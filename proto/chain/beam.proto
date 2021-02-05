@@ -1,0 +1,57 @@
+syntax = "proto3";
+package sandblockio.chain.chain;
+
+option go_package = "github.com/sandblockio/chain/x/chain/types";
+
+import "gogoproto/gogo.proto";
+
+message KeyValue {
+  string key = 1;
+  string value = 2;
+  string reason = 3;
+}
+
+message Beam {
+  string creator = 1;
+  string id = 2;
+  int32 amount = 3;
+  string status = 4;
+  string secret = 5;
+
+  message BeamReview {
+    string title = 1;
+    string content = 2;
+    repeated KeyValue metadata = 3;
+  }
+
+  message BeamCashback {
+    string brand = 1;
+  }
+
+  BeamCashback cashback = 6;
+  BeamReview review = 7;
+}
+
+message MsgOpenBeam {
+  string creator = 1;
+  int32 amount = 2;
+  string secret = 3;
+}
+
+message MsgIncreaseBeam {
+  string id = 1;
+  int32 amount = 2;
+}
+
+message MsgCancelBeam {
+  string id = 1;
+}
+
+message MsgCloseBeam {
+  string id = 1;
+}
+
+message MsgClaimBeam {
+  string id = 1;
+  string secret = 2;
+}

@@ -2,6 +2,8 @@ package cli
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -20,7 +22,36 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-    // this line is used by starport scaffolding # 1
+	cmd.AddCommand(CmdOpenBeam())
+	return cmd
+}
 
-	return cmd 
+// CmdOpenBeam Command definition for beam opening dispatch
+func CmdOpenBeam() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "open-beam [amount] [secret]",
+		Short: "Open a new beam",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Acquire the command arguments
+			argsAmount, err := strconv.ParseInt(args[0], 10, 32)
+			argsSecret := args[1]
+			if err != nil {
+				return err
+			}
+
+			// Acquire the client context
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			// Construct the message and validate
+			msg := types.NewMsgOpenBeam(clientCtx.GetFromAddress().String(), int32(argsAmount), argsSecret)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			// Broadcast the message
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	return cmd
 }
