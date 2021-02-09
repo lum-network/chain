@@ -39,19 +39,23 @@ message MsgOpenBeam {
 }
 
 message MsgIncreaseBeam {
-  string id = 1;
-  int32 amount = 2;
+  string updater = 1;
+  string id = 2;
+  int32 amount = 3;
 }
 
 message MsgCancelBeam {
-  string id = 1;
+  string updater = 1;
+  string id = 2;
 }
 
 message MsgCloseBeam {
-  string id = 1;
+  string updater = 1;
+  string id = 2;
 }
 
 message MsgClaimBeam {
-  string id = 1;
-  string secret = 2;
+  string claimer = 1;
+  string id = 2;
+  string secret = 3;
 }

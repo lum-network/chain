@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/sandblockio/chain/x/chain/keeper"
 	"github.com/sandblockio/chain/x/chain/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // NewHandler ...
@@ -18,11 +18,21 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgOpenBeam:
 			return handleMsgOpenBeam(ctx, k, msg)
 
+		case *types.MsgIncreaseBeam:
+			return handleMsgIncreaseBeam(ctx, k, msg)
+
+		case *types.MsgCancelBeam:
+			return handleMsgCancelBeam(ctx, k, msg)
+
+		case *types.MsgCloseBeam:
+			return handleMsgCloseBeam(ctx, k, msg)
+
+		case *types.MsgClaimBeam:
+			return handleMsgClaimBeam(ctx, k, msg)
+
 		default:
 			errMsg := fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
 		}
 	}
 }
-
-

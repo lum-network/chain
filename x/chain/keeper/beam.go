@@ -17,6 +17,27 @@ func (k Keeper) GetBeam(ctx sdk.Context, key string) types.Beam {
 	return beam
 }
 
+// HasBeam Check if a beam instance exists or not (by its key)
+func (k Keeper) HasBeam(ctx sdk.Context, id string) bool {
+	// Acquire the store instance
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BeamKey))
+
+	// Return the presence boolean
+	return store.Has(types.KeyPrefix(types.BeamKey + id))
+}
+
+// UpdateBeam Replace the beam at the specified "id" position
+func (k Keeper) UpdateBeam(ctx sdk.Context, key string, beam types.Beam) {
+	// Acquire the store instance
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BeamKey))
+
+	// Encode the beam
+	encodedBeam := k.cdc.MustMarshalBinaryBare(&beam)
+
+	// Update in store
+	store.Set(types.KeyPrefix(types.BeamKey+key), encodedBeam)
+}
+
 // OpenBeam Create a new beam instance
 func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) {
 	// Generate the random id
@@ -49,11 +70,81 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) {
 	store.Set(key, value)
 }
 
-// HasBeam Check if a beam instance exists or not (by its key)
-func (k Keeper) HasBeam(ctx sdk.Context, id string) bool {
-	// Acquire the store instance
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BeamKey))
+func (k Keeper) IncreaseBeam(ctx sdk.Context, msg types.MsgIncreaseBeam) {
+	// Does the beam exists?
+	if !k.HasBeam(ctx, msg.Id) {
+		return
+	}
 
-	// Return the presence boolean
-	return store.Has(types.KeyPrefix(types.BeamKey + id))
+	// Acquire the beam instance
+	beam := k.GetBeam(ctx, msg.Id)
+
+	// Make sure transaction signer is authorized
+	//TODO: implement
+
+	// Update the value
+	beam.Amount += msg.Amount
+
+	// Append to beam logs
+	//TODO: implement
+
+	// Update the in-store beam
+	k.UpdateBeam(ctx, msg.Id, beam)
+}
+
+func (k Keeper) CloseBeam(ctx sdk.Context, msg types.MsgCloseBeam) {
+	// Does the beam exists?
+	if !k.HasBeam(ctx, msg.Id) {
+		return
+	}
+
+	// Acquire the beam instance
+	// beam := k.GetBeam(ctx, msg.Id)
+
+	// Make sure transaction signer is authorized
+	//TODO: implement
+
+	// Proceed money transfer from module account
+	//TODO: implement
+
+	// Update the beam status
+	//TODO: implement
+}
+
+func (k Keeper) CancelBeam(ctx sdk.Context, msg types.MsgCancelBeam) {
+	// Does the beam exists?
+	if !k.HasBeam(ctx, msg.Id) {
+		return
+	}
+
+	// Acquire the beam instance
+	// beam := k.GetBeam(ctx, msg.Id)
+
+	// Make sure transaction signer is authorized
+	//TODO: implement
+
+	// Refund creator
+	//TODO: implement
+
+	// Update beam status
+	//TODO: implement
+}
+
+func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) {
+	// Does the beam exists?
+	if !k.HasBeam(ctx, msg.Id) {
+		return
+	}
+
+	// Acquire the beam instance
+	// beam := k.GetBeam(ctx, msg.Id)
+
+	// Make sure transaction signer is authorized
+	//TODO: implement
+
+	// Transfer funds
+	//TODO: implement
+
+	// Update beam status
+	//TODO: implement
 }

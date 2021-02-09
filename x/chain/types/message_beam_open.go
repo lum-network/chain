@@ -49,8 +49,12 @@ func (msg *MsgOpenBeam) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid creator address (%s)", err)
 	}
 
-	//TODO: validate the amount
-	//TODO: validate the secret
+	// Validate the amount
+	if msg.Amount <= 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "Invalid amount: must be greater than 0")
+	}
 
+	// Validate the secret
+	// TODO: implement
 	return nil
 }
