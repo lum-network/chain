@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	// "strings"
 
@@ -24,8 +25,75 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-    // this line is used by starport scaffolding # 1
+	cmd.AddCommand(
+		CmdFetchBeams(),
+		CmdGetBeam(),
+	)
 
-	return cmd 
+	return cmd
 }
 
+// CmdFetchBeams Query the blockchain and print the list of beams
+func CmdFetchBeams() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "fetch-beams",
+		Short: "Fetch all beams",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Acquire the client instance
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			// Acquire the pagination
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			// Acquire the query client from the context
+			queryClient := types.NewQueryClient(clientCtx)
+
+			// Construct the params payload
+			params := &types.QueryFetchBeamsRequest{
+				Pagination: pageReq,
+			}
+
+			// Post and acquire response
+			res, err := queryClient.Beams(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(res)
+		},
+	}
+	return cmd
+}
+
+// CmdGetBeam Query the blockchain about a beam and print response
+func CmdGetBeam() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "get-beam [id]",
+		Short: "Get a given beam",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Acquire the client instance
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			// Acquire the query client
+			queryClient := types.NewQueryClient(clientCtx)
+
+			// Construct the payload
+			params := &types.QueryGetBeamRequest{
+				Id: args[0],
+			}
+
+			// Post and acquire the response
+			res, err := queryClient.Beam(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintOutput(res)
+		},
+	}
+	return cmd
+}

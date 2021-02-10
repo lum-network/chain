@@ -6,12 +6,16 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	_ "github.com/cosmos/cosmos-sdk/types/query"
+	query "github.com/cosmos/cosmos-sdk/types/query"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
 	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -25,22 +29,227 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+type QueryGetBeamRequest struct {
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (m *QueryGetBeamRequest) Reset()         { *m = QueryGetBeamRequest{} }
+func (m *QueryGetBeamRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetBeamRequest) ProtoMessage()    {}
+func (*QueryGetBeamRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4729f39ff79d7ffc, []int{0}
+}
+func (m *QueryGetBeamRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetBeamRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetBeamRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetBeamRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetBeamRequest.Merge(m, src)
+}
+func (m *QueryGetBeamRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetBeamRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetBeamRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetBeamRequest proto.InternalMessageInfo
+
+func (m *QueryGetBeamRequest) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+type QueryGetBeamResponse struct {
+	Beam *Beam `protobuf:"bytes,1,opt,name=Beam,proto3" json:"Beam,omitempty"`
+}
+
+func (m *QueryGetBeamResponse) Reset()         { *m = QueryGetBeamResponse{} }
+func (m *QueryGetBeamResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetBeamResponse) ProtoMessage()    {}
+func (*QueryGetBeamResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4729f39ff79d7ffc, []int{1}
+}
+func (m *QueryGetBeamResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetBeamResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetBeamResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetBeamResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetBeamResponse.Merge(m, src)
+}
+func (m *QueryGetBeamResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetBeamResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetBeamResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetBeamResponse proto.InternalMessageInfo
+
+func (m *QueryGetBeamResponse) GetBeam() *Beam {
+	if m != nil {
+		return m.Beam
+	}
+	return nil
+}
+
+type QueryFetchBeamsRequest struct {
+	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryFetchBeamsRequest) Reset()         { *m = QueryFetchBeamsRequest{} }
+func (m *QueryFetchBeamsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryFetchBeamsRequest) ProtoMessage()    {}
+func (*QueryFetchBeamsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4729f39ff79d7ffc, []int{2}
+}
+func (m *QueryFetchBeamsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryFetchBeamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryFetchBeamsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryFetchBeamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryFetchBeamsRequest.Merge(m, src)
+}
+func (m *QueryFetchBeamsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryFetchBeamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryFetchBeamsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryFetchBeamsRequest proto.InternalMessageInfo
+
+func (m *QueryFetchBeamsRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+type QueryFetchBeamsResponse struct {
+	Beam       []*Beam             `protobuf:"bytes,1,rep,name=Beam,proto3" json:"Beam,omitempty"`
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryFetchBeamsResponse) Reset()         { *m = QueryFetchBeamsResponse{} }
+func (m *QueryFetchBeamsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryFetchBeamsResponse) ProtoMessage()    {}
+func (*QueryFetchBeamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4729f39ff79d7ffc, []int{3}
+}
+func (m *QueryFetchBeamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryFetchBeamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryFetchBeamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryFetchBeamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryFetchBeamsResponse.Merge(m, src)
+}
+func (m *QueryFetchBeamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryFetchBeamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryFetchBeamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryFetchBeamsResponse proto.InternalMessageInfo
+
+func (m *QueryFetchBeamsResponse) GetBeam() []*Beam {
+	if m != nil {
+		return m.Beam
+	}
+	return nil
+}
+
+func (m *QueryFetchBeamsResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+func init() {
+	proto.RegisterType((*QueryGetBeamRequest)(nil), "sandblockio.chain.chain.QueryGetBeamRequest")
+	proto.RegisterType((*QueryGetBeamResponse)(nil), "sandblockio.chain.chain.QueryGetBeamResponse")
+	proto.RegisterType((*QueryFetchBeamsRequest)(nil), "sandblockio.chain.chain.QueryFetchBeamsRequest")
+	proto.RegisterType((*QueryFetchBeamsResponse)(nil), "sandblockio.chain.chain.QueryFetchBeamsResponse")
+}
+
 func init() { proto.RegisterFile("chain/query.proto", fileDescriptor_4729f39ff79d7ffc) }
 
 var fileDescriptor_4729f39ff79d7ffc = []byte{
-	// 186 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4c, 0xce, 0x48, 0xcc,
-	0xcc, 0xd3, 0x2f, 0x2c, 0x4d, 0x2d, 0xaa, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x2f,
-	0x4e, 0xcc, 0x4b, 0x49, 0xca, 0xc9, 0x4f, 0xce, 0xce, 0xcc, 0xd7, 0x03, 0x4b, 0x43, 0x48, 0x29,
-	0x99, 0xf4, 0xfc, 0xfc, 0xf4, 0x9c, 0x54, 0xfd, 0xc4, 0x82, 0x4c, 0xfd, 0xc4, 0xbc, 0xbc, 0xfc,
-	0x92, 0xc4, 0x92, 0xcc, 0xfc, 0xbc, 0x62, 0x88, 0x36, 0x29, 0xad, 0xe4, 0xfc, 0xe2, 0xdc, 0xfc,
-	0x62, 0xfd, 0xa4, 0xc4, 0xe2, 0x54, 0x88, 0x79, 0xfa, 0x65, 0x86, 0x49, 0xa9, 0x25, 0x89, 0x86,
-	0xfa, 0x05, 0x89, 0xe9, 0x99, 0x79, 0x60, 0xc5, 0x10, 0xb5, 0x46, 0xec, 0x5c, 0xac, 0x81, 0x20,
-	0x15, 0x4e, 0x2e, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24, 0xc7, 0xf8, 0xe0, 0x91, 0x1c, 0xe3,
-	0x84, 0xc7, 0x72, 0x0c, 0x17, 0x1e, 0xcb, 0x31, 0xdc, 0x78, 0x2c, 0xc7, 0x10, 0xa5, 0x95, 0x9e,
-	0x59, 0x92, 0x51, 0x9a, 0xa4, 0x97, 0x9c, 0x9f, 0xab, 0x8f, 0xe4, 0x20, 0x7d, 0x88, 0x7b, 0x2b,
-	0xa0, 0x74, 0x49, 0x65, 0x41, 0x6a, 0x71, 0x12, 0x1b, 0xd8, 0x54, 0x63, 0x40, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0xa2, 0xb1, 0x4e, 0xe5, 0xcd, 0x00, 0x00, 0x00,
+	// 405 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x92, 0x41, 0x4f, 0xdb, 0x30,
+	0x1c, 0xc5, 0xeb, 0x6c, 0x9d, 0x34, 0x4f, 0x9a, 0x36, 0x6f, 0x6a, 0xab, 0x6c, 0x8d, 0xa6, 0x4c,
+	0x1b, 0xa8, 0x02, 0x9b, 0x96, 0x6f, 0x50, 0xa1, 0x56, 0xdc, 0xa0, 0x47, 0x4e, 0x38, 0x89, 0x95,
+	0x5a, 0x34, 0x71, 0x5a, 0xbb, 0x88, 0x0a, 0x71, 0xe1, 0x84, 0x38, 0x21, 0x21, 0xce, 0x7c, 0x1d,
+	0x8e, 0x95, 0xb8, 0x70, 0x44, 0x2d, 0x1f, 0x04, 0xc5, 0x0e, 0xb4, 0x55, 0x5b, 0xe8, 0x25, 0x51,
+	0x9c, 0xf7, 0xfe, 0xef, 0xf7, 0x6c, 0xc3, 0xef, 0x7e, 0x9b, 0xf2, 0x98, 0x74, 0xfb, 0xac, 0x37,
+	0xc0, 0x49, 0x4f, 0x28, 0x81, 0x8a, 0x92, 0xc6, 0x81, 0xd7, 0x11, 0xfe, 0x11, 0x17, 0x58, 0xff,
+	0x36, 0x4f, 0xfb, 0x77, 0x28, 0x44, 0xd8, 0x61, 0x84, 0x26, 0x9c, 0xd0, 0x38, 0x16, 0x8a, 0x2a,
+	0x2e, 0x62, 0x69, 0x6c, 0x76, 0xc5, 0x17, 0x32, 0x12, 0x92, 0x78, 0x54, 0x32, 0x33, 0x8f, 0x1c,
+	0x57, 0x3d, 0xa6, 0x68, 0x95, 0x24, 0x34, 0xe4, 0xb1, 0x16, 0x67, 0xda, 0x6f, 0x26, 0xd5, 0x63,
+	0x34, 0x32, 0x2b, 0xee, 0x3f, 0xf8, 0x63, 0x3f, 0xf5, 0x34, 0x99, 0xaa, 0x33, 0x1a, 0xb5, 0x58,
+	0xb7, 0xcf, 0xa4, 0x42, 0x5f, 0xa1, 0xc5, 0x83, 0x12, 0xf8, 0x03, 0xd6, 0x3f, 0xb7, 0x2c, 0x1e,
+	0xb8, 0xbb, 0xf0, 0xe7, 0xac, 0x4c, 0x26, 0x22, 0x96, 0x0c, 0x55, 0xe1, 0xc7, 0xf4, 0x5b, 0x2b,
+	0xbf, 0xd4, 0xca, 0x78, 0x49, 0x05, 0xac, 0x4d, 0x5a, 0xea, 0x1e, 0xc2, 0x82, 0x1e, 0xd5, 0x60,
+	0xca, 0x6f, 0xa7, 0x2b, 0xf2, 0x25, 0xb4, 0x01, 0xe1, 0x84, 0x38, 0x1b, 0xf9, 0x1f, 0x9b, 0x7a,
+	0x38, 0xad, 0x87, 0xcd, 0x76, 0x65, 0xf5, 0xf0, 0x1e, 0x0d, 0x59, 0xe6, 0x6d, 0x4d, 0x39, 0xdd,
+	0x1b, 0x00, 0x8b, 0x73, 0x11, 0x73, 0xc0, 0x1f, 0x56, 0x04, 0x46, 0xcd, 0x19, 0x2c, 0x4b, 0x63,
+	0xad, 0xbd, 0x8b, 0x65, 0xf2, 0xa6, 0xb9, 0x6a, 0xb7, 0x16, 0xcc, 0x6b, 0x2e, 0x74, 0x01, 0x0c,
+	0x06, 0xda, 0x58, 0x0a, 0xb0, 0xe0, 0x54, 0xec, 0xcd, 0x15, 0xd5, 0x26, 0xdb, 0xfd, 0x7b, 0x7e,
+	0xff, 0x74, 0x6d, 0x95, 0xd1, 0x2f, 0xf2, 0x6a, 0x23, 0x93, 0x0b, 0x20, 0xc9, 0x29, 0x0f, 0xce,
+	0xd0, 0x25, 0x80, 0x79, 0xbd, 0x45, 0x88, 0xbc, 0x3d, 0x7d, 0xee, 0xbc, 0xec, 0xad, 0xd5, 0x0d,
+	0x19, 0x91, 0xa3, 0x89, 0x4a, 0xa8, 0xb0, 0x98, 0xa8, 0xbe, 0x73, 0x37, 0x72, 0xc0, 0x70, 0xe4,
+	0x80, 0xc7, 0x91, 0x03, 0xae, 0xc6, 0x4e, 0x6e, 0x38, 0x76, 0x72, 0x0f, 0x63, 0x27, 0x77, 0x50,
+	0x09, 0xb9, 0x6a, 0xf7, 0x3d, 0xec, 0x8b, 0x88, 0x4c, 0xa5, 0x66, 0xee, 0x93, 0xec, 0xad, 0x06,
+	0x09, 0x93, 0xde, 0x27, 0x7d, 0xb5, 0xb7, 0x9f, 0x03, 0x00, 0x00, 0xff, 0xff, 0xc0, 0x2b, 0xfd,
+	0xaa, 0x64, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -55,6 +264,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
+	Beam(ctx context.Context, in *QueryGetBeamRequest, opts ...grpc.CallOption) (*QueryGetBeamResponse, error)
+	Beams(ctx context.Context, in *QueryFetchBeamsRequest, opts ...grpc.CallOption) (*QueryFetchBeamsResponse, error)
 }
 
 type queryClient struct {
@@ -65,22 +276,789 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
+func (c *queryClient) Beam(ctx context.Context, in *QueryGetBeamRequest, opts ...grpc.CallOption) (*QueryGetBeamResponse, error) {
+	out := new(QueryGetBeamResponse)
+	err := c.cc.Invoke(ctx, "/sandblockio.chain.chain.Query/Beam", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Beams(ctx context.Context, in *QueryFetchBeamsRequest, opts ...grpc.CallOption) (*QueryFetchBeamsResponse, error) {
+	out := new(QueryFetchBeamsResponse)
+	err := c.cc.Invoke(ctx, "/sandblockio.chain.chain.Query/Beams", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
+	Beam(context.Context, *QueryGetBeamRequest) (*QueryGetBeamResponse, error)
+	Beams(context.Context, *QueryFetchBeamsRequest) (*QueryFetchBeamsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
 type UnimplementedQueryServer struct {
 }
 
+func (*UnimplementedQueryServer) Beam(ctx context.Context, req *QueryGetBeamRequest) (*QueryGetBeamResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Beam not implemented")
+}
+func (*UnimplementedQueryServer) Beams(ctx context.Context, req *QueryFetchBeamsRequest) (*QueryFetchBeamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Beams not implemented")
+}
+
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
+}
+
+func _Query_Beam_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetBeamRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Beam(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/sandblockio.chain.chain.Query/Beam",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Beam(ctx, req.(*QueryGetBeamRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Beams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryFetchBeamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Beams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/sandblockio.chain.chain.Query/Beams",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Beams(ctx, req.(*QueryFetchBeamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "sandblockio.chain.chain.Query",
 	HandlerType: (*QueryServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "chain/query.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Beam",
+			Handler:    _Query_Beam_Handler,
+		},
+		{
+			MethodName: "Beams",
+			Handler:    _Query_Beams_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "chain/query.proto",
 }
+
+func (m *QueryGetBeamRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetBeamRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetBeamRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Id) > 0 {
+		i -= len(m.Id)
+		copy(dAtA[i:], m.Id)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Id)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetBeamResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetBeamResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetBeamResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Beam != nil {
+		{
+			size, err := m.Beam.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryFetchBeamsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryFetchBeamsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryFetchBeamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryFetchBeamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryFetchBeamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryFetchBeamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Beam) > 0 {
+		for iNdEx := len(m.Beam) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Beam[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
+	offset -= sovQuery(v)
+	base := offset
+	for v >= 1<<7 {
+		dAtA[offset] = uint8(v&0x7f | 0x80)
+		v >>= 7
+		offset++
+	}
+	dAtA[offset] = uint8(v)
+	return base
+}
+func (m *QueryGetBeamRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Id)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetBeamResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Beam != nil {
+		l = m.Beam.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryFetchBeamsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryFetchBeamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Beam) > 0 {
+		for _, e := range m.Beam {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func sovQuery(x uint64) (n int) {
+	return (math_bits.Len64(x|1) + 6) / 7
+}
+func sozQuery(x uint64) (n int) {
+	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *QueryGetBeamRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetBeamRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetBeamRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Id = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetBeamResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetBeamResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetBeamResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Beam", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Beam == nil {
+				m.Beam = &Beam{}
+			}
+			if err := m.Beam.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryFetchBeamsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryFetchBeamsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryFetchBeamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryFetchBeamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryFetchBeamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryFetchBeamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Beam", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Beam = append(m.Beam, &Beam{})
+			if err := m.Beam[len(m.Beam)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func skipQuery(dAtA []byte) (n int, err error) {
+	l := len(dAtA)
+	iNdEx := 0
+	depth := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return 0, io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		wireType := int(wire & 0x7)
+		switch wireType {
+		case 0:
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				iNdEx++
+				if dAtA[iNdEx-1] < 0x80 {
+					break
+				}
+			}
+		case 1:
+			iNdEx += 8
+		case 2:
+			var length int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				length |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if length < 0 {
+				return 0, ErrInvalidLengthQuery
+			}
+			iNdEx += length
+		case 3:
+			depth++
+		case 4:
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupQuery
+			}
+			depth--
+		case 5:
+			iNdEx += 4
+		default:
+			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
+		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthQuery
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
+	}
+	return 0, io.ErrUnexpectedEOF
+}
+
+var (
+	ErrInvalidLengthQuery        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowQuery          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupQuery = fmt.Errorf("proto: unexpected end of group")
+)

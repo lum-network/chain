@@ -3,8 +3,6 @@ package sandblockio.chain.chain;
 
 option go_package = "github.com/sandblockio/chain/x/chain/types";
 
-import "gogoproto/gogo.proto";
-
 message KeyValue {
   string key = 1;
   string value = 2;

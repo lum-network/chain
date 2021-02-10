@@ -17,6 +17,26 @@ func (k Keeper) GetBeam(ctx sdk.Context, key string) types.Beam {
 	return beam
 }
 
+func (k Keeper) ListBeams(ctx sdk.Context) (msgs []types.Beam) {
+	// Acquire the store instance
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BeamKey))
+
+	// Define the iterator
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefix(types.BeamKey))
+
+	// Defer the iterator shutdown
+	defer iterator.Close()
+
+	// For each beam, unmarshal and append to return structure
+	for ; iterator.Valid(); iterator.Next() {
+		var msg types.Beam
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &msg)
+		msgs = append(msgs, msg)
+	}
+
+	return
+}
+
 // HasBeam Check if a beam instance exists or not (by its key)
 func (k Keeper) HasBeam(ctx sdk.Context, id string) bool {
 	// Acquire the store instance

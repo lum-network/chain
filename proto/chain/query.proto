@@ -3,13 +3,35 @@ package sandblockio.chain.chain;
 
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-// this line is used by starport scaffolding # 1
+
+import "chain/beam.proto";
 
 option go_package = "github.com/sandblockio/chain/x/chain/types";
 
 // Query defines the gRPC querier service.
 service Query {
-    // this line is used by starport scaffolding # 2
+  rpc Beam(QueryGetBeamRequest) returns (QueryGetBeamResponse) {
+    option (google.api.http).get = "/sandblock/chain/beams/{id}";
+  }
+
+  rpc Beams(QueryFetchBeamsRequest) returns (QueryFetchBeamsResponse) {
+    option (google.api.http).get = "/sandblock/chain/beams";
+  }
 }
 
-// this line is used by starport scaffolding # 3
+message QueryGetBeamRequest {
+  string id = 1;
+}
+
+message QueryGetBeamResponse {
+  Beam Beam = 1;
+}
+
+message QueryFetchBeamsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryFetchBeamsResponse {
+  repeated Beam Beam = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
