@@ -37,7 +37,8 @@ jobs:
           name: new_version
           path: new_version.txt
 
-  name: Build the image and push on docker registry
+  build:
+    name: Build the image and push on docker registry
     runs-on: ubuntu-latest
     needs: bump-version-push-tag
     steps:
