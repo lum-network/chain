@@ -59,14 +59,13 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, key string, beam types.Beam) {
 }
 
 // OpenBeam Create a new beam instance
-func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) {
+func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 	// Generate the random id
 	id := GenerateSecureToken(10)
 
-	// If it already exists, call the same function again
+	// If the generated ID already exists, call same method again
 	if k.HasBeam(ctx, id) {
-		k.OpenBeam(ctx, msg)
-		return
+		return k.OpenBeam(ctx, msg)
 	}
 
 	// Create the beam payload
@@ -88,12 +87,14 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) {
 
 	// Save the payload to the store
 	store.Set(key, value)
+
+	return nil
 }
 
-func (k Keeper) IncreaseBeam(ctx sdk.Context, msg types.MsgIncreaseBeam) {
+func (k Keeper) IncreaseBeam(ctx sdk.Context, msg types.MsgIncreaseBeam) error {
 	// Does the beam exists?
 	if !k.HasBeam(ctx, msg.Id) {
-		return
+		return types.ErrBeamNotFound
 	}
 
 	// Acquire the beam instance
@@ -110,12 +111,14 @@ func (k Keeper) IncreaseBeam(ctx sdk.Context, msg types.MsgIncreaseBeam) {
 
 	// Update the in-store beam
 	k.UpdateBeam(ctx, msg.Id, beam)
+
+	return nil
 }
 
-func (k Keeper) CloseBeam(ctx sdk.Context, msg types.MsgCloseBeam) {
+func (k Keeper) CloseBeam(ctx sdk.Context, msg types.MsgCloseBeam) error {
 	// Does the beam exists?
 	if !k.HasBeam(ctx, msg.Id) {
-		return
+		return types.ErrBeamNotFound
 	}
 
 	// Acquire the beam instance
@@ -129,12 +132,14 @@ func (k Keeper) CloseBeam(ctx sdk.Context, msg types.MsgCloseBeam) {
 
 	// Update the beam status
 	//TODO: implement
+
+	return nil
 }
 
-func (k Keeper) CancelBeam(ctx sdk.Context, msg types.MsgCancelBeam) {
+func (k Keeper) CancelBeam(ctx sdk.Context, msg types.MsgCancelBeam) error {
 	// Does the beam exists?
 	if !k.HasBeam(ctx, msg.Id) {
-		return
+		return types.ErrBeamNotFound
 	}
 
 	// Acquire the beam instance
@@ -148,12 +153,14 @@ func (k Keeper) CancelBeam(ctx sdk.Context, msg types.MsgCancelBeam) {
 
 	// Update beam status
 	//TODO: implement
+
+	return nil
 }
 
-func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) {
+func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 	// Does the beam exists?
 	if !k.HasBeam(ctx, msg.Id) {
-		return
+		return types.ErrBeamNotFound
 	}
 
 	// Acquire the beam instance
@@ -167,4 +174,6 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) {
 
 	// Update beam status
 	//TODO: implement
+
+	return nil
 }

@@ -7,31 +7,41 @@ import (
 )
 
 func handleMsgOpenBeam(ctx sdk.Context, k keeper.Keeper, msg *types.MsgOpenBeam) (*sdk.Result, error) {
-	//TODO: handle errors
-	k.OpenBeam(ctx, *msg)
+	err := k.OpenBeam(ctx, *msg)
+	if err != nil {
+		return nil, err
+	}
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
 func handleMsgIncreaseBeam(ctx sdk.Context, k keeper.Keeper, msg *types.MsgIncreaseBeam) (*sdk.Result, error) {
-	//TODO: handle errors
-	k.IncreaseBeam(ctx, *msg)
+	err := k.IncreaseBeam(ctx, *msg)
+	if err != nil {
+		return nil, err
+	}
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
 func handleMsgCloseBeam(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCloseBeam) (*sdk.Result, error) {
-	//TODO: handle errors
-	k.CloseBeam(ctx, *msg)
+	err := k.CloseBeam(ctx, *msg)
+	if err != nil {
+		return nil, err
+	}
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
 func handleMsgCancelBeam(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCancelBeam) (*sdk.Result, error) {
-	//TODO: handle errors
-	k.CancelBeam(ctx, *msg)
+	err := k.CancelBeam(ctx, *msg)
+	if err != nil {
+		return nil, err
+	}
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
 func handleMsgClaimBeam(ctx sdk.Context, k keeper.Keeper, msg *types.MsgClaimBeam) (*sdk.Result, error) {
-	//TODO: handle errors
-	k.ClaimBeam(ctx, *msg)
+	err := k.ClaimBeam(ctx, *msg)
+	if err != nil {
+		return nil, err
+	}
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }

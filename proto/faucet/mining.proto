@@ -1,0 +1,19 @@
+syntax = "proto3";
+package lum.network.faucet;
+
+option go_package = "github.com/sandblockio/chain/x/faucet/types";
+
+import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+message Mining {
+  string minter = 1;
+  google.protobuf.Timestamp last_time = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  cosmos.base.v1beta1.Coin total = 3 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+message MsgMintAndSend {
+  string minter = 1;
+  google.protobuf.Timestamp mint_time = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}

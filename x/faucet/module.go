@@ -2,23 +2,34 @@ package faucet
 
 import (
 	"encoding/json"
+	"fmt"
+    // this line is used by starport scaffolding # 1
+
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/sandblockio/chain/x/faucet/client/cli"
-	"github.com/spf13/cobra"
-
-	"github.com/sandblockio/chain/x/faucet/client/rest"
+	"github.com/sandblockio/chain/x/faucet/keeper"
 	"github.com/sandblockio/chain/x/faucet/types"
+	"github.com/sandblockio/chain/x/faucet/client/cli"
+	"github.com/sandblockio/chain/x/faucet/client/rest"
 )
 
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
+
+// ----------------------------------------------------------------------------
+// AppModuleBasic
+// ----------------------------------------------------------------------------
 
 // AppModuleBasic implements the AppModuleBasic interface for the capability module.
 type AppModuleBasic struct {
@@ -29,11 +40,16 @@ func NewAppModuleBasic(cdc codec.Marshaler) AppModuleBasic {
 	return AppModuleBasic{cdc: cdc}
 }
 
-func (a AppModuleBasic) Name() string {
+// Name returns the capability module's name.
+func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-func (a AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
+	types.RegisterCodec(cdc)
+}
+
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterCodec(cdc)
 }
 
@@ -43,30 +59,107 @@ func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 }
 
 // DefaultGenesis returns the capability module's default genesis state.
-func (a AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
+func (AppModuleBasic) DefaultGenesis(cdc codec.JSONMarshaler) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
 // ValidateGenesis performs genesis state validation for the capability module.
-func (a AppModuleBasic) ValidateGenesis(marshaler codec.JSONMarshaler, config client.TxEncodingConfig, message json.RawMessage) error {
-	panic("implement me")
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxEncodingConfig, bz json.RawMessage) error {
+	var genState types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+	return genState.Validate()
 }
 
 // RegisterRESTRoutes registers the capability module's REST service handlers.
-func (a AppModuleBasic) RegisterRESTRoutes(context client.Context, router *mux.Router) {
-	rest.RegisterRoutes(context, router)
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
+	rest.RegisterRoutes(clientCtx, rtr)
 }
 
-func (a AppModuleBasic) RegisterGRPCGatewayRoutes(context client.Context, mux *runtime.ServeMux) {
-	panic("implement me")
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+    // this line is used by starport scaffolding # 2
 }
 
 // GetTxCmd returns the capability module's root tx command.
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
+    return cli.GetTxCmd()
 }
 
 // GetQueryCmd returns the capability module's root query command.
-func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(types.StoreKey)
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+    return cli.GetQueryCmd(types.StoreKey)
+}
+
+// ----------------------------------------------------------------------------
+// AppModule
+// ----------------------------------------------------------------------------
+
+// AppModule implements the AppModule interface for the capability module.
+type AppModule struct {
+	AppModuleBasic
+
+	keeper keeper.Keeper
+}
+
+func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper) AppModule {
+	return AppModule{
+		AppModuleBasic: NewAppModuleBasic(cdc),
+		keeper:         keeper,
+	}
+}
+
+// Name returns the capability module's name.
+func (am AppModule) Name() string {
+	return am.AppModuleBasic.Name()
+}
+
+// Route returns the capability module's message routing key.
+func (am AppModule) Route() sdk.Route {
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
+}
+
+// QuerierRoute returns the capability module's query routing key.
+func (AppModule) QuerierRoute() string { return types.QuerierRoute }
+
+// LegacyQuerierHandler returns the capability module's Querier.
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
+}
+
+// RegisterServices registers a GRPC query service to respond to the
+// module-specific GRPC queries.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+    types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+}
+
+// RegisterInvariants registers the capability module's invariants.
+func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+
+// InitGenesis performs the capability module's genesis initialization It returns
+// no validator updates.
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, gs json.RawMessage) []abci.ValidatorUpdate {
+	var genState types.GenesisState
+	// Initialize global index to index in genesis state
+	cdc.MustUnmarshalJSON(gs, &genState)
+
+	InitGenesis(ctx, am.keeper, genState)
+
+	return []abci.ValidatorUpdate{}
+}
+
+// ExportGenesis returns the capability module's exported genesis state as raw JSON bytes.
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
+	genState := ExportGenesis(ctx, am.keeper)
+	return cdc.MustMarshalJSON(genState)
+}
+
+// BeginBlock executes all ABCI BeginBlock logic respective to the capability module.
+func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
+
+// EndBlock executes all ABCI EndBlock logic respective to the capability module. It
+// returns no validator updates.
+func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
 }

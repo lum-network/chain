@@ -1,0 +1,8 @@
+syntax = "proto3";
+package sandblockio.chain.faucet;
+
+option go_package = "github.com/sandblockio/chain/x/faucet/types";
+
+// GenesisState defines the faucet module's genesis state.
+message GenesisState {
+}

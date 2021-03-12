@@ -2,9 +2,12 @@ package cli
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/sandblockio/chain/x/faucet/types"
+
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	// "github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/sandblockio/chain/x/faucet/types"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -17,6 +20,7 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand()
-	return cmd
+	// this line is used by starport scaffolding # 1
+
+	return cmd 
 }

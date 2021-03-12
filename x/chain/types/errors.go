@@ -8,5 +8,5 @@ import (
 
 // x/chain module sentinel errors
 var (
-	ErrSample = sdkerrors.Register(ModuleName, 1100, "sample error")
+	ErrBeamNotFound = sdkerrors.Register(ModuleName, 110, "Beam does not exists")
 )

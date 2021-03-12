@@ -17,6 +17,7 @@ require (
 	github.com/tendermint/tm-db v0.6.2
 	google.golang.org/genproto v0.0.0-20201014134559-03b6142f0dc9
 	google.golang.org/grpc v1.33.0
+	google.golang.org/protobuf v1.25.0
 
 )
 
