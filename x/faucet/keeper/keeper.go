@@ -3,7 +3,6 @@ package keeper
 import (
 	"fmt"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	mint "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 	"time"
@@ -15,7 +14,6 @@ import (
 
 type Keeper struct {
 	BankKeeper    bank.Keeper
-	MintKeeper    mint.Keeper
 	StakingKeeper staking.Keeper
 
 	defaultAmount int64
@@ -26,11 +24,15 @@ type Keeper struct {
 	memKey   sdk.StoreKey
 }
 
-func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey) *Keeper {
+func NewKeeper(bankKeeper bank.Keeper, stakingKeeper staking.Keeper, cdc codec.Marshaler, storeKey, memKey sdk.StoreKey, amount int64, rateLimit time.Duration) *Keeper {
 	return &Keeper{
-		cdc:      cdc,
-		storeKey: storeKey,
-		memKey:   memKey,
+		BankKeeper:    bankKeeper,
+		StakingKeeper: stakingKeeper,
+		cdc:           cdc,
+		storeKey:      storeKey,
+		memKey:        memKey,
+		defaultAmount: amount,
+		defaultLimit:  rateLimit,
 	}
 }
 
