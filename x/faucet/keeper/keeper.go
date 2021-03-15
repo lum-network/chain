@@ -24,6 +24,7 @@ type Keeper struct {
 	memKey   sdk.StoreKey
 }
 
+// NewKeeper Initialize the keeper instance with the required elements
 func NewKeeper(bankKeeper bank.Keeper, stakingKeeper staking.Keeper, cdc codec.Marshaler, storeKey, memKey sdk.StoreKey, amount int64, rateLimit time.Duration) *Keeper {
 	return &Keeper{
 		BankKeeper:    bankKeeper,
@@ -36,6 +37,7 @@ func NewKeeper(bankKeeper bank.Keeper, stakingKeeper staking.Keeper, cdc codec.M
 	}
 }
 
+// Logger Return a logger instance for the keeper
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }

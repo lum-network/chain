@@ -17,6 +17,7 @@ func (k Keeper) GetBeam(ctx sdk.Context, key string) types.Beam {
 	return beam
 }
 
+// ListBeams Return a list of in store beams
 func (k Keeper) ListBeams(ctx sdk.Context) (msgs []types.Beam) {
 	// Acquire the store instance
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BeamKey))
@@ -91,6 +92,7 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 	return nil
 }
 
+// IncreaseBeam Increase the beam amount of money, and update in store value
 func (k Keeper) IncreaseBeam(ctx sdk.Context, msg types.MsgIncreaseBeam) error {
 	// Does the beam exists?
 	if !k.HasBeam(ctx, msg.Id) {
@@ -115,6 +117,7 @@ func (k Keeper) IncreaseBeam(ctx sdk.Context, msg types.MsgIncreaseBeam) error {
 	return nil
 }
 
+// CloseBeam Finalize the beam and mark it as immutable
 func (k Keeper) CloseBeam(ctx sdk.Context, msg types.MsgCloseBeam) error {
 	// Does the beam exists?
 	if !k.HasBeam(ctx, msg.Id) {
@@ -136,6 +139,7 @@ func (k Keeper) CloseBeam(ctx sdk.Context, msg types.MsgCloseBeam) error {
 	return nil
 }
 
+// CancelBeam Cancel a given beam and refund the money
 func (k Keeper) CancelBeam(ctx sdk.Context, msg types.MsgCancelBeam) error {
 	// Does the beam exists?
 	if !k.HasBeam(ctx, msg.Id) {
@@ -157,6 +161,7 @@ func (k Keeper) CancelBeam(ctx sdk.Context, msg types.MsgCancelBeam) error {
 	return nil
 }
 
+// ClaimBeam Final user endpoint to claim and acquire the money
 func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 	// Does the beam exists?
 	if !k.HasBeam(ctx, msg.Id) {

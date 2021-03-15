@@ -18,6 +18,7 @@ type (
 	}
 )
 
+// NewKeeper Create a new keeper instance and return the pointer
 func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey) *Keeper {
 	return &Keeper{
 		cdc:      cdc,
@@ -26,6 +27,7 @@ func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey) *Keeper {
 	}
 }
 
+// Logger Return a keeper logger instance
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }

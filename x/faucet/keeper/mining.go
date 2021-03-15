@@ -7,11 +7,13 @@ import (
 	"time"
 )
 
+// HasMining Define if a user ever made a mining claim
 func (k Keeper) HasMining(ctx sdk.Context, minter sdk.AccAddress) bool {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.FaucetKey))
 	return store.Has(types.KeyPrefix(types.FaucetKey + minter.String()))
 }
 
+// GetMining Acquire a mining instance from an owner, and if it does not exist, create it
 func (k Keeper) GetMining(ctx sdk.Context, minter sdk.AccAddress) types.Mining {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.FaucetKey))
 
@@ -31,6 +33,7 @@ func (k Keeper) GetMining(ctx sdk.Context, minter sdk.AccAddress) types.Mining {
 	return mining
 }
 
+// SetMining Update a mining instance in database
 func (k Keeper) SetMining(ctx sdk.Context, miner sdk.AccAddress, mining types.Mining) {
 	if len(mining.Minter) <= 0 {
 		return
@@ -44,6 +47,8 @@ func (k Keeper) SetMining(ctx sdk.Context, miner sdk.AccAddress, mining types.Mi
 	store.Set(types.KeyPrefix(types.FaucetKey+miner.String()), k.cdc.MustMarshalBinaryBare(&mining))
 }
 
+// MintAndSend Mint a limited amount of coins and transfer them to an address
+// This method is disabled in production mode, and should be used carefully
 func (k Keeper) MintAndSend(ctx sdk.Context, msg types.MsgMintAndSend) error {
 	accAddress, err := sdk.AccAddressFromBech32(msg.Minter)
 	if err != nil {

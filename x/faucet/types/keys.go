@@ -16,6 +16,7 @@ const (
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_capability"
 
+	// FaucetKey defines the faucet methods store key
 	FaucetKey = "Faucet-value-"
 )
 
