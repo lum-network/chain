@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"strconv"
 
@@ -46,7 +47,10 @@ func CmdOpenBeam() *cobra.Command {
 			}
 
 			// Acquire the client context
-			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			// Construct the message and validate
 			msg := types.NewMsgOpenBeam(clientCtx.GetFromAddress().String(), int32(argsAmount), argsSecret)
@@ -58,6 +62,8 @@ func CmdOpenBeam() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.MarkFlagRequired(flags.FlagFrom)
 	return cmd
 }
 
@@ -76,7 +82,10 @@ func CmdIncreaseBeam() *cobra.Command {
 			}
 
 			// Acquire the client context
-			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			// Construct the message and validate
 			msg := types.NewMsgIncreaseBeam(clientCtx.GetFromAddress().String(), argsId, int32(argsAmount))
@@ -87,6 +96,8 @@ func CmdIncreaseBeam() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.MarkFlagRequired(flags.FlagFrom)
 	return cmd
 }
 
@@ -100,7 +111,10 @@ func CmdCloseBeam() *cobra.Command {
 			argsId := args[0]
 
 			// Acquire the client context
-			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			// Construct the message and validate
 			msg := types.NewMsgCloseBeam(clientCtx.GetFromAddress().String(), argsId)
@@ -111,6 +125,8 @@ func CmdCloseBeam() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.MarkFlagRequired(flags.FlagFrom)
 	return cmd
 }
 
@@ -124,7 +140,10 @@ func CmdClaimBeam() *cobra.Command {
 			argsId := args[0]
 
 			// Acquire the client context
-			clientCtx := client.GetClientContextFromCmd(cmd)
+			clientCtx, err := client.ReadTxCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			// Construct the message and validate
 			msg := types.NewMsgClaimBeam(clientCtx.GetFromAddress().String(), argsId)
@@ -135,5 +154,7 @@ func CmdClaimBeam() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.MarkFlagRequired(flags.FlagFrom)
 	return cmd
 }
