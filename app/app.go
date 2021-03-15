@@ -3,11 +3,12 @@ package app
 import (
 	"io"
 	"os"
-    "path/filepath"
+	"path/filepath"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-    "github.com/pelletier/go-toml"
+	"github.com/pelletier/go-toml"
 	"github.com/spf13/cast"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -78,14 +79,17 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	appparams "github.com/sandblockio/chain/app/params"
 	"github.com/sandblockio/chain/x/chain"
 	chainkeeper "github.com/sandblockio/chain/x/chain/keeper"
 	chaintypes "github.com/sandblockio/chain/x/chain/types"
+	tmjson "github.com/tendermint/tendermint/libs/json"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
+	"github.com/sandblockio/chain/x/faucet"
+	faucetkeeper "github.com/sandblockio/chain/x/faucet/keeper"
+	faucettypes "github.com/sandblockio/chain/x/faucet/types"
 )
 
 var (
@@ -117,7 +121,7 @@ var (
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		chain.AppModuleBasic{},
-		// this line is used by starport scaffolding # stargate/app/moduleBasic
+		faucet.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -129,6 +133,7 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		faucettypes.ModuleName:         {authtypes.Minter},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -181,8 +186,8 @@ type App struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
-	chainKeeper chainkeeper.Keeper
-	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
+	chainKeeper  chainkeeper.Keeper
+	faucetKeeper faucetkeeper.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -210,8 +215,7 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-        chaintypes.StoreKey,
-		// this line is used by starport scaffolding # stargate/app/storeKey
+		chaintypes.StoreKey, faucettypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -312,10 +316,18 @@ func New(
 	app.EvidenceKeeper = *evidenceKeeper
 
 	app.chainKeeper = *chainkeeper.NewKeeper(
-        appCodec, keys[chaintypes.StoreKey], keys[chaintypes.MemStoreKey],
+		appCodec, keys[chaintypes.StoreKey], keys[chaintypes.MemStoreKey],
 	)
 
-	// this line is used by starport scaffolding # stargate/app/keeperDefinition
+	app.faucetKeeper = *faucetkeeper.NewKeeper(
+		app.BankKeeper,
+		app.StakingKeeper,
+		appCodec,
+		keys[faucettypes.StoreKey],
+		keys[faucettypes.MemStoreKey],
+		10*10000,
+		24*time.Hour,
+	)
 
 	/****  Module Options ****/
 
@@ -347,7 +359,7 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		chain.NewAppModule(appCodec, app.chainKeeper),
-		// this line is used by starport scaffolding # stargate/app/appModule
+		faucet.NewAppModule(appCodec, app.faucetKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -381,6 +393,7 @@ func New(
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
+		faucettypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -578,6 +591,7 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
+	paramsKeeper.Subspace(faucettypes.ModuleName)
 
 	return paramsKeeper
 }
