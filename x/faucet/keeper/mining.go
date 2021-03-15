@@ -45,7 +45,11 @@ func (k Keeper) SetMining(ctx sdk.Context, miner sdk.AccAddress, mining types.Mi
 }
 
 func (k Keeper) MintAndSend(ctx sdk.Context, msg types.MsgMintAndSend) error {
-	accAddress := sdk.AccAddress(msg.Minter)
+	accAddress, err := sdk.AccAddressFromBech32(msg.Minter)
+	if err != nil {
+		return err
+	}
+
 	// Acquire mining instance
 	mining := k.GetMining(ctx, accAddress)
 
@@ -58,7 +62,7 @@ func (k Keeper) MintAndSend(ctx sdk.Context, msg types.MsgMintAndSend) error {
 	newCoin := sdk.NewCoin(denom, sdk.NewInt(k.defaultAmount))
 
 	// Mint the coins from the supply
-	err := k.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(newCoin))
+	err = k.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(newCoin))
 	if err != nil {
 		return err
 	}
