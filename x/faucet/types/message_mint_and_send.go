@@ -42,6 +42,9 @@ func (msg *MsgMintAndSend) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid minter address (%s)", err)
 	}
 
+	if msg.GetMintTime().After(time.Now()) {
+		return ErrMintDateFuture
+	}
+
 	return nil
 }
-
