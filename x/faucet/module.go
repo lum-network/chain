@@ -16,10 +16,10 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/sandblockio/chain/x/faucet/keeper"
-	"github.com/sandblockio/chain/x/faucet/types"
-	"github.com/sandblockio/chain/x/faucet/client/cli"
-	"github.com/sandblockio/chain/x/faucet/client/rest"
+	"github.com/lum-network/chain/x/faucet/keeper"
+	"github.com/lum-network/chain/x/faucet/types"
+	"github.com/lum-network/chain/x/faucet/client/cli"
+	"github.com/lum-network/chain/x/faucet/client/rest"
 )
 
 var (

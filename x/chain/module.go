@@ -16,10 +16,10 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/sandblockio/chain/x/chain/client/cli"
-	"github.com/sandblockio/chain/x/chain/client/rest"
-	"github.com/sandblockio/chain/x/chain/keeper"
-	"github.com/sandblockio/chain/x/chain/types"
+	"github.com/lum-network/chain/x/chain/client/cli"
+	"github.com/lum-network/chain/x/chain/client/rest"
+	"github.com/lum-network/chain/x/chain/keeper"
+	"github.com/lum-network/chain/x/chain/types"
 )
 
 var (

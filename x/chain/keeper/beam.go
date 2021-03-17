@@ -3,7 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/sandblockio/chain/x/chain/types"
+	"github.com/lum-network/chain/x/chain/types"
 )
 
 // GetBeam Return a beam instance for the given key

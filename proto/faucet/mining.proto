@@ -1,7 +1,7 @@
 syntax = "proto3";
 package lum.network.faucet;
 
-option go_package = "github.com/sandblockio/chain/x/faucet/types";
+option go_package = "github.com/lum-network/chain/x/faucet/types";
 
 import "google/protobuf/timestamp.proto";
 import "gogoproto/gogo.proto";

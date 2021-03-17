@@ -13,7 +13,7 @@ import (
 	// "github.com/cosmos/cosmos-sdk/client/flags"
 	// sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/sandblockio/chain/x/faucet/types"
+	"github.com/lum-network/chain/x/faucet/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module

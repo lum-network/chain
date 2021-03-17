@@ -2,8 +2,8 @@ package chain
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/sandblockio/chain/x/chain/keeper"
-	"github.com/sandblockio/chain/x/chain/types"
+	"github.com/lum-network/chain/x/chain/keeper"
+	"github.com/lum-network/chain/x/chain/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

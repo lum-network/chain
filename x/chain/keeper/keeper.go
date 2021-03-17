@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/sandblockio/chain/x/chain/types"
+	"github.com/lum-network/chain/x/chain/types"
 )
 
 type (

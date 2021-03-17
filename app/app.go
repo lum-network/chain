@@ -78,16 +78,16 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	appparams "github.com/sandblockio/chain/app/params"
-	"github.com/sandblockio/chain/x/chain"
-	chainkeeper "github.com/sandblockio/chain/x/chain/keeper"
-	chaintypes "github.com/sandblockio/chain/x/chain/types"
+	appparams "github.com/lum-network/chain/app/params"
+	"github.com/lum-network/chain/x/chain"
+	chainkeeper "github.com/lum-network/chain/x/chain/keeper"
+	chaintypes "github.com/lum-network/chain/x/chain/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
-	"github.com/sandblockio/chain/x/faucet"
-	faucetkeeper "github.com/sandblockio/chain/x/faucet/keeper"
-	faucettypes "github.com/sandblockio/chain/x/faucet/types"
+	"github.com/lum-network/chain/x/faucet"
+	faucetkeeper "github.com/lum-network/chain/x/faucet/keeper"
+	faucettypes "github.com/lum-network/chain/x/faucet/types"
 )
 
 var (

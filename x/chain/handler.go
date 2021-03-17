@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/sandblockio/chain/x/chain/keeper"
-	"github.com/sandblockio/chain/x/chain/types"
+	"github.com/lum-network/chain/x/chain/keeper"
+	"github.com/lum-network/chain/x/chain/types"
 )
 
 // NewHandler ...

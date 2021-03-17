@@ -1,4 +1,4 @@
-module github.com/sandblockio/chain
+module github.com/lum-network/chain
 
 go 1.15
 

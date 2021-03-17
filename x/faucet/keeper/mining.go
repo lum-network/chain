@@ -3,7 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/sandblockio/chain/x/faucet/types"
+	"github.com/lum-network/chain/x/faucet/types"
 	"time"
 )
 

@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/sandblockio/chain/x/faucet/types"
+	"github.com/lum-network/chain/x/faucet/types"
 )
 
 type Keeper struct {

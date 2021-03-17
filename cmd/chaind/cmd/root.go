@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/snapshots"
-	"github.com/sandblockio/chain/app/params"
+	"github.com/lum-network/chain/app/params"
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -34,7 +34,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	"github.com/sandblockio/chain/app"
+	"github.com/lum-network/chain/app"
 )
 
 var ChainID string
