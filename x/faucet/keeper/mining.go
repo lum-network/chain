@@ -47,19 +47,12 @@ func (k Keeper) SetMining(ctx sdk.Context, miner sdk.AccAddress, mining types.Mi
 	store.Set(types.KeyPrefix(types.FaucetKey+miner.String()), k.cdc.MustMarshalBinaryBare(&mining))
 }
 
-// MintAndSend Mint a limited amount of coins and transfer them to an address
-// This method is disabled in production mode, and should be used carefully
-func (k Keeper) MintAndSend(ctx sdk.Context, msg types.MsgMintAndSend) error {
-	accAddress, err := sdk.AccAddressFromBech32(msg.Minter)
-	if err != nil {
-		return err
-	}
-
+func (k Keeper) Mint(ctx sdk.Context, minter sdk.AccAddress, mintTime time.Time) error {
 	// Acquire mining instance
-	mining := k.GetMining(ctx, accAddress)
+	mining := k.GetMining(ctx, minter)
 
 	// Refuse mint if it's too early
-	if k.HasMining(ctx, accAddress) && mining.LastTime.Add(k.defaultLimit).UTC().After(msg.MintTime) {
+	if k.HasMining(ctx, minter) && mining.LastTime.Add(k.defaultLimit).UTC().After(mintTime) {
 		return types.ErrMintTooOften
 	}
 
@@ -67,21 +60,20 @@ func (k Keeper) MintAndSend(ctx sdk.Context, msg types.MsgMintAndSend) error {
 	newCoin := sdk.NewCoin(denom, sdk.NewInt(k.defaultAmount))
 
 	// Mint the coins from the supply
-	err = k.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(newCoin))
+	err := k.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(newCoin))
 	if err != nil {
 		return err
 	}
 
 	// Send the minted coins
-	err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, accAddress, sdk.NewCoins(newCoin))
+	err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, minter, sdk.NewCoins(newCoin))
 	if err != nil {
 		return err
 	}
 
 	// Update the local kv store mining once everything was minted
 	mining.Total = mining.Total.Add(newCoin)
-	mining.LastTime = msg.MintTime
-	k.SetMining(ctx, accAddress, mining)
-
+	mining.LastTime = mintTime
+	k.SetMining(ctx, minter, mining)
 	return nil
 }

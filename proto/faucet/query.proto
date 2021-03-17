@@ -1,15 +1,25 @@
 syntax = "proto3";
 package sandblockio.chain.faucet;
 
+import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-// this line is used by starport scaffolding # 1
 
 option go_package = "github.com/sandblockio/chain/x/faucet/types";
 
 // Query defines the gRPC querier service.
 service Query {
-    // this line is used by starport scaffolding # 2
+    rpc MintAndSend(QueryMintAndSendRequest) returns (QueryMintAndSendResponse) {
+      option (google.api.http).get = "/lumnetwork/faucet/mint/{minter}";
+    }
 }
 
-// this line is used by starport scaffolding # 3
+message QueryMintAndSendRequest {
+  string minter = 1;
+  google.protobuf.Timestamp mint_time = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+message QueryMintAndSendResponse {
+  string total = 1;
+}

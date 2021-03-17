@@ -12,8 +12,3 @@ message Mining {
   google.protobuf.Timestamp last_time = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   cosmos.base.v1beta1.Coin total = 3 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
 }
-
-message MsgMintAndSend {
-  string minter = 1;
-  google.protobuf.Timestamp mint_time = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-}

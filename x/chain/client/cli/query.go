@@ -3,6 +3,8 @@ package cli
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+
 	// "strings"
 
 	"github.com/spf13/cobra"
@@ -65,6 +67,8 @@ func CmdFetchBeams() *cobra.Command {
 			return clientCtx.PrintProto(res)
 		},
 	}
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "all beams")
 	return cmd
 }
 
@@ -95,5 +99,6 @@ func CmdGetBeam() *cobra.Command {
 			return clientCtx.PrintProto(res)
 		},
 	}
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
