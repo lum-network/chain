@@ -47,7 +47,7 @@ func CmdOpenBeam() *cobra.Command {
 			}
 
 			// Acquire the client context
-			clientCtx, err := client.ReadTxCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
+			clientCtx, err := client.ReadPersistentCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -82,7 +82,7 @@ func CmdIncreaseBeam() *cobra.Command {
 			}
 
 			// Acquire the client context
-			clientCtx, err := client.ReadTxCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
+			clientCtx, err := client.ReadPersistentCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -111,7 +111,7 @@ func CmdCloseBeam() *cobra.Command {
 			argsId := args[0]
 
 			// Acquire the client context
-			clientCtx, err := client.ReadTxCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
+			clientCtx, err := client.ReadPersistentCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -140,7 +140,7 @@ func CmdClaimBeam() *cobra.Command {
 			argsId := args[0]
 
 			// Acquire the client context
-			clientCtx, err := client.ReadTxCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
+			clientCtx, err := client.ReadPersistentCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
 			if err != nil {
 				return err
 			}

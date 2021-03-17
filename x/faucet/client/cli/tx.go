@@ -36,7 +36,7 @@ func CmdMintAndSend() *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Acquire the client instance
-			clientCtx, err := client.ReadTxCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
+			clientCtx, err := client.ReadPersistentCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
 			if err != nil {
 				return err
 			}

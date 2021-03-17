@@ -62,7 +62,7 @@ func CmdFetchBeams() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 	return cmd
@@ -92,7 +92,7 @@ func CmdGetBeam() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(res)
+			return clientCtx.PrintProto(res)
 		},
 	}
 	return cmd

@@ -1,14 +1,13 @@
 package app
 
 import (
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"io"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/pelletier/go-toml"
 	"github.com/spf13/cast"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -85,7 +84,6 @@ import (
 	chaintypes "github.com/sandblockio/chain/x/chain/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 	"github.com/sandblockio/chain/x/faucet"
 	faucetkeeper "github.com/sandblockio/chain/x/faucet/keeper"
@@ -134,11 +132,6 @@ var (
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		faucettypes.ModuleName:         {authtypes.Minter},
-	}
-
-	// module accounts that are allowed to receive tokens
-	allowedReceivingModAcc = map[string]bool{
-		distrtypes.ModuleName: true,
 	}
 )
 
@@ -249,7 +242,7 @@ func New(
 		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms,
 	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
-		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.BlockedAddrs(),
+		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.ModuleAccountAddrs(),
 	)
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
@@ -280,7 +273,7 @@ func New(
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
-		appCodec, keys[ibchost.StoreKey], app.StakingKeeper, scopedIBCKeeper,
+		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, scopedIBCKeeper,
 	)
 
 	// register the proposal types
@@ -475,17 +468,6 @@ func (app *App) ModuleAccountAddrs() map[string]bool {
 	return modAccAddrs
 }
 
-// BlockedAddrs returns all the app's module account addresses that are not
-// allowed to receive external tokens.
-func (app *App) BlockedAddrs() map[string]bool {
-	blockedAddrs := make(map[string]bool)
-	for acc := range maccPerms {
-		blockedAddrs[authtypes.NewModuleAddress(acc).String()] = !allowedReceivingModAcc[acc]
-	}
-
-	return blockedAddrs
-}
-
 // LegacyAmino returns SimApp's amino codec.
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
@@ -544,28 +526,21 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 	// Register legacy tx routes.
 	authrest.RegisterTxRoutes(clientCtx, apiSvr.Router)
 	// Register new tx routes from grpc-gateway.
-	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCRouter)
+	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register legacy and grpc-gateway routes for all modules.
 	ModuleBasics.RegisterRESTRoutes(clientCtx, apiSvr.Router)
-	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCRouter)
+	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
 func (app *App) RegisterTxService(clientCtx client.Context) {
-	// TODO remove this workaround after https://github.com/cosmos/cosmos-sdk/pull/7840 has merged.
-	// -- right now, clientCtx does not have a Client set. this workaround fixes that.
-	config, err := toml.LoadFile(filepath.Join(DefaultNodeHome(""), "config/config.toml"))
-	if err != nil {
-		panic(err)
-	}
-	client, err := rpchttp.New(config.Get("rpc.laddr").(string), "/websocket")
-	if err != nil {
-		panic(err)
-	}
-	clientCtx = clientCtx.WithClient(client)
-	// -- end of the workaround.
 	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
+}
+
+// RegisterTendermintService implements the Application.RegisterTendermintService method.
+func (app *App) RegisterTendermintService(clientCtx client.Context) {
+	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
 }
 
 // GetMaccPerms returns a copy of the module account permissions
@@ -590,7 +565,9 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
-	// this line is used by starport scaffolding # stargate/app/paramSubspace
+	paramsKeeper.Subspace(ibchost.ModuleName)
+
+	paramsKeeper.Subspace(chaintypes.ModuleName)
 	paramsKeeper.Subspace(faucettypes.ModuleName)
 
 	return paramsKeeper
