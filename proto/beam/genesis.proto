@@ -1,7 +1,7 @@
 syntax = "proto3";
-package sandblockio.chain.chain;
+package lum.network.beam;
 
-option go_package = "github.com/lum-network/chain/x/chain/types";
+option go_package = "github.com/lum-network/chain/x/beam/types";
 
 // GenesisState defines the capability module's genesis state.
 message GenesisState {

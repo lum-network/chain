@@ -1,4 +1,4 @@
-package chain
+package beam
 
 import (
 	"context"
@@ -16,10 +16,10 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/lum-network/chain/x/chain/client/cli"
-	"github.com/lum-network/chain/x/chain/client/rest"
-	"github.com/lum-network/chain/x/chain/keeper"
-	"github.com/lum-network/chain/x/chain/types"
+	"github.com/lum-network/chain/x/beam/client/cli"
+	"github.com/lum-network/chain/x/beam/client/rest"
+	"github.com/lum-network/chain/x/beam/keeper"
+	"github.com/lum-network/chain/x/beam/types"
 )
 
 var (

@@ -1,21 +1,21 @@
 syntax = "proto3";
-package sandblockio.chain.chain;
+package lum.network.beam;
 
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
-import "chain/beam.proto";
+import "beam/beam.proto";
 
-option go_package = "github.com/lum-network/chain/x/chain/types";
+option go_package = "github.com/lum-network/chain/x/beam/types";
 
 // Query defines the gRPC querier service.
 service Query {
   rpc Beam(QueryGetBeamRequest) returns (QueryGetBeamResponse) {
-    option (google.api.http).get = "/sandblock/chain/beams/{id}";
+    option (google.api.http).get = "/lumnetwork/beam/get/{id}";
   }
 
   rpc Beams(QueryFetchBeamsRequest) returns (QueryFetchBeamsResponse) {
-    option (google.api.http).get = "/sandblock/chain/beams";
+    option (google.api.http).get = "/lumnetwork/beam/fetch";
   }
 }
 

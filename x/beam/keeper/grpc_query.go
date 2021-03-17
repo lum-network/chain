@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/lum-network/chain/x/chain/types"
+	"github.com/lum-network/chain/x/beam/types"
 )
 
 var _ types.QueryServer = Keeper{}

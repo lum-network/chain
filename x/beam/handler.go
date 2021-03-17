@@ -1,12 +1,12 @@
-package chain
+package beam
 
 import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/lum-network/chain/x/chain/keeper"
-	"github.com/lum-network/chain/x/chain/types"
+	"github.com/lum-network/chain/x/beam/keeper"
+	"github.com/lum-network/chain/x/beam/types"
 )
 
 // NewHandler ...

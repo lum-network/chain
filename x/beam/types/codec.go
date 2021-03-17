@@ -8,11 +8,11 @@ import (
 
 // RegisterCodec Register the codec for  the message passing
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgOpenBeam{}, "sandblock/OpenBeam", nil)
-	cdc.RegisterConcrete(&MsgIncreaseBeam{}, "sandblock/IncreaseBeam", nil)
-	cdc.RegisterConcrete(&MsgClaimBeam{}, "sandblock/ClaimBeam", nil)
-	cdc.RegisterConcrete(&MsgCancelBeam{}, "sandblock/CancelBeam", nil)
-	cdc.RegisterConcrete(&MsgCloseBeam{}, "sandblock/CloseBeam", nil)
+	cdc.RegisterConcrete(&MsgOpenBeam{}, "lumnetwork/OpenBeam", nil)
+	cdc.RegisterConcrete(&MsgIncreaseBeam{}, "lumnetwork/IncreaseBeam", nil)
+	cdc.RegisterConcrete(&MsgClaimBeam{}, "lumnetwork/ClaimBeam", nil)
+	cdc.RegisterConcrete(&MsgCancelBeam{}, "lumnetwork/CancelBeam", nil)
+	cdc.RegisterConcrete(&MsgCloseBeam{}, "lumnetwork/CloseBeam", nil)
 }
 
 // RegisterInterfaces Register the implementations for the given codecs

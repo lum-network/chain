@@ -1,9 +1,9 @@
-package chain
+package beam
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/lum-network/chain/x/chain/keeper"
-	"github.com/lum-network/chain/x/chain/types"
+	"github.com/lum-network/chain/x/beam/keeper"
+	"github.com/lum-network/chain/x/beam/types"
 )
 
 func handleMsgOpenBeam(ctx sdk.Context, k keeper.Keeper, msg *types.MsgOpenBeam) (*sdk.Result, error) {

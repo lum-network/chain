@@ -9,8 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	// "github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/lum-network/chain/x/chain/types"
+	"github.com/lum-network/chain/x/beam/types"
 )
 
 // GetTxCmd returns the transaction commands for this module

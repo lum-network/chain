@@ -79,9 +79,9 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	appparams "github.com/lum-network/chain/app/params"
-	"github.com/lum-network/chain/x/chain"
-	chainkeeper "github.com/lum-network/chain/x/chain/keeper"
-	chaintypes "github.com/lum-network/chain/x/chain/types"
+	"github.com/lum-network/chain/x/beam"
+	chainkeeper "github.com/lum-network/chain/x/beam/keeper"
+	chaintypes "github.com/lum-network/chain/x/beam/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
@@ -118,7 +118,7 @@ var (
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
-		chain.AppModuleBasic{},
+		beam.AppModuleBasic{},
 		faucet.AppModuleBasic{},
 	)
 
@@ -351,7 +351,7 @@ func New(
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
-		chain.NewAppModule(appCodec, app.chainKeeper),
+		beam.NewAppModule(appCodec, app.chainKeeper),
 		faucet.NewAppModule(appCodec, app.faucetKeeper),
 	)
 
