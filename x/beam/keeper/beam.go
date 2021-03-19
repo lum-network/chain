@@ -75,6 +75,7 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 		Id:      id,
 		Secret:  msg.Secret,
 		Amount:  msg.Amount,
+		Status:  types.BeamStatusPending,
 	}
 
 	// Acquire the store instance
@@ -103,7 +104,9 @@ func (k Keeper) IncreaseBeam(ctx sdk.Context, msg types.MsgIncreaseBeam) error {
 	beam := k.GetBeam(ctx, msg.Id)
 
 	// Make sure transaction signer is authorized
-	//TODO: implement
+	if beam.Creator != msg.Updater {
+		return types.ErrBeamNotAuthorized
+	}
 
 	// Update the value
 	beam.Amount += msg.Amount
@@ -125,16 +128,19 @@ func (k Keeper) CloseBeam(ctx sdk.Context, msg types.MsgCloseBeam) error {
 	}
 
 	// Acquire the beam instance
-	// beam := k.GetBeam(ctx, msg.Id)
+	beam := k.GetBeam(ctx, msg.Id)
 
 	// Make sure transaction signer is authorized
-	//TODO: implement
+	if beam.Creator != msg.Updater {
+		return types.ErrBeamNotAuthorized
+	}
 
 	// Proceed money transfer from module account
 	//TODO: implement
 
 	// Update the beam status
-	//TODO: implement
+	beam.Status = types.BeamStatusFinalized
+	k.UpdateBeam(ctx, msg.Id, beam)
 
 	return nil
 }
@@ -147,16 +153,19 @@ func (k Keeper) CancelBeam(ctx sdk.Context, msg types.MsgCancelBeam) error {
 	}
 
 	// Acquire the beam instance
-	// beam := k.GetBeam(ctx, msg.Id)
+	beam := k.GetBeam(ctx, msg.Id)
 
 	// Make sure transaction signer is authorized
-	//TODO: implement
+	if beam.Creator != msg.Updater {
+		return types.ErrBeamNotAuthorized
+	}
 
 	// Refund creator
 	//TODO: implement
 
 	// Update beam status
-	//TODO: implement
+	beam.Status = types.BeamStatusCanceled
+	k.UpdateBeam(ctx, msg.Id, beam)
 
 	return nil
 }
@@ -169,16 +178,20 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 	}
 
 	// Acquire the beam instance
-	// beam := k.GetBeam(ctx, msg.Id)
+	beam := k.GetBeam(ctx, msg.Id)
 
 	// Make sure transaction signer is authorized
-	//TODO: implement
+	//TODO: find a cryptographic way for this
+	if beam.Secret != msg.Secret {
+		return types.ErrBeamNotAuthorized
+	}
 
 	// Transfer funds
 	//TODO: implement
 
 	// Update beam status
-	//TODO: implement
+	beam.Status = types.BeamStatusClaimed
+	k.UpdateBeam(ctx, msg.Id, beam)
 
 	return nil
 }

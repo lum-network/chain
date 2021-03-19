@@ -8,5 +8,6 @@ import (
 
 // x/chain module sentinel errors
 var (
-	ErrBeamNotFound = sdkerrors.Register(ModuleName, 110, "Beam does not exists")
+	ErrBeamNotFound = sdkerrors.Register(ModuleName, 1100, "Beam does not exists")
+	ErrBeamNotAuthorized = sdkerrors.Register(ModuleName, 1101, "This beam does not belong to you")
 )
