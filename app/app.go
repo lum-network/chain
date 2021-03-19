@@ -4,7 +4,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"io"
 	"os"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -84,10 +83,6 @@ import (
 	chaintypes "github.com/lum-network/chain/x/beam/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	// this line is used by starport scaffolding # stargate/app/moduleImport
-	"github.com/lum-network/chain/x/faucet"
-	faucetkeeper "github.com/lum-network/chain/x/faucet/keeper"
-	faucettypes "github.com/lum-network/chain/x/faucet/types"
 )
 
 var (
@@ -119,7 +114,6 @@ var (
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		beam.AppModuleBasic{},
-		faucet.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -131,7 +125,6 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		faucettypes.ModuleName:         {authtypes.Minter},
 	}
 )
 
@@ -180,7 +173,6 @@ type App struct {
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
 	chainKeeper  chainkeeper.Keeper
-	faucetKeeper faucetkeeper.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -208,7 +200,7 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		chaintypes.StoreKey, faucettypes.StoreKey,
+		chaintypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -312,16 +304,6 @@ func New(
 		appCodec, keys[chaintypes.StoreKey], keys[chaintypes.MemStoreKey],
 	)
 
-	app.faucetKeeper = *faucetkeeper.NewKeeper(
-		app.BankKeeper,
-		app.StakingKeeper,
-		appCodec,
-		keys[faucettypes.StoreKey],
-		keys[faucettypes.MemStoreKey],
-		10*10000,
-		24*time.Hour,
-	)
-
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -352,7 +334,6 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		beam.NewAppModule(appCodec, app.chainKeeper),
-		faucet.NewAppModule(appCodec, app.faucetKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -385,8 +366,6 @@ func New(
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		// this line is used by starport scaffolding # stargate/app/initGenesis
-		faucettypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -568,7 +547,6 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(ibchost.ModuleName)
 
 	paramsKeeper.Subspace(chaintypes.ModuleName)
-	paramsKeeper.Subspace(faucettypes.ModuleName)
 
 	return paramsKeeper
 }
