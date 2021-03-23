@@ -8,7 +8,7 @@ import (
 var _ sdk.Msg = &MsgOpenBeam{}
 
 // NewMsgOpenBeam Build a open beam message based on parameters
-func NewMsgOpenBeam(creator string, amount int32, secret string) *MsgOpenBeam {
+func NewMsgOpenBeam(creator string, amount int64, secret string) *MsgOpenBeam {
 	return &MsgOpenBeam{
 		Creator: creator,
 		Amount:  amount,

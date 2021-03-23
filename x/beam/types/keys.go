@@ -4,6 +4,8 @@ const (
 	// ModuleName defines the module name
 	ModuleName = "beam"
 
+	ModuleCurrencyName = "lum"
+
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
 

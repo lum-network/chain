@@ -12,7 +12,7 @@ message KeyValue {
 message Beam {
   string creator = 1;
   string id = 2;
-  int32 amount = 3;
+  int64 amount = 3;
   string status = 4;
   string secret = 5;
 
@@ -32,14 +32,14 @@ message Beam {
 
 message MsgOpenBeam {
   string creator = 1;
-  int32 amount = 2;
+  int64 amount = 2;
   string secret = 3;
 }
 
 message MsgIncreaseBeam {
   string updater = 1;
   string id = 2;
-  int32 amount = 3;
+  int64 amount = 3;
 }
 
 message MsgCancelBeam {

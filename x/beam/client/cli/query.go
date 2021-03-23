@@ -38,7 +38,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 // CmdFetchBeams Query the blockchain and print the list of beams
 func CmdFetchBeams() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "fetch-beams",
+		Use:   "fetch",
 		Short: "Fetch all beams",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Acquire the client instance
@@ -75,7 +75,7 @@ func CmdFetchBeams() *cobra.Command {
 // CmdGetBeam Query the blockchain about a beam and print response
 func CmdGetBeam() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-beam [id]",
+		Use:   "get [id]",
 		Short: "Get a given beam",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

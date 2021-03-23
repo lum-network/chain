@@ -34,7 +34,7 @@ func GetTxCmd() *cobra.Command {
 // CmdOpenBeam Command definition for beam opening dispatch
 func CmdOpenBeam() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "open-beam [amount] [secret]",
+		Use:   "open [amount] [secret]",
 		Short: "Open a new beam",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -46,13 +46,13 @@ func CmdOpenBeam() *cobra.Command {
 			}
 
 			// Acquire the client context
-			clientCtx, err := client.ReadPersistentCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgOpenBeam(clientCtx.GetFromAddress().String(), int32(argsAmount), argsSecret)
+			msg := types.NewMsgOpenBeam(clientCtx.GetFromAddress().String(), int64(argsAmount), argsSecret)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -69,7 +69,7 @@ func CmdOpenBeam() *cobra.Command {
 // CmdIncreaseBeam Command definition for beam increase dispatch
 func CmdIncreaseBeam() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "increase-beam [id] [amount]",
+		Use:   "increase [id] [amount]",
 		Short: "Increase a given beam amount",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -81,13 +81,13 @@ func CmdIncreaseBeam() *cobra.Command {
 			}
 
 			// Acquire the client context
-			clientCtx, err := client.ReadPersistentCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgIncreaseBeam(clientCtx.GetFromAddress().String(), argsId, int32(argsAmount))
+			msg := types.NewMsgIncreaseBeam(clientCtx.GetFromAddress().String(), argsId, int64(argsAmount))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -103,14 +103,14 @@ func CmdIncreaseBeam() *cobra.Command {
 // CmdCloseBeam Command definition for beam close dispatch
 func CmdCloseBeam() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "close-beam [id]",
+		Use:   "close [id]",
 		Short: "Close a given beam",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsId := args[0]
 
 			// Acquire the client context
-			clientCtx, err := client.ReadPersistentCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -132,14 +132,14 @@ func CmdCloseBeam() *cobra.Command {
 // CmdClaimBeam Command definition for beam claim dispatch
 func CmdClaimBeam() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "claim-beam [id]",
+		Use:   "claim [id]",
 		Short: "Claim a given beam",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsId := args[0]
 
 			// Acquire the client context
-			clientCtx, err := client.ReadPersistentCommandFlags(client.GetClientContextFromCmd(cmd), cmd.Flags())
+			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}

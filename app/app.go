@@ -172,7 +172,7 @@ type App struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
-	chainKeeper  chainkeeper.Keeper
+	chainKeeper chainkeeper.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -302,6 +302,7 @@ func New(
 
 	app.chainKeeper = *chainkeeper.NewKeeper(
 		appCodec, keys[chaintypes.StoreKey], keys[chaintypes.MemStoreKey],
+		app.BankKeeper,
 	)
 
 	/****  Module Options ****/
