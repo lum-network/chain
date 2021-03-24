@@ -31,9 +31,10 @@ message Beam {
 }
 
 message MsgOpenBeam {
-  string creator = 1;
-  int64 amount = 2;
-  string secret = 3;
+  string id = 1;
+  string creator = 2;
+  int64 amount = 3;
+  string secret = 4;
 }
 
 message MsgIncreaseBeam {

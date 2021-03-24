@@ -8,8 +8,9 @@ import (
 var _ sdk.Msg = &MsgOpenBeam{}
 
 // NewMsgOpenBeam Build a open beam message based on parameters
-func NewMsgOpenBeam(creator string, amount int64, secret string) *MsgOpenBeam {
+func NewMsgOpenBeam(id string, creator string, amount int64, secret string) *MsgOpenBeam {
 	return &MsgOpenBeam{
+		Id:      id,
 		Creator: creator,
 		Amount:  amount,
 		Secret:  secret,
@@ -43,6 +44,10 @@ func (msg *MsgOpenBeam) GetSignBytes() []byte {
 
 // ValidateBasic Validate the message payload before dispatching to the local kv store
 func (msg *MsgOpenBeam) ValidateBasic() error {
+	if len(msg.Id) <= 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "Invalid id supplied (%d", len(msg.Id))
+	}
+
 	// Ensure the address is correct and that we are able to acquire it
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {

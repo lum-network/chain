@@ -131,20 +131,17 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 		return sdkerrors.ErrInvalidAddress
 	}
 
-	// Generate the random id
-	id := GenerateSecureToken(10)
-
-	// If the generated ID already exists, call same method again
-	if k.HasBeam(ctx, id) {
-		return k.OpenBeam(ctx, msg)
+	// If the generated ID already exists, refuse the payload
+	if k.HasBeam(ctx, msg.GetId()) {
+		return types.ErrBeamAlreadyExists
 	}
 
 	// Create the beam payload
 	var beam = types.Beam{
-		Creator: msg.Creator,
-		Id:      id,
-		Secret:  msg.Secret,
-		Amount:  msg.Amount,
+		Creator: msg.GetCreator(),
+		Id:      msg.GetId(),
+		Secret:  msg.GetSecret(),
+		Amount:  msg.GetAmount(),
 		Status:  types.BeamStatusPending,
 	}
 
@@ -152,7 +149,7 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 	store := k.GetStore(ctx)
 
 	// Construct our new beam key
-	key := types.KeyPrefix(types.BeamKey + beam.Id)
+	key := types.KeyPrefix(types.BeamKey + beam.GetId())
 
 	// Marshal the beam payload to be store-compatible
 	value := k.cdc.MustMarshalBinaryBare(&beam)
