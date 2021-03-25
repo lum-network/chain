@@ -54,8 +54,14 @@ func CmdOpenBeam() *cobra.Command {
 			// Generate the random id
 			id := types.GenerateSecureToken(10)
 
+			// Encode the secret
+			hashedSecret, err := types.GenerateHashFromString(argsSecret)
+			if err != nil {
+				return err
+			}
+
 			// Construct the message and validate
-			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), int64(argsAmount), argsSecret)
+			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), int64(argsAmount), hashedSecret)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

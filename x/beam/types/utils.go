@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/hex"
+	"golang.org/x/crypto/bcrypt"
 	"math/rand"
 )
 
@@ -12,4 +13,20 @@ func GenerateSecureToken(length int) string {
 		return ""
 	}
 	return hex.EncodeToString(b)
+}
+
+// GenerateHashFromString is used to generate a hashed version of the argument passed string
+func GenerateHashFromString(secret string) (string, error) {
+	hashed, err := bcrypt.GenerateFromPassword([]byte(secret), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+
+	return string(hashed), nil
+}
+
+// CompareHashAndString is used to verify that a string matches a provided hash
+func CompareHashAndString(hash string, str string) bool {
+	res := bcrypt.CompareHashAndPassword([]byte(hash), []byte(str))
+	return res == nil
 }

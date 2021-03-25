@@ -272,8 +272,7 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 	beam := k.GetBeam(ctx, msg.Id)
 
 	// Make sure transaction signer is authorized
-	//TODO: find a cryptographic way for this
-	if beam.Secret != msg.Secret {
+	if types.CompareHashAndString(beam.Secret, msg.Secret) == false {
 		return types.ErrBeamNotAuthorized
 	}
 
