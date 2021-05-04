@@ -141,7 +141,7 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 		Creator: msg.GetCreator(),
 		Id:      msg.GetId(),
 		Secret:  msg.GetSecret(),
-		Amount: msg.GetAmount(),
+		Amount:  msg.GetAmount(),
 		Status:  types.BeamStatusPending,
 		Reward:  msg.GetReward(),
 		Review:  msg.GetReview(),
@@ -196,6 +196,15 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 	err = k.moveCoinsToModuleAccount(ctx, creatorAddress, sdk.NewInt(msg.Amount))
 	if err != nil {
 		return err
+	}
+
+	// Update metadata
+	if msg.GetReward() != nil {
+		beam.Reward = msg.GetReward()
+	}
+
+	if msg.GetReview() != nil {
+		beam.Review = msg.GetReview()
 	}
 
 	// Append to beam logs

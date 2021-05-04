@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -34,7 +35,7 @@ func GetTxCmd() *cobra.Command {
 // CmdOpenBeam Command definition for beam opening dispatch
 func CmdOpenBeam() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "open [amount] [secret]",
+		Use:   "open <amount> <secret>",
 		Short: "Open a new beam",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -51,6 +52,30 @@ func CmdOpenBeam() *cobra.Command {
 				return err
 			}
 
+			// Try to acquire the reward arg
+			argsReward, err := cmd.Flags().GetString(FlagReward)
+			if err != nil {
+				return err
+			}
+			var rew types.BeamReward
+			if len(argsReward) > 0 {
+				if err = json.Unmarshal([]byte(argsReward), &rew); err != nil {
+					return err
+				}
+			}
+
+			// Trying to acquire the review arg
+			argsReview, err := cmd.Flags().GetString(FlagReview)
+			if err != nil {
+				return err
+			}
+			var rev types.BeamReview
+			if len(argsReview) > 0 {
+				if err = json.Unmarshal([]byte(argsReview), &rev); err != nil {
+					return err
+				}
+			}
+
 			// Generate the random id
 			id := types.GenerateSecureToken(10)
 
@@ -61,7 +86,7 @@ func CmdOpenBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), int64(argsAmount), hashedSecret)
+			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), int64(argsAmount), hashedSecret, &rew, &rev)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -70,6 +95,7 @@ func CmdOpenBeam() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+	cmd.Flags().AddFlagSet(flagSetBeamMetadata())
 	flags.AddTxFlagsToCmd(cmd)
 	_ = cmd.MarkFlagRequired(flags.FlagFrom)
 	return cmd
@@ -89,9 +115,29 @@ func CmdUpdateBeam() *cobra.Command {
 				return err
 			}
 
-			// Try to acquire the reward and review arguments
-			argsReward := &args[2]
-			argsReview := &args[3]
+			// Try to acquire the reward arg
+			argsReward, err := cmd.Flags().GetString(FlagReward)
+			if err != nil {
+				return err
+			}
+			var rew types.BeamReward
+			if len(argsReward) > 0 {
+				if err = json.Unmarshal([]byte(argsReward), &rew); err != nil {
+					return err
+				}
+			}
+
+			// Trying to acquire the review arg
+			argsReview, err := cmd.Flags().GetString(FlagReview)
+			if err != nil {
+				return err
+			}
+			var rev types.BeamReview
+			if len(argsReview) > 0 {
+				if err = json.Unmarshal([]byte(argsReview), &rev); err != nil {
+					return err
+				}
+			}
 
 			// Acquire the client context
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -100,7 +146,7 @@ func CmdUpdateBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgUpdateBeam(clientCtx.GetFromAddress().String(), argsId, int64(argsAmount), argsReward, argsReview)
+			msg := types.NewMsgUpdateBeam(clientCtx.GetFromAddress().String(), argsId, int64(argsAmount), &rew, &rev)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -108,6 +154,7 @@ func CmdUpdateBeam() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+	cmd.Flags().AddFlagSet(flagSetBeamMetadata())
 	flags.AddTxFlagsToCmd(cmd)
 	_ = cmd.MarkFlagRequired(flags.FlagFrom)
 	return cmd

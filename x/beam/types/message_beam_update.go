@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -9,17 +8,13 @@ import (
 var _ sdk.Msg = &MsgUpdateBeam{}
 
 // NewMsgUpdateBeam Build a increase beam message based on parameters
-func NewMsgUpdateBeam(updater string, id string, amount int64, reward *string, review *string) *MsgUpdateBeam {
-	var rew *BeamReward
-	var rev *BeamReview
-	_ = json.Unmarshal([]byte(*reward), rew)
-	_ = json.Unmarshal([]byte(*review), rev)
+func NewMsgUpdateBeam(updater string, id string, amount int64, reward *BeamReward, review *BeamReview) *MsgUpdateBeam {
 	return &MsgUpdateBeam{
 		Updater: updater,
 		Id:      id,
 		Amount:  amount,
-		Reward:  rew,
-		Review:  rev,
+		Reward:  reward,
+		Review:  review,
 	}
 }
 
