@@ -79,8 +79,8 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	appparams "github.com/lum-network/chain/app/params"
 	"github.com/lum-network/chain/x/beam"
-	chainkeeper "github.com/lum-network/chain/x/beam/keeper"
-	chaintypes "github.com/lum-network/chain/x/beam/types"
+	beamkeeper "github.com/lum-network/chain/x/beam/keeper"
+	beamtypes "github.com/lum-network/chain/x/beam/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
@@ -125,6 +125,7 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		beamtypes.ModuleName:           nil,
 	}
 )
 
@@ -172,7 +173,7 @@ type App struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
-	chainKeeper chainkeeper.Keeper
+	beamKeeper beamkeeper.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -200,7 +201,7 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		chaintypes.StoreKey,
+		beamtypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -300,8 +301,8 @@ func New(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
-	app.chainKeeper = *chainkeeper.NewKeeper(
-		appCodec, keys[chaintypes.StoreKey], keys[chaintypes.MemStoreKey],
+	app.beamKeeper = *beamkeeper.NewKeeper(
+		appCodec, keys[beamtypes.StoreKey], keys[beamtypes.MemStoreKey],
 		app.BankKeeper,
 	)
 
@@ -334,7 +335,7 @@ func New(
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
-		beam.NewAppModule(appCodec, app.chainKeeper),
+		beam.NewAppModule(appCodec, app.beamKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -547,7 +548,7 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 
-	paramsKeeper.Subspace(chaintypes.ModuleName)
+	paramsKeeper.Subspace(beamtypes.ModuleName)
 
 	return paramsKeeper
 }

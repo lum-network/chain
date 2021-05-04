@@ -111,8 +111,8 @@ func (k Keeper) HasBeam(ctx sdk.Context, id string) bool {
 	return store.Has(types.KeyPrefix(types.BeamKey + id))
 }
 
-// UpdateBeam Replace the beam at the specified "id" position
-func (k Keeper) UpdateBeam(ctx sdk.Context, key string, beam types.Beam) {
+// SetBeam Replace the beam at the specified "id" position
+func (k Keeper) SetBeam(ctx sdk.Context, key string, beam types.Beam) {
 	// Acquire the store instance
 	store := k.GetStore(ctx)
 
@@ -141,8 +141,10 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 		Creator: msg.GetCreator(),
 		Id:      msg.GetId(),
 		Secret:  msg.GetSecret(),
-		Amount:  msg.GetAmount(),
+		Amount: msg.GetAmount(),
 		Status:  types.BeamStatusPending,
+		Reward:  msg.GetReward(),
+		Review:  msg.GetReview(),
 	}
 
 	// Acquire the store instance
@@ -166,8 +168,8 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 	return nil
 }
 
-// IncreaseBeam Increase the beam amount of money, and update in store value
-func (k Keeper) IncreaseBeam(ctx sdk.Context, msg types.MsgIncreaseBeam) error {
+// UpdateBeam Increase the beam amount of money, and update in store value
+func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 	// Does the beam exists?
 	if !k.HasBeam(ctx, msg.Id) {
 		return types.ErrBeamNotFound
@@ -200,7 +202,7 @@ func (k Keeper) IncreaseBeam(ctx sdk.Context, msg types.MsgIncreaseBeam) error {
 	//TODO: implement
 
 	// Update the in-store beam
-	k.UpdateBeam(ctx, msg.Id, beam)
+	k.SetBeam(ctx, msg.Id, beam)
 
 	return nil
 }
@@ -222,7 +224,7 @@ func (k Keeper) CloseBeam(ctx sdk.Context, msg types.MsgCloseBeam) error {
 
 	// Update the beam status
 	beam.Status = types.BeamStatusFinalized
-	k.UpdateBeam(ctx, msg.Id, beam)
+	k.SetBeam(ctx, msg.Id, beam)
 
 	return nil
 }
@@ -256,7 +258,7 @@ func (k Keeper) CancelBeam(ctx sdk.Context, msg types.MsgCancelBeam) error {
 
 	// Update beam status
 	beam.Status = types.BeamStatusCanceled
-	k.UpdateBeam(ctx, msg.Id, beam)
+	k.SetBeam(ctx, msg.Id, beam)
 
 	return nil
 }
@@ -290,7 +292,7 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 
 	// Update beam status
 	beam.Status = types.BeamStatusClaimed
-	k.UpdateBeam(ctx, msg.Id, beam)
+	k.SetBeam(ctx, msg.Id, beam)
 
 	return nil
 }

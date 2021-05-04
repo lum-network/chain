@@ -3,10 +3,71 @@ package lum.network.beam;
 
 option go_package = "github.com/lum-network/chain/x/beam/types";
 
-message KeyValue {
-  string key = 1;
-  string value = 2;
-  string reason = 3;
+message BeamReward {
+  message BeamRewardDetails {
+    string name = 1;
+    int64 amount = 2;
+    int64 max_amount = 3;
+    string currency = 4;
+    string status = 5;
+  }
+
+  repeated BeamRewardDetails rewards = 1;
+}
+
+message BeamReview {
+  message BeamReviewReviewer {
+    string reviewer_id = 1;
+    string name = 2;
+    bool is_anonymous = 3;
+  }
+
+  message BeamReviewMerchantReview {
+    string review_id = 1;
+    string merchant_url = 2;
+    string rating_url = 3;
+    string review_url = 4;
+    string timestamp = 5;
+    map<string, int64> ratings = 6;
+    string title = 7;
+    map<string, string> content = 8;
+  }
+
+  message BeamReviewProductReview {
+    message Media {
+      string mimetype = 1;
+      string url = 2;
+      string thumbnail_url = 3;
+    }
+
+    message Product {
+      message ProductIds {
+        repeated string gtins = 1;
+        repeated string mpns = 2;
+        repeated string skus = 3;
+        repeated string asins = 4;
+      }
+      string name = 1;
+      string url = 2;
+      repeated string brands = 3;
+      ProductIds ids = 4;
+    }
+
+    string review_id = 1;
+    string rating_url = 2;
+    string review_url = 3;
+    string collection_method = 4;
+    string timestamp = 5;
+    map<string, int64> ratings = 6;
+    string title = 7;
+    map<string, string> content = 8;
+    repeated Media medias = 9;
+    repeated Product products = 10;
+  }
+
+  BeamReviewReviewer reviewer = 1;
+  BeamReviewMerchantReview merchant_review = 2;
+  repeated BeamReviewProductReview products_reviews = 3;
 }
 
 message Beam {
@@ -16,18 +77,10 @@ message Beam {
   string status = 4;
   string secret = 5;
 
-  message BeamReview {
-    string title = 1;
-    string content = 2;
-    repeated KeyValue metadata = 3;
-  }
+  string schema = 6;
 
-  message BeamCashback {
-    string brand = 1;
-  }
-
-  BeamCashback cashback = 6;
-  BeamReview review = 7;
+  BeamReward reward = 7;
+  BeamReview review = 8;
 }
 
 message MsgOpenBeam {
@@ -35,12 +88,18 @@ message MsgOpenBeam {
   string creator = 2;
   int64 amount = 3;
   string secret = 4;
+
+  BeamReward reward = 5;
+  BeamReview review = 6;
 }
 
-message MsgIncreaseBeam {
+message MsgUpdateBeam {
   string updater = 1;
   string id = 2;
   int64 amount = 3;
+
+  BeamReward reward = 4;
+  BeamReview review = 5;
 }
 
 message MsgCancelBeam {

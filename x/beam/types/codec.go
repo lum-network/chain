@@ -8,16 +8,16 @@ import (
 
 // RegisterCodec Register the codec for  the message passing
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgOpenBeam{}, "lumnetwork/OpenBeam", nil)
-	cdc.RegisterConcrete(&MsgIncreaseBeam{}, "lumnetwork/IncreaseBeam", nil)
-	cdc.RegisterConcrete(&MsgClaimBeam{}, "lumnetwork/ClaimBeam", nil)
-	cdc.RegisterConcrete(&MsgCancelBeam{}, "lumnetwork/CancelBeam", nil)
-	cdc.RegisterConcrete(&MsgCloseBeam{}, "lumnetwork/CloseBeam", nil)
+	cdc.RegisterConcrete(&MsgOpenBeam{}, "lum-network/OpenBeam", nil)
+	cdc.RegisterConcrete(&MsgUpdateBeam{}, "lum-network/UpdateBeam", nil)
+	cdc.RegisterConcrete(&MsgClaimBeam{}, "lum-network/ClaimBeam", nil)
+	cdc.RegisterConcrete(&MsgCancelBeam{}, "lum-network/CancelBeam", nil)
+	cdc.RegisterConcrete(&MsgCloseBeam{}, "lum-network/CloseBeam", nil)
 }
 
 // RegisterInterfaces Register the implementations for the given codecs
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgOpenBeam{}, &MsgIncreaseBeam{}, &MsgClaimBeam{}, &MsgCancelBeam{}, &MsgCloseBeam{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgOpenBeam{}, &MsgUpdateBeam{}, &MsgClaimBeam{}, &MsgCancelBeam{}, &MsgCloseBeam{})
 }
 
 var (

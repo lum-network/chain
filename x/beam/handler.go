@@ -18,8 +18,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgOpenBeam:
 			return handleMsgOpenBeam(ctx, k, msg)
 
-		case *types.MsgIncreaseBeam:
-			return handleMsgIncreaseBeam(ctx, k, msg)
+		case *types.MsgUpdateBeam:
+			return handleMsgUpdateBeam(ctx, k, msg)
 
 		case *types.MsgCancelBeam:
 			return handleMsgCancelBeam(ctx, k, msg)

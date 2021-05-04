@@ -14,8 +14,8 @@ func handleMsgOpenBeam(ctx sdk.Context, k keeper.Keeper, msg *types.MsgOpenBeam)
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleMsgIncreaseBeam(ctx sdk.Context, k keeper.Keeper, msg *types.MsgIncreaseBeam) (*sdk.Result, error) {
-	err := k.IncreaseBeam(ctx, *msg)
+func handleMsgUpdateBeam(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpdateBeam) (*sdk.Result, error) {
+	err := k.UpdateBeam(ctx, *msg)
 	if err != nil {
 		return nil, err
 	}

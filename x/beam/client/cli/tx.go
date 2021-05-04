@@ -24,7 +24,7 @@ func GetTxCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		CmdOpenBeam(),
-		CmdIncreaseBeam(),
+		CmdUpdateBeam(),
 		CmdCloseBeam(),
 		CmdClaimBeam(),
 	)
@@ -75,12 +75,12 @@ func CmdOpenBeam() *cobra.Command {
 	return cmd
 }
 
-// CmdIncreaseBeam Command definition for beam increase dispatch
-func CmdIncreaseBeam() *cobra.Command {
+// CmdUpdateBeam Command definition for beam increase dispatch
+func CmdUpdateBeam() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "increase [id] [amount]",
-		Short: "Increase a given beam amount",
-		Args:  cobra.ExactArgs(2),
+		Use:   "update <id> <amount> [reward] [review]",
+		Short: "Update a given beam",
+		Args:  cobra.RangeArgs(2, 4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Acquire the command arguments
 			argsAmount, err := strconv.ParseInt(args[1], 10, 32)
@@ -89,6 +89,10 @@ func CmdIncreaseBeam() *cobra.Command {
 				return err
 			}
 
+			// Try to acquire the reward and review arguments
+			argsReward := &args[2]
+			argsReview := &args[3]
+
 			// Acquire the client context
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -96,7 +100,7 @@ func CmdIncreaseBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgIncreaseBeam(clientCtx.GetFromAddress().String(), argsId, int64(argsAmount))
+			msg := types.NewMsgUpdateBeam(clientCtx.GetFromAddress().String(), argsId, int64(argsAmount), argsReward, argsReview)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

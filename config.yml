@@ -1,21 +1,21 @@
 version: 1
 accounts:
   - name: user1
-    coins: ["120000000lum"]
+    coins: ["120000000ulum"]
   - name: user2
-    coins: ["100lum"]
+    coins: ["100ulum"]
 validator:
   name: user1
-  staked: "100000000lum"
+  staked: "100000000ulum"
 genesis:
   chain_id: "lumnetwork-testnet"
   app_state:
     crisis:
       constant_fee:
-        denom: "lum"
+        denom: "ulum"
     mint:
       params:
-        mint_denom: "lum"
+        mint_denom: "ulum"
     staking:
       params:
-        bond_denom: "lum"
+        bond_denom: "ulum"
