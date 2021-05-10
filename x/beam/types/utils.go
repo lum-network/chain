@@ -4,10 +4,12 @@ import (
 	"encoding/hex"
 	"golang.org/x/crypto/bcrypt"
 	"math/rand"
+	"time"
 )
 
 // GenerateSecureToken Generate a secure random token of the given length and return string
 func GenerateSecureToken(length int) string {
+	rand.Seed(time.Now().UnixNano())
 	b := make([]byte, length)
 	if _, err := rand.Read(b); err != nil {
 		return ""
