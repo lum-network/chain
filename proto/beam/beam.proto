@@ -3,117 +3,176 @@ package lum.network.beam;
 
 option go_package = "github.com/lum-network/chain/x/beam/types";
 
-message BeamReward {
-  message BeamRewardDetails {
-    string name = 1;
-    int64 amount = 2;
-    int64 max_amount = 3;
-    string currency = 4;
-    string status = 5;
-  }
-
-  repeated BeamRewardDetails rewards = 1;
+enum BeamState {
+    OPEN = 0;
+    CANCELED = 1;
+    CLOSED = 2;
+    CLAIMED = 3;
 }
 
-message BeamReview {
-  message BeamReviewReviewer {
+message BeamMedia {
+    string mimetype = 1;
+    string url = 2;
+    string thumbnail_url = 3;
+}
+
+message BeamReviewer {
     string reviewer_id = 1;
     string name = 2;
     bool is_anonymous = 3;
-  }
+}
 
-  message BeamReviewMerchantReview {
-    string review_id = 1;
-    string merchant_url = 2;
+message BeamVerifier {
+    string name = 1;
+    string url = 2;
+    string signature = 3;
+}
+
+message BeamReward {
+    message BeamRewardDetails {
+        string type = 1;
+        float amount = 2;
+        float max_amount = 3;
+        string status = 4;
+    }
+
+    string trigger = 1;
+
+    float amount = 2;
+    float max_amount = 3;
+
+    string currency = 4;
+    string status = 5;
+
+    repeated BeamRewardDetails details = 6;
+}
+
+message BeamMerchantReview {
+    message BeamMerchantReviewRating {
+        float overall = 1;
+        float customer_service = 2;
+        float nps = 3;
+    }
+
+    message BeamMerchantReviewContent {
+        string overall = 1;
+        string customer_service = 2;
+    }
+
+    string order_id = 1;
+    string review_id = 2;
+    string merchant_url = 3;
+    string rating_url = 4;
+    string review_url = 5;
+    string collection_method = 6;
+    string timestamp = 7;
+
+    BeamMerchantReviewRating ratings = 8;
+
+    string title = 9;
+    BeamMerchantReviewContent content = 10;
+}
+
+message BeamProductReview {
+    message BeamProductReviewRating {
+        float overall = 1;
+        float quality = 2;
+    }
+
+    message BeamProductReviewContent {
+        string overall = 1;
+        string pros = 2;
+        string cons = 3;
+    }
+
+    message BeamProduct {
+        message BeamProductIds {
+            repeated string gtins = 1;
+            repeated string mpns = 2;
+            repeated string skus = 3;
+            repeated string asins = 4;
+        }
+        string name = 1;
+        string url = 2;
+        repeated string urls = 3;
+        BeamProductIds ids = 4;
+    }
+
+    string order_id = 1;
+    string review_id = 2;
     string rating_url = 3;
     string review_url = 4;
-    string timestamp = 5;
-    map<string, int64> ratings = 6;
-    string title = 7;
-    map<string, string> content = 8;
-  }
+    string collection_method = 5;
+    string timestamp = 6;
 
-  message BeamReviewProductReview {
-    message Media {
-      string mimetype = 1;
-      string url = 2;
-      string thumbnail_url = 3;
-    }
+    BeamProductReviewRating ratings = 7;
 
-    message Product {
-      message ProductIds {
-        repeated string gtins = 1;
-        repeated string mpns = 2;
-        repeated string skus = 3;
-        repeated string asins = 4;
-      }
-      string name = 1;
-      string url = 2;
-      repeated string brands = 3;
-      ProductIds ids = 4;
-    }
+    string title = 8;
+    BeamProductReviewContent content = 9;
 
-    string review_id = 1;
-    string rating_url = 2;
-    string review_url = 3;
-    string collection_method = 4;
-    string timestamp = 5;
-    map<string, int64> ratings = 6;
-    string title = 7;
-    map<string, string> content = 8;
-    repeated Media medias = 9;
-    repeated Product products = 10;
-  }
+    repeated BeamMedia medias = 10;
+    repeated BeamProduct products = 11;
+}
 
-  BeamReviewReviewer reviewer = 1;
-  BeamReviewMerchantReview merchant_review = 2;
-  repeated BeamReviewProductReview products_reviews = 3;
+message BeamSchemeReview {
+    BeamReward reward = 1;
+    BeamVerifier verifier = 2;
+    BeamReviewer reviewer = 3;
+    BeamMerchantReview merchant_review = 4;
+    repeated BeamProductReview products_reviews = 5;
+}
+
+message BeamSchemeReward {
+    BeamReward reward = 1;
+    BeamVerifier verifier = 2;
 }
 
 message Beam {
-  string creator = 1;
-  string id = 2;
-  int64 amount = 3;
-  string status = 4;
-  string secret = 5;
+    string creator = 1;
+    string id = 2;
+    int64 amount = 3;
+    BeamState status = 4;
+    string secret = 5;
 
-  string schema = 6;
+    string schema = 6;
 
-  BeamReward reward = 7;
-  BeamReview review = 8;
+  BeamSchemeReward reward = 7;
+  BeamSchemeReview review = 8;
 }
 
 message MsgOpenBeam {
-  string id = 1;
-  string creator = 2;
-  int64 amount = 3;
-  string secret = 4;
+    string id = 1;
+    string creator = 2;
+    string secret = 3;
+    int64 amount = 4;
 
-  BeamReward reward = 5;
-  BeamReview review = 6;
+    string schema = 5;
+
+  BeamSchemeReward reward = 6;
+  BeamSchemeReview review = 7;
 }
 
 message MsgUpdateBeam {
-  string updater = 1;
-  string id = 2;
-  int64 amount = 3;
+    string updater = 1;
+    string id = 2;
+    int64 amount = 3;
 
-  BeamReward reward = 4;
-  BeamReview review = 5;
+  BeamSchemeReward reward = 4;
+  BeamSchemeReview review = 5;
 }
 
 message MsgCancelBeam {
-  string updater = 1;
-  string id = 2;
+    string updater = 1;
+    string id = 2;
 }
 
 message MsgCloseBeam {
-  string updater = 1;
-  string id = 2;
+    string updater = 1;
+    string id = 2;
 }
 
 message MsgClaimBeam {
-  string claimer = 1;
-  string id = 2;
-  string secret = 3;
+    string claimer = 1;
+    string id = 2;
+    string secret = 3;
 }

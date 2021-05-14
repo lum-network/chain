@@ -8,7 +8,7 @@ import (
 var _ sdk.Msg = &MsgUpdateBeam{}
 
 // NewMsgUpdateBeam Build a increase beam message based on parameters
-func NewMsgUpdateBeam(updater string, id string, amount int64, reward *BeamReward, review *BeamReview) *MsgUpdateBeam {
+func NewMsgUpdateBeam(updater string, id string, amount int64, reward *BeamSchemeReward, review *BeamSchemeReview) *MsgUpdateBeam {
 	return &MsgUpdateBeam{
 		Updater: updater,
 		Id:      id,

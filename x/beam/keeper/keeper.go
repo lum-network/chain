@@ -125,46 +125,35 @@ func (k Keeper) SetBeam(ctx sdk.Context, key string, beam types.Beam) {
 
 // OpenBeam Create a new beam instance
 func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
-	// Acquire the creator address
-	creatorAddress, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress
-	}
-
 	// If the generated ID already exists, refuse the payload
 	if k.HasBeam(ctx, msg.GetId()) {
 		return types.ErrBeamAlreadyExists
 	}
 
-	// Create the beam payload
 	var beam = types.Beam{
 		Creator: msg.GetCreator(),
 		Id:      msg.GetId(),
 		Secret:  msg.GetSecret(),
-		Amount:  msg.GetAmount(),
-		Status:  types.BeamStatusPending,
+		Amount:  0,
+		Status:  types.BeamState_OPEN,
 		Reward:  msg.GetReward(),
 		Review:  msg.GetReview(),
 	}
 
-	// Acquire the store instance
-	store := k.GetStore(ctx)
+	// Only try to process coins move if present
+	if msg.Amount > 0 {
+		creatorAddress, err := sdk.AccAddressFromBech32(msg.Creator)
+		if err != nil {
+			return sdkerrors.ErrInvalidAddress
+		}
 
-	// Construct our new beam key
-	key := types.KeyPrefix(types.BeamKey + beam.GetId())
-
-	// Marshal the beam payload to be store-compatible
-	value := k.cdc.MustMarshalBinaryBare(&beam)
-
-	// Try to move the coins to the module account
-	err = k.moveCoinsToModuleAccount(ctx, creatorAddress, sdk.NewInt(msg.Amount))
-	if err != nil {
-		return err
+		err = k.moveCoinsToModuleAccount(ctx, creatorAddress, sdk.NewInt(msg.Amount))
+		if err != nil {
+			return err
+		}
 	}
 
-	// Save the payload to the store
-	store.Set(key, value)
-
+	k.SetBeam(ctx, beam.GetId(), beam)
 	return nil
 }
 
@@ -178,8 +167,8 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 	// Acquire the beam instance
 	beam := k.GetBeam(ctx, msg.Id)
 
-	// Acquire the creator address
-	creatorAddress, err := sdk.AccAddressFromBech32(msg.Updater)
+	// Acquire the updater address
+	updaterAddress, err := sdk.AccAddressFromBech32(msg.Updater)
 	if err != nil {
 		return sdkerrors.ErrInvalidAddress
 	}
@@ -193,9 +182,11 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 	beam.Amount += msg.Amount
 
 	// Move coins
-	err = k.moveCoinsToModuleAccount(ctx, creatorAddress, sdk.NewInt(msg.Amount))
-	if err != nil {
-		return err
+	if msg.Amount > 0 {
+		err = k.moveCoinsToModuleAccount(ctx, updaterAddress, sdk.NewInt(msg.Amount))
+		if err != nil {
+			return err
+		}
 	}
 
 	// Update metadata
@@ -232,7 +223,7 @@ func (k Keeper) CloseBeam(ctx sdk.Context, msg types.MsgCloseBeam) error {
 	}
 
 	// Update the beam status
-	beam.Status = types.BeamStatusFinalized
+	beam.Status = types.BeamState_CLOSED
 	k.SetBeam(ctx, msg.Id, beam)
 
 	return nil
@@ -247,6 +238,11 @@ func (k Keeper) CancelBeam(ctx sdk.Context, msg types.MsgCancelBeam) error {
 
 	// Acquire the beam instance
 	beam := k.GetBeam(ctx, msg.Id)
+
+	// Is the beam available?
+	if beam.Status != types.BeamState_OPEN {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Beam is not open, and thus not cancelable")
+	}
 
 	// Make sure transaction signer is authorized
 	if beam.Creator != msg.Updater {
@@ -266,7 +262,7 @@ func (k Keeper) CancelBeam(ctx sdk.Context, msg types.MsgCancelBeam) error {
 	}
 
 	// Update beam status
-	beam.Status = types.BeamStatusCanceled
+	beam.Status = types.BeamState_CANCELED
 	k.SetBeam(ctx, msg.Id, beam)
 
 	return nil
@@ -281,6 +277,11 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 
 	// Acquire the beam instance
 	beam := k.GetBeam(ctx, msg.Id)
+
+	// Is the beam available?
+	if beam.Status != types.BeamState_CLOSED {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Beam is not closed, and thus not ready for claim")
+	}
 
 	// Make sure transaction signer is authorized
 	if types.CompareHashAndString(beam.Secret, msg.Secret) == false {
@@ -300,7 +301,7 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 	}
 
 	// Update beam status
-	beam.Status = types.BeamStatusClaimed
+	beam.Status = types.BeamState_CLAIMED
 	k.SetBeam(ctx, msg.Id, beam)
 
 	return nil

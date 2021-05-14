@@ -57,7 +57,7 @@ func CmdOpenBeam() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			var rew types.BeamReward
+			var rew types.BeamSchemeReward
 			if len(argsReward) > 0 {
 				if err = json.Unmarshal([]byte(argsReward), &rew); err != nil {
 					return err
@@ -69,7 +69,7 @@ func CmdOpenBeam() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			var rev types.BeamReview
+			var rev types.BeamSchemeReview
 			if len(argsReview) > 0 {
 				if err = json.Unmarshal([]byte(argsReview), &rev); err != nil {
 					return err
@@ -120,7 +120,7 @@ func CmdUpdateBeam() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			var rew types.BeamReward
+			var rew types.BeamSchemeReward
 			if len(argsReward) > 0 {
 				if err = json.Unmarshal([]byte(argsReward), &rew); err != nil {
 					return err
@@ -132,7 +132,7 @@ func CmdUpdateBeam() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			var rev types.BeamReview
+			var rev types.BeamSchemeReview
 			if len(argsReview) > 0 {
 				if err = json.Unmarshal([]byte(argsReview), &rev); err != nil {
 					return err

@@ -4,6 +4,7 @@
 package types
 
 import (
+	encoding_binary "encoding/binary"
 	fmt "fmt"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -22,15 +23,231 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+type BeamState int32
+
+const (
+	BeamState_OPEN     BeamState = 0
+	BeamState_CANCELED BeamState = 1
+	BeamState_CLOSED   BeamState = 2
+	BeamState_CLAIMED  BeamState = 3
+)
+
+var BeamState_name = map[int32]string{
+	0: "OPEN",
+	1: "CANCELED",
+	2: "CLOSED",
+	3: "CLAIMED",
+}
+
+var BeamState_value = map[string]int32{
+	"OPEN":     0,
+	"CANCELED": 1,
+	"CLOSED":   2,
+	"CLAIMED":  3,
+}
+
+func (x BeamState) String() string {
+	return proto.EnumName(BeamState_name, int32(x))
+}
+
+func (BeamState) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_00b764aa3b93518a, []int{0}
+}
+
+type BeamMedia struct {
+	Mimetype     string `protobuf:"bytes,1,opt,name=mimetype,proto3" json:"mimetype,omitempty"`
+	Url          string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+	ThumbnailUrl string `protobuf:"bytes,3,opt,name=thumbnail_url,json=thumbnailUrl,proto3" json:"thumbnail_url,omitempty"`
+}
+
+func (m *BeamMedia) Reset()         { *m = BeamMedia{} }
+func (m *BeamMedia) String() string { return proto.CompactTextString(m) }
+func (*BeamMedia) ProtoMessage()    {}
+func (*BeamMedia) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00b764aa3b93518a, []int{0}
+}
+func (m *BeamMedia) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BeamMedia) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BeamMedia.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BeamMedia) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BeamMedia.Merge(m, src)
+}
+func (m *BeamMedia) XXX_Size() int {
+	return m.Size()
+}
+func (m *BeamMedia) XXX_DiscardUnknown() {
+	xxx_messageInfo_BeamMedia.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BeamMedia proto.InternalMessageInfo
+
+func (m *BeamMedia) GetMimetype() string {
+	if m != nil {
+		return m.Mimetype
+	}
+	return ""
+}
+
+func (m *BeamMedia) GetUrl() string {
+	if m != nil {
+		return m.Url
+	}
+	return ""
+}
+
+func (m *BeamMedia) GetThumbnailUrl() string {
+	if m != nil {
+		return m.ThumbnailUrl
+	}
+	return ""
+}
+
+type BeamReviewer struct {
+	ReviewerId  string `protobuf:"bytes,1,opt,name=reviewer_id,json=reviewerId,proto3" json:"reviewer_id,omitempty"`
+	Name        string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	IsAnonymous bool   `protobuf:"varint,3,opt,name=is_anonymous,json=isAnonymous,proto3" json:"is_anonymous,omitempty"`
+}
+
+func (m *BeamReviewer) Reset()         { *m = BeamReviewer{} }
+func (m *BeamReviewer) String() string { return proto.CompactTextString(m) }
+func (*BeamReviewer) ProtoMessage()    {}
+func (*BeamReviewer) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00b764aa3b93518a, []int{1}
+}
+func (m *BeamReviewer) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BeamReviewer) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BeamReviewer.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BeamReviewer) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BeamReviewer.Merge(m, src)
+}
+func (m *BeamReviewer) XXX_Size() int {
+	return m.Size()
+}
+func (m *BeamReviewer) XXX_DiscardUnknown() {
+	xxx_messageInfo_BeamReviewer.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BeamReviewer proto.InternalMessageInfo
+
+func (m *BeamReviewer) GetReviewerId() string {
+	if m != nil {
+		return m.ReviewerId
+	}
+	return ""
+}
+
+func (m *BeamReviewer) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *BeamReviewer) GetIsAnonymous() bool {
+	if m != nil {
+		return m.IsAnonymous
+	}
+	return false
+}
+
+type BeamVerifier struct {
+	Name      string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Url       string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+	Signature string `protobuf:"bytes,3,opt,name=signature,proto3" json:"signature,omitempty"`
+}
+
+func (m *BeamVerifier) Reset()         { *m = BeamVerifier{} }
+func (m *BeamVerifier) String() string { return proto.CompactTextString(m) }
+func (*BeamVerifier) ProtoMessage()    {}
+func (*BeamVerifier) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00b764aa3b93518a, []int{2}
+}
+func (m *BeamVerifier) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BeamVerifier) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BeamVerifier.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BeamVerifier) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BeamVerifier.Merge(m, src)
+}
+func (m *BeamVerifier) XXX_Size() int {
+	return m.Size()
+}
+func (m *BeamVerifier) XXX_DiscardUnknown() {
+	xxx_messageInfo_BeamVerifier.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BeamVerifier proto.InternalMessageInfo
+
+func (m *BeamVerifier) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *BeamVerifier) GetUrl() string {
+	if m != nil {
+		return m.Url
+	}
+	return ""
+}
+
+func (m *BeamVerifier) GetSignature() string {
+	if m != nil {
+		return m.Signature
+	}
+	return ""
+}
+
 type BeamReward struct {
-	Rewards []*BeamReward_BeamRewardDetails `protobuf:"bytes,1,rep,name=rewards,proto3" json:"rewards,omitempty"`
+	Trigger   string                          `protobuf:"bytes,1,opt,name=trigger,proto3" json:"trigger,omitempty"`
+	Amount    float32                         `protobuf:"fixed32,2,opt,name=amount,proto3" json:"amount,omitempty"`
+	MaxAmount float32                         `protobuf:"fixed32,3,opt,name=max_amount,json=maxAmount,proto3" json:"max_amount,omitempty"`
+	Currency  string                          `protobuf:"bytes,4,opt,name=currency,proto3" json:"currency,omitempty"`
+	Status    string                          `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
+	Details   []*BeamReward_BeamRewardDetails `protobuf:"bytes,6,rep,name=details,proto3" json:"details,omitempty"`
 }
 
 func (m *BeamReward) Reset()         { *m = BeamReward{} }
 func (m *BeamReward) String() string { return proto.CompactTextString(m) }
 func (*BeamReward) ProtoMessage()    {}
 func (*BeamReward) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00b764aa3b93518a, []int{0}
+	return fileDescriptor_00b764aa3b93518a, []int{3}
 }
 func (m *BeamReward) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -59,26 +276,60 @@ func (m *BeamReward) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BeamReward proto.InternalMessageInfo
 
-func (m *BeamReward) GetRewards() []*BeamReward_BeamRewardDetails {
+func (m *BeamReward) GetTrigger() string {
 	if m != nil {
-		return m.Rewards
+		return m.Trigger
+	}
+	return ""
+}
+
+func (m *BeamReward) GetAmount() float32 {
+	if m != nil {
+		return m.Amount
+	}
+	return 0
+}
+
+func (m *BeamReward) GetMaxAmount() float32 {
+	if m != nil {
+		return m.MaxAmount
+	}
+	return 0
+}
+
+func (m *BeamReward) GetCurrency() string {
+	if m != nil {
+		return m.Currency
+	}
+	return ""
+}
+
+func (m *BeamReward) GetStatus() string {
+	if m != nil {
+		return m.Status
+	}
+	return ""
+}
+
+func (m *BeamReward) GetDetails() []*BeamReward_BeamRewardDetails {
+	if m != nil {
+		return m.Details
 	}
 	return nil
 }
 
 type BeamReward_BeamRewardDetails struct {
-	Name      string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Amount    int64  `protobuf:"varint,2,opt,name=amount,proto3" json:"amount,omitempty"`
-	MaxAmount int64  `protobuf:"varint,3,opt,name=max_amount,json=maxAmount,proto3" json:"max_amount,omitempty"`
-	Currency  string `protobuf:"bytes,4,opt,name=currency,proto3" json:"currency,omitempty"`
-	Status    string `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
+	Type      string  `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Amount    float32 `protobuf:"fixed32,2,opt,name=amount,proto3" json:"amount,omitempty"`
+	MaxAmount float32 `protobuf:"fixed32,3,opt,name=max_amount,json=maxAmount,proto3" json:"max_amount,omitempty"`
+	Status    string  `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
 }
 
 func (m *BeamReward_BeamRewardDetails) Reset()         { *m = BeamReward_BeamRewardDetails{} }
 func (m *BeamReward_BeamRewardDetails) String() string { return proto.CompactTextString(m) }
 func (*BeamReward_BeamRewardDetails) ProtoMessage()    {}
 func (*BeamReward_BeamRewardDetails) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00b764aa3b93518a, []int{0, 0}
+	return fileDescriptor_00b764aa3b93518a, []int{3, 0}
 }
 func (m *BeamReward_BeamRewardDetails) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -107,32 +358,25 @@ func (m *BeamReward_BeamRewardDetails) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BeamReward_BeamRewardDetails proto.InternalMessageInfo
 
-func (m *BeamReward_BeamRewardDetails) GetName() string {
+func (m *BeamReward_BeamRewardDetails) GetType() string {
 	if m != nil {
-		return m.Name
+		return m.Type
 	}
 	return ""
 }
 
-func (m *BeamReward_BeamRewardDetails) GetAmount() int64 {
+func (m *BeamReward_BeamRewardDetails) GetAmount() float32 {
 	if m != nil {
 		return m.Amount
 	}
 	return 0
 }
 
-func (m *BeamReward_BeamRewardDetails) GetMaxAmount() int64 {
+func (m *BeamReward_BeamRewardDetails) GetMaxAmount() float32 {
 	if m != nil {
 		return m.MaxAmount
 	}
 	return 0
-}
-
-func (m *BeamReward_BeamRewardDetails) GetCurrency() string {
-	if m != nil {
-		return m.Currency
-	}
-	return ""
 }
 
 func (m *BeamReward_BeamRewardDetails) GetStatus() string {
@@ -142,24 +386,31 @@ func (m *BeamReward_BeamRewardDetails) GetStatus() string {
 	return ""
 }
 
-type BeamReview struct {
-	Reviewer        *BeamReview_BeamReviewReviewer        `protobuf:"bytes,1,opt,name=reviewer,proto3" json:"reviewer,omitempty"`
-	MerchantReview  *BeamReview_BeamReviewMerchantReview  `protobuf:"bytes,2,opt,name=merchant_review,json=merchantReview,proto3" json:"merchant_review,omitempty"`
-	ProductsReviews []*BeamReview_BeamReviewProductReview `protobuf:"bytes,3,rep,name=products_reviews,json=productsReviews,proto3" json:"products_reviews,omitempty"`
+type BeamMerchantReview struct {
+	OrderId          string                                        `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	ReviewId         string                                        `protobuf:"bytes,2,opt,name=review_id,json=reviewId,proto3" json:"review_id,omitempty"`
+	MerchantUrl      string                                        `protobuf:"bytes,3,opt,name=merchant_url,json=merchantUrl,proto3" json:"merchant_url,omitempty"`
+	RatingUrl        string                                        `protobuf:"bytes,4,opt,name=rating_url,json=ratingUrl,proto3" json:"rating_url,omitempty"`
+	ReviewUrl        string                                        `protobuf:"bytes,5,opt,name=review_url,json=reviewUrl,proto3" json:"review_url,omitempty"`
+	CollectionMethod string                                        `protobuf:"bytes,6,opt,name=collection_method,json=collectionMethod,proto3" json:"collection_method,omitempty"`
+	Timestamp        string                                        `protobuf:"bytes,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Ratings          *BeamMerchantReview_BeamMerchantReviewRating  `protobuf:"bytes,8,opt,name=ratings,proto3" json:"ratings,omitempty"`
+	Title            string                                        `protobuf:"bytes,9,opt,name=title,proto3" json:"title,omitempty"`
+	Content          *BeamMerchantReview_BeamMerchantReviewContent `protobuf:"bytes,10,opt,name=content,proto3" json:"content,omitempty"`
 }
 
-func (m *BeamReview) Reset()         { *m = BeamReview{} }
-func (m *BeamReview) String() string { return proto.CompactTextString(m) }
-func (*BeamReview) ProtoMessage()    {}
-func (*BeamReview) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00b764aa3b93518a, []int{1}
+func (m *BeamMerchantReview) Reset()         { *m = BeamMerchantReview{} }
+func (m *BeamMerchantReview) String() string { return proto.CompactTextString(m) }
+func (*BeamMerchantReview) ProtoMessage()    {}
+func (*BeamMerchantReview) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00b764aa3b93518a, []int{4}
 }
-func (m *BeamReview) XXX_Unmarshal(b []byte) error {
+func (m *BeamMerchantReview) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *BeamReview) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *BeamMerchantReview) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_BeamReview.Marshal(b, m, deterministic)
+		return xxx_messageInfo_BeamMerchantReview.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -169,400 +420,353 @@ func (m *BeamReview) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *BeamReview) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BeamReview.Merge(m, src)
+func (m *BeamMerchantReview) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BeamMerchantReview.Merge(m, src)
 }
-func (m *BeamReview) XXX_Size() int {
+func (m *BeamMerchantReview) XXX_Size() int {
 	return m.Size()
 }
-func (m *BeamReview) XXX_DiscardUnknown() {
-	xxx_messageInfo_BeamReview.DiscardUnknown(m)
+func (m *BeamMerchantReview) XXX_DiscardUnknown() {
+	xxx_messageInfo_BeamMerchantReview.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_BeamReview proto.InternalMessageInfo
+var xxx_messageInfo_BeamMerchantReview proto.InternalMessageInfo
 
-func (m *BeamReview) GetReviewer() *BeamReview_BeamReviewReviewer {
+func (m *BeamMerchantReview) GetOrderId() string {
 	if m != nil {
-		return m.Reviewer
-	}
-	return nil
-}
-
-func (m *BeamReview) GetMerchantReview() *BeamReview_BeamReviewMerchantReview {
-	if m != nil {
-		return m.MerchantReview
-	}
-	return nil
-}
-
-func (m *BeamReview) GetProductsReviews() []*BeamReview_BeamReviewProductReview {
-	if m != nil {
-		return m.ProductsReviews
-	}
-	return nil
-}
-
-type BeamReview_BeamReviewReviewer struct {
-	ReviewerId  string `protobuf:"bytes,1,opt,name=reviewer_id,json=reviewerId,proto3" json:"reviewer_id,omitempty"`
-	Name        string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	IsAnonymous bool   `protobuf:"varint,3,opt,name=is_anonymous,json=isAnonymous,proto3" json:"is_anonymous,omitempty"`
-}
-
-func (m *BeamReview_BeamReviewReviewer) Reset()         { *m = BeamReview_BeamReviewReviewer{} }
-func (m *BeamReview_BeamReviewReviewer) String() string { return proto.CompactTextString(m) }
-func (*BeamReview_BeamReviewReviewer) ProtoMessage()    {}
-func (*BeamReview_BeamReviewReviewer) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00b764aa3b93518a, []int{1, 0}
-}
-func (m *BeamReview_BeamReviewReviewer) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *BeamReview_BeamReviewReviewer) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_BeamReview_BeamReviewReviewer.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *BeamReview_BeamReviewReviewer) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BeamReview_BeamReviewReviewer.Merge(m, src)
-}
-func (m *BeamReview_BeamReviewReviewer) XXX_Size() int {
-	return m.Size()
-}
-func (m *BeamReview_BeamReviewReviewer) XXX_DiscardUnknown() {
-	xxx_messageInfo_BeamReview_BeamReviewReviewer.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_BeamReview_BeamReviewReviewer proto.InternalMessageInfo
-
-func (m *BeamReview_BeamReviewReviewer) GetReviewerId() string {
-	if m != nil {
-		return m.ReviewerId
+		return m.OrderId
 	}
 	return ""
 }
 
-func (m *BeamReview_BeamReviewReviewer) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *BeamReview_BeamReviewReviewer) GetIsAnonymous() bool {
-	if m != nil {
-		return m.IsAnonymous
-	}
-	return false
-}
-
-type BeamReview_BeamReviewMerchantReview struct {
-	ReviewId    string            `protobuf:"bytes,1,opt,name=review_id,json=reviewId,proto3" json:"review_id,omitempty"`
-	MerchantUrl string            `protobuf:"bytes,2,opt,name=merchant_url,json=merchantUrl,proto3" json:"merchant_url,omitempty"`
-	RatingUrl   string            `protobuf:"bytes,3,opt,name=rating_url,json=ratingUrl,proto3" json:"rating_url,omitempty"`
-	ReviewUrl   string            `protobuf:"bytes,4,opt,name=review_url,json=reviewUrl,proto3" json:"review_url,omitempty"`
-	Timestamp   string            `protobuf:"bytes,5,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	Ratings     map[string]int64  `protobuf:"bytes,6,rep,name=ratings,proto3" json:"ratings,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
-	Title       string            `protobuf:"bytes,7,opt,name=title,proto3" json:"title,omitempty"`
-	Content     map[string]string `protobuf:"bytes,8,rep,name=content,proto3" json:"content,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-}
-
-func (m *BeamReview_BeamReviewMerchantReview) Reset()         { *m = BeamReview_BeamReviewMerchantReview{} }
-func (m *BeamReview_BeamReviewMerchantReview) String() string { return proto.CompactTextString(m) }
-func (*BeamReview_BeamReviewMerchantReview) ProtoMessage()    {}
-func (*BeamReview_BeamReviewMerchantReview) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00b764aa3b93518a, []int{1, 1}
-}
-func (m *BeamReview_BeamReviewMerchantReview) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *BeamReview_BeamReviewMerchantReview) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_BeamReview_BeamReviewMerchantReview.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *BeamReview_BeamReviewMerchantReview) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BeamReview_BeamReviewMerchantReview.Merge(m, src)
-}
-func (m *BeamReview_BeamReviewMerchantReview) XXX_Size() int {
-	return m.Size()
-}
-func (m *BeamReview_BeamReviewMerchantReview) XXX_DiscardUnknown() {
-	xxx_messageInfo_BeamReview_BeamReviewMerchantReview.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_BeamReview_BeamReviewMerchantReview proto.InternalMessageInfo
-
-func (m *BeamReview_BeamReviewMerchantReview) GetReviewId() string {
+func (m *BeamMerchantReview) GetReviewId() string {
 	if m != nil {
 		return m.ReviewId
 	}
 	return ""
 }
 
-func (m *BeamReview_BeamReviewMerchantReview) GetMerchantUrl() string {
+func (m *BeamMerchantReview) GetMerchantUrl() string {
 	if m != nil {
 		return m.MerchantUrl
 	}
 	return ""
 }
 
-func (m *BeamReview_BeamReviewMerchantReview) GetRatingUrl() string {
+func (m *BeamMerchantReview) GetRatingUrl() string {
 	if m != nil {
 		return m.RatingUrl
 	}
 	return ""
 }
 
-func (m *BeamReview_BeamReviewMerchantReview) GetReviewUrl() string {
+func (m *BeamMerchantReview) GetReviewUrl() string {
 	if m != nil {
 		return m.ReviewUrl
 	}
 	return ""
 }
 
-func (m *BeamReview_BeamReviewMerchantReview) GetTimestamp() string {
-	if m != nil {
-		return m.Timestamp
-	}
-	return ""
-}
-
-func (m *BeamReview_BeamReviewMerchantReview) GetRatings() map[string]int64 {
-	if m != nil {
-		return m.Ratings
-	}
-	return nil
-}
-
-func (m *BeamReview_BeamReviewMerchantReview) GetTitle() string {
-	if m != nil {
-		return m.Title
-	}
-	return ""
-}
-
-func (m *BeamReview_BeamReviewMerchantReview) GetContent() map[string]string {
-	if m != nil {
-		return m.Content
-	}
-	return nil
-}
-
-type BeamReview_BeamReviewProductReview struct {
-	ReviewId         string                                        `protobuf:"bytes,1,opt,name=review_id,json=reviewId,proto3" json:"review_id,omitempty"`
-	RatingUrl        string                                        `protobuf:"bytes,2,opt,name=rating_url,json=ratingUrl,proto3" json:"rating_url,omitempty"`
-	ReviewUrl        string                                        `protobuf:"bytes,3,opt,name=review_url,json=reviewUrl,proto3" json:"review_url,omitempty"`
-	CollectionMethod string                                        `protobuf:"bytes,4,opt,name=collection_method,json=collectionMethod,proto3" json:"collection_method,omitempty"`
-	Timestamp        string                                        `protobuf:"bytes,5,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	Ratings          map[string]int64                              `protobuf:"bytes,6,rep,name=ratings,proto3" json:"ratings,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
-	Title            string                                        `protobuf:"bytes,7,opt,name=title,proto3" json:"title,omitempty"`
-	Content          map[string]string                             `protobuf:"bytes,8,rep,name=content,proto3" json:"content,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	Medias           []*BeamReview_BeamReviewProductReview_Media   `protobuf:"bytes,9,rep,name=medias,proto3" json:"medias,omitempty"`
-	Products         []*BeamReview_BeamReviewProductReview_Product `protobuf:"bytes,10,rep,name=products,proto3" json:"products,omitempty"`
-}
-
-func (m *BeamReview_BeamReviewProductReview) Reset()         { *m = BeamReview_BeamReviewProductReview{} }
-func (m *BeamReview_BeamReviewProductReview) String() string { return proto.CompactTextString(m) }
-func (*BeamReview_BeamReviewProductReview) ProtoMessage()    {}
-func (*BeamReview_BeamReviewProductReview) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00b764aa3b93518a, []int{1, 2}
-}
-func (m *BeamReview_BeamReviewProductReview) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *BeamReview_BeamReviewProductReview) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_BeamReview_BeamReviewProductReview.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *BeamReview_BeamReviewProductReview) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BeamReview_BeamReviewProductReview.Merge(m, src)
-}
-func (m *BeamReview_BeamReviewProductReview) XXX_Size() int {
-	return m.Size()
-}
-func (m *BeamReview_BeamReviewProductReview) XXX_DiscardUnknown() {
-	xxx_messageInfo_BeamReview_BeamReviewProductReview.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_BeamReview_BeamReviewProductReview proto.InternalMessageInfo
-
-func (m *BeamReview_BeamReviewProductReview) GetReviewId() string {
-	if m != nil {
-		return m.ReviewId
-	}
-	return ""
-}
-
-func (m *BeamReview_BeamReviewProductReview) GetRatingUrl() string {
-	if m != nil {
-		return m.RatingUrl
-	}
-	return ""
-}
-
-func (m *BeamReview_BeamReviewProductReview) GetReviewUrl() string {
-	if m != nil {
-		return m.ReviewUrl
-	}
-	return ""
-}
-
-func (m *BeamReview_BeamReviewProductReview) GetCollectionMethod() string {
+func (m *BeamMerchantReview) GetCollectionMethod() string {
 	if m != nil {
 		return m.CollectionMethod
 	}
 	return ""
 }
 
-func (m *BeamReview_BeamReviewProductReview) GetTimestamp() string {
+func (m *BeamMerchantReview) GetTimestamp() string {
 	if m != nil {
 		return m.Timestamp
 	}
 	return ""
 }
 
-func (m *BeamReview_BeamReviewProductReview) GetRatings() map[string]int64 {
+func (m *BeamMerchantReview) GetRatings() *BeamMerchantReview_BeamMerchantReviewRating {
 	if m != nil {
 		return m.Ratings
 	}
 	return nil
 }
 
-func (m *BeamReview_BeamReviewProductReview) GetTitle() string {
+func (m *BeamMerchantReview) GetTitle() string {
 	if m != nil {
 		return m.Title
 	}
 	return ""
 }
 
-func (m *BeamReview_BeamReviewProductReview) GetContent() map[string]string {
+func (m *BeamMerchantReview) GetContent() *BeamMerchantReview_BeamMerchantReviewContent {
 	if m != nil {
 		return m.Content
 	}
 	return nil
 }
 
-func (m *BeamReview_BeamReviewProductReview) GetMedias() []*BeamReview_BeamReviewProductReview_Media {
+type BeamMerchantReview_BeamMerchantReviewRating struct {
+	Overall         float32 `protobuf:"fixed32,1,opt,name=overall,proto3" json:"overall,omitempty"`
+	CustomerService float32 `protobuf:"fixed32,2,opt,name=customer_service,json=customerService,proto3" json:"customer_service,omitempty"`
+	Nps             float32 `protobuf:"fixed32,3,opt,name=nps,proto3" json:"nps,omitempty"`
+}
+
+func (m *BeamMerchantReview_BeamMerchantReviewRating) Reset() {
+	*m = BeamMerchantReview_BeamMerchantReviewRating{}
+}
+func (m *BeamMerchantReview_BeamMerchantReviewRating) String() string {
+	return proto.CompactTextString(m)
+}
+func (*BeamMerchantReview_BeamMerchantReviewRating) ProtoMessage() {}
+func (*BeamMerchantReview_BeamMerchantReviewRating) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00b764aa3b93518a, []int{4, 0}
+}
+func (m *BeamMerchantReview_BeamMerchantReviewRating) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BeamMerchantReview_BeamMerchantReviewRating) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BeamMerchantReview_BeamMerchantReviewRating.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BeamMerchantReview_BeamMerchantReviewRating) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BeamMerchantReview_BeamMerchantReviewRating.Merge(m, src)
+}
+func (m *BeamMerchantReview_BeamMerchantReviewRating) XXX_Size() int {
+	return m.Size()
+}
+func (m *BeamMerchantReview_BeamMerchantReviewRating) XXX_DiscardUnknown() {
+	xxx_messageInfo_BeamMerchantReview_BeamMerchantReviewRating.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BeamMerchantReview_BeamMerchantReviewRating proto.InternalMessageInfo
+
+func (m *BeamMerchantReview_BeamMerchantReviewRating) GetOverall() float32 {
+	if m != nil {
+		return m.Overall
+	}
+	return 0
+}
+
+func (m *BeamMerchantReview_BeamMerchantReviewRating) GetCustomerService() float32 {
+	if m != nil {
+		return m.CustomerService
+	}
+	return 0
+}
+
+func (m *BeamMerchantReview_BeamMerchantReviewRating) GetNps() float32 {
+	if m != nil {
+		return m.Nps
+	}
+	return 0
+}
+
+type BeamMerchantReview_BeamMerchantReviewContent struct {
+	Overall         string `protobuf:"bytes,1,opt,name=overall,proto3" json:"overall,omitempty"`
+	CustomerService string `protobuf:"bytes,2,opt,name=customer_service,json=customerService,proto3" json:"customer_service,omitempty"`
+}
+
+func (m *BeamMerchantReview_BeamMerchantReviewContent) Reset() {
+	*m = BeamMerchantReview_BeamMerchantReviewContent{}
+}
+func (m *BeamMerchantReview_BeamMerchantReviewContent) String() string {
+	return proto.CompactTextString(m)
+}
+func (*BeamMerchantReview_BeamMerchantReviewContent) ProtoMessage() {}
+func (*BeamMerchantReview_BeamMerchantReviewContent) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00b764aa3b93518a, []int{4, 1}
+}
+func (m *BeamMerchantReview_BeamMerchantReviewContent) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BeamMerchantReview_BeamMerchantReviewContent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BeamMerchantReview_BeamMerchantReviewContent.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BeamMerchantReview_BeamMerchantReviewContent) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BeamMerchantReview_BeamMerchantReviewContent.Merge(m, src)
+}
+func (m *BeamMerchantReview_BeamMerchantReviewContent) XXX_Size() int {
+	return m.Size()
+}
+func (m *BeamMerchantReview_BeamMerchantReviewContent) XXX_DiscardUnknown() {
+	xxx_messageInfo_BeamMerchantReview_BeamMerchantReviewContent.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BeamMerchantReview_BeamMerchantReviewContent proto.InternalMessageInfo
+
+func (m *BeamMerchantReview_BeamMerchantReviewContent) GetOverall() string {
+	if m != nil {
+		return m.Overall
+	}
+	return ""
+}
+
+func (m *BeamMerchantReview_BeamMerchantReviewContent) GetCustomerService() string {
+	if m != nil {
+		return m.CustomerService
+	}
+	return ""
+}
+
+type BeamProductReview struct {
+	OrderId          string                                      `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	ReviewId         string                                      `protobuf:"bytes,2,opt,name=review_id,json=reviewId,proto3" json:"review_id,omitempty"`
+	RatingUrl        string                                      `protobuf:"bytes,3,opt,name=rating_url,json=ratingUrl,proto3" json:"rating_url,omitempty"`
+	ReviewUrl        string                                      `protobuf:"bytes,4,opt,name=review_url,json=reviewUrl,proto3" json:"review_url,omitempty"`
+	CollectionMethod string                                      `protobuf:"bytes,5,opt,name=collection_method,json=collectionMethod,proto3" json:"collection_method,omitempty"`
+	Timestamp        string                                      `protobuf:"bytes,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Ratings          *BeamProductReview_BeamProductReviewRating  `protobuf:"bytes,7,opt,name=ratings,proto3" json:"ratings,omitempty"`
+	Title            string                                      `protobuf:"bytes,8,opt,name=title,proto3" json:"title,omitempty"`
+	Content          *BeamProductReview_BeamProductReviewContent `protobuf:"bytes,9,opt,name=content,proto3" json:"content,omitempty"`
+	Medias           []*BeamMedia                                `protobuf:"bytes,10,rep,name=medias,proto3" json:"medias,omitempty"`
+	Products         []*BeamProductReview_BeamProduct            `protobuf:"bytes,11,rep,name=products,proto3" json:"products,omitempty"`
+}
+
+func (m *BeamProductReview) Reset()         { *m = BeamProductReview{} }
+func (m *BeamProductReview) String() string { return proto.CompactTextString(m) }
+func (*BeamProductReview) ProtoMessage()    {}
+func (*BeamProductReview) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00b764aa3b93518a, []int{5}
+}
+func (m *BeamProductReview) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BeamProductReview) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BeamProductReview.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BeamProductReview) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BeamProductReview.Merge(m, src)
+}
+func (m *BeamProductReview) XXX_Size() int {
+	return m.Size()
+}
+func (m *BeamProductReview) XXX_DiscardUnknown() {
+	xxx_messageInfo_BeamProductReview.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BeamProductReview proto.InternalMessageInfo
+
+func (m *BeamProductReview) GetOrderId() string {
+	if m != nil {
+		return m.OrderId
+	}
+	return ""
+}
+
+func (m *BeamProductReview) GetReviewId() string {
+	if m != nil {
+		return m.ReviewId
+	}
+	return ""
+}
+
+func (m *BeamProductReview) GetRatingUrl() string {
+	if m != nil {
+		return m.RatingUrl
+	}
+	return ""
+}
+
+func (m *BeamProductReview) GetReviewUrl() string {
+	if m != nil {
+		return m.ReviewUrl
+	}
+	return ""
+}
+
+func (m *BeamProductReview) GetCollectionMethod() string {
+	if m != nil {
+		return m.CollectionMethod
+	}
+	return ""
+}
+
+func (m *BeamProductReview) GetTimestamp() string {
+	if m != nil {
+		return m.Timestamp
+	}
+	return ""
+}
+
+func (m *BeamProductReview) GetRatings() *BeamProductReview_BeamProductReviewRating {
+	if m != nil {
+		return m.Ratings
+	}
+	return nil
+}
+
+func (m *BeamProductReview) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *BeamProductReview) GetContent() *BeamProductReview_BeamProductReviewContent {
+	if m != nil {
+		return m.Content
+	}
+	return nil
+}
+
+func (m *BeamProductReview) GetMedias() []*BeamMedia {
 	if m != nil {
 		return m.Medias
 	}
 	return nil
 }
 
-func (m *BeamReview_BeamReviewProductReview) GetProducts() []*BeamReview_BeamReviewProductReview_Product {
+func (m *BeamProductReview) GetProducts() []*BeamProductReview_BeamProduct {
 	if m != nil {
 		return m.Products
 	}
 	return nil
 }
 
-type BeamReview_BeamReviewProductReview_Media struct {
-	Mimetype     string `protobuf:"bytes,1,opt,name=mimetype,proto3" json:"mimetype,omitempty"`
-	Url          string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
-	ThumbnailUrl string `protobuf:"bytes,3,opt,name=thumbnail_url,json=thumbnailUrl,proto3" json:"thumbnail_url,omitempty"`
+type BeamProductReview_BeamProductReviewRating struct {
+	Overall float32 `protobuf:"fixed32,1,opt,name=overall,proto3" json:"overall,omitempty"`
+	Quality float32 `protobuf:"fixed32,2,opt,name=quality,proto3" json:"quality,omitempty"`
 }
 
-func (m *BeamReview_BeamReviewProductReview_Media) Reset() {
-	*m = BeamReview_BeamReviewProductReview_Media{}
+func (m *BeamProductReview_BeamProductReviewRating) Reset() {
+	*m = BeamProductReview_BeamProductReviewRating{}
 }
-func (m *BeamReview_BeamReviewProductReview_Media) String() string { return proto.CompactTextString(m) }
-func (*BeamReview_BeamReviewProductReview_Media) ProtoMessage()    {}
-func (*BeamReview_BeamReviewProductReview_Media) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00b764aa3b93518a, []int{1, 2, 0}
-}
-func (m *BeamReview_BeamReviewProductReview_Media) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *BeamReview_BeamReviewProductReview_Media) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_BeamReview_BeamReviewProductReview_Media.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *BeamReview_BeamReviewProductReview_Media) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BeamReview_BeamReviewProductReview_Media.Merge(m, src)
-}
-func (m *BeamReview_BeamReviewProductReview_Media) XXX_Size() int {
-	return m.Size()
-}
-func (m *BeamReview_BeamReviewProductReview_Media) XXX_DiscardUnknown() {
-	xxx_messageInfo_BeamReview_BeamReviewProductReview_Media.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_BeamReview_BeamReviewProductReview_Media proto.InternalMessageInfo
-
-func (m *BeamReview_BeamReviewProductReview_Media) GetMimetype() string {
-	if m != nil {
-		return m.Mimetype
-	}
-	return ""
-}
-
-func (m *BeamReview_BeamReviewProductReview_Media) GetUrl() string {
-	if m != nil {
-		return m.Url
-	}
-	return ""
-}
-
-func (m *BeamReview_BeamReviewProductReview_Media) GetThumbnailUrl() string {
-	if m != nil {
-		return m.ThumbnailUrl
-	}
-	return ""
-}
-
-type BeamReview_BeamReviewProductReview_Product struct {
-	Name   string                                                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Url    string                                                 `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
-	Brands []string                                               `protobuf:"bytes,3,rep,name=brands,proto3" json:"brands,omitempty"`
-	Ids    *BeamReview_BeamReviewProductReview_Product_ProductIds `protobuf:"bytes,4,opt,name=ids,proto3" json:"ids,omitempty"`
-}
-
-func (m *BeamReview_BeamReviewProductReview_Product) Reset() {
-	*m = BeamReview_BeamReviewProductReview_Product{}
-}
-func (m *BeamReview_BeamReviewProductReview_Product) String() string {
+func (m *BeamProductReview_BeamProductReviewRating) String() string {
 	return proto.CompactTextString(m)
 }
-func (*BeamReview_BeamReviewProductReview_Product) ProtoMessage() {}
-func (*BeamReview_BeamReviewProductReview_Product) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00b764aa3b93518a, []int{1, 2, 1}
+func (*BeamProductReview_BeamProductReviewRating) ProtoMessage() {}
+func (*BeamProductReview_BeamProductReviewRating) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00b764aa3b93518a, []int{5, 0}
 }
-func (m *BeamReview_BeamReviewProductReview_Product) XXX_Unmarshal(b []byte) error {
+func (m *BeamProductReview_BeamProductReviewRating) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *BeamReview_BeamReviewProductReview_Product) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *BeamProductReview_BeamProductReviewRating) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_BeamReview_BeamReviewProductReview_Product.Marshal(b, m, deterministic)
+		return xxx_messageInfo_BeamProductReview_BeamProductReviewRating.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -572,69 +776,187 @@ func (m *BeamReview_BeamReviewProductReview_Product) XXX_Marshal(b []byte, deter
 		return b[:n], nil
 	}
 }
-func (m *BeamReview_BeamReviewProductReview_Product) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BeamReview_BeamReviewProductReview_Product.Merge(m, src)
+func (m *BeamProductReview_BeamProductReviewRating) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BeamProductReview_BeamProductReviewRating.Merge(m, src)
 }
-func (m *BeamReview_BeamReviewProductReview_Product) XXX_Size() int {
+func (m *BeamProductReview_BeamProductReviewRating) XXX_Size() int {
 	return m.Size()
 }
-func (m *BeamReview_BeamReviewProductReview_Product) XXX_DiscardUnknown() {
-	xxx_messageInfo_BeamReview_BeamReviewProductReview_Product.DiscardUnknown(m)
+func (m *BeamProductReview_BeamProductReviewRating) XXX_DiscardUnknown() {
+	xxx_messageInfo_BeamProductReview_BeamProductReviewRating.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_BeamReview_BeamReviewProductReview_Product proto.InternalMessageInfo
+var xxx_messageInfo_BeamProductReview_BeamProductReviewRating proto.InternalMessageInfo
 
-func (m *BeamReview_BeamReviewProductReview_Product) GetName() string {
+func (m *BeamProductReview_BeamProductReviewRating) GetOverall() float32 {
+	if m != nil {
+		return m.Overall
+	}
+	return 0
+}
+
+func (m *BeamProductReview_BeamProductReviewRating) GetQuality() float32 {
+	if m != nil {
+		return m.Quality
+	}
+	return 0
+}
+
+type BeamProductReview_BeamProductReviewContent struct {
+	Overall string `protobuf:"bytes,1,opt,name=overall,proto3" json:"overall,omitempty"`
+	Pros    string `protobuf:"bytes,2,opt,name=pros,proto3" json:"pros,omitempty"`
+	Cons    string `protobuf:"bytes,3,opt,name=cons,proto3" json:"cons,omitempty"`
+}
+
+func (m *BeamProductReview_BeamProductReviewContent) Reset() {
+	*m = BeamProductReview_BeamProductReviewContent{}
+}
+func (m *BeamProductReview_BeamProductReviewContent) String() string {
+	return proto.CompactTextString(m)
+}
+func (*BeamProductReview_BeamProductReviewContent) ProtoMessage() {}
+func (*BeamProductReview_BeamProductReviewContent) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00b764aa3b93518a, []int{5, 1}
+}
+func (m *BeamProductReview_BeamProductReviewContent) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BeamProductReview_BeamProductReviewContent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BeamProductReview_BeamProductReviewContent.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BeamProductReview_BeamProductReviewContent) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BeamProductReview_BeamProductReviewContent.Merge(m, src)
+}
+func (m *BeamProductReview_BeamProductReviewContent) XXX_Size() int {
+	return m.Size()
+}
+func (m *BeamProductReview_BeamProductReviewContent) XXX_DiscardUnknown() {
+	xxx_messageInfo_BeamProductReview_BeamProductReviewContent.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BeamProductReview_BeamProductReviewContent proto.InternalMessageInfo
+
+func (m *BeamProductReview_BeamProductReviewContent) GetOverall() string {
+	if m != nil {
+		return m.Overall
+	}
+	return ""
+}
+
+func (m *BeamProductReview_BeamProductReviewContent) GetPros() string {
+	if m != nil {
+		return m.Pros
+	}
+	return ""
+}
+
+func (m *BeamProductReview_BeamProductReviewContent) GetCons() string {
+	if m != nil {
+		return m.Cons
+	}
+	return ""
+}
+
+type BeamProductReview_BeamProduct struct {
+	Name string                                        `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Url  string                                        `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+	Urls []string                                      `protobuf:"bytes,3,rep,name=urls,proto3" json:"urls,omitempty"`
+	Ids  *BeamProductReview_BeamProduct_BeamProductIds `protobuf:"bytes,4,opt,name=ids,proto3" json:"ids,omitempty"`
+}
+
+func (m *BeamProductReview_BeamProduct) Reset()         { *m = BeamProductReview_BeamProduct{} }
+func (m *BeamProductReview_BeamProduct) String() string { return proto.CompactTextString(m) }
+func (*BeamProductReview_BeamProduct) ProtoMessage()    {}
+func (*BeamProductReview_BeamProduct) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00b764aa3b93518a, []int{5, 2}
+}
+func (m *BeamProductReview_BeamProduct) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BeamProductReview_BeamProduct) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BeamProductReview_BeamProduct.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BeamProductReview_BeamProduct) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BeamProductReview_BeamProduct.Merge(m, src)
+}
+func (m *BeamProductReview_BeamProduct) XXX_Size() int {
+	return m.Size()
+}
+func (m *BeamProductReview_BeamProduct) XXX_DiscardUnknown() {
+	xxx_messageInfo_BeamProductReview_BeamProduct.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BeamProductReview_BeamProduct proto.InternalMessageInfo
+
+func (m *BeamProductReview_BeamProduct) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-func (m *BeamReview_BeamReviewProductReview_Product) GetUrl() string {
+func (m *BeamProductReview_BeamProduct) GetUrl() string {
 	if m != nil {
 		return m.Url
 	}
 	return ""
 }
 
-func (m *BeamReview_BeamReviewProductReview_Product) GetBrands() []string {
+func (m *BeamProductReview_BeamProduct) GetUrls() []string {
 	if m != nil {
-		return m.Brands
+		return m.Urls
 	}
 	return nil
 }
 
-func (m *BeamReview_BeamReviewProductReview_Product) GetIds() *BeamReview_BeamReviewProductReview_Product_ProductIds {
+func (m *BeamProductReview_BeamProduct) GetIds() *BeamProductReview_BeamProduct_BeamProductIds {
 	if m != nil {
 		return m.Ids
 	}
 	return nil
 }
 
-type BeamReview_BeamReviewProductReview_Product_ProductIds struct {
+type BeamProductReview_BeamProduct_BeamProductIds struct {
 	Gtins []string `protobuf:"bytes,1,rep,name=gtins,proto3" json:"gtins,omitempty"`
 	Mpns  []string `protobuf:"bytes,2,rep,name=mpns,proto3" json:"mpns,omitempty"`
 	Skus  []string `protobuf:"bytes,3,rep,name=skus,proto3" json:"skus,omitempty"`
 	Asins []string `protobuf:"bytes,4,rep,name=asins,proto3" json:"asins,omitempty"`
 }
 
-func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) Reset() {
-	*m = BeamReview_BeamReviewProductReview_Product_ProductIds{}
+func (m *BeamProductReview_BeamProduct_BeamProductIds) Reset() {
+	*m = BeamProductReview_BeamProduct_BeamProductIds{}
 }
-func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) String() string {
+func (m *BeamProductReview_BeamProduct_BeamProductIds) String() string {
 	return proto.CompactTextString(m)
 }
-func (*BeamReview_BeamReviewProductReview_Product_ProductIds) ProtoMessage() {}
-func (*BeamReview_BeamReviewProductReview_Product_ProductIds) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00b764aa3b93518a, []int{1, 2, 1, 0}
+func (*BeamProductReview_BeamProduct_BeamProductIds) ProtoMessage() {}
+func (*BeamProductReview_BeamProduct_BeamProductIds) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00b764aa3b93518a, []int{5, 2, 0}
 }
-func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) XXX_Unmarshal(b []byte) error {
+func (m *BeamProductReview_BeamProduct_BeamProductIds) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *BeamProductReview_BeamProduct_BeamProductIds) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_BeamReview_BeamReviewProductReview_Product_ProductIds.Marshal(b, m, deterministic)
+		return xxx_messageInfo_BeamProductReview_BeamProduct_BeamProductIds.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -644,62 +966,190 @@ func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) XXX_Marshal(b []
 		return b[:n], nil
 	}
 }
-func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BeamReview_BeamReviewProductReview_Product_ProductIds.Merge(m, src)
+func (m *BeamProductReview_BeamProduct_BeamProductIds) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BeamProductReview_BeamProduct_BeamProductIds.Merge(m, src)
 }
-func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) XXX_Size() int {
+func (m *BeamProductReview_BeamProduct_BeamProductIds) XXX_Size() int {
 	return m.Size()
 }
-func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) XXX_DiscardUnknown() {
-	xxx_messageInfo_BeamReview_BeamReviewProductReview_Product_ProductIds.DiscardUnknown(m)
+func (m *BeamProductReview_BeamProduct_BeamProductIds) XXX_DiscardUnknown() {
+	xxx_messageInfo_BeamProductReview_BeamProduct_BeamProductIds.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_BeamReview_BeamReviewProductReview_Product_ProductIds proto.InternalMessageInfo
+var xxx_messageInfo_BeamProductReview_BeamProduct_BeamProductIds proto.InternalMessageInfo
 
-func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) GetGtins() []string {
+func (m *BeamProductReview_BeamProduct_BeamProductIds) GetGtins() []string {
 	if m != nil {
 		return m.Gtins
 	}
 	return nil
 }
 
-func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) GetMpns() []string {
+func (m *BeamProductReview_BeamProduct_BeamProductIds) GetMpns() []string {
 	if m != nil {
 		return m.Mpns
 	}
 	return nil
 }
 
-func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) GetSkus() []string {
+func (m *BeamProductReview_BeamProduct_BeamProductIds) GetSkus() []string {
 	if m != nil {
 		return m.Skus
 	}
 	return nil
 }
 
-func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) GetAsins() []string {
+func (m *BeamProductReview_BeamProduct_BeamProductIds) GetAsins() []string {
 	if m != nil {
 		return m.Asins
 	}
 	return nil
 }
 
+type BeamSchemeReview struct {
+	Reward          *BeamReward          `protobuf:"bytes,1,opt,name=reward,proto3" json:"reward,omitempty"`
+	Verifier        *BeamVerifier        `protobuf:"bytes,2,opt,name=verifier,proto3" json:"verifier,omitempty"`
+	Reviewer        *BeamReviewer        `protobuf:"bytes,3,opt,name=reviewer,proto3" json:"reviewer,omitempty"`
+	MerchantReview  *BeamMerchantReview  `protobuf:"bytes,4,opt,name=merchant_review,json=merchantReview,proto3" json:"merchant_review,omitempty"`
+	ProductsReviews []*BeamProductReview `protobuf:"bytes,5,rep,name=products_reviews,json=productsReviews,proto3" json:"products_reviews,omitempty"`
+}
+
+func (m *BeamSchemeReview) Reset()         { *m = BeamSchemeReview{} }
+func (m *BeamSchemeReview) String() string { return proto.CompactTextString(m) }
+func (*BeamSchemeReview) ProtoMessage()    {}
+func (*BeamSchemeReview) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00b764aa3b93518a, []int{6}
+}
+func (m *BeamSchemeReview) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BeamSchemeReview) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BeamSchemeReview.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BeamSchemeReview) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BeamSchemeReview.Merge(m, src)
+}
+func (m *BeamSchemeReview) XXX_Size() int {
+	return m.Size()
+}
+func (m *BeamSchemeReview) XXX_DiscardUnknown() {
+	xxx_messageInfo_BeamSchemeReview.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BeamSchemeReview proto.InternalMessageInfo
+
+func (m *BeamSchemeReview) GetReward() *BeamReward {
+	if m != nil {
+		return m.Reward
+	}
+	return nil
+}
+
+func (m *BeamSchemeReview) GetVerifier() *BeamVerifier {
+	if m != nil {
+		return m.Verifier
+	}
+	return nil
+}
+
+func (m *BeamSchemeReview) GetReviewer() *BeamReviewer {
+	if m != nil {
+		return m.Reviewer
+	}
+	return nil
+}
+
+func (m *BeamSchemeReview) GetMerchantReview() *BeamMerchantReview {
+	if m != nil {
+		return m.MerchantReview
+	}
+	return nil
+}
+
+func (m *BeamSchemeReview) GetProductsReviews() []*BeamProductReview {
+	if m != nil {
+		return m.ProductsReviews
+	}
+	return nil
+}
+
+type BeamSchemeReward struct {
+	Reward   *BeamReward   `protobuf:"bytes,1,opt,name=reward,proto3" json:"reward,omitempty"`
+	Verifier *BeamVerifier `protobuf:"bytes,2,opt,name=verifier,proto3" json:"verifier,omitempty"`
+}
+
+func (m *BeamSchemeReward) Reset()         { *m = BeamSchemeReward{} }
+func (m *BeamSchemeReward) String() string { return proto.CompactTextString(m) }
+func (*BeamSchemeReward) ProtoMessage()    {}
+func (*BeamSchemeReward) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00b764aa3b93518a, []int{7}
+}
+func (m *BeamSchemeReward) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BeamSchemeReward) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BeamSchemeReward.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BeamSchemeReward) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BeamSchemeReward.Merge(m, src)
+}
+func (m *BeamSchemeReward) XXX_Size() int {
+	return m.Size()
+}
+func (m *BeamSchemeReward) XXX_DiscardUnknown() {
+	xxx_messageInfo_BeamSchemeReward.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BeamSchemeReward proto.InternalMessageInfo
+
+func (m *BeamSchemeReward) GetReward() *BeamReward {
+	if m != nil {
+		return m.Reward
+	}
+	return nil
+}
+
+func (m *BeamSchemeReward) GetVerifier() *BeamVerifier {
+	if m != nil {
+		return m.Verifier
+	}
+	return nil
+}
+
 type Beam struct {
-	Creator string      `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	Id      string      `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
-	Amount  int64       `protobuf:"varint,3,opt,name=amount,proto3" json:"amount,omitempty"`
-	Status  string      `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
-	Secret  string      `protobuf:"bytes,5,opt,name=secret,proto3" json:"secret,omitempty"`
-	Schema  string      `protobuf:"bytes,6,opt,name=schema,proto3" json:"schema,omitempty"`
-	Reward  *BeamReward `protobuf:"bytes,7,opt,name=reward,proto3" json:"reward,omitempty"`
-	Review  *BeamReview `protobuf:"bytes,8,opt,name=review,proto3" json:"review,omitempty"`
+	Creator string            `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Id      string            `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	Amount  int64             `protobuf:"varint,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	Status  BeamState         `protobuf:"varint,4,opt,name=status,proto3,enum=lum.network.beam.BeamState" json:"status,omitempty"`
+	Secret  string            `protobuf:"bytes,5,opt,name=secret,proto3" json:"secret,omitempty"`
+	Schema  string            `protobuf:"bytes,6,opt,name=schema,proto3" json:"schema,omitempty"`
+	Reward  *BeamSchemeReward `protobuf:"bytes,7,opt,name=reward,proto3" json:"reward,omitempty"`
+	Review  *BeamSchemeReview `protobuf:"bytes,8,opt,name=review,proto3" json:"review,omitempty"`
 }
 
 func (m *Beam) Reset()         { *m = Beam{} }
 func (m *Beam) String() string { return proto.CompactTextString(m) }
 func (*Beam) ProtoMessage()    {}
 func (*Beam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00b764aa3b93518a, []int{2}
+	return fileDescriptor_00b764aa3b93518a, []int{8}
 }
 func (m *Beam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -749,11 +1199,11 @@ func (m *Beam) GetAmount() int64 {
 	return 0
 }
 
-func (m *Beam) GetStatus() string {
+func (m *Beam) GetStatus() BeamState {
 	if m != nil {
 		return m.Status
 	}
-	return ""
+	return BeamState_OPEN
 }
 
 func (m *Beam) GetSecret() string {
@@ -770,14 +1220,14 @@ func (m *Beam) GetSchema() string {
 	return ""
 }
 
-func (m *Beam) GetReward() *BeamReward {
+func (m *Beam) GetReward() *BeamSchemeReward {
 	if m != nil {
 		return m.Reward
 	}
 	return nil
 }
 
-func (m *Beam) GetReview() *BeamReview {
+func (m *Beam) GetReview() *BeamSchemeReview {
 	if m != nil {
 		return m.Review
 	}
@@ -785,19 +1235,20 @@ func (m *Beam) GetReview() *BeamReview {
 }
 
 type MsgOpenBeam struct {
-	Id      string      `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Creator string      `protobuf:"bytes,2,opt,name=creator,proto3" json:"creator,omitempty"`
-	Amount  int64       `protobuf:"varint,3,opt,name=amount,proto3" json:"amount,omitempty"`
-	Secret  string      `protobuf:"bytes,4,opt,name=secret,proto3" json:"secret,omitempty"`
-	Reward  *BeamReward `protobuf:"bytes,5,opt,name=reward,proto3" json:"reward,omitempty"`
-	Review  *BeamReview `protobuf:"bytes,6,opt,name=review,proto3" json:"review,omitempty"`
+	Id      string            `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Creator string            `protobuf:"bytes,2,opt,name=creator,proto3" json:"creator,omitempty"`
+	Secret  string            `protobuf:"bytes,3,opt,name=secret,proto3" json:"secret,omitempty"`
+	Amount  int64             `protobuf:"varint,4,opt,name=amount,proto3" json:"amount,omitempty"`
+	Schema  string            `protobuf:"bytes,5,opt,name=schema,proto3" json:"schema,omitempty"`
+	Reward  *BeamSchemeReward `protobuf:"bytes,6,opt,name=reward,proto3" json:"reward,omitempty"`
+	Review  *BeamSchemeReview `protobuf:"bytes,7,opt,name=review,proto3" json:"review,omitempty"`
 }
 
 func (m *MsgOpenBeam) Reset()         { *m = MsgOpenBeam{} }
 func (m *MsgOpenBeam) String() string { return proto.CompactTextString(m) }
 func (*MsgOpenBeam) ProtoMessage()    {}
 func (*MsgOpenBeam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00b764aa3b93518a, []int{3}
+	return fileDescriptor_00b764aa3b93518a, []int{9}
 }
 func (m *MsgOpenBeam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -840,13 +1291,6 @@ func (m *MsgOpenBeam) GetCreator() string {
 	return ""
 }
 
-func (m *MsgOpenBeam) GetAmount() int64 {
-	if m != nil {
-		return m.Amount
-	}
-	return 0
-}
-
 func (m *MsgOpenBeam) GetSecret() string {
 	if m != nil {
 		return m.Secret
@@ -854,14 +1298,28 @@ func (m *MsgOpenBeam) GetSecret() string {
 	return ""
 }
 
-func (m *MsgOpenBeam) GetReward() *BeamReward {
+func (m *MsgOpenBeam) GetAmount() int64 {
+	if m != nil {
+		return m.Amount
+	}
+	return 0
+}
+
+func (m *MsgOpenBeam) GetSchema() string {
+	if m != nil {
+		return m.Schema
+	}
+	return ""
+}
+
+func (m *MsgOpenBeam) GetReward() *BeamSchemeReward {
 	if m != nil {
 		return m.Reward
 	}
 	return nil
 }
 
-func (m *MsgOpenBeam) GetReview() *BeamReview {
+func (m *MsgOpenBeam) GetReview() *BeamSchemeReview {
 	if m != nil {
 		return m.Review
 	}
@@ -869,18 +1327,18 @@ func (m *MsgOpenBeam) GetReview() *BeamReview {
 }
 
 type MsgUpdateBeam struct {
-	Updater string      `protobuf:"bytes,1,opt,name=updater,proto3" json:"updater,omitempty"`
-	Id      string      `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
-	Amount  int64       `protobuf:"varint,3,opt,name=amount,proto3" json:"amount,omitempty"`
-	Reward  *BeamReward `protobuf:"bytes,4,opt,name=reward,proto3" json:"reward,omitempty"`
-	Review  *BeamReview `protobuf:"bytes,5,opt,name=review,proto3" json:"review,omitempty"`
+	Updater string            `protobuf:"bytes,1,opt,name=updater,proto3" json:"updater,omitempty"`
+	Id      string            `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	Amount  int64             `protobuf:"varint,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	Reward  *BeamSchemeReward `protobuf:"bytes,4,opt,name=reward,proto3" json:"reward,omitempty"`
+	Review  *BeamSchemeReview `protobuf:"bytes,5,opt,name=review,proto3" json:"review,omitempty"`
 }
 
 func (m *MsgUpdateBeam) Reset()         { *m = MsgUpdateBeam{} }
 func (m *MsgUpdateBeam) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateBeam) ProtoMessage()    {}
 func (*MsgUpdateBeam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00b764aa3b93518a, []int{4}
+	return fileDescriptor_00b764aa3b93518a, []int{10}
 }
 func (m *MsgUpdateBeam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -930,14 +1388,14 @@ func (m *MsgUpdateBeam) GetAmount() int64 {
 	return 0
 }
 
-func (m *MsgUpdateBeam) GetReward() *BeamReward {
+func (m *MsgUpdateBeam) GetReward() *BeamSchemeReward {
 	if m != nil {
 		return m.Reward
 	}
 	return nil
 }
 
-func (m *MsgUpdateBeam) GetReview() *BeamReview {
+func (m *MsgUpdateBeam) GetReview() *BeamSchemeReview {
 	if m != nil {
 		return m.Review
 	}
@@ -953,7 +1411,7 @@ func (m *MsgCancelBeam) Reset()         { *m = MsgCancelBeam{} }
 func (m *MsgCancelBeam) String() string { return proto.CompactTextString(m) }
 func (*MsgCancelBeam) ProtoMessage()    {}
 func (*MsgCancelBeam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00b764aa3b93518a, []int{5}
+	return fileDescriptor_00b764aa3b93518a, []int{11}
 }
 func (m *MsgCancelBeam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1005,7 +1463,7 @@ func (m *MsgCloseBeam) Reset()         { *m = MsgCloseBeam{} }
 func (m *MsgCloseBeam) String() string { return proto.CompactTextString(m) }
 func (*MsgCloseBeam) ProtoMessage()    {}
 func (*MsgCloseBeam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00b764aa3b93518a, []int{6}
+	return fileDescriptor_00b764aa3b93518a, []int{12}
 }
 func (m *MsgCloseBeam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1058,7 +1516,7 @@ func (m *MsgClaimBeam) Reset()         { *m = MsgClaimBeam{} }
 func (m *MsgClaimBeam) String() string { return proto.CompactTextString(m) }
 func (*MsgClaimBeam) ProtoMessage()    {}
 func (*MsgClaimBeam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00b764aa3b93518a, []int{7}
+	return fileDescriptor_00b764aa3b93518a, []int{13}
 }
 func (m *MsgClaimBeam) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1109,19 +1567,22 @@ func (m *MsgClaimBeam) GetSecret() string {
 }
 
 func init() {
+	proto.RegisterEnum("lum.network.beam.BeamState", BeamState_name, BeamState_value)
+	proto.RegisterType((*BeamMedia)(nil), "lum.network.beam.BeamMedia")
+	proto.RegisterType((*BeamReviewer)(nil), "lum.network.beam.BeamReviewer")
+	proto.RegisterType((*BeamVerifier)(nil), "lum.network.beam.BeamVerifier")
 	proto.RegisterType((*BeamReward)(nil), "lum.network.beam.BeamReward")
 	proto.RegisterType((*BeamReward_BeamRewardDetails)(nil), "lum.network.beam.BeamReward.BeamRewardDetails")
-	proto.RegisterType((*BeamReview)(nil), "lum.network.beam.BeamReview")
-	proto.RegisterType((*BeamReview_BeamReviewReviewer)(nil), "lum.network.beam.BeamReview.BeamReviewReviewer")
-	proto.RegisterType((*BeamReview_BeamReviewMerchantReview)(nil), "lum.network.beam.BeamReview.BeamReviewMerchantReview")
-	proto.RegisterMapType((map[string]string)(nil), "lum.network.beam.BeamReview.BeamReviewMerchantReview.ContentEntry")
-	proto.RegisterMapType((map[string]int64)(nil), "lum.network.beam.BeamReview.BeamReviewMerchantReview.RatingsEntry")
-	proto.RegisterType((*BeamReview_BeamReviewProductReview)(nil), "lum.network.beam.BeamReview.BeamReviewProductReview")
-	proto.RegisterMapType((map[string]string)(nil), "lum.network.beam.BeamReview.BeamReviewProductReview.ContentEntry")
-	proto.RegisterMapType((map[string]int64)(nil), "lum.network.beam.BeamReview.BeamReviewProductReview.RatingsEntry")
-	proto.RegisterType((*BeamReview_BeamReviewProductReview_Media)(nil), "lum.network.beam.BeamReview.BeamReviewProductReview.Media")
-	proto.RegisterType((*BeamReview_BeamReviewProductReview_Product)(nil), "lum.network.beam.BeamReview.BeamReviewProductReview.Product")
-	proto.RegisterType((*BeamReview_BeamReviewProductReview_Product_ProductIds)(nil), "lum.network.beam.BeamReview.BeamReviewProductReview.Product.ProductIds")
+	proto.RegisterType((*BeamMerchantReview)(nil), "lum.network.beam.BeamMerchantReview")
+	proto.RegisterType((*BeamMerchantReview_BeamMerchantReviewRating)(nil), "lum.network.beam.BeamMerchantReview.BeamMerchantReviewRating")
+	proto.RegisterType((*BeamMerchantReview_BeamMerchantReviewContent)(nil), "lum.network.beam.BeamMerchantReview.BeamMerchantReviewContent")
+	proto.RegisterType((*BeamProductReview)(nil), "lum.network.beam.BeamProductReview")
+	proto.RegisterType((*BeamProductReview_BeamProductReviewRating)(nil), "lum.network.beam.BeamProductReview.BeamProductReviewRating")
+	proto.RegisterType((*BeamProductReview_BeamProductReviewContent)(nil), "lum.network.beam.BeamProductReview.BeamProductReviewContent")
+	proto.RegisterType((*BeamProductReview_BeamProduct)(nil), "lum.network.beam.BeamProductReview.BeamProduct")
+	proto.RegisterType((*BeamProductReview_BeamProduct_BeamProductIds)(nil), "lum.network.beam.BeamProductReview.BeamProduct.BeamProductIds")
+	proto.RegisterType((*BeamSchemeReview)(nil), "lum.network.beam.BeamSchemeReview")
+	proto.RegisterType((*BeamSchemeReward)(nil), "lum.network.beam.BeamSchemeReward")
 	proto.RegisterType((*Beam)(nil), "lum.network.beam.Beam")
 	proto.RegisterType((*MsgOpenBeam)(nil), "lum.network.beam.MsgOpenBeam")
 	proto.RegisterType((*MsgUpdateBeam)(nil), "lum.network.beam.MsgUpdateBeam")
@@ -1133,73 +1594,89 @@ func init() {
 func init() { proto.RegisterFile("beam/beam.proto", fileDescriptor_00b764aa3b93518a) }
 
 var fileDescriptor_00b764aa3b93518a = []byte{
-	// 1002 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x57, 0x4b, 0x6f, 0x23, 0x45,
-	0x10, 0xce, 0x78, 0x1c, 0x3f, 0xca, 0xd9, 0x4d, 0xb6, 0x85, 0x96, 0x91, 0x59, 0x4c, 0x30, 0x97,
-	0x20, 0x84, 0x2d, 0x99, 0x45, 0x5a, 0x22, 0x2e, 0x49, 0x40, 0x10, 0x21, 0x8b, 0xd5, 0x48, 0x91,
-	0x60, 0x17, 0x61, 0xda, 0x33, 0x2d, 0x7b, 0x94, 0xe9, 0x1e, 0xab, 0xbb, 0x67, 0x13, 0xdf, 0x38,
-	0xf0, 0x03, 0x10, 0x27, 0x7e, 0x01, 0xff, 0x82, 0x3b, 0xc7, 0x95, 0xb8, 0x70, 0x44, 0xc9, 0x91,
-	0xbf, 0xc0, 0x01, 0xf5, 0x63, 0x1e, 0xce, 0xc3, 0x1b, 0x7b, 0x0f, 0x5c, 0x92, 0xfa, 0xaa, 0xba,
-	0xbe, 0x7a, 0xce, 0x4c, 0x1b, 0xb6, 0xc7, 0x04, 0xd3, 0xbe, 0xfa, 0xd3, 0x9b, 0xf1, 0x44, 0x26,
-	0x68, 0x27, 0x4e, 0x69, 0x8f, 0x11, 0x79, 0x96, 0xf0, 0xd3, 0x9e, 0xd2, 0x77, 0xff, 0x71, 0x00,
-	0x0e, 0x09, 0xa6, 0x3e, 0x39, 0xc3, 0x3c, 0x44, 0x5f, 0x42, 0x9d, 0x6b, 0x49, 0x78, 0xce, 0xae,
-	0xbb, 0xd7, 0x1a, 0xf4, 0x7a, 0x57, 0x5d, 0x7a, 0xc5, 0xf1, 0x92, 0xf8, 0x19, 0x91, 0x38, 0x8a,
-	0x85, 0x9f, 0xb9, 0xb7, 0x7f, 0x71, 0xe0, 0xc1, 0x35, 0x33, 0x42, 0x50, 0x65, 0x98, 0x12, 0xcf,
-	0xd9, 0x75, 0xf6, 0x9a, 0xbe, 0x96, 0xd1, 0x43, 0xa8, 0x61, 0x9a, 0xa4, 0x4c, 0x7a, 0x95, 0x5d,
-	0x67, 0xcf, 0xf5, 0x2d, 0x42, 0x6f, 0x03, 0x50, 0x7c, 0x3e, 0xb2, 0x36, 0x57, 0xdb, 0x9a, 0x14,
-	0x9f, 0x1f, 0x18, 0x73, 0x1b, 0x1a, 0x41, 0xca, 0x39, 0x61, 0xc1, 0xdc, 0xab, 0x6a, 0xba, 0x1c,
-	0x2b, 0x4a, 0x21, 0xb1, 0x4c, 0x85, 0xb7, 0xa9, 0x2d, 0x16, 0x75, 0x7f, 0xdb, 0xce, 0xaa, 0x7d,
-	0x11, 0x91, 0x33, 0xf4, 0x15, 0x34, 0xb8, 0x96, 0x08, 0xd7, 0x19, 0xb5, 0x06, 0xfd, 0xdb, 0xca,
-	0x55, 0xa7, 0x4a, 0xa2, 0x6f, 0xdd, 0xfc, 0x9c, 0x00, 0x7d, 0x0f, 0xdb, 0x94, 0xf0, 0x60, 0x8a,
-	0x99, 0x1c, 0x19, 0xa5, 0xae, 0xa7, 0x35, 0xf8, 0xf8, 0x8e, 0x9c, 0x43, 0xeb, 0x6d, 0x23, 0xdc,
-	0xa7, 0x0b, 0x18, 0x8d, 0x60, 0x67, 0xc6, 0x93, 0x30, 0x0d, 0xa4, 0xb0, 0xfc, 0xc2, 0x73, 0xf5,
-	0x8c, 0x1e, 0xdf, 0x31, 0xc0, 0x53, 0xe3, 0x6e, 0xf9, 0xb7, 0x33, 0x36, 0x83, 0x45, 0x3b, 0x06,
-	0x74, 0xbd, 0x40, 0xf4, 0x0e, 0xb4, 0xb2, 0x12, 0x47, 0x51, 0x68, 0x07, 0x07, 0x99, 0xea, 0x38,
-	0xcc, 0x47, 0x5a, 0x29, 0x8d, 0xf4, 0x5d, 0xd8, 0x8a, 0xc4, 0x08, 0xb3, 0x84, 0xcd, 0x69, 0x92,
-	0x0a, 0x3d, 0xbc, 0x86, 0xdf, 0x8a, 0xc4, 0x41, 0xa6, 0x6a, 0xff, 0x58, 0x05, 0xef, 0xb6, 0xda,
-	0xd1, 0x5b, 0xd0, 0x34, 0x11, 0x8a, 0x90, 0xb6, 0xd1, 0xc7, 0xa1, 0x22, 0xcf, 0x1b, 0x9d, 0xf2,
-	0xd8, 0x06, 0x6e, 0x65, 0xba, 0x13, 0x1e, 0xab, 0xd5, 0xe1, 0x58, 0x46, 0x6c, 0xa2, 0x0f, 0xb8,
-	0xfa, 0x40, 0xd3, 0x68, 0x32, 0xb3, 0xa1, 0x57, 0xe6, 0xaa, 0x35, 0x6b, 0x8d, 0x32, 0x3f, 0x82,
-	0xa6, 0x8c, 0x28, 0x11, 0x12, 0xd3, 0x99, 0x5d, 0xa0, 0x42, 0x81, 0xbe, 0x83, 0xba, 0x61, 0x12,
-	0x5e, 0x4d, 0xb7, 0xff, 0x70, 0xad, 0xf9, 0xf6, 0x7c, 0x43, 0xf2, 0x39, 0x93, 0x7c, 0xee, 0x67,
-	0x94, 0xe8, 0x0d, 0xd8, 0x94, 0x91, 0x8c, 0x89, 0x57, 0xd7, 0x71, 0x0d, 0x50, 0x31, 0x83, 0x84,
-	0x49, 0xc2, 0xa4, 0xd7, 0x78, 0x9d, 0x98, 0x47, 0x86, 0xc4, 0xc6, 0xb4, 0x94, 0xed, 0x7d, 0xd8,
-	0x2a, 0x27, 0x83, 0x76, 0xc0, 0x3d, 0x25, 0x73, 0xdb, 0x77, 0x25, 0xaa, 0xac, 0x5e, 0xe0, 0x38,
-	0x25, 0xf6, 0x09, 0x35, 0x60, 0xbf, 0xf2, 0xc4, 0x51, 0xbe, 0x65, 0xd2, 0x57, 0xf9, 0x36, 0xcb,
-	0xbe, 0xbf, 0x36, 0xe0, 0xcd, 0x5b, 0xb6, 0x73, 0xf9, 0x06, 0x2c, 0x8e, 0xb7, 0xb2, 0x7c, 0xbc,
-	0xee, 0xd5, 0xf1, 0x7e, 0x00, 0x0f, 0x82, 0x24, 0x8e, 0x49, 0x20, 0xa3, 0x84, 0x8d, 0x28, 0x91,
-	0xd3, 0x24, 0xb4, 0x4b, 0xb0, 0x53, 0x18, 0x86, 0x5a, 0xff, 0x8a, 0x5d, 0x78, 0x7e, 0x75, 0x17,
-	0x0e, 0xd6, 0x79, 0x14, 0x57, 0x5a, 0x85, 0xe7, 0x57, 0x57, 0x61, 0xbd, 0x90, 0x37, 0x6e, 0x02,
-	0xf2, 0xa1, 0x46, 0x49, 0x18, 0x61, 0xe1, 0x35, 0x35, 0xf7, 0xfe, 0x5a, 0xdc, 0x43, 0x45, 0xe1,
-	0x5b, 0x26, 0xf4, 0x0d, 0x34, 0xb2, 0x37, 0x8d, 0x07, 0x9a, 0xf5, 0xd3, 0xb5, 0x58, 0x33, 0x94,
-	0xb3, 0xb5, 0x9f, 0xc1, 0xa6, 0x0e, 0xa5, 0x3e, 0x05, 0x34, 0xa2, 0x44, 0xce, 0x67, 0xd9, 0x97,
-	0x25, 0xc7, 0x6a, 0x21, 0x8b, 0x25, 0x51, 0x22, 0x7a, 0x0f, 0xee, 0xc9, 0x69, 0x4a, 0xc7, 0x0c,
-	0x47, 0x71, 0x69, 0x43, 0xb6, 0x72, 0xe5, 0x09, 0x8f, 0xdb, 0x3f, 0x55, 0xa0, 0x6e, 0x23, 0xde,
-	0xf8, 0xd1, 0xba, 0x4e, 0xfb, 0x10, 0x6a, 0x63, 0x8e, 0x59, 0x68, 0xde, 0xca, 0x4d, 0xdf, 0x22,
-	0xf4, 0x2d, 0xb8, 0x51, 0x28, 0xf4, 0x82, 0xb5, 0x06, 0x5f, 0xbc, 0x4e, 0xe9, 0xd9, 0xff, 0xe3,
-	0x50, 0xf8, 0x8a, 0xb3, 0xfd, 0x03, 0x40, 0xa1, 0x52, 0xfb, 0x32, 0x91, 0x11, 0x33, 0x5f, 0xee,
-	0xa6, 0x6f, 0x80, 0x4a, 0x9e, 0xce, 0x98, 0xf0, 0x2a, 0x5a, 0xa9, 0x65, 0xa5, 0x13, 0xa7, 0x69,
-	0x96, 0xa8, 0x96, 0x95, 0x37, 0x16, 0xca, 0xbb, 0x6a, 0xbc, 0x35, 0xf8, 0xbf, 0x5e, 0x0d, 0xdd,
-	0x7f, 0x1d, 0xa8, 0xaa, 0x6e, 0x20, 0x0f, 0xea, 0x01, 0x27, 0x58, 0x26, 0xdc, 0x3a, 0x66, 0x10,
-	0xdd, 0x87, 0x4a, 0x14, 0x5a, 0xcf, 0x4a, 0x14, 0x96, 0xae, 0x11, 0xee, 0xc2, 0x35, 0xa2, 0xb8,
-	0x0b, 0x54, 0xcb, 0x77, 0x01, 0xad, 0x27, 0x01, 0x27, 0x32, 0xbf, 0x23, 0x68, 0xa4, 0xf5, 0xc1,
-	0x94, 0x50, 0xec, 0xd5, 0xac, 0x5e, 0x23, 0xf4, 0x18, 0x6a, 0xe6, 0x6e, 0xa3, 0x9f, 0xc7, 0xd6,
-	0xe0, 0xd1, 0xb2, 0x9b, 0x91, 0x6f, 0xcf, 0x1a, 0x2f, 0x7d, 0x19, 0x68, 0x2c, 0xf7, 0xd2, 0x1f,
-	0x5d, 0x7b, 0xb6, 0xfb, 0xa7, 0x03, 0xad, 0xa1, 0x98, 0x7c, 0x3d, 0x23, 0x4c, 0x77, 0xc1, 0xd4,
-	0xea, 0xe4, 0xb5, 0x96, 0xba, 0x52, 0x59, 0xec, 0xca, 0xb2, 0x2e, 0x98, 0x6a, 0xab, 0x0b, 0xd5,
-	0x16, 0x55, 0x6d, 0xae, 0x55, 0x55, 0x6d, 0x85, 0xaa, 0x7e, 0x77, 0xe0, 0xde, 0x50, 0x4c, 0x4e,
-	0x66, 0x21, 0x96, 0x24, 0x9b, 0x6e, 0xaa, 0x51, 0x3e, 0x5d, 0x0b, 0xef, 0x3c, 0xdd, 0x22, 0xff,
-	0xea, 0x5a, 0xf9, 0x6f, 0xae, 0x90, 0xff, 0x27, 0x3a, 0xfd, 0x23, 0xcc, 0x02, 0x12, 0xaf, 0x96,
-	0x7e, 0xf7, 0x09, 0x6c, 0x29, 0xd7, 0x38, 0x11, 0x2b, 0x16, 0xde, 0x7d, 0x6a, 0x3d, 0x71, 0x44,
-	0xf3, 0x07, 0x42, 0x81, 0xc2, 0xd3, 0xc2, 0x9b, 0x5a, 0x66, 0x47, 0xee, 0x96, 0x47, 0x7e, 0x78,
-	0xf4, 0xc7, 0x45, 0xc7, 0x79, 0x79, 0xd1, 0x71, 0xfe, 0xbe, 0xe8, 0x38, 0x3f, 0x5f, 0x76, 0x36,
-	0x5e, 0x5e, 0x76, 0x36, 0xfe, 0xba, 0xec, 0x6c, 0x3c, 0x7b, 0x7f, 0x12, 0xc9, 0x69, 0x3a, 0xee,
-	0x05, 0x09, 0xed, 0xc7, 0x29, 0xfd, 0xd0, 0x36, 0xa4, 0x1f, 0x4c, 0x71, 0xc4, 0xfa, 0xe7, 0xfa,
-	0x97, 0x44, 0x5f, 0xbd, 0x55, 0xc5, 0xb8, 0xa6, 0x7f, 0x50, 0x7c, 0xf4, 0x5f, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0xd6, 0x4e, 0x23, 0x75, 0x63, 0x0c, 0x00, 0x00,
+	// 1258 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x57, 0xdd, 0x6e, 0x1b, 0x45,
+	0x14, 0xce, 0xfa, 0x77, 0x7d, 0x9c, 0x26, 0xee, 0x08, 0xc1, 0xd6, 0x2d, 0xa6, 0x6c, 0xb9, 0x68,
+	0x41, 0xd8, 0x52, 0xca, 0x05, 0x94, 0x82, 0x94, 0x3a, 0x91, 0x88, 0xa8, 0xdb, 0x68, 0xa3, 0x14,
+	0x84, 0x10, 0x66, 0xb2, 0x3b, 0xb5, 0x47, 0xdd, 0x1f, 0x77, 0x66, 0x36, 0x6d, 0xee, 0x79, 0x00,
+	0xae, 0x78, 0x03, 0xde, 0x05, 0xb8, 0xaa, 0xc4, 0x0d, 0x77, 0xa0, 0xe6, 0x21, 0xb8, 0x04, 0xcd,
+	0xcf, 0xae, 0xd7, 0x89, 0x1d, 0x9c, 0x44, 0xe2, 0xc6, 0x3a, 0x3f, 0x7b, 0xce, 0x99, 0xf3, 0xcd,
+	0x37, 0x33, 0xc7, 0xb0, 0x7e, 0x40, 0x70, 0xd4, 0x93, 0x3f, 0xdd, 0x09, 0x4b, 0x44, 0x82, 0x5a,
+	0x61, 0x1a, 0x75, 0x63, 0x22, 0x5e, 0x24, 0xec, 0x59, 0x57, 0xda, 0xdd, 0xef, 0xa0, 0xf1, 0x80,
+	0xe0, 0x68, 0x40, 0x02, 0x8a, 0x51, 0x1b, 0xec, 0x88, 0x46, 0x44, 0x1c, 0x4d, 0x88, 0x63, 0xdd,
+	0xb4, 0x6e, 0x37, 0xbc, 0x5c, 0x47, 0x2d, 0x28, 0xa7, 0x2c, 0x74, 0x4a, 0xca, 0x2c, 0x45, 0x74,
+	0x0b, 0xae, 0x88, 0x71, 0x1a, 0x1d, 0xc4, 0x98, 0x86, 0x43, 0xe9, 0x2b, 0x2b, 0xdf, 0x6a, 0x6e,
+	0xdc, 0x67, 0xa1, 0xfb, 0x14, 0x56, 0x65, 0x7e, 0x8f, 0x1c, 0x52, 0xf2, 0x82, 0x30, 0xf4, 0x0e,
+	0x34, 0x99, 0x91, 0x87, 0x34, 0x30, 0x55, 0x20, 0x33, 0xed, 0x04, 0x08, 0x41, 0x25, 0xc6, 0x11,
+	0x31, 0x85, 0x94, 0x8c, 0xde, 0x85, 0x55, 0xca, 0x87, 0x38, 0x4e, 0xe2, 0xa3, 0x28, 0x49, 0xb9,
+	0x2a, 0x64, 0x7b, 0x4d, 0xca, 0x37, 0x33, 0x93, 0xeb, 0xe9, 0x3a, 0x4f, 0x08, 0xa3, 0x4f, 0x29,
+	0x61, 0x79, 0x1a, 0xab, 0x90, 0xe6, 0x74, 0x0b, 0x37, 0xa0, 0xc1, 0xe9, 0x28, 0xc6, 0x22, 0x65,
+	0xc4, 0x2c, 0x7f, 0x6a, 0x70, 0x7f, 0x2f, 0x01, 0xe8, 0xc5, 0xbf, 0xc0, 0x2c, 0x40, 0x0e, 0xd4,
+	0x05, 0xa3, 0xa3, 0x11, 0x61, 0x26, 0x6b, 0xa6, 0xa2, 0x37, 0xa1, 0x86, 0xa3, 0x24, 0x8d, 0x85,
+	0xca, 0x5d, 0xf2, 0x8c, 0x86, 0xde, 0x06, 0x88, 0xf0, 0xcb, 0xa1, 0xf1, 0x95, 0x95, 0xaf, 0x11,
+	0xe1, 0x97, 0x9b, 0xda, 0xdd, 0x06, 0xdb, 0x4f, 0x19, 0x23, 0xb1, 0x7f, 0xe4, 0x54, 0x34, 0xdc,
+	0x99, 0x2e, 0x53, 0x72, 0x81, 0x45, 0xca, 0x9d, 0xaa, 0xf2, 0x18, 0x0d, 0x7d, 0x01, 0xf5, 0x80,
+	0x08, 0x4c, 0x43, 0xee, 0xd4, 0x6e, 0x96, 0x6f, 0x37, 0x37, 0xba, 0xdd, 0x93, 0x7b, 0xda, 0x9d,
+	0xae, 0xb9, 0x20, 0x6e, 0xe9, 0x28, 0x2f, 0x0b, 0x6f, 0x1f, 0xc2, 0xd5, 0x53, 0x5e, 0x09, 0x5b,
+	0x61, 0xf7, 0x95, 0x7c, 0xd1, 0xee, 0xa6, 0x1d, 0x54, 0x8a, 0x1d, 0xb8, 0x3f, 0x55, 0x01, 0x69,
+	0xca, 0x31, 0x7f, 0x8c, 0x63, 0xa1, 0xa9, 0x81, 0xae, 0x81, 0x9d, 0xb0, 0xa0, 0xc8, 0x8a, 0xba,
+	0xd2, 0x77, 0x02, 0x74, 0x1d, 0x1a, 0x9a, 0x20, 0xd2, 0xa7, 0x77, 0xcf, 0xd6, 0x86, 0x9d, 0x40,
+	0x72, 0x23, 0x32, 0x99, 0x0a, 0x24, 0x6c, 0x66, 0xb6, 0x7d, 0x16, 0xca, 0x85, 0x32, 0x2c, 0x68,
+	0x3c, 0x52, 0x1f, 0xe8, 0xd5, 0x34, 0xb4, 0x25, 0x73, 0xeb, 0xf4, 0xd2, 0x5d, 0x35, 0x6e, 0x65,
+	0x91, 0xee, 0x0f, 0xe0, 0xaa, 0x9f, 0x84, 0x21, 0xf1, 0x05, 0x4d, 0xe2, 0x61, 0x44, 0xc4, 0x38,
+	0x09, 0x9c, 0x9a, 0xfa, 0xaa, 0x35, 0x75, 0x0c, 0x94, 0x5d, 0x12, 0x4a, 0xd0, 0x88, 0x70, 0x81,
+	0xa3, 0x89, 0x53, 0xd7, 0xa9, 0x72, 0x03, 0xfa, 0x0a, 0xea, 0xba, 0x2c, 0x77, 0xec, 0x9b, 0xd6,
+	0xed, 0xe6, 0xc6, 0x67, 0xf3, 0x37, 0x6f, 0x16, 0x9a, 0x39, 0x26, 0x4f, 0x65, 0xf1, 0xb2, 0x6c,
+	0xe8, 0x0d, 0xa8, 0x0a, 0x2a, 0x42, 0xe2, 0x34, 0x54, 0x49, 0xad, 0xa0, 0xaf, 0xa1, 0xee, 0x27,
+	0xb1, 0x20, 0xb1, 0x70, 0x40, 0x95, 0xfb, 0xfc, 0x82, 0xe5, 0xfa, 0x3a, 0x8b, 0x97, 0xa5, 0x6b,
+	0x3f, 0x07, 0x67, 0xd1, 0xa2, 0xe4, 0x31, 0x49, 0x0e, 0x09, 0xc3, 0x61, 0xa8, 0xf6, 0xb1, 0xe4,
+	0x65, 0x2a, 0xba, 0x03, 0x2d, 0x3f, 0xe5, 0x22, 0x89, 0x08, 0x1b, 0x72, 0xc2, 0x0e, 0xa9, 0x4f,
+	0x0c, 0xa5, 0xd6, 0x33, 0xfb, 0x9e, 0x36, 0xcb, 0xa3, 0x1a, 0x4f, 0xb8, 0x21, 0x95, 0x14, 0xdb,
+	0xdf, 0xc3, 0xb5, 0x85, 0x0b, 0x3b, 0x59, 0xb3, 0xf1, 0xdf, 0x35, 0x1b, 0xa7, 0x6a, 0xba, 0xbf,
+	0xd5, 0xf5, 0x89, 0xd8, 0x65, 0x49, 0x90, 0xfa, 0x97, 0xe5, 0xe5, 0x2c, 0xe9, 0xca, 0x67, 0x93,
+	0xae, 0xb2, 0x14, 0xe9, 0xaa, 0xcb, 0x90, 0xae, 0x76, 0x92, 0x74, 0xfb, 0x53, 0xd2, 0xd5, 0x15,
+	0x0b, 0x3e, 0x9d, 0xcf, 0x82, 0x99, 0xb6, 0x4f, 0x5b, 0x16, 0x52, 0xce, 0x2e, 0x52, 0xee, 0xc9,
+	0x94, 0x72, 0x0d, 0x55, 0xec, 0xfe, 0x85, 0x8a, 0x9d, 0x24, 0x1c, 0xba, 0x0b, 0xb5, 0x48, 0x3e,
+	0x51, 0xdc, 0x01, 0x75, 0xeb, 0x5d, 0x5f, 0xc4, 0xe4, 0x80, 0x62, 0xcf, 0x7c, 0x8a, 0xbe, 0x04,
+	0x7b, 0xa2, 0xb3, 0x72, 0xa7, 0xa9, 0xc2, 0x7a, 0xe7, 0x5d, 0x4d, 0x9e, 0xa0, 0x3d, 0x80, 0xb7,
+	0x16, 0x60, 0x72, 0x06, 0xe3, 0x1d, 0xa8, 0x3f, 0x4f, 0x71, 0x48, 0xc5, 0x91, 0x21, 0x7a, 0xa6,
+	0xb6, 0xbf, 0xd5, 0x27, 0x68, 0x5e, 0xd7, 0x67, 0xb0, 0x19, 0x41, 0x65, 0xc2, 0x12, 0x9e, 0x3d,
+	0x8e, 0x52, 0x96, 0x36, 0x3f, 0x89, 0xb9, 0xa1, 0x98, 0x92, 0xdb, 0xff, 0x58, 0xd0, 0x2c, 0xa4,
+	0x5f, 0xf2, 0x35, 0x44, 0x50, 0x49, 0x59, 0x28, 0x33, 0x95, 0xe5, 0x57, 0x52, 0x46, 0xbb, 0x50,
+	0xa6, 0x81, 0xbe, 0xc2, 0x17, 0xde, 0x1f, 0x0b, 0xe1, 0x2b, 0xca, 0x3b, 0x01, 0xf7, 0x64, 0xaa,
+	0x76, 0x00, 0x6b, 0xb3, 0x66, 0x49, 0xa5, 0x91, 0xa0, 0x31, 0x77, 0x2c, 0x55, 0x58, 0x2b, 0x72,
+	0x35, 0xd1, 0x24, 0x96, 0xbd, 0xaa, 0xd5, 0x48, 0x59, 0xda, 0xf8, 0xb3, 0x34, 0x5f, 0xa1, 0x94,
+	0x65, 0x34, 0xe6, 0x32, 0xba, 0xa2, 0xa3, 0x95, 0xe2, 0xfe, 0x59, 0x82, 0x96, 0x2c, 0xb3, 0xe7,
+	0x8f, 0x49, 0x44, 0xcc, 0x59, 0xfe, 0x08, 0x6a, 0x4c, 0x3d, 0x77, 0x0a, 0x88, 0xe6, 0xc6, 0x8d,
+	0xb3, 0xde, 0x4e, 0xcf, 0x7c, 0x8b, 0xee, 0x81, 0x7d, 0x68, 0xc6, 0x0a, 0x85, 0x56, 0x73, 0xa3,
+	0x33, 0x3f, 0x2e, 0x1b, 0x3e, 0xbc, 0xfc, 0x7b, 0x19, 0x9b, 0xcd, 0x36, 0x6a, 0x83, 0x16, 0xc6,
+	0x66, 0x03, 0x92, 0x97, 0x7f, 0x8f, 0x06, 0xb0, 0x9e, 0xbf, 0x6c, 0xda, 0x68, 0xb6, 0xe1, 0xbd,
+	0x65, 0xae, 0x71, 0x6f, 0x2d, 0x9a, 0x7d, 0x60, 0x1f, 0x41, 0x2b, 0x23, 0xb3, 0x49, 0x27, 0x67,
+	0x0b, 0x79, 0x2a, 0x6e, 0x2d, 0xb1, 0xad, 0xde, 0x7a, 0x16, 0xac, 0x75, 0xee, 0xfe, 0x60, 0xcd,
+	0x22, 0xac, 0xb0, 0xfa, 0xdf, 0x11, 0x76, 0x7f, 0x2e, 0x41, 0x45, 0xba, 0xe4, 0xa9, 0xf1, 0x19,
+	0xc1, 0x22, 0xc9, 0xc7, 0x33, 0xa3, 0xa2, 0x35, 0x28, 0xe5, 0x17, 0x74, 0x89, 0x06, 0x85, 0x81,
+	0x46, 0x6e, 0x49, 0x39, 0x1f, 0x68, 0xee, 0xce, 0x4c, 0x2c, 0x6b, 0x8b, 0x2e, 0x99, 0x3d, 0x81,
+	0x05, 0xc9, 0x07, 0x32, 0x39, 0xe6, 0x10, 0x9f, 0x11, 0x91, 0x0f, 0x6a, 0x4a, 0x53, 0x76, 0x89,
+	0x0c, 0x36, 0x37, 0xb2, 0xd1, 0xd0, 0xbd, 0x1c, 0x21, 0x7d, 0x1b, 0xbb, 0x0b, 0x8a, 0x14, 0x50,
+	0x2d, 0xe0, 0x54, 0x33, 0x44, 0xb0, 0x97, 0x89, 0x55, 0xfb, 0x66, 0x22, 0xdc, 0xbf, 0x2d, 0x68,
+	0x0e, 0xf8, 0xe8, 0xf1, 0x84, 0xc4, 0x0a, 0x2e, 0x0d, 0x8a, 0x95, 0x83, 0x52, 0x80, 0xaf, 0x34,
+	0x0b, 0xdf, 0xb4, 0xc3, 0xf2, 0xc9, 0x0e, 0x0d, 0x8c, 0x95, 0x19, 0x18, 0xa7, 0x9d, 0x57, 0x17,
+	0x74, 0x5e, 0xbb, 0x44, 0xe7, 0xf5, 0x73, 0x77, 0xfe, 0xab, 0x05, 0x57, 0x06, 0x7c, 0xb4, 0x3f,
+	0x09, 0xb0, 0x20, 0x19, 0x55, 0x52, 0xa5, 0xe5, 0x54, 0x31, 0xea, 0xd2, 0x54, 0x99, 0xf6, 0x52,
+	0xb9, 0x44, 0x2f, 0xd5, 0x73, 0xf7, 0xf2, 0x89, 0x6a, 0xa5, 0x8f, 0x63, 0x9f, 0x84, 0xe7, 0x6b,
+	0xc5, 0xfd, 0x18, 0x56, 0x65, 0x68, 0x98, 0xf0, 0x73, 0x82, 0xe0, 0xee, 0x9a, 0x48, 0x4c, 0xa3,
+	0xfc, 0xa4, 0x49, 0x65, 0x1a, 0x69, 0xd4, 0x79, 0xf0, 0xcd, 0xa3, 0xce, 0xfb, 0xf7, 0xf5, 0xbf,
+	0x4e, 0x75, 0x92, 0x90, 0x0d, 0x95, 0xc7, 0xbb, 0xdb, 0x8f, 0x5a, 0x2b, 0x68, 0x15, 0xec, 0xfe,
+	0xe6, 0xa3, 0xfe, 0xf6, 0xc3, 0xed, 0xad, 0x96, 0x85, 0x00, 0x6a, 0xfd, 0x87, 0x8f, 0xf7, 0xb6,
+	0xb7, 0x5a, 0x25, 0xd4, 0x84, 0x7a, 0xff, 0xe1, 0xe6, 0xce, 0x60, 0x7b, 0xab, 0x55, 0x7e, 0xd0,
+	0xff, 0xe5, 0x75, 0xc7, 0x7a, 0xf5, 0xba, 0x63, 0xfd, 0xf5, 0xba, 0x63, 0xfd, 0x78, 0xdc, 0x59,
+	0x79, 0x75, 0xdc, 0x59, 0xf9, 0xe3, 0xb8, 0xb3, 0xf2, 0xcd, 0x9d, 0x11, 0x15, 0xe3, 0xf4, 0xa0,
+	0xeb, 0x27, 0x51, 0x2f, 0x4c, 0xa3, 0x0f, 0x0d, 0xa8, 0x3d, 0x7f, 0x8c, 0x69, 0xdc, 0x7b, 0xa9,
+	0xfe, 0x0a, 0xf7, 0xe4, 0x9f, 0x1a, 0x7e, 0x50, 0x53, 0xff, 0x88, 0xef, 0xfe, 0x1b, 0x00, 0x00,
+	0xff, 0xff, 0x05, 0x86, 0xc9, 0x67, 0x24, 0x0f, 0x00, 0x00,
 }
 
-func (m *BeamReward) Marshal() (dAtA []byte, err error) {
+func (m *BeamMedia) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1209,149 +1686,41 @@ func (m *BeamReward) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *BeamReward) MarshalTo(dAtA []byte) (int, error) {
+func (m *BeamMedia) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *BeamReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *BeamMedia) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Rewards) > 0 {
-		for iNdEx := len(m.Rewards) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Rewards[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintBeam(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *BeamReward_BeamRewardDetails) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BeamReward_BeamRewardDetails) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *BeamReward_BeamRewardDetails) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Status) > 0 {
-		i -= len(m.Status)
-		copy(dAtA[i:], m.Status)
-		i = encodeVarintBeam(dAtA, i, uint64(len(m.Status)))
+	if len(m.ThumbnailUrl) > 0 {
+		i -= len(m.ThumbnailUrl)
+		copy(dAtA[i:], m.ThumbnailUrl)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.ThumbnailUrl)))
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x1a
 	}
-	if len(m.Currency) > 0 {
-		i -= len(m.Currency)
-		copy(dAtA[i:], m.Currency)
-		i = encodeVarintBeam(dAtA, i, uint64(len(m.Currency)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if m.MaxAmount != 0 {
-		i = encodeVarintBeam(dAtA, i, uint64(m.MaxAmount))
-		i--
-		dAtA[i] = 0x18
-	}
-	if m.Amount != 0 {
-		i = encodeVarintBeam(dAtA, i, uint64(m.Amount))
-		i--
-		dAtA[i] = 0x10
-	}
-	if len(m.Name) > 0 {
-		i -= len(m.Name)
-		copy(dAtA[i:], m.Name)
-		i = encodeVarintBeam(dAtA, i, uint64(len(m.Name)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *BeamReview) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BeamReview) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *BeamReview) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.ProductsReviews) > 0 {
-		for iNdEx := len(m.ProductsReviews) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.ProductsReviews[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintBeam(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x1a
-		}
-	}
-	if m.MerchantReview != nil {
-		{
-			size, err := m.MerchantReview.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintBeam(dAtA, i, uint64(size))
-		}
+	if len(m.Url) > 0 {
+		i -= len(m.Url)
+		copy(dAtA[i:], m.Url)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.Url)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if m.Reviewer != nil {
-		{
-			size, err := m.Reviewer.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintBeam(dAtA, i, uint64(size))
-		}
+	if len(m.Mimetype) > 0 {
+		i -= len(m.Mimetype)
+		copy(dAtA[i:], m.Mimetype)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.Mimetype)))
 		i--
 		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *BeamReview_BeamReviewReviewer) Marshal() (dAtA []byte, err error) {
+func (m *BeamReviewer) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1361,12 +1730,12 @@ func (m *BeamReview_BeamReviewReviewer) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *BeamReview_BeamReviewReviewer) MarshalTo(dAtA []byte) (int, error) {
+func (m *BeamReviewer) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *BeamReview_BeamReviewReviewer) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *BeamReviewer) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1398,7 +1767,7 @@ func (m *BeamReview_BeamReviewReviewer) MarshalToSizedBuffer(dAtA []byte) (int, 
 	return len(dAtA) - i, nil
 }
 
-func (m *BeamReview_BeamReviewMerchantReview) Marshal() (dAtA []byte, err error) {
+func (m *BeamVerifier) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1408,98 +1777,41 @@ func (m *BeamReview_BeamReviewMerchantReview) Marshal() (dAtA []byte, err error)
 	return dAtA[:n], nil
 }
 
-func (m *BeamReview_BeamReviewMerchantReview) MarshalTo(dAtA []byte) (int, error) {
+func (m *BeamVerifier) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *BeamReview_BeamReviewMerchantReview) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *BeamVerifier) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Content) > 0 {
-		for k := range m.Content {
-			v := m.Content[k]
-			baseI := i
-			i -= len(v)
-			copy(dAtA[i:], v)
-			i = encodeVarintBeam(dAtA, i, uint64(len(v)))
-			i--
-			dAtA[i] = 0x12
-			i -= len(k)
-			copy(dAtA[i:], k)
-			i = encodeVarintBeam(dAtA, i, uint64(len(k)))
-			i--
-			dAtA[i] = 0xa
-			i = encodeVarintBeam(dAtA, i, uint64(baseI-i))
-			i--
-			dAtA[i] = 0x42
-		}
-	}
-	if len(m.Title) > 0 {
-		i -= len(m.Title)
-		copy(dAtA[i:], m.Title)
-		i = encodeVarintBeam(dAtA, i, uint64(len(m.Title)))
-		i--
-		dAtA[i] = 0x3a
-	}
-	if len(m.Ratings) > 0 {
-		for k := range m.Ratings {
-			v := m.Ratings[k]
-			baseI := i
-			i = encodeVarintBeam(dAtA, i, uint64(v))
-			i--
-			dAtA[i] = 0x10
-			i -= len(k)
-			copy(dAtA[i:], k)
-			i = encodeVarintBeam(dAtA, i, uint64(len(k)))
-			i--
-			dAtA[i] = 0xa
-			i = encodeVarintBeam(dAtA, i, uint64(baseI-i))
-			i--
-			dAtA[i] = 0x32
-		}
-	}
-	if len(m.Timestamp) > 0 {
-		i -= len(m.Timestamp)
-		copy(dAtA[i:], m.Timestamp)
-		i = encodeVarintBeam(dAtA, i, uint64(len(m.Timestamp)))
-		i--
-		dAtA[i] = 0x2a
-	}
-	if len(m.ReviewUrl) > 0 {
-		i -= len(m.ReviewUrl)
-		copy(dAtA[i:], m.ReviewUrl)
-		i = encodeVarintBeam(dAtA, i, uint64(len(m.ReviewUrl)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.RatingUrl) > 0 {
-		i -= len(m.RatingUrl)
-		copy(dAtA[i:], m.RatingUrl)
-		i = encodeVarintBeam(dAtA, i, uint64(len(m.RatingUrl)))
+	if len(m.Signature) > 0 {
+		i -= len(m.Signature)
+		copy(dAtA[i:], m.Signature)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.Signature)))
 		i--
 		dAtA[i] = 0x1a
 	}
-	if len(m.MerchantUrl) > 0 {
-		i -= len(m.MerchantUrl)
-		copy(dAtA[i:], m.MerchantUrl)
-		i = encodeVarintBeam(dAtA, i, uint64(len(m.MerchantUrl)))
+	if len(m.Url) > 0 {
+		i -= len(m.Url)
+		copy(dAtA[i:], m.Url)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.Url)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.ReviewId) > 0 {
-		i -= len(m.ReviewId)
-		copy(dAtA[i:], m.ReviewId)
-		i = encodeVarintBeam(dAtA, i, uint64(len(m.ReviewId)))
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.Name)))
 		i--
 		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *BeamReview_BeamReviewProductReview) Marshal() (dAtA []byte, err error) {
+func (m *BeamReward) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1509,12 +1821,312 @@ func (m *BeamReview_BeamReviewProductReview) Marshal() (dAtA []byte, err error) 
 	return dAtA[:n], nil
 }
 
-func (m *BeamReview_BeamReviewProductReview) MarshalTo(dAtA []byte) (int, error) {
+func (m *BeamReward) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *BeamReview_BeamReviewProductReview) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *BeamReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Details) > 0 {
+		for iNdEx := len(m.Details) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Details[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintBeam(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x32
+		}
+	}
+	if len(m.Status) > 0 {
+		i -= len(m.Status)
+		copy(dAtA[i:], m.Status)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.Status)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.Currency) > 0 {
+		i -= len(m.Currency)
+		copy(dAtA[i:], m.Currency)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.Currency)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.MaxAmount != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.MaxAmount))))
+		i--
+		dAtA[i] = 0x1d
+	}
+	if m.Amount != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Amount))))
+		i--
+		dAtA[i] = 0x15
+	}
+	if len(m.Trigger) > 0 {
+		i -= len(m.Trigger)
+		copy(dAtA[i:], m.Trigger)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.Trigger)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BeamReward_BeamRewardDetails) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BeamReward_BeamRewardDetails) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BeamReward_BeamRewardDetails) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Status) > 0 {
+		i -= len(m.Status)
+		copy(dAtA[i:], m.Status)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.Status)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.MaxAmount != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.MaxAmount))))
+		i--
+		dAtA[i] = 0x1d
+	}
+	if m.Amount != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Amount))))
+		i--
+		dAtA[i] = 0x15
+	}
+	if len(m.Type) > 0 {
+		i -= len(m.Type)
+		copy(dAtA[i:], m.Type)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.Type)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BeamMerchantReview) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BeamMerchantReview) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BeamMerchantReview) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Content != nil {
+		{
+			size, err := m.Content.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintBeam(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x52
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0x4a
+	}
+	if m.Ratings != nil {
+		{
+			size, err := m.Ratings.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintBeam(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x42
+	}
+	if len(m.Timestamp) > 0 {
+		i -= len(m.Timestamp)
+		copy(dAtA[i:], m.Timestamp)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.Timestamp)))
+		i--
+		dAtA[i] = 0x3a
+	}
+	if len(m.CollectionMethod) > 0 {
+		i -= len(m.CollectionMethod)
+		copy(dAtA[i:], m.CollectionMethod)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.CollectionMethod)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.ReviewUrl) > 0 {
+		i -= len(m.ReviewUrl)
+		copy(dAtA[i:], m.ReviewUrl)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.ReviewUrl)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.RatingUrl) > 0 {
+		i -= len(m.RatingUrl)
+		copy(dAtA[i:], m.RatingUrl)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.RatingUrl)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.MerchantUrl) > 0 {
+		i -= len(m.MerchantUrl)
+		copy(dAtA[i:], m.MerchantUrl)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.MerchantUrl)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.ReviewId) > 0 {
+		i -= len(m.ReviewId)
+		copy(dAtA[i:], m.ReviewId)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.ReviewId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.OrderId) > 0 {
+		i -= len(m.OrderId)
+		copy(dAtA[i:], m.OrderId)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.OrderId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BeamMerchantReview_BeamMerchantReviewRating) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BeamMerchantReview_BeamMerchantReviewRating) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BeamMerchantReview_BeamMerchantReviewRating) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Nps != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Nps))))
+		i--
+		dAtA[i] = 0x1d
+	}
+	if m.CustomerService != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.CustomerService))))
+		i--
+		dAtA[i] = 0x15
+	}
+	if m.Overall != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Overall))))
+		i--
+		dAtA[i] = 0xd
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BeamMerchantReview_BeamMerchantReviewContent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BeamMerchantReview_BeamMerchantReviewContent) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BeamMerchantReview_BeamMerchantReviewContent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.CustomerService) > 0 {
+		i -= len(m.CustomerService)
+		copy(dAtA[i:], m.CustomerService)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.CustomerService)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Overall) > 0 {
+		i -= len(m.Overall)
+		copy(dAtA[i:], m.Overall)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.Overall)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BeamProductReview) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BeamProductReview) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BeamProductReview) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1530,7 +2142,7 @@ func (m *BeamReview_BeamReviewProductReview) MarshalToSizedBuffer(dAtA []byte) (
 				i = encodeVarintBeam(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x52
+			dAtA[i] = 0x5a
 		}
 	}
 	if len(m.Medias) > 0 {
@@ -1544,91 +2156,86 @@ func (m *BeamReview_BeamReviewProductReview) MarshalToSizedBuffer(dAtA []byte) (
 				i = encodeVarintBeam(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x4a
+			dAtA[i] = 0x52
 		}
 	}
-	if len(m.Content) > 0 {
-		for k := range m.Content {
-			v := m.Content[k]
-			baseI := i
-			i -= len(v)
-			copy(dAtA[i:], v)
-			i = encodeVarintBeam(dAtA, i, uint64(len(v)))
-			i--
-			dAtA[i] = 0x12
-			i -= len(k)
-			copy(dAtA[i:], k)
-			i = encodeVarintBeam(dAtA, i, uint64(len(k)))
-			i--
-			dAtA[i] = 0xa
-			i = encodeVarintBeam(dAtA, i, uint64(baseI-i))
-			i--
-			dAtA[i] = 0x42
+	if m.Content != nil {
+		{
+			size, err := m.Content.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintBeam(dAtA, i, uint64(size))
 		}
+		i--
+		dAtA[i] = 0x4a
 	}
 	if len(m.Title) > 0 {
 		i -= len(m.Title)
 		copy(dAtA[i:], m.Title)
 		i = encodeVarintBeam(dAtA, i, uint64(len(m.Title)))
 		i--
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x42
 	}
-	if len(m.Ratings) > 0 {
-		for k := range m.Ratings {
-			v := m.Ratings[k]
-			baseI := i
-			i = encodeVarintBeam(dAtA, i, uint64(v))
-			i--
-			dAtA[i] = 0x10
-			i -= len(k)
-			copy(dAtA[i:], k)
-			i = encodeVarintBeam(dAtA, i, uint64(len(k)))
-			i--
-			dAtA[i] = 0xa
-			i = encodeVarintBeam(dAtA, i, uint64(baseI-i))
-			i--
-			dAtA[i] = 0x32
+	if m.Ratings != nil {
+		{
+			size, err := m.Ratings.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintBeam(dAtA, i, uint64(size))
 		}
+		i--
+		dAtA[i] = 0x3a
 	}
 	if len(m.Timestamp) > 0 {
 		i -= len(m.Timestamp)
 		copy(dAtA[i:], m.Timestamp)
 		i = encodeVarintBeam(dAtA, i, uint64(len(m.Timestamp)))
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x32
 	}
 	if len(m.CollectionMethod) > 0 {
 		i -= len(m.CollectionMethod)
 		copy(dAtA[i:], m.CollectionMethod)
 		i = encodeVarintBeam(dAtA, i, uint64(len(m.CollectionMethod)))
 		i--
-		dAtA[i] = 0x22
+		dAtA[i] = 0x2a
 	}
 	if len(m.ReviewUrl) > 0 {
 		i -= len(m.ReviewUrl)
 		copy(dAtA[i:], m.ReviewUrl)
 		i = encodeVarintBeam(dAtA, i, uint64(len(m.ReviewUrl)))
 		i--
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x22
 	}
 	if len(m.RatingUrl) > 0 {
 		i -= len(m.RatingUrl)
 		copy(dAtA[i:], m.RatingUrl)
 		i = encodeVarintBeam(dAtA, i, uint64(len(m.RatingUrl)))
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0x1a
 	}
 	if len(m.ReviewId) > 0 {
 		i -= len(m.ReviewId)
 		copy(dAtA[i:], m.ReviewId)
 		i = encodeVarintBeam(dAtA, i, uint64(len(m.ReviewId)))
 		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.OrderId) > 0 {
+		i -= len(m.OrderId)
+		copy(dAtA[i:], m.OrderId)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.OrderId)))
+		i--
 		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *BeamReview_BeamReviewProductReview_Media) Marshal() (dAtA []byte, err error) {
+func (m *BeamProductReview_BeamProductReviewRating) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1638,41 +2245,32 @@ func (m *BeamReview_BeamReviewProductReview_Media) Marshal() (dAtA []byte, err e
 	return dAtA[:n], nil
 }
 
-func (m *BeamReview_BeamReviewProductReview_Media) MarshalTo(dAtA []byte) (int, error) {
+func (m *BeamProductReview_BeamProductReviewRating) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *BeamReview_BeamReviewProductReview_Media) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *BeamProductReview_BeamProductReviewRating) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.ThumbnailUrl) > 0 {
-		i -= len(m.ThumbnailUrl)
-		copy(dAtA[i:], m.ThumbnailUrl)
-		i = encodeVarintBeam(dAtA, i, uint64(len(m.ThumbnailUrl)))
+	if m.Quality != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Quality))))
 		i--
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x15
 	}
-	if len(m.Url) > 0 {
-		i -= len(m.Url)
-		copy(dAtA[i:], m.Url)
-		i = encodeVarintBeam(dAtA, i, uint64(len(m.Url)))
+	if m.Overall != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Overall))))
 		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Mimetype) > 0 {
-		i -= len(m.Mimetype)
-		copy(dAtA[i:], m.Mimetype)
-		i = encodeVarintBeam(dAtA, i, uint64(len(m.Mimetype)))
-		i--
-		dAtA[i] = 0xa
+		dAtA[i] = 0xd
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *BeamReview_BeamReviewProductReview_Product) Marshal() (dAtA []byte, err error) {
+func (m *BeamProductReview_BeamProductReviewContent) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1682,12 +2280,56 @@ func (m *BeamReview_BeamReviewProductReview_Product) Marshal() (dAtA []byte, err
 	return dAtA[:n], nil
 }
 
-func (m *BeamReview_BeamReviewProductReview_Product) MarshalTo(dAtA []byte) (int, error) {
+func (m *BeamProductReview_BeamProductReviewContent) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *BeamReview_BeamReviewProductReview_Product) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *BeamProductReview_BeamProductReviewContent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Cons) > 0 {
+		i -= len(m.Cons)
+		copy(dAtA[i:], m.Cons)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.Cons)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Pros) > 0 {
+		i -= len(m.Pros)
+		copy(dAtA[i:], m.Pros)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.Pros)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Overall) > 0 {
+		i -= len(m.Overall)
+		copy(dAtA[i:], m.Overall)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.Overall)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BeamProductReview_BeamProduct) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BeamProductReview_BeamProduct) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BeamProductReview_BeamProduct) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1704,11 +2346,11 @@ func (m *BeamReview_BeamReviewProductReview_Product) MarshalToSizedBuffer(dAtA [
 		i--
 		dAtA[i] = 0x22
 	}
-	if len(m.Brands) > 0 {
-		for iNdEx := len(m.Brands) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.Brands[iNdEx])
-			copy(dAtA[i:], m.Brands[iNdEx])
-			i = encodeVarintBeam(dAtA, i, uint64(len(m.Brands[iNdEx])))
+	if len(m.Urls) > 0 {
+		for iNdEx := len(m.Urls) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Urls[iNdEx])
+			copy(dAtA[i:], m.Urls[iNdEx])
+			i = encodeVarintBeam(dAtA, i, uint64(len(m.Urls[iNdEx])))
 			i--
 			dAtA[i] = 0x1a
 		}
@@ -1730,7 +2372,7 @@ func (m *BeamReview_BeamReviewProductReview_Product) MarshalToSizedBuffer(dAtA [
 	return len(dAtA) - i, nil
 }
 
-func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) Marshal() (dAtA []byte, err error) {
+func (m *BeamProductReview_BeamProduct_BeamProductIds) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1740,12 +2382,12 @@ func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) Marshal() (dAtA 
 	return dAtA[:n], nil
 }
 
-func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) MarshalTo(dAtA []byte) (int, error) {
+func (m *BeamProductReview_BeamProduct_BeamProductIds) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *BeamProductReview_BeamProduct_BeamProductIds) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1785,6 +2427,138 @@ func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) MarshalToSizedBu
 			i--
 			dAtA[i] = 0xa
 		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BeamSchemeReview) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BeamSchemeReview) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BeamSchemeReview) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ProductsReviews) > 0 {
+		for iNdEx := len(m.ProductsReviews) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ProductsReviews[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintBeam(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if m.MerchantReview != nil {
+		{
+			size, err := m.MerchantReview.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintBeam(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.Reviewer != nil {
+		{
+			size, err := m.Reviewer.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintBeam(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.Verifier != nil {
+		{
+			size, err := m.Verifier.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintBeam(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Reward != nil {
+		{
+			size, err := m.Reward.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintBeam(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BeamSchemeReward) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BeamSchemeReward) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BeamSchemeReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Verifier != nil {
+		{
+			size, err := m.Verifier.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintBeam(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Reward != nil {
+		{
+			size, err := m.Reward.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintBeam(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1847,12 +2621,10 @@ func (m *Beam) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x2a
 	}
-	if len(m.Status) > 0 {
-		i -= len(m.Status)
-		copy(dAtA[i:], m.Status)
-		i = encodeVarintBeam(dAtA, i, uint64(len(m.Status)))
+	if m.Status != 0 {
+		i = encodeVarintBeam(dAtA, i, uint64(m.Status))
 		i--
-		dAtA[i] = 0x22
+		dAtA[i] = 0x20
 	}
 	if m.Amount != 0 {
 		i = encodeVarintBeam(dAtA, i, uint64(m.Amount))
@@ -1906,7 +2678,7 @@ func (m *MsgOpenBeam) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintBeam(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x32
+		dAtA[i] = 0x3a
 	}
 	if m.Reward != nil {
 		{
@@ -1918,19 +2690,26 @@ func (m *MsgOpenBeam) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintBeam(dAtA, i, uint64(size))
 		}
 		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.Schema) > 0 {
+		i -= len(m.Schema)
+		copy(dAtA[i:], m.Schema)
+		i = encodeVarintBeam(dAtA, i, uint64(len(m.Schema)))
+		i--
 		dAtA[i] = 0x2a
+	}
+	if m.Amount != 0 {
+		i = encodeVarintBeam(dAtA, i, uint64(m.Amount))
+		i--
+		dAtA[i] = 0x20
 	}
 	if len(m.Secret) > 0 {
 		i -= len(m.Secret)
 		copy(dAtA[i:], m.Secret)
 		i = encodeVarintBeam(dAtA, i, uint64(len(m.Secret)))
 		i--
-		dAtA[i] = 0x22
-	}
-	if m.Amount != 0 {
-		i = encodeVarintBeam(dAtA, i, uint64(m.Amount))
-		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x1a
 	}
 	if len(m.Creator) > 0 {
 		i -= len(m.Creator)
@@ -2144,202 +2923,7 @@ func encodeVarintBeam(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *BeamReward) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.Rewards) > 0 {
-		for _, e := range m.Rewards {
-			l = e.Size()
-			n += 1 + l + sovBeam(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *BeamReward_BeamRewardDetails) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Name)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	if m.Amount != 0 {
-		n += 1 + sovBeam(uint64(m.Amount))
-	}
-	if m.MaxAmount != 0 {
-		n += 1 + sovBeam(uint64(m.MaxAmount))
-	}
-	l = len(m.Currency)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	l = len(m.Status)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	return n
-}
-
-func (m *BeamReview) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Reviewer != nil {
-		l = m.Reviewer.Size()
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	if m.MerchantReview != nil {
-		l = m.MerchantReview.Size()
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	if len(m.ProductsReviews) > 0 {
-		for _, e := range m.ProductsReviews {
-			l = e.Size()
-			n += 1 + l + sovBeam(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *BeamReview_BeamReviewReviewer) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.ReviewerId)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	l = len(m.Name)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	if m.IsAnonymous {
-		n += 2
-	}
-	return n
-}
-
-func (m *BeamReview_BeamReviewMerchantReview) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.ReviewId)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	l = len(m.MerchantUrl)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	l = len(m.RatingUrl)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	l = len(m.ReviewUrl)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	l = len(m.Timestamp)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	if len(m.Ratings) > 0 {
-		for k, v := range m.Ratings {
-			_ = k
-			_ = v
-			mapEntrySize := 1 + len(k) + sovBeam(uint64(len(k))) + 1 + sovBeam(uint64(v))
-			n += mapEntrySize + 1 + sovBeam(uint64(mapEntrySize))
-		}
-	}
-	l = len(m.Title)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	if len(m.Content) > 0 {
-		for k, v := range m.Content {
-			_ = k
-			_ = v
-			mapEntrySize := 1 + len(k) + sovBeam(uint64(len(k))) + 1 + len(v) + sovBeam(uint64(len(v)))
-			n += mapEntrySize + 1 + sovBeam(uint64(mapEntrySize))
-		}
-	}
-	return n
-}
-
-func (m *BeamReview_BeamReviewProductReview) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.ReviewId)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	l = len(m.RatingUrl)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	l = len(m.ReviewUrl)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	l = len(m.CollectionMethod)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	l = len(m.Timestamp)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	if len(m.Ratings) > 0 {
-		for k, v := range m.Ratings {
-			_ = k
-			_ = v
-			mapEntrySize := 1 + len(k) + sovBeam(uint64(len(k))) + 1 + sovBeam(uint64(v))
-			n += mapEntrySize + 1 + sovBeam(uint64(mapEntrySize))
-		}
-	}
-	l = len(m.Title)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
-	}
-	if len(m.Content) > 0 {
-		for k, v := range m.Content {
-			_ = k
-			_ = v
-			mapEntrySize := 1 + len(k) + sovBeam(uint64(len(k))) + 1 + len(v) + sovBeam(uint64(len(v)))
-			n += mapEntrySize + 1 + sovBeam(uint64(mapEntrySize))
-		}
-	}
-	if len(m.Medias) > 0 {
-		for _, e := range m.Medias {
-			l = e.Size()
-			n += 1 + l + sovBeam(uint64(l))
-		}
-	}
-	if len(m.Products) > 0 {
-		for _, e := range m.Products {
-			l = e.Size()
-			n += 1 + l + sovBeam(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *BeamReview_BeamReviewProductReview_Media) Size() (n int) {
+func (m *BeamMedia) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2360,7 +2944,27 @@ func (m *BeamReview_BeamReviewProductReview_Media) Size() (n int) {
 	return n
 }
 
-func (m *BeamReview_BeamReviewProductReview_Product) Size() (n int) {
+func (m *BeamReviewer) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ReviewerId)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	if m.IsAnonymous {
+		n += 2
+	}
+	return n
+}
+
+func (m *BeamVerifier) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2374,8 +2978,262 @@ func (m *BeamReview_BeamReviewProductReview_Product) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovBeam(uint64(l))
 	}
-	if len(m.Brands) > 0 {
-		for _, s := range m.Brands {
+	l = len(m.Signature)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	return n
+}
+
+func (m *BeamReward) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Trigger)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	if m.Amount != 0 {
+		n += 5
+	}
+	if m.MaxAmount != 0 {
+		n += 5
+	}
+	l = len(m.Currency)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.Status)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	if len(m.Details) > 0 {
+		for _, e := range m.Details {
+			l = e.Size()
+			n += 1 + l + sovBeam(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *BeamReward_BeamRewardDetails) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	if m.Amount != 0 {
+		n += 5
+	}
+	if m.MaxAmount != 0 {
+		n += 5
+	}
+	l = len(m.Status)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	return n
+}
+
+func (m *BeamMerchantReview) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.OrderId)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.ReviewId)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.MerchantUrl)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.RatingUrl)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.ReviewUrl)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.CollectionMethod)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.Timestamp)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	if m.Ratings != nil {
+		l = m.Ratings.Size()
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	if m.Content != nil {
+		l = m.Content.Size()
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	return n
+}
+
+func (m *BeamMerchantReview_BeamMerchantReviewRating) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Overall != 0 {
+		n += 5
+	}
+	if m.CustomerService != 0 {
+		n += 5
+	}
+	if m.Nps != 0 {
+		n += 5
+	}
+	return n
+}
+
+func (m *BeamMerchantReview_BeamMerchantReviewContent) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Overall)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.CustomerService)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	return n
+}
+
+func (m *BeamProductReview) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.OrderId)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.ReviewId)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.RatingUrl)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.ReviewUrl)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.CollectionMethod)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.Timestamp)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	if m.Ratings != nil {
+		l = m.Ratings.Size()
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	if m.Content != nil {
+		l = m.Content.Size()
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	if len(m.Medias) > 0 {
+		for _, e := range m.Medias {
+			l = e.Size()
+			n += 1 + l + sovBeam(uint64(l))
+		}
+	}
+	if len(m.Products) > 0 {
+		for _, e := range m.Products {
+			l = e.Size()
+			n += 1 + l + sovBeam(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *BeamProductReview_BeamProductReviewRating) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Overall != 0 {
+		n += 5
+	}
+	if m.Quality != 0 {
+		n += 5
+	}
+	return n
+}
+
+func (m *BeamProductReview_BeamProductReviewContent) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Overall)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.Pros)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.Cons)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	return n
+}
+
+func (m *BeamProductReview_BeamProduct) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	l = len(m.Url)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	if len(m.Urls) > 0 {
+		for _, s := range m.Urls {
 			l = len(s)
 			n += 1 + l + sovBeam(uint64(l))
 		}
@@ -2387,7 +3245,7 @@ func (m *BeamReview_BeamReviewProductReview_Product) Size() (n int) {
 	return n
 }
 
-func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) Size() (n int) {
+func (m *BeamProductReview_BeamProduct_BeamProductIds) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2420,6 +3278,54 @@ func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) Size() (n int) {
 	return n
 }
 
+func (m *BeamSchemeReview) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Reward != nil {
+		l = m.Reward.Size()
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	if m.Verifier != nil {
+		l = m.Verifier.Size()
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	if m.Reviewer != nil {
+		l = m.Reviewer.Size()
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	if m.MerchantReview != nil {
+		l = m.MerchantReview.Size()
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	if len(m.ProductsReviews) > 0 {
+		for _, e := range m.ProductsReviews {
+			l = e.Size()
+			n += 1 + l + sovBeam(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *BeamSchemeReward) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Reward != nil {
+		l = m.Reward.Size()
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	if m.Verifier != nil {
+		l = m.Verifier.Size()
+		n += 1 + l + sovBeam(uint64(l))
+	}
+	return n
+}
+
 func (m *Beam) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2437,9 +3343,8 @@ func (m *Beam) Size() (n int) {
 	if m.Amount != 0 {
 		n += 1 + sovBeam(uint64(m.Amount))
 	}
-	l = len(m.Status)
-	if l > 0 {
-		n += 1 + l + sovBeam(uint64(l))
+	if m.Status != 0 {
+		n += 1 + sovBeam(uint64(m.Status))
 	}
 	l = len(m.Secret)
 	if l > 0 {
@@ -2474,10 +3379,14 @@ func (m *MsgOpenBeam) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovBeam(uint64(l))
 	}
+	l = len(m.Secret)
+	if l > 0 {
+		n += 1 + l + sovBeam(uint64(l))
+	}
 	if m.Amount != 0 {
 		n += 1 + sovBeam(uint64(m.Amount))
 	}
-	l = len(m.Secret)
+	l = len(m.Schema)
 	if l > 0 {
 		n += 1 + l + sovBeam(uint64(l))
 	}
@@ -2581,7 +3490,7 @@ func sovBeam(x uint64) (n int) {
 func sozBeam(x uint64) (n int) {
 	return sovBeam(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *BeamReward) Unmarshal(dAtA []byte) error {
+func (m *BeamMedia) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2604,1618 +3513,10 @@ func (m *BeamReward) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: BeamReward: wiretype end group for non-group")
+			return fmt.Errorf("proto: BeamMedia: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BeamReward: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Rewards", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Rewards = append(m.Rewards, &BeamReward_BeamRewardDetails{})
-			if err := m.Rewards[len(m.Rewards)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBeam(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BeamReward_BeamRewardDetails) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBeam
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BeamRewardDetails: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BeamRewardDetails: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Name = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			m.Amount = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Amount |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxAmount", wireType)
-			}
-			m.MaxAmount = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.MaxAmount |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Currency", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Currency = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Status = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBeam(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BeamReview) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBeam
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BeamReview: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BeamReview: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Reviewer", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Reviewer == nil {
-				m.Reviewer = &BeamReview_BeamReviewReviewer{}
-			}
-			if err := m.Reviewer.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MerchantReview", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.MerchantReview == nil {
-				m.MerchantReview = &BeamReview_BeamReviewMerchantReview{}
-			}
-			if err := m.MerchantReview.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ProductsReviews", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ProductsReviews = append(m.ProductsReviews, &BeamReview_BeamReviewProductReview{})
-			if err := m.ProductsReviews[len(m.ProductsReviews)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBeam(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BeamReview_BeamReviewReviewer) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBeam
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BeamReviewReviewer: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BeamReviewReviewer: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ReviewerId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ReviewerId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Name = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IsAnonymous", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.IsAnonymous = bool(v != 0)
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBeam(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BeamReview_BeamReviewMerchantReview) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBeam
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BeamReviewMerchantReview: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BeamReviewMerchantReview: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ReviewId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ReviewId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MerchantUrl", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.MerchantUrl = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RatingUrl", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.RatingUrl = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ReviewUrl", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ReviewUrl = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Timestamp = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Ratings", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Ratings == nil {
-				m.Ratings = make(map[string]int64)
-			}
-			var mapkey string
-			var mapvalue int64
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowBeam
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					wire |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					var stringLenmapkey uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowBeam
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapkey |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapkey := int(stringLenmapkey)
-					if intStringLenmapkey < 0 {
-						return ErrInvalidLengthBeam
-					}
-					postStringIndexmapkey := iNdEx + intStringLenmapkey
-					if postStringIndexmapkey < 0 {
-						return ErrInvalidLengthBeam
-					}
-					if postStringIndexmapkey > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
-					iNdEx = postStringIndexmapkey
-				} else if fieldNum == 2 {
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowBeam
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						mapvalue |= int64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipBeam(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if skippy < 0 {
-						return ErrInvalidLengthBeam
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
-				}
-			}
-			m.Ratings[mapkey] = mapvalue
-			iNdEx = postIndex
-		case 7:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Title = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 8:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Content", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Content == nil {
-				m.Content = make(map[string]string)
-			}
-			var mapkey string
-			var mapvalue string
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowBeam
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					wire |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					var stringLenmapkey uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowBeam
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapkey |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapkey := int(stringLenmapkey)
-					if intStringLenmapkey < 0 {
-						return ErrInvalidLengthBeam
-					}
-					postStringIndexmapkey := iNdEx + intStringLenmapkey
-					if postStringIndexmapkey < 0 {
-						return ErrInvalidLengthBeam
-					}
-					if postStringIndexmapkey > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
-					iNdEx = postStringIndexmapkey
-				} else if fieldNum == 2 {
-					var stringLenmapvalue uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowBeam
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapvalue |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapvalue := int(stringLenmapvalue)
-					if intStringLenmapvalue < 0 {
-						return ErrInvalidLengthBeam
-					}
-					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
-					if postStringIndexmapvalue < 0 {
-						return ErrInvalidLengthBeam
-					}
-					if postStringIndexmapvalue > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
-					iNdEx = postStringIndexmapvalue
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipBeam(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if skippy < 0 {
-						return ErrInvalidLengthBeam
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
-				}
-			}
-			m.Content[mapkey] = mapvalue
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBeam(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BeamReview_BeamReviewProductReview) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBeam
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BeamReviewProductReview: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BeamReviewProductReview: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ReviewId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ReviewId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RatingUrl", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.RatingUrl = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ReviewUrl", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ReviewUrl = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CollectionMethod", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.CollectionMethod = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Timestamp = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Ratings", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Ratings == nil {
-				m.Ratings = make(map[string]int64)
-			}
-			var mapkey string
-			var mapvalue int64
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowBeam
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					wire |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					var stringLenmapkey uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowBeam
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapkey |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapkey := int(stringLenmapkey)
-					if intStringLenmapkey < 0 {
-						return ErrInvalidLengthBeam
-					}
-					postStringIndexmapkey := iNdEx + intStringLenmapkey
-					if postStringIndexmapkey < 0 {
-						return ErrInvalidLengthBeam
-					}
-					if postStringIndexmapkey > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
-					iNdEx = postStringIndexmapkey
-				} else if fieldNum == 2 {
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowBeam
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						mapvalue |= int64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipBeam(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if skippy < 0 {
-						return ErrInvalidLengthBeam
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
-				}
-			}
-			m.Ratings[mapkey] = mapvalue
-			iNdEx = postIndex
-		case 7:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Title = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 8:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Content", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Content == nil {
-				m.Content = make(map[string]string)
-			}
-			var mapkey string
-			var mapvalue string
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowBeam
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					wire |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					var stringLenmapkey uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowBeam
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapkey |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapkey := int(stringLenmapkey)
-					if intStringLenmapkey < 0 {
-						return ErrInvalidLengthBeam
-					}
-					postStringIndexmapkey := iNdEx + intStringLenmapkey
-					if postStringIndexmapkey < 0 {
-						return ErrInvalidLengthBeam
-					}
-					if postStringIndexmapkey > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
-					iNdEx = postStringIndexmapkey
-				} else if fieldNum == 2 {
-					var stringLenmapvalue uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowBeam
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapvalue |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapvalue := int(stringLenmapvalue)
-					if intStringLenmapvalue < 0 {
-						return ErrInvalidLengthBeam
-					}
-					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
-					if postStringIndexmapvalue < 0 {
-						return ErrInvalidLengthBeam
-					}
-					if postStringIndexmapvalue > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
-					iNdEx = postStringIndexmapvalue
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipBeam(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if skippy < 0 {
-						return ErrInvalidLengthBeam
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
-				}
-			}
-			m.Content[mapkey] = mapvalue
-			iNdEx = postIndex
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Medias", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Medias = append(m.Medias, &BeamReview_BeamReviewProductReview_Media{})
-			if err := m.Medias[len(m.Medias)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 10:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Products", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Products = append(m.Products, &BeamReview_BeamReviewProductReview_Product{})
-			if err := m.Products[len(m.Products)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipBeam(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BeamReview_BeamReviewProductReview_Media) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowBeam
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Media: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Media: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: BeamMedia: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4338,7 +3639,7 @@ func (m *BeamReview_BeamReviewProductReview_Media) Unmarshal(dAtA []byte) error 
 	}
 	return nil
 }
-func (m *BeamReview_BeamReviewProductReview_Product) Unmarshal(dAtA []byte) error {
+func (m *BeamReviewer) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4361,10 +3662,147 @@ func (m *BeamReview_BeamReviewProductReview_Product) Unmarshal(dAtA []byte) erro
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Product: wiretype end group for non-group")
+			return fmt.Errorf("proto: BeamReviewer: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Product: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: BeamReviewer: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReviewerId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ReviewerId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IsAnonymous", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IsAnonymous = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBeam(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BeamVerifier) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBeam
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BeamVerifier: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BeamVerifier: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4433,7 +3871,7 @@ func (m *BeamReview_BeamReviewProductReview_Product) Unmarshal(dAtA []byte) erro
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Brands", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Signature", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -4461,7 +3899,1725 @@ func (m *BeamReview_BeamReviewProductReview_Product) Unmarshal(dAtA []byte) erro
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Brands = append(m.Brands, string(dAtA[iNdEx:postIndex]))
+			m.Signature = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBeam(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BeamReward) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBeam
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BeamReward: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BeamReward: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Trigger", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Trigger = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Amount = float32(math.Float32frombits(v))
+		case 3:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxAmount", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.MaxAmount = float32(math.Float32frombits(v))
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Currency", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Currency = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Status = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Details", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Details = append(m.Details, &BeamReward_BeamRewardDetails{})
+			if err := m.Details[len(m.Details)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBeam(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BeamReward_BeamRewardDetails) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBeam
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BeamRewardDetails: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BeamRewardDetails: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Amount = float32(math.Float32frombits(v))
+		case 3:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxAmount", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.MaxAmount = float32(math.Float32frombits(v))
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Status = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBeam(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BeamMerchantReview) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBeam
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BeamMerchantReview: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BeamMerchantReview: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OrderId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OrderId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReviewId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ReviewId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MerchantUrl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MerchantUrl = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RatingUrl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RatingUrl = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReviewUrl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ReviewUrl = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CollectionMethod", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CollectionMethod = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Timestamp = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ratings", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Ratings == nil {
+				m.Ratings = &BeamMerchantReview_BeamMerchantReviewRating{}
+			}
+			if err := m.Ratings.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Content", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Content == nil {
+				m.Content = &BeamMerchantReview_BeamMerchantReviewContent{}
+			}
+			if err := m.Content.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBeam(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BeamMerchantReview_BeamMerchantReviewRating) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBeam
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BeamMerchantReviewRating: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BeamMerchantReviewRating: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Overall", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Overall = float32(math.Float32frombits(v))
+		case 2:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CustomerService", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.CustomerService = float32(math.Float32frombits(v))
+		case 3:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Nps", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Nps = float32(math.Float32frombits(v))
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBeam(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BeamMerchantReview_BeamMerchantReviewContent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBeam
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BeamMerchantReviewContent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BeamMerchantReviewContent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Overall", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Overall = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CustomerService", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CustomerService = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBeam(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BeamProductReview) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBeam
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BeamProductReview: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BeamProductReview: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OrderId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OrderId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReviewId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ReviewId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RatingUrl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RatingUrl = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReviewUrl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ReviewUrl = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CollectionMethod", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CollectionMethod = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Timestamp = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ratings", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Ratings == nil {
+				m.Ratings = &BeamProductReview_BeamProductReviewRating{}
+			}
+			if err := m.Ratings.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Content", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Content == nil {
+				m.Content = &BeamProductReview_BeamProductReviewContent{}
+			}
+			if err := m.Content.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Medias", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Medias = append(m.Medias, &BeamMedia{})
+			if err := m.Medias[len(m.Medias)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Products", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Products = append(m.Products, &BeamProductReview_BeamProduct{})
+			if err := m.Products[len(m.Products)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBeam(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BeamProductReview_BeamProductReviewRating) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBeam
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BeamProductReviewRating: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BeamProductReviewRating: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Overall", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Overall = float32(math.Float32frombits(v))
+		case 2:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Quality", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Quality = float32(math.Float32frombits(v))
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBeam(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BeamProductReview_BeamProductReviewContent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBeam
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BeamProductReviewContent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BeamProductReviewContent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Overall", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Overall = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pros", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Pros = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Cons", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Cons = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBeam(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BeamProductReview_BeamProduct) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBeam
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BeamProduct: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BeamProduct: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Url", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Url = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Urls", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Urls = append(m.Urls, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -4493,7 +5649,7 @@ func (m *BeamReview_BeamReviewProductReview_Product) Unmarshal(dAtA []byte) erro
 				return io.ErrUnexpectedEOF
 			}
 			if m.Ids == nil {
-				m.Ids = &BeamReview_BeamReviewProductReview_Product_ProductIds{}
+				m.Ids = &BeamProductReview_BeamProduct_BeamProductIds{}
 			}
 			if err := m.Ids.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -4523,7 +5679,7 @@ func (m *BeamReview_BeamReviewProductReview_Product) Unmarshal(dAtA []byte) erro
 	}
 	return nil
 }
-func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) Unmarshal(dAtA []byte) error {
+func (m *BeamProductReview_BeamProduct_BeamProductIds) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4546,10 +5702,10 @@ func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) Unmarshal(dAtA [
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ProductIds: wiretype end group for non-group")
+			return fmt.Errorf("proto: BeamProductIds: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ProductIds: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: BeamProductIds: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4704,6 +5860,362 @@ func (m *BeamReview_BeamReviewProductReview_Product_ProductIds) Unmarshal(dAtA [
 	}
 	return nil
 }
+func (m *BeamSchemeReview) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBeam
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BeamSchemeReview: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BeamSchemeReview: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reward", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Reward == nil {
+				m.Reward = &BeamReward{}
+			}
+			if err := m.Reward.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Verifier", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Verifier == nil {
+				m.Verifier = &BeamVerifier{}
+			}
+			if err := m.Verifier.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reviewer", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Reviewer == nil {
+				m.Reviewer = &BeamReviewer{}
+			}
+			if err := m.Reviewer.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MerchantReview", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.MerchantReview == nil {
+				m.MerchantReview = &BeamMerchantReview{}
+			}
+			if err := m.MerchantReview.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProductsReviews", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ProductsReviews = append(m.ProductsReviews, &BeamProductReview{})
+			if err := m.ProductsReviews[len(m.ProductsReviews)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBeam(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BeamSchemeReward) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBeam
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BeamSchemeReward: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BeamSchemeReward: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reward", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Reward == nil {
+				m.Reward = &BeamReward{}
+			}
+			if err := m.Reward.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Verifier", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Verifier == nil {
+				m.Verifier = &BeamVerifier{}
+			}
+			if err := m.Verifier.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBeam(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *Beam) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -4817,10 +6329,10 @@ func (m *Beam) Unmarshal(dAtA []byte) error {
 				}
 			}
 		case 4:
-			if wireType != 2 {
+			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
 			}
-			var stringLen uint64
+			m.Status = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowBeam
@@ -4830,24 +6342,11 @@ func (m *Beam) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				m.Status |= BeamState(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthBeam
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthBeam
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Status = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Secret", wireType)
@@ -4942,7 +6441,7 @@ func (m *Beam) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Reward == nil {
-				m.Reward = &BeamReward{}
+				m.Reward = &BeamSchemeReward{}
 			}
 			if err := m.Reward.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -4978,7 +6477,7 @@ func (m *Beam) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Review == nil {
-				m.Review = &BeamReview{}
+				m.Review = &BeamSchemeReview{}
 			}
 			if err := m.Review.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -5102,25 +6601,6 @@ func (m *MsgOpenBeam) Unmarshal(dAtA []byte) error {
 			m.Creator = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			m.Amount = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBeam
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Amount |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Secret", wireType)
 			}
@@ -5152,7 +6632,58 @@ func (m *MsgOpenBeam) Unmarshal(dAtA []byte) error {
 			}
 			m.Secret = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			m.Amount = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Amount |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Schema", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBeam
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBeam
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBeam
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Schema = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Reward", wireType)
 			}
@@ -5182,13 +6713,13 @@ func (m *MsgOpenBeam) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Reward == nil {
-				m.Reward = &BeamReward{}
+				m.Reward = &BeamSchemeReward{}
 			}
 			if err := m.Reward.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 6:
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Review", wireType)
 			}
@@ -5218,7 +6749,7 @@ func (m *MsgOpenBeam) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Review == nil {
-				m.Review = &BeamReview{}
+				m.Review = &BeamSchemeReview{}
 			}
 			if err := m.Review.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -5390,7 +6921,7 @@ func (m *MsgUpdateBeam) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Reward == nil {
-				m.Reward = &BeamReward{}
+				m.Reward = &BeamSchemeReward{}
 			}
 			if err := m.Reward.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -5426,7 +6957,7 @@ func (m *MsgUpdateBeam) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Review == nil {
-				m.Review = &BeamReview{}
+				m.Review = &BeamSchemeReview{}
 			}
 			if err := m.Review.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

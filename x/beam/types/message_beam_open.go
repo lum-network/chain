@@ -8,11 +8,11 @@ import (
 var _ sdk.Msg = &MsgOpenBeam{}
 
 // NewMsgOpenBeam Build a open beam message based on parameters
-func NewMsgOpenBeam(id string, creator string, amount int64, secret string, reward *BeamReward, review *BeamReview) *MsgOpenBeam {
+func NewMsgOpenBeam(id string, creator string, amount int64, secret string, reward *BeamSchemeReward, review *BeamSchemeReview) *MsgOpenBeam {
 	return &MsgOpenBeam{
 		Id:      id,
 		Creator: creator,
-		Amount:  amount,
+		Amount: amount,
 		Secret:  secret,
 		Reward:  reward,
 		Review:  review,
@@ -47,7 +47,7 @@ func (msg *MsgOpenBeam) GetSignBytes() []byte {
 // ValidateBasic Validate the message payload before dispatching to the local kv store
 func (msg *MsgOpenBeam) ValidateBasic() error {
 	if len(msg.Id) <= 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "Invalid id supplied (%d", len(msg.Id))
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "Invalid id supplied (%d)", len(msg.Id))
 	}
 
 	// Ensure the address is correct and that we are able to acquire it
@@ -56,12 +56,9 @@ func (msg *MsgOpenBeam) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid creator address (%s)", err)
 	}
 
-	// Validate the amount
-	if msg.Amount <= 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "Invalid amount: must be greater than 0")
-	}
-
 	// Validate the secret
-	// TODO: implement
+	if len(msg.Secret) <= 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "Invalid secret supplied")
+	}
 	return nil
 }
