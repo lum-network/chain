@@ -1,0 +1,34 @@
+syntax = "proto3";
+package lum.network.beam;
+
+option go_package = "github.com/lum-network/chain/x/beam/types";
+
+import "beam/beam.proto";
+
+message MsgOpenBeam {
+    string id = 1;
+    string creator = 2;
+    string secret = 3;
+    int64 amount = 4;
+
+    string schema = 5;
+
+    BeamSchemeReward reward = 6;
+    BeamSchemeReview review = 7;
+}
+
+message MsgUpdateBeam {
+    string updater = 1;
+    string id = 2;
+    int64 amount = 3;
+    BeamState status = 4;
+
+    BeamSchemeReward reward = 5;
+    BeamSchemeReview review = 6;
+}
+
+message MsgClaimBeam {
+    string claimer = 1;
+    string id = 2;
+    string secret = 3;
+}

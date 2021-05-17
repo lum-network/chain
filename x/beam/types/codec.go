@@ -11,13 +11,11 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgOpenBeam{}, "lum-network/OpenBeam", nil)
 	cdc.RegisterConcrete(&MsgUpdateBeam{}, "lum-network/UpdateBeam", nil)
 	cdc.RegisterConcrete(&MsgClaimBeam{}, "lum-network/ClaimBeam", nil)
-	cdc.RegisterConcrete(&MsgCancelBeam{}, "lum-network/CancelBeam", nil)
-	cdc.RegisterConcrete(&MsgCloseBeam{}, "lum-network/CloseBeam", nil)
 }
 
 // RegisterInterfaces Register the implementations for the given codecs
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgOpenBeam{}, &MsgUpdateBeam{}, &MsgClaimBeam{}, &MsgCancelBeam{}, &MsgCloseBeam{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgOpenBeam{}, &MsgUpdateBeam{}, &MsgClaimBeam{})
 }
 
 var (

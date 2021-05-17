@@ -8,12 +8,13 @@ import (
 var _ sdk.Msg = &MsgOpenBeam{}
 
 // NewMsgOpenBeam Build a open beam message based on parameters
-func NewMsgOpenBeam(id string, creator string, amount int64, secret string, reward *BeamSchemeReward, review *BeamSchemeReview) *MsgOpenBeam {
+func NewMsgOpenBeam(id string, creator string, amount int64, secret string, schema string, reward *BeamSchemeReward, review *BeamSchemeReview) *MsgOpenBeam {
 	return &MsgOpenBeam{
 		Id:      id,
 		Creator: creator,
 		Amount: amount,
 		Secret:  secret,
+		Schema: schema,
 		Reward:  reward,
 		Review:  review,
 	}
@@ -59,6 +60,11 @@ func (msg *MsgOpenBeam) ValidateBasic() error {
 	// Validate the secret
 	if len(msg.Secret) <= 0 {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "Invalid secret supplied")
+	}
+
+	// Validate the schema
+	if msg.GetSchema() != BEAM_SCHEMA_REVIEW && msg.GetSchema() != BEAM_SCHEMA_REWARD {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "Invalid schema must be review or reward")
 	}
 	return nil
 }

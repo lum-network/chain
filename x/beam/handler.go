@@ -21,12 +21,6 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgUpdateBeam:
 			return handleMsgUpdateBeam(ctx, k, msg)
 
-		case *types.MsgCancelBeam:
-			return handleMsgCancelBeam(ctx, k, msg)
-
-		case *types.MsgCloseBeam:
-			return handleMsgCloseBeam(ctx, k, msg)
-
 		case *types.MsgClaimBeam:
 			return handleMsgClaimBeam(ctx, k, msg)
 

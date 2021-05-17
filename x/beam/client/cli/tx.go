@@ -26,7 +26,6 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(
 		CmdOpenBeam(),
 		CmdUpdateBeam(),
-		CmdCloseBeam(),
 		CmdClaimBeam(),
 	)
 	return cmd
@@ -35,13 +34,14 @@ func GetTxCmd() *cobra.Command {
 // CmdOpenBeam Command definition for beam opening dispatch
 func CmdOpenBeam() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "open <amount> <secret>",
+		Use:   "open <amount> <secret> <schema>",
 		Short: "Open a new beam",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Acquire the command arguments
 			argsAmount, err := strconv.ParseInt(args[0], 10, 32)
 			argsSecret := args[1]
+			argsSchema := args[2]
 			if err != nil {
 				return err
 			}
@@ -52,7 +52,7 @@ func CmdOpenBeam() *cobra.Command {
 				return err
 			}
 
-			// Try to acquire the reward arg
+			// Try to acquire the reward flag
 			argsReward, err := cmd.Flags().GetString(FlagReward)
 			if err != nil {
 				return err
@@ -64,7 +64,7 @@ func CmdOpenBeam() *cobra.Command {
 				}
 			}
 
-			// Trying to acquire the review arg
+			// Trying to acquire the review flag
 			argsReview, err := cmd.Flags().GetString(FlagReview)
 			if err != nil {
 				return err
@@ -86,7 +86,7 @@ func CmdOpenBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), int64(argsAmount), hashedSecret, &rew, &rev)
+			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), int64(argsAmount), hashedSecret, argsSchema, &rew, &rev)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -139,6 +139,11 @@ func CmdUpdateBeam() *cobra.Command {
 				}
 			}
 
+			argsStatus, err := cmd.Flags().GetInt32(FlagStatus)
+			if err != nil {
+				return err
+			}
+
 			// Acquire the client context
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -146,7 +151,7 @@ func CmdUpdateBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgUpdateBeam(clientCtx.GetFromAddress().String(), argsId, int64(argsAmount), &rew, &rev)
+			msg := types.NewMsgUpdateBeam(clientCtx.GetFromAddress().String(), argsId, int64(argsAmount), types.BeamState(argsStatus), &rew, &rev)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -155,35 +160,6 @@ func CmdUpdateBeam() *cobra.Command {
 		},
 	}
 	cmd.Flags().AddFlagSet(flagSetBeamMetadata())
-	flags.AddTxFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(flags.FlagFrom)
-	return cmd
-}
-
-// CmdCloseBeam Command definition for beam close dispatch
-func CmdCloseBeam() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "close [id]",
-		Short: "Close a given beam",
-		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			argsId := args[0]
-
-			// Acquire the client context
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			// Construct the message and validate
-			msg := types.NewMsgCloseBeam(clientCtx.GetFromAddress().String(), argsId)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
 	flags.AddTxFlagsToCmd(cmd)
 	_ = cmd.MarkFlagRequired(flags.FlagFrom)
 	return cmd

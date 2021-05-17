@@ -7,6 +7,7 @@ import (
 const (
 	FlagReward = "reward"
 	FlagReview = "review"
+	FlagStatus = "status"
 )
 
 func flagSetBeamMetadata() *flag.FlagSet {
@@ -14,5 +15,6 @@ func flagSetBeamMetadata() *flag.FlagSet {
 
 	fs.String(FlagReward, "", "Beam reward metadata")
 	fs.String(FlagReview, "", "Beam review metadata")
+	fs.Int32(FlagStatus, 0, "Beam new status")
 	return fs
 }

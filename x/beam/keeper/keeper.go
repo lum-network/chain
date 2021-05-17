@@ -134,20 +134,21 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 		Creator: msg.GetCreator(),
 		Id:      msg.GetId(),
 		Secret:  msg.GetSecret(),
-		Amount:  0,
+		Amount:  msg.GetAmount(),
 		Status:  types.BeamState_OPEN,
+		Schema:  msg.GetSchema(),
 		Reward:  msg.GetReward(),
 		Review:  msg.GetReview(),
 	}
 
 	// Only try to process coins move if present
-	if msg.Amount > 0 {
-		creatorAddress, err := sdk.AccAddressFromBech32(msg.Creator)
+	if msg.GetAmount() > 0 {
+		creatorAddress, err := sdk.AccAddressFromBech32(msg.GetCreator())
 		if err != nil {
 			return sdkerrors.ErrInvalidAddress
 		}
 
-		err = k.moveCoinsToModuleAccount(ctx, creatorAddress, sdk.NewInt(msg.Amount))
+		err = k.moveCoinsToModuleAccount(ctx, creatorAddress, sdk.NewInt(msg.GetAmount()))
 		if err != nil {
 			return err
 		}
@@ -157,7 +158,7 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 	return nil
 }
 
-// UpdateBeam Increase the beam amount of money, and update in store value
+// UpdateBeam Update a beam instance and proceeds any require state machine update
 func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 	// Does the beam exists?
 	if !k.HasBeam(ctx, msg.Id) {
@@ -167,29 +168,17 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 	// Acquire the beam instance
 	beam := k.GetBeam(ctx, msg.Id)
 
-	// Acquire the updater address
-	updaterAddress, err := sdk.AccAddressFromBech32(msg.Updater)
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress
+	// Is the beam still updatable
+	if beam.GetStatus() != types.BeamState_OPEN {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "Beam is closed and thus cannot be updated")
 	}
 
 	// Make sure transaction signer is authorized
-	if beam.Creator != msg.Updater {
+	if beam.GetCreator() != msg.GetUpdater() {
 		return types.ErrBeamNotAuthorized
 	}
 
-	// Update the value
-	beam.Amount += msg.Amount
-
-	// Move coins
-	if msg.Amount > 0 {
-		err = k.moveCoinsToModuleAccount(ctx, updaterAddress, sdk.NewInt(msg.Amount))
-		if err != nil {
-			return err
-		}
-	}
-
-	// Update metadata
+	// First update the metadata before making change since we could want to f.e close but still update metadata
 	if msg.GetReward() != nil {
 		beam.Reward = msg.GetReward()
 	}
@@ -198,73 +187,46 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 		beam.Review = msg.GetReview()
 	}
 
-	// Append to beam logs
-	//TODO: implement
+	if msg.GetAmount() > 0 {
+		updaterAddress, err := sdk.AccAddressFromBech32(msg.GetUpdater())
+		if err != nil {
+			return sdkerrors.ErrInvalidAddress
+		}
 
-	// Update the in-store beam
-	k.SetBeam(ctx, msg.Id, beam)
+		err = k.moveCoinsToModuleAccount(ctx, updaterAddress, sdk.NewInt(msg.GetAmount()))
+		if err != nil {
+			return err
+		}
 
-	return nil
-}
-
-// CloseBeam Finalize the beam and mark it as immutable
-func (k Keeper) CloseBeam(ctx sdk.Context, msg types.MsgCloseBeam) error {
-	// Does the beam exists?
-	if !k.HasBeam(ctx, msg.Id) {
-		return types.ErrBeamNotFound
+		beam.Amount += msg.GetAmount()
 	}
 
-	// Acquire the beam instance
-	beam := k.GetBeam(ctx, msg.Id)
+	// We then check the status and return if required
+	if msg.GetStatus() != beam.GetStatus() {
+		switch msg.GetStatus() {
+		case types.BeamState_CLOSED:
+			beam.Status = types.BeamState_CLOSED
+			break
 
-	// Make sure transaction signer is authorized
-	if beam.Creator != msg.Updater {
-		return types.ErrBeamNotAuthorized
+		case types.BeamState_CANCELED:
+			beam.Status = types.BeamState_CANCELED
+
+			// Refund every cent
+			creatorAddress, err := sdk.AccAddressFromBech32(beam.GetCreator())
+			if err != nil {
+				return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Cannot acquire creator address")
+			}
+			err = k.moveCoinsToAccount(ctx, creatorAddress, sdk.NewInt(beam.GetAmount()))
+			if err != nil {
+				return err
+			}
+			break
+		default:
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "This status update cannot be proceeded")
+		}
 	}
 
-	// Update the beam status
-	beam.Status = types.BeamState_CLOSED
-	k.SetBeam(ctx, msg.Id, beam)
-
-	return nil
-}
-
-// CancelBeam Cancel a given beam and refund the money
-func (k Keeper) CancelBeam(ctx sdk.Context, msg types.MsgCancelBeam) error {
-	// Does the beam exists?
-	if !k.HasBeam(ctx, msg.Id) {
-		return types.ErrBeamNotFound
-	}
-
-	// Acquire the beam instance
-	beam := k.GetBeam(ctx, msg.Id)
-
-	// Is the beam available?
-	if beam.Status != types.BeamState_OPEN {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Beam is not open, and thus not cancelable")
-	}
-
-	// Make sure transaction signer is authorized
-	if beam.Creator != msg.Updater {
-		return types.ErrBeamNotAuthorized
-	}
-
-	// Acquire the creator address
-	creatorAddress, err := sdk.AccAddressFromBech32(msg.Updater)
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress
-	}
-
-	// Refund creator
-	err = k.moveCoinsToAccount(ctx, creatorAddress, sdk.NewInt(beam.Amount))
-	if err != nil {
-		return err
-	}
-
-	// Update beam status
-	beam.Status = types.BeamState_CANCELED
-	k.SetBeam(ctx, msg.Id, beam)
-
+	k.SetBeam(ctx, beam.GetId(), beam)
 	return nil
 }
 
