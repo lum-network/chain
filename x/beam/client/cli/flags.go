@@ -5,10 +5,17 @@ import (
 )
 
 const (
+	FlagOwner  = "owner"
 	FlagReward = "reward"
 	FlagReview = "review"
 	FlagStatus = "status"
 )
+
+func flagSetOwner() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	fs.String(FlagOwner, "", "Beam destination owner")
+	return fs
+}
 
 func flagSetBeamMetadata() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)

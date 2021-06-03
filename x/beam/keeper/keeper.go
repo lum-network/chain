@@ -143,6 +143,12 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 		Review:         msg.GetReview(),
 	}
 
+	// If the payload includes a owner field, we auto claim it
+	if len(msg.GetOwner()) > 0 {
+		beam.Owner = msg.GetOwner()
+		beam.Claimed = true
+	}
+
 	// Only try to process coins move if present
 	if msg.GetAmount() != nil && msg.GetAmount().IsPositive() {
 		creatorAddress, err := sdk.AccAddressFromBech32(msg.GetCreator())

@@ -17,6 +17,8 @@ message MsgOpenBeam {
 
     BeamSchemeReward reward = 6;
     BeamSchemeReview review = 7;
+
+    string owner = 8;
 }
 
 message MsgUpdateBeam {

@@ -80,7 +80,11 @@ func CmdOpenBeam() *cobra.Command {
 				}
 			}
 
-
+			// Trying to acquire the owner flag
+			argsOwner, err := cmd.Flags().GetString(FlagOwner)
+			if err != nil {
+				return err
+			}
 
 			// Generate the random id
 			id := types.GenerateSecureToken(10)
@@ -92,7 +96,7 @@ func CmdOpenBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), &coin, hashedSecret, argsSchema, &rew, &rev)
+			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), argsOwner, &coin, hashedSecret, argsSchema, &rew, &rev)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -102,6 +106,7 @@ func CmdOpenBeam() *cobra.Command {
 		},
 	}
 	cmd.Flags().AddFlagSet(flagSetBeamMetadata())
+	cmd.Flags().AddFlagSet(flagSetOwner())
 	flags.AddTxFlagsToCmd(cmd)
 	_ = cmd.MarkFlagRequired(flags.FlagFrom)
 	return cmd
@@ -178,7 +183,7 @@ func CmdClaimBeam() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "claim [id]",
 		Short: "Claim a given beam",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsId := args[0]
 
