@@ -114,15 +114,11 @@ func CmdUpdateBeam() *cobra.Command {
 		Short: "Update a given beam",
 		Args:  cobra.RangeArgs(2, 4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
-			// Trying to acquire the amount
-			coin, err := sdk.ParseCoinNormalized(args[0])
-			if err != nil {
-				return err
-			}
-
 			// Acquire the command arguments
 			argsId := args[0]
+
+			// Trying to acquire the amount
+			coin, err := sdk.ParseCoinNormalized(args[1])
 			if err != nil {
 				return err
 			}

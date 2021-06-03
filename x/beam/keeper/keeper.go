@@ -131,14 +131,16 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 	}
 
 	var beam = types.Beam{
-		Creator: msg.GetCreator(),
-		Id:      msg.GetId(),
-		Secret:  msg.GetSecret(),
-		Amount:  msg.GetAmount(),
-		Status:  types.BeamState_OPEN,
-		Schema:  msg.GetSchema(),
-		Reward:  msg.GetReward(),
-		Review:  msg.GetReview(),
+		Creator:        msg.GetCreator(),
+		Id:             msg.GetId(),
+		Secret:         msg.GetSecret(),
+		Amount:         msg.GetAmount(),
+		Status:         types.BeamState_OPEN,
+		FundsWithdrawn: false,
+		Claimed:        false,
+		Schema:         msg.GetSchema(),
+		Reward:         msg.GetReward(),
+		Review:         msg.GetReview(),
 	}
 
 	// Only try to process coins move if present
@@ -198,11 +200,8 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 			return err
 		}
 
-		if beam.GetAmount().GetDenom() != msg.GetAmount().GetDenom() {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "The sent denom does not match the beam denom")
-		}
-
-		beam.Amount.Add(*msg.GetAmount())
+		newAmount := beam.GetAmount().Add(*msg.GetAmount())
+		beam.Amount = &newAmount
 	}
 
 	// We then check the status and return if required
