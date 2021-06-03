@@ -43,12 +43,12 @@ func (k Keeper) GetStore(ctx sdk.Context) prefix.Store {
 }
 
 // moveCoinsToModuleAccount This moves coins from a given address to the beam module account
-func (k Keeper) moveCoinsToModuleAccount(ctx sdk.Context, account sdk.AccAddress, amount sdk.Int) error {
-	if k.BankKeeper.GetBalance(ctx, account, types.ModuleCurrencyName).IsLT(sdk.NewCoin(types.ModuleCurrencyName, amount)) {
+func (k Keeper) moveCoinsToModuleAccount(ctx sdk.Context, account sdk.AccAddress, amount sdk.Coin) error {
+	if k.BankKeeper.GetBalance(ctx, account, types.ModuleCurrencyName).IsLT(amount) {
 		return sdkerrors.ErrInsufficientFunds
 	}
 
-	err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, account, types.ModuleName, sdk.NewCoins(sdk.NewCoin(types.ModuleCurrencyName, amount)))
+	err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, account, types.ModuleName, sdk.NewCoins(amount))
 	if err != nil {
 		return err
 	}
@@ -57,12 +57,12 @@ func (k Keeper) moveCoinsToModuleAccount(ctx sdk.Context, account sdk.AccAddress
 }
 
 // moveCoinsToAccount This moves coins from the beam module account to a end user account
-func (k Keeper) moveCoinsToAccount(ctx sdk.Context, account sdk.AccAddress, amount sdk.Int) error {
-	if k.BankKeeper.GetBalance(ctx, account, types.ModuleCurrencyName).IsLT(sdk.NewCoin(types.ModuleCurrencyName, amount)) {
+func (k Keeper) moveCoinsToAccount(ctx sdk.Context, account sdk.AccAddress, amount sdk.Coin) error {
+	if k.BankKeeper.GetBalance(ctx, account, types.ModuleCurrencyName).IsLT(amount) {
 		return sdkerrors.ErrInsufficientFunds
 	}
 
-	err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, account, sdk.NewCoins(sdk.NewCoin(types.ModuleCurrencyName, amount)))
+	err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, account, sdk.NewCoins(amount))
 	if err != nil {
 		return err
 	}
@@ -142,13 +142,13 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 	}
 
 	// Only try to process coins move if present
-	if msg.GetAmount() > 0 {
+	if msg.GetAmount() != nil && msg.GetAmount().IsPositive() {
 		creatorAddress, err := sdk.AccAddressFromBech32(msg.GetCreator())
 		if err != nil {
 			return sdkerrors.ErrInvalidAddress
 		}
 
-		err = k.moveCoinsToModuleAccount(ctx, creatorAddress, sdk.NewInt(msg.GetAmount()))
+		err = k.moveCoinsToModuleAccount(ctx, creatorAddress, *msg.GetAmount())
 		if err != nil {
 			return err
 		}
@@ -187,18 +187,22 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 		beam.Review = msg.GetReview()
 	}
 
-	if msg.GetAmount() > 0 {
+	if msg.GetAmount() != nil && msg.GetAmount().IsPositive() {
 		updaterAddress, err := sdk.AccAddressFromBech32(msg.GetUpdater())
 		if err != nil {
 			return sdkerrors.ErrInvalidAddress
 		}
 
-		err = k.moveCoinsToModuleAccount(ctx, updaterAddress, sdk.NewInt(msg.GetAmount()))
+		err = k.moveCoinsToModuleAccount(ctx, updaterAddress, *msg.GetAmount())
 		if err != nil {
 			return err
 		}
 
-		beam.Amount += msg.GetAmount()
+		if beam.GetAmount().GetDenom() != msg.GetAmount().GetDenom() {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "The sent denom does not match the beam denom")
+		}
+
+		beam.Amount.Add(*msg.GetAmount())
 	}
 
 	// We then check the status and return if required
@@ -216,7 +220,7 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 			if err != nil {
 				return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Cannot acquire creator address")
 			}
-			err = k.moveCoinsToAccount(ctx, creatorAddress, sdk.NewInt(beam.GetAmount()))
+			err = k.moveCoinsToAccount(ctx, creatorAddress, *beam.GetAmount())
 			if err != nil {
 				return err
 			}
@@ -257,7 +261,7 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 	}
 
 	// Transfer funds
-	err = k.moveCoinsToAccount(ctx, claimerAddress, sdk.NewInt(beam.Amount))
+	err = k.moveCoinsToAccount(ctx, claimerAddress, *beam.GetAmount())
 	if err != nil {
 		return err
 	}

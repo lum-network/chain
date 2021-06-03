@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"strconv"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -38,8 +37,13 @@ func CmdOpenBeam() *cobra.Command {
 		Short: "Open a new beam",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// Trying to acquire the amount
+			coin, err := sdk.ParseCoinNormalized(args[0])
+			if err != nil {
+				return err
+			}
+
 			// Acquire the command arguments
-			argsAmount, err := strconv.ParseInt(args[0], 10, 32)
 			argsSecret := args[1]
 			argsSchema := args[2]
 			if err != nil {
@@ -76,6 +80,8 @@ func CmdOpenBeam() *cobra.Command {
 				}
 			}
 
+
+
 			// Generate the random id
 			id := types.GenerateSecureToken(10)
 
@@ -86,7 +92,7 @@ func CmdOpenBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), int64(argsAmount), hashedSecret, argsSchema, &rew, &rev)
+			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), &coin, hashedSecret, argsSchema, &rew, &rev)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -108,8 +114,14 @@ func CmdUpdateBeam() *cobra.Command {
 		Short: "Update a given beam",
 		Args:  cobra.RangeArgs(2, 4),
 		RunE: func(cmd *cobra.Command, args []string) error {
+
+			// Trying to acquire the amount
+			coin, err := sdk.ParseCoinNormalized(args[0])
+			if err != nil {
+				return err
+			}
+
 			// Acquire the command arguments
-			argsAmount, err := strconv.ParseInt(args[1], 10, 32)
 			argsId := args[0]
 			if err != nil {
 				return err
@@ -151,7 +163,7 @@ func CmdUpdateBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgUpdateBeam(clientCtx.GetFromAddress().String(), argsId, int64(argsAmount), types.BeamState(argsStatus), &rew, &rev)
+			msg := types.NewMsgUpdateBeam(clientCtx.GetFromAddress().String(), argsId, &coin, types.BeamState(argsStatus), &rew, &rev)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

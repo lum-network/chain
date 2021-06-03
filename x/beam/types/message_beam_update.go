@@ -8,7 +8,7 @@ import (
 var _ sdk.Msg = &MsgUpdateBeam{}
 
 // NewMsgUpdateBeam Build a increase beam message based on parameters
-func NewMsgUpdateBeam(updater string, id string, amount int64, status BeamState, reward *BeamSchemeReward, review *BeamSchemeReview) *MsgUpdateBeam {
+func NewMsgUpdateBeam(updater string, id string, amount *sdk.Coin, status BeamState, reward *BeamSchemeReward, review *BeamSchemeReview) *MsgUpdateBeam {
 	return &MsgUpdateBeam{
 		Updater: updater,
 		Id:      id,
@@ -52,7 +52,8 @@ func (msg *MsgUpdateBeam) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid creator address (%s)", err)
 	}
 
-	if msg.Amount < 0 {
+	// If we have an amount, make sure it is not negative nor zero
+	if msg.Amount != nil && msg.Amount.IsNegative() || msg.Amount.IsZero() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "Invalid amount: must be greater than 0")
 	}
 	return nil

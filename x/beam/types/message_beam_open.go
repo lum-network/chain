@@ -8,13 +8,13 @@ import (
 var _ sdk.Msg = &MsgOpenBeam{}
 
 // NewMsgOpenBeam Build a open beam message based on parameters
-func NewMsgOpenBeam(id string, creator string, amount int64, secret string, schema string, reward *BeamSchemeReward, review *BeamSchemeReview) *MsgOpenBeam {
+func NewMsgOpenBeam(id string, creator string, amount *sdk.Coin, secret string, schema string, reward *BeamSchemeReward, review *BeamSchemeReview) *MsgOpenBeam {
 	return &MsgOpenBeam{
 		Id:      id,
 		Creator: creator,
-		Amount: amount,
+		Amount:  amount,
 		Secret:  secret,
-		Schema: schema,
+		Schema:  schema,
 		Reward:  reward,
 		Review:  review,
 	}
@@ -65,6 +65,11 @@ func (msg *MsgOpenBeam) ValidateBasic() error {
 	// Validate the schema
 	if msg.GetSchema() != BEAM_SCHEMA_REVIEW && msg.GetSchema() != BEAM_SCHEMA_REWARD {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "Invalid schema must be review or reward")
+	}
+
+	// If we have an amount, make sure it is not negative nor zero
+	if msg.Amount != nil && msg.Amount.IsNegative() || msg.Amount.IsZero() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "Invalid amount: must be greater than 0")
 	}
 	return nil
 }

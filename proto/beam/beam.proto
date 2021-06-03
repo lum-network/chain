@@ -3,6 +3,8 @@ package lum.network.beam;
 
 option go_package = "github.com/lum-network/chain/x/beam/types";
 
+import "cosmos/base/v1beta1/coin.proto";
+
 enum BeamState {
     OPEN = 0;
     CANCELED = 1;
@@ -130,7 +132,7 @@ message BeamSchemeReward {
 message Beam {
     string creator = 1;
     string id = 2;
-    int64 amount = 3;
+    cosmos.base.v1beta1.Coin amount = 3;
     BeamState status = 4;
     string secret = 5;
 
