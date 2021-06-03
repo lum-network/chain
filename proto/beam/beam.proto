@@ -9,7 +9,6 @@ enum BeamState {
     OPEN = 0;
     CANCELED = 1;
     CLOSED = 2;
-    CLAIMED = 3;
 }
 
 message BeamMedia {
@@ -135,9 +134,13 @@ message Beam {
     cosmos.base.v1beta1.Coin amount = 3;
     BeamState status = 4;
     string secret = 5;
+    string owner = 6;
 
-    string schema = 6;
+    bool funds_withdrawn = 7;
+    bool claimed = 8;
 
-  BeamSchemeReward reward = 7;
-  BeamSchemeReview review = 8;
+    string schema = 9;
+
+  BeamSchemeReward reward = 10;
+  BeamSchemeReview review = 11;
 }

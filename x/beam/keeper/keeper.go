@@ -210,6 +210,19 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 		switch msg.GetStatus() {
 		case types.BeamState_CLOSED:
 			beam.Status = types.BeamState_CLOSED
+
+			// Transfer funds only if the beam has been claimed already
+			if beam.GetClaimed() && beam.GetFundsWithdrawn() == false {
+				claimerAddress, err := sdk.AccAddressFromBech32(beam.GetOwner())
+				if err != nil {
+					return sdkerrors.ErrInvalidAddress
+				}
+
+				if err = k.moveCoinsToAccount(ctx, claimerAddress, *beam.GetAmount()); err != nil {
+					return err
+				}
+				beam.FundsWithdrawn = true
+			}
 			break
 
 		case types.BeamState_CANCELED:
@@ -220,8 +233,8 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 			if err != nil {
 				return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Cannot acquire creator address")
 			}
-			err = k.moveCoinsToAccount(ctx, creatorAddress, *beam.GetAmount())
-			if err != nil {
+
+			if err = k.moveCoinsToAccount(ctx, creatorAddress, *beam.GetAmount()); err != nil {
 				return err
 			}
 			break
@@ -244,9 +257,9 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 	// Acquire the beam instance
 	beam := k.GetBeam(ctx, msg.Id)
 
-	// Is the beam available?
-	if beam.Status != types.BeamState_CLOSED {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Beam is not closed, and thus not ready for claim")
+	// If beam is already claimed, we should not be able to
+	if beam.GetClaimed() {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Beam is already claimed")
 	}
 
 	// Make sure transaction signer is authorized
@@ -254,20 +267,23 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 		return types.ErrBeamNotAuthorized
 	}
 
-	// Acquire the creator address
+	// Acquire the claimer address
 	claimerAddress, err := sdk.AccAddressFromBech32(msg.GetClaimer())
 	if err != nil {
 		return sdkerrors.ErrInvalidAddress
 	}
 
-	// Transfer funds
-	err = k.moveCoinsToAccount(ctx, claimerAddress, *beam.GetAmount())
-	if err != nil {
-		return err
+	// Transfer funds only if beam is already closed
+	if beam.GetStatus() == types.BeamState_CLOSED && beam.GetFundsWithdrawn() == false {
+		if err = k.moveCoinsToAccount(ctx, claimerAddress, *beam.GetAmount()); err != nil {
+			return err
+		}
+		beam.FundsWithdrawn = true
 	}
 
 	// Update beam status
-	beam.Status = types.BeamState_CLAIMED
+	beam.Claimed = true
+	beam.Owner = msg.GetClaimer()
 	k.SetBeam(ctx, msg.Id, beam)
 
 	return nil
