@@ -9,30 +9,29 @@ import "beam/beam.proto";
 
 message MsgOpenBeam {
     string id = 1;
-    string creator = 2;
+    string creator_address = 2;
     string secret = 3;
     cosmos.base.v1beta1.Coin amount = 4;
 
     string schema = 5;
 
-    BeamSchemeReward reward = 6;
-    BeamSchemeReview review = 7;
-
-    string owner = 8;
+    BeamData data = 6;
+    string claim_address = 7;
 }
 
 message MsgUpdateBeam {
-    string updater = 1;
+    string updater_address = 1;
     string id = 2;
     cosmos.base.v1beta1.Coin amount = 3;
     BeamState status = 4;
+    string cancel_reason = 5;
+    bool hide_content = 6;
 
-    BeamSchemeReward reward = 5;
-    BeamSchemeReview review = 6;
+    BeamData data = 7;
 }
 
 message MsgClaimBeam {
-    string claimer = 1;
+    string claimer_address = 1;
     string id = 2;
     string secret = 3;
 }

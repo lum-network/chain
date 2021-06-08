@@ -1,9 +1,10 @@
 syntax = "proto3";
+
 package lum.network.beam;
 
-option go_package = "github.com/lum-network/chain/x/beam/types";
-
 import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/lum-network/chain/x/beam/types";
 
 enum BeamState {
     OPEN = 0;
@@ -115,7 +116,7 @@ message BeamProductReview {
     repeated BeamProduct products = 11;
 }
 
-message BeamSchemeReview {
+message BeamData {
     BeamReward reward = 1;
     BeamVerifier verifier = 2;
     BeamReviewer reviewer = 3;
@@ -123,24 +124,21 @@ message BeamSchemeReview {
     repeated BeamProductReview products_reviews = 5;
 }
 
-message BeamSchemeReward {
-    BeamReward reward = 1;
-    BeamVerifier verifier = 2;
-}
-
 message Beam {
-    string creator = 1;
+    string creator_address = 1;
     string id = 2;
     cosmos.base.v1beta1.Coin amount = 3;
     BeamState status = 4;
     string secret = 5;
-    string owner = 6;
+    string claim_address = 6;
 
     bool funds_withdrawn = 7;
     bool claimed = 8;
 
-    string schema = 9;
+    string cancel_reason = 9;
+    bool hide_content = 10;
 
-  BeamSchemeReward reward = 10;
-  BeamSchemeReview review = 11;
+    string schema = 11;
+
+    BeamData data = 12;
 }

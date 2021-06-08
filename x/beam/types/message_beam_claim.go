@@ -10,8 +10,8 @@ var _ sdk.Msg = &MsgClaimBeam{}
 // NewMsgClaimBeam Build a MsgClaimBeam instance
 func NewMsgClaimBeam(claimer string, id string) *MsgClaimBeam {
 	return &MsgClaimBeam{
-		Claimer: claimer,
-		Id:      id,
+		ClaimerAddress: claimer,
+		Id:             id,
 	}
 }
 
@@ -27,7 +27,7 @@ func (msg MsgClaimBeam) Type() string {
 
 // GetSigners Return the list of signers for the given message
 func (msg *MsgClaimBeam) GetSigners() []sdk.AccAddress {
-	updater, err := sdk.AccAddressFromBech32(msg.Claimer)
+	updater, err := sdk.AccAddressFromBech32(msg.GetClaimerAddress())
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +43,7 @@ func (msg *MsgClaimBeam) GetSignBytes() []byte {
 // ValidateBasic Validate the msg payload
 func (msg *MsgClaimBeam) ValidateBasic() error {
 	// Ensure the address is correct and that we are able to acquire it
-	_, err := sdk.AccAddressFromBech32(msg.Claimer)
+	_, err := sdk.AccAddressFromBech32(msg.GetClaimerAddress())
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid creator address (%s)", err)
 	}

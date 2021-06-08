@@ -131,27 +131,28 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 	}
 
 	var beam = types.Beam{
-		Creator:        msg.GetCreator(),
+		CreatorAddress: msg.GetCreatorAddress(),
 		Id:             msg.GetId(),
 		Secret:         msg.GetSecret(),
 		Amount:         msg.GetAmount(),
 		Status:         types.BeamState_OPEN,
 		FundsWithdrawn: false,
 		Claimed:        false,
+		HideContent:    false,
+		CancelReason:   "",
 		Schema:         msg.GetSchema(),
-		Reward:         msg.GetReward(),
-		Review:         msg.GetReview(),
+		Data:           msg.GetData(),
 	}
 
 	// If the payload includes a owner field, we auto claim it
-	if len(msg.GetOwner()) > 0 {
-		beam.Owner = msg.GetOwner()
+	if len(msg.GetClaimAddress()) > 0 {
+		beam.ClaimAddress = msg.GetClaimAddress()
 		beam.Claimed = true
 	}
 
 	// Only try to process coins move if present
 	if msg.GetAmount() != nil && msg.GetAmount().IsPositive() {
-		creatorAddress, err := sdk.AccAddressFromBech32(msg.GetCreator())
+		creatorAddress, err := sdk.AccAddressFromBech32(msg.GetCreatorAddress())
 		if err != nil {
 			return sdkerrors.ErrInvalidAddress
 		}
@@ -165,7 +166,7 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 	k.SetBeam(ctx, beam.GetId(), beam)
 
 	ctx.EventManager().Events().AppendEvents(sdk.Events{
-		sdk.NewEvent(types.EventTypeOpenBeam, sdk.NewAttribute(types.AttributeKeyOpener, msg.GetOwner())),
+		sdk.NewEvent(types.EventTypeOpenBeam, sdk.NewAttribute(types.AttributeKeyOpener, msg.GetCreatorAddress())),
 	})
 	return nil
 }
@@ -186,21 +187,17 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 	}
 
 	// Make sure transaction signer is authorized
-	if beam.GetCreator() != msg.GetUpdater() {
+	if beam.GetCreatorAddress() != msg.GetUpdaterAddress() {
 		return types.ErrBeamNotAuthorized
 	}
 
 	// First update the metadata before making change since we could want to f.e close but still update metadata
-	if msg.GetReward() != nil {
-		beam.Reward = msg.GetReward()
-	}
-
-	if msg.GetReview() != nil {
-		beam.Review = msg.GetReview()
+	if msg.GetData() != nil {
+		beam.Data = msg.GetData()
 	}
 
 	if msg.GetAmount() != nil && msg.GetAmount().IsPositive() {
-		updaterAddress, err := sdk.AccAddressFromBech32(msg.GetUpdater())
+		updaterAddress, err := sdk.AccAddressFromBech32(msg.GetUpdaterAddress())
 		if err != nil {
 			return sdkerrors.ErrInvalidAddress
 		}
@@ -214,6 +211,14 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 		beam.Amount = &newAmount
 	}
 
+	if msg.GetHideContent() != beam.GetHideContent() {
+		beam.HideContent = msg.GetHideContent()
+	}
+
+	if msg.GetCancelReason() != beam.GetCancelReason() {
+		beam.CancelReason = msg.GetCancelReason()
+	}
+
 	// We then check the status and return if required
 	if msg.GetStatus() != beam.GetStatus() {
 		switch msg.GetStatus() {
@@ -222,7 +227,7 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 
 			// Transfer funds only if the beam has been claimed already
 			if beam.GetClaimed() && beam.GetFundsWithdrawn() == false {
-				claimerAddress, err := sdk.AccAddressFromBech32(beam.GetOwner())
+				claimerAddress, err := sdk.AccAddressFromBech32(beam.GetClaimAddress())
 				if err != nil {
 					return sdkerrors.ErrInvalidAddress
 				}
@@ -238,7 +243,7 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 			beam.Status = types.BeamState_CANCELED
 
 			// Refund every cent
-			creatorAddress, err := sdk.AccAddressFromBech32(beam.GetCreator())
+			creatorAddress, err := sdk.AccAddressFromBech32(beam.GetCreatorAddress())
 			if err != nil {
 				return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Cannot acquire creator address")
 			}
@@ -255,7 +260,7 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 	k.SetBeam(ctx, beam.GetId(), beam)
 
 	ctx.EventManager().Events().AppendEvents(sdk.Events{
-		sdk.NewEvent(types.EventTypeUpdateBeam, sdk.NewAttribute(types.AttributeKeyUpdater, msg.GetUpdater())),
+		sdk.NewEvent(types.EventTypeUpdateBeam, sdk.NewAttribute(types.AttributeKeyUpdater, msg.GetUpdaterAddress())),
 	})
 	return nil
 }
@@ -281,7 +286,7 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 	}
 
 	// Acquire the claimer address
-	claimerAddress, err := sdk.AccAddressFromBech32(msg.GetClaimer())
+	claimerAddress, err := sdk.AccAddressFromBech32(msg.GetClaimerAddress())
 	if err != nil {
 		return sdkerrors.ErrInvalidAddress
 	}
@@ -296,11 +301,11 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 
 	// Update beam status
 	beam.Claimed = true
-	beam.Owner = msg.GetClaimer()
+	beam.ClaimAddress = msg.GetClaimerAddress()
 	k.SetBeam(ctx, msg.Id, beam)
 
 	ctx.EventManager().Events().AppendEvents(sdk.Events{
-		sdk.NewEvent(types.EventTypeClaimBeam, sdk.NewAttribute(types.AttributeKeyClaimer, msg.GetClaimer())),
+		sdk.NewEvent(types.EventTypeClaimBeam, sdk.NewAttribute(types.AttributeKeyClaimer, msg.GetClaimerAddress())),
 	})
 	return nil
 }

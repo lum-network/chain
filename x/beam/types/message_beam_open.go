@@ -8,16 +8,15 @@ import (
 var _ sdk.Msg = &MsgOpenBeam{}
 
 // NewMsgOpenBeam Build a open beam message based on parameters
-func NewMsgOpenBeam(id string, creator string, owner string, amount *sdk.Coin, secret string, schema string, reward *BeamSchemeReward, review *BeamSchemeReview) *MsgOpenBeam {
+func NewMsgOpenBeam(id string, creator string, owner string, amount *sdk.Coin, secret string, schema string, data *BeamData) *MsgOpenBeam {
 	return &MsgOpenBeam{
-		Id:      id,
-		Creator: creator,
-		Amount:  amount,
-		Secret:  secret,
-		Schema:  schema,
-		Reward:  reward,
-		Review:  review,
-		Owner:   owner,
+		Id:             id,
+		CreatorAddress: creator,
+		Amount:         amount,
+		Secret:         secret,
+		Schema:         schema,
+		Data:           data,
+		ClaimAddress:   owner,
 	}
 }
 
@@ -33,7 +32,7 @@ func (msg MsgOpenBeam) Type() string {
 
 // GetSigners Return the list of signers for the given message
 func (msg *MsgOpenBeam) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Creator)
+	creator, err := sdk.AccAddressFromBech32(msg.GetCreatorAddress())
 	if err != nil {
 		panic(err)
 	}
@@ -53,7 +52,7 @@ func (msg *MsgOpenBeam) ValidateBasic() error {
 	}
 
 	// Ensure the address is correct and that we are able to acquire it
-	_, err := sdk.AccAddressFromBech32(msg.Creator)
+	_, err := sdk.AccAddressFromBech32(msg.GetCreatorAddress())
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid creator address (%s)", err)
 	}

@@ -8,14 +8,13 @@ import (
 var _ sdk.Msg = &MsgUpdateBeam{}
 
 // NewMsgUpdateBeam Build a increase beam message based on parameters
-func NewMsgUpdateBeam(updater string, id string, amount *sdk.Coin, status BeamState, reward *BeamSchemeReward, review *BeamSchemeReview) *MsgUpdateBeam {
+func NewMsgUpdateBeam(updater string, id string, amount *sdk.Coin, status BeamState, data *BeamData) *MsgUpdateBeam {
 	return &MsgUpdateBeam{
-		Updater: updater,
-		Id:      id,
-		Amount:  amount,
-		Status:  status,
-		Reward:  reward,
-		Review:  review,
+		UpdaterAddress: updater,
+		Id:             id,
+		Amount:         amount,
+		Status:         status,
+		Data:           data,
 	}
 }
 
@@ -31,7 +30,7 @@ func (msg MsgUpdateBeam) Type() string {
 
 // GetSigners Return the list of signers for the given message
 func (msg *MsgUpdateBeam) GetSigners() []sdk.AccAddress {
-	updater, err := sdk.AccAddressFromBech32(msg.Updater)
+	updater, err := sdk.AccAddressFromBech32(msg.GetUpdaterAddress())
 	if err != nil {
 		panic(err)
 	}
@@ -47,7 +46,7 @@ func (msg *MsgUpdateBeam) GetSignBytes() []byte {
 // ValidateBasic Validate the message payload before dispatching to the local kv store
 func (msg *MsgUpdateBeam) ValidateBasic() error {
 	// Ensure the address is correct and that we are able to acquire it
-	_, err := sdk.AccAddressFromBech32(msg.Updater)
+	_, err := sdk.AccAddressFromBech32(msg.GetUpdaterAddress())
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid creator address (%s)", err)
 	}

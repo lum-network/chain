@@ -33,7 +33,7 @@ func GetTxCmd() *cobra.Command {
 // CmdOpenBeam Command definition for beam opening dispatch
 func CmdOpenBeam() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "open <amount> <secret> <schema>",
+		Use:   "open <amount> <secret> <schema> [data]",
 		Short: "Open a new beam",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -56,26 +56,14 @@ func CmdOpenBeam() *cobra.Command {
 				return err
 			}
 
-			// Try to acquire the reward flag
-			argsReward, err := cmd.Flags().GetString(FlagReward)
+			// Try to acquire the data arg
+			argsData, err := cmd.Flags().GetString(FlagData)
 			if err != nil {
 				return err
 			}
-			var rew types.BeamSchemeReward
-			if len(argsReward) > 0 {
-				if err = json.Unmarshal([]byte(argsReward), &rew); err != nil {
-					return err
-				}
-			}
-
-			// Trying to acquire the review flag
-			argsReview, err := cmd.Flags().GetString(FlagReview)
-			if err != nil {
-				return err
-			}
-			var rev types.BeamSchemeReview
-			if len(argsReview) > 0 {
-				if err = json.Unmarshal([]byte(argsReview), &rev); err != nil {
+			var data types.BeamData
+			if len(argsData) > 0 {
+				if err = json.Unmarshal([]byte(argsData), &data); err != nil {
 					return err
 				}
 			}
@@ -96,7 +84,7 @@ func CmdOpenBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), argsOwner, &coin, hashedSecret, argsSchema, &rew, &rev)
+			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), argsOwner, &coin, hashedSecret, argsSchema, &data)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -115,7 +103,7 @@ func CmdOpenBeam() *cobra.Command {
 // CmdUpdateBeam Command definition for beam increase dispatch
 func CmdUpdateBeam() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <id> <amount> [reward] [review]",
+		Use:   "update <id> <amount> [data]",
 		Short: "Update a given beam",
 		Args:  cobra.RangeArgs(2, 4),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -128,26 +116,14 @@ func CmdUpdateBeam() *cobra.Command {
 				return err
 			}
 
-			// Try to acquire the reward arg
-			argsReward, err := cmd.Flags().GetString(FlagReward)
+			// Try to acquire the data arg
+			argsData, err := cmd.Flags().GetString(FlagData)
 			if err != nil {
 				return err
 			}
-			var rew types.BeamSchemeReward
-			if len(argsReward) > 0 {
-				if err = json.Unmarshal([]byte(argsReward), &rew); err != nil {
-					return err
-				}
-			}
-
-			// Trying to acquire the review arg
-			argsReview, err := cmd.Flags().GetString(FlagReview)
-			if err != nil {
-				return err
-			}
-			var rev types.BeamSchemeReview
-			if len(argsReview) > 0 {
-				if err = json.Unmarshal([]byte(argsReview), &rev); err != nil {
+			var data types.BeamData
+			if len(argsData) > 0 {
+				if err = json.Unmarshal([]byte(argsData), &data); err != nil {
 					return err
 				}
 			}
@@ -164,7 +140,7 @@ func CmdUpdateBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgUpdateBeam(clientCtx.GetFromAddress().String(), argsId, &coin, types.BeamState(argsStatus), &rew, &rev)
+			msg := types.NewMsgUpdateBeam(clientCtx.GetFromAddress().String(), argsId, &coin, types.BeamState(argsStatus), &data)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
