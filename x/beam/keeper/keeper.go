@@ -151,13 +151,13 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 	}
 
 	// Only try to process coins move if present
-	if msg.GetAmount() != nil && msg.GetAmount().IsPositive() {
+	if msg.GetAmount().IsPositive() {
 		creatorAddress, err := sdk.AccAddressFromBech32(msg.GetCreatorAddress())
 		if err != nil {
 			return sdkerrors.ErrInvalidAddress
 		}
 
-		err = k.moveCoinsToModuleAccount(ctx, creatorAddress, *msg.GetAmount())
+		err = k.moveCoinsToModuleAccount(ctx, creatorAddress, msg.GetAmount())
 		if err != nil {
 			return err
 		}
@@ -196,27 +196,18 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 		beam.Data = msg.GetData()
 	}
 
-	if msg.GetAmount() != nil && msg.GetAmount().IsPositive() {
+	if msg.GetAmount().IsPositive() {
 		updaterAddress, err := sdk.AccAddressFromBech32(msg.GetUpdaterAddress())
 		if err != nil {
 			return sdkerrors.ErrInvalidAddress
 		}
 
-		err = k.moveCoinsToModuleAccount(ctx, updaterAddress, *msg.GetAmount())
+		err = k.moveCoinsToModuleAccount(ctx, updaterAddress, msg.GetAmount())
 		if err != nil {
 			return err
 		}
 
-		newAmount := beam.GetAmount().Add(*msg.GetAmount())
-		beam.Amount = &newAmount
-	}
-
-	if msg.GetHideContent() != beam.GetHideContent() {
-		beam.HideContent = msg.GetHideContent()
-	}
-
-	if msg.GetCancelReason() != beam.GetCancelReason() {
-		beam.CancelReason = msg.GetCancelReason()
+		beam.Amount = beam.GetAmount().Add(msg.GetAmount())
 	}
 
 	// We then check the status and return if required
@@ -225,6 +216,10 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 		case types.BeamState_CLOSED:
 			beam.Status = types.BeamState_CLOSED
 
+			if msg.GetHideContent() != beam.GetHideContent() {
+				beam.HideContent = msg.GetHideContent()
+			}
+
 			// Transfer funds only if the beam has been claimed already
 			if beam.GetClaimed() && beam.GetFundsWithdrawn() == false {
 				claimerAddress, err := sdk.AccAddressFromBech32(beam.GetClaimAddress())
@@ -232,7 +227,7 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 					return sdkerrors.ErrInvalidAddress
 				}
 
-				if err = k.moveCoinsToAccount(ctx, claimerAddress, *beam.GetAmount()); err != nil {
+				if err = k.moveCoinsToAccount(ctx, claimerAddress, beam.GetAmount()); err != nil {
 					return err
 				}
 				beam.FundsWithdrawn = true
@@ -242,13 +237,21 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 		case types.BeamState_CANCELED:
 			beam.Status = types.BeamState_CANCELED
 
+			if msg.GetCancelReason() != beam.GetCancelReason() {
+				beam.CancelReason = msg.GetCancelReason()
+			}
+
+			if msg.GetHideContent() != beam.GetHideContent() {
+				beam.HideContent = msg.GetHideContent()
+			}
+
 			// Refund every cent
 			creatorAddress, err := sdk.AccAddressFromBech32(beam.GetCreatorAddress())
 			if err != nil {
 				return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Cannot acquire creator address")
 			}
 
-			if err = k.moveCoinsToAccount(ctx, creatorAddress, *beam.GetAmount()); err != nil {
+			if err = k.moveCoinsToAccount(ctx, creatorAddress, beam.GetAmount()); err != nil {
 				return err
 			}
 			break
@@ -293,7 +296,7 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 
 	// Transfer funds only if beam is already closed
 	if beam.GetStatus() == types.BeamState_CLOSED && beam.GetFundsWithdrawn() == false {
-		if err = k.moveCoinsToAccount(ctx, claimerAddress, *beam.GetAmount()); err != nil {
+		if err = k.moveCoinsToAccount(ctx, claimerAddress, beam.GetAmount()); err != nil {
 			return err
 		}
 		beam.FundsWithdrawn = true

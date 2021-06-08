@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package lum.network.beam;
-
+import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/lum-network/chain/x/beam/types";
@@ -127,7 +127,7 @@ message BeamData {
 message Beam {
     string creator_address = 1;
     string id = 2;
-    cosmos.base.v1beta1.Coin amount = 3;
+    cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
     BeamState status = 4;
     string secret = 5;
     string claim_address = 6;

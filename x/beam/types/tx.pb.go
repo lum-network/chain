@@ -6,6 +6,7 @@ package types
 import (
 	fmt "fmt"
 	types "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
@@ -24,13 +25,13 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type MsgOpenBeam struct {
-	Id             string      `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	CreatorAddress string      `protobuf:"bytes,2,opt,name=creator_address,json=creatorAddress,proto3" json:"creator_address,omitempty"`
-	Secret         string      `protobuf:"bytes,3,opt,name=secret,proto3" json:"secret,omitempty"`
-	Amount         *types.Coin `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
-	Schema         string      `protobuf:"bytes,5,opt,name=schema,proto3" json:"schema,omitempty"`
-	Data           *BeamData   `protobuf:"bytes,6,opt,name=data,proto3" json:"data,omitempty"`
-	ClaimAddress   string      `protobuf:"bytes,7,opt,name=claim_address,json=claimAddress,proto3" json:"claim_address,omitempty"`
+	Id             string     `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	CreatorAddress string     `protobuf:"bytes,2,opt,name=creator_address,json=creatorAddress,proto3" json:"creator_address,omitempty"`
+	Secret         string     `protobuf:"bytes,3,opt,name=secret,proto3" json:"secret,omitempty"`
+	Amount         types.Coin `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount"`
+	Schema         string     `protobuf:"bytes,5,opt,name=schema,proto3" json:"schema,omitempty"`
+	Data           *BeamData  `protobuf:"bytes,6,opt,name=data,proto3" json:"data,omitempty"`
+	ClaimAddress   string     `protobuf:"bytes,7,opt,name=claim_address,json=claimAddress,proto3" json:"claim_address,omitempty"`
 }
 
 func (m *MsgOpenBeam) Reset()         { *m = MsgOpenBeam{} }
@@ -87,11 +88,11 @@ func (m *MsgOpenBeam) GetSecret() string {
 	return ""
 }
 
-func (m *MsgOpenBeam) GetAmount() *types.Coin {
+func (m *MsgOpenBeam) GetAmount() types.Coin {
 	if m != nil {
 		return m.Amount
 	}
-	return nil
+	return types.Coin{}
 }
 
 func (m *MsgOpenBeam) GetSchema() string {
@@ -116,13 +117,13 @@ func (m *MsgOpenBeam) GetClaimAddress() string {
 }
 
 type MsgUpdateBeam struct {
-	UpdaterAddress string      `protobuf:"bytes,1,opt,name=updater_address,json=updaterAddress,proto3" json:"updater_address,omitempty"`
-	Id             string      `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
-	Amount         *types.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
-	Status         BeamState   `protobuf:"varint,4,opt,name=status,proto3,enum=lum.network.beam.BeamState" json:"status,omitempty"`
-	CancelReason   string      `protobuf:"bytes,5,opt,name=cancel_reason,json=cancelReason,proto3" json:"cancel_reason,omitempty"`
-	HideContent    bool        `protobuf:"varint,6,opt,name=hide_content,json=hideContent,proto3" json:"hide_content,omitempty"`
-	Data           *BeamData   `protobuf:"bytes,7,opt,name=data,proto3" json:"data,omitempty"`
+	Id             string     `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	UpdaterAddress string     `protobuf:"bytes,2,opt,name=updater_address,json=updaterAddress,proto3" json:"updater_address,omitempty"`
+	Amount         types.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
+	Status         BeamState  `protobuf:"varint,4,opt,name=status,proto3,enum=lum.network.beam.BeamState" json:"status,omitempty"`
+	CancelReason   string     `protobuf:"bytes,5,opt,name=cancel_reason,json=cancelReason,proto3" json:"cancel_reason,omitempty"`
+	HideContent    bool       `protobuf:"varint,6,opt,name=hide_content,json=hideContent,proto3" json:"hide_content,omitempty"`
+	Data           *BeamData  `protobuf:"bytes,7,opt,name=data,proto3" json:"data,omitempty"`
 }
 
 func (m *MsgUpdateBeam) Reset()         { *m = MsgUpdateBeam{} }
@@ -158,13 +159,6 @@ func (m *MsgUpdateBeam) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateBeam proto.InternalMessageInfo
 
-func (m *MsgUpdateBeam) GetUpdaterAddress() string {
-	if m != nil {
-		return m.UpdaterAddress
-	}
-	return ""
-}
-
 func (m *MsgUpdateBeam) GetId() string {
 	if m != nil {
 		return m.Id
@@ -172,11 +166,18 @@ func (m *MsgUpdateBeam) GetId() string {
 	return ""
 }
 
-func (m *MsgUpdateBeam) GetAmount() *types.Coin {
+func (m *MsgUpdateBeam) GetUpdaterAddress() string {
+	if m != nil {
+		return m.UpdaterAddress
+	}
+	return ""
+}
+
+func (m *MsgUpdateBeam) GetAmount() types.Coin {
 	if m != nil {
 		return m.Amount
 	}
-	return nil
+	return types.Coin{}
 }
 
 func (m *MsgUpdateBeam) GetStatus() BeamState {
@@ -208,8 +209,8 @@ func (m *MsgUpdateBeam) GetData() *BeamData {
 }
 
 type MsgClaimBeam struct {
-	ClaimerAddress string `protobuf:"bytes,1,opt,name=claimer_address,json=claimerAddress,proto3" json:"claimer_address,omitempty"`
-	Id             string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	Id             string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	ClaimerAddress string `protobuf:"bytes,2,opt,name=claimer_address,json=claimerAddress,proto3" json:"claimer_address,omitempty"`
 	Secret         string `protobuf:"bytes,3,opt,name=secret,proto3" json:"secret,omitempty"`
 }
 
@@ -246,16 +247,16 @@ func (m *MsgClaimBeam) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgClaimBeam proto.InternalMessageInfo
 
-func (m *MsgClaimBeam) GetClaimerAddress() string {
+func (m *MsgClaimBeam) GetId() string {
 	if m != nil {
-		return m.ClaimerAddress
+		return m.Id
 	}
 	return ""
 }
 
-func (m *MsgClaimBeam) GetId() string {
+func (m *MsgClaimBeam) GetClaimerAddress() string {
 	if m != nil {
-		return m.Id
+		return m.ClaimerAddress
 	}
 	return ""
 }
@@ -276,35 +277,36 @@ func init() {
 func init() { proto.RegisterFile("beam/tx.proto", fileDescriptor_88d9e4661aa44d2c) }
 
 var fileDescriptor_88d9e4661aa44d2c = []byte{
-	// 445 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x93, 0xcf, 0x6e, 0xd3, 0x40,
-	0x10, 0xc6, 0x63, 0xb7, 0xb8, 0xb0, 0xf9, 0x87, 0x7c, 0x40, 0x26, 0x48, 0x56, 0x09, 0x87, 0x96,
-	0x03, 0x6b, 0xa5, 0x7d, 0x02, 0x1a, 0xae, 0x11, 0x92, 0x11, 0x17, 0x2e, 0xd1, 0x78, 0x3d, 0x4a,
-	0x2c, 0xb2, 0xbb, 0x96, 0x77, 0x0d, 0xe5, 0x2d, 0x78, 0x0c, 0x1e, 0x85, 0x63, 0x8f, 0x1c, 0x51,
-	0xf2, 0x1e, 0x08, 0x79, 0x76, 0x9b, 0x4a, 0xd0, 0x4a, 0xb9, 0x44, 0x9a, 0x6f, 0x26, 0x9f, 0xbe,
-	0xef, 0xa7, 0x35, 0x1b, 0x16, 0x08, 0x32, 0xb3, 0xd7, 0xbc, 0x6e, 0xb4, 0xd5, 0xf1, 0xd3, 0x4d,
-	0x2b, 0xb9, 0x42, 0xfb, 0x55, 0x37, 0x9f, 0x79, 0xb7, 0x9a, 0xa4, 0x42, 0x1b, 0xa9, 0x4d, 0x56,
-	0x80, 0xc1, 0xec, 0xcb, 0xac, 0x40, 0x0b, 0xb3, 0x4c, 0xe8, 0x4a, 0xb9, 0x7f, 0x4c, 0xc6, 0x64,
-	0xd0, 0xfd, 0x38, 0x61, 0xfa, 0x27, 0x60, 0xfd, 0x85, 0x59, 0xbd, 0xaf, 0x51, 0x5d, 0x21, 0xc8,
-	0x78, 0xc4, 0xc2, 0xaa, 0x4c, 0x82, 0xd3, 0xe0, 0xfc, 0x49, 0x1e, 0x56, 0x65, 0x7c, 0xc6, 0xc6,
-	0xa2, 0x41, 0xb0, 0xba, 0x59, 0x42, 0x59, 0x36, 0x68, 0x4c, 0x12, 0xd2, 0x72, 0xe4, 0xe5, 0xb7,
-	0x4e, 0x8d, 0x9f, 0xb1, 0xc8, 0xa0, 0x68, 0xd0, 0x26, 0x47, 0xb4, 0xf7, 0x53, 0x3c, 0x63, 0x11,
-	0x48, 0xdd, 0x2a, 0x9b, 0x1c, 0x9f, 0x06, 0xe7, 0xfd, 0x8b, 0xe7, 0xdc, 0x45, 0xe4, 0x5d, 0x44,
-	0xee, 0x23, 0xf2, 0xb9, 0xae, 0x54, 0xee, 0x0f, 0xc9, 0x4a, 0xac, 0x51, 0x42, 0xf2, 0xc8, 0x5b,
-	0xd1, 0x14, 0x73, 0x76, 0x5c, 0x82, 0x85, 0x24, 0x22, 0xa3, 0x09, 0xff, 0xb7, 0x3d, 0xef, 0x1a,
-	0xbc, 0x03, 0x0b, 0x39, 0xdd, 0xc5, 0xaf, 0xd8, 0x50, 0x6c, 0xa0, 0x92, 0xfb, 0xe4, 0x27, 0x64,
-	0x37, 0x20, 0xd1, 0xe7, 0x9e, 0xfe, 0x08, 0xd9, 0x70, 0x61, 0x56, 0x1f, 0xeb, 0x12, 0x2c, 0x12,
-	0x82, 0x33, 0x36, 0x6e, 0x69, 0xba, 0xab, 0xec, 0x78, 0x8c, 0xbc, 0x7c, 0x5b, 0xd9, 0xb1, 0x0a,
-	0xf7, 0xac, 0xee, 0xaa, 0x1e, 0x1d, 0x5a, 0xf5, 0x92, 0x45, 0xc6, 0x82, 0x6d, 0x0d, 0xd1, 0x19,
-	0x5d, 0xbc, 0xb8, 0xbf, 0xd4, 0x07, 0x0b, 0x16, 0x73, 0x7f, 0x4a, 0xbd, 0x40, 0x09, 0xdc, 0x2c,
-	0x1b, 0x04, 0xa3, 0x95, 0xc7, 0x34, 0x70, 0x62, 0x4e, 0x5a, 0xfc, 0x92, 0x0d, 0xd6, 0x55, 0x89,
-	0x4b, 0xa1, 0x95, 0x45, 0x65, 0x09, 0xda, 0xe3, 0xbc, 0xdf, 0x69, 0x73, 0x27, 0xed, 0x79, 0x9e,
-	0x1c, 0xc6, 0x73, 0xba, 0x64, 0x83, 0x85, 0x59, 0xcd, 0x3b, 0x7a, 0xb7, 0xa0, 0x08, 0xe5, 0xff,
-	0xa0, 0xbc, 0xfc, 0x10, 0xa8, 0x07, 0xde, 0xca, 0xd5, 0xfc, 0xe7, 0x36, 0x0d, 0x6e, 0xb6, 0x69,
-	0xf0, 0x7b, 0x9b, 0x06, 0xdf, 0x77, 0x69, 0xef, 0x66, 0x97, 0xf6, 0x7e, 0xed, 0xd2, 0xde, 0xa7,
-	0xd7, 0xab, 0xca, 0xae, 0xdb, 0x82, 0x0b, 0x2d, 0xb3, 0x4d, 0x2b, 0xdf, 0xf8, 0x98, 0x99, 0x58,
-	0x43, 0xa5, 0xb2, 0xeb, 0xcc, 0x7d, 0x17, 0xdf, 0x6a, 0x34, 0x45, 0x44, 0x0f, 0xfb, 0xf2, 0x6f,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0x61, 0x71, 0xdf, 0x9a, 0x2c, 0x03, 0x00, 0x00,
+	// 454 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x93, 0xcf, 0x6e, 0xd3, 0x40,
+	0x10, 0xc6, 0x63, 0x37, 0xb8, 0xb0, 0xf9, 0x53, 0x64, 0x21, 0x64, 0x82, 0x64, 0x4a, 0x38, 0x50,
+	0x0e, 0xec, 0xaa, 0x2d, 0x12, 0x67, 0x12, 0xae, 0x11, 0x92, 0x11, 0x17, 0x2e, 0xd1, 0x78, 0x3d,
+	0x72, 0x2c, 0xb2, 0xbb, 0x91, 0x77, 0x0d, 0xe5, 0x15, 0x38, 0xf1, 0x30, 0x3c, 0x44, 0x8f, 0x3d,
+	0x72, 0x42, 0x28, 0x79, 0x11, 0xe4, 0xf1, 0x52, 0x24, 0x4a, 0x85, 0x7a, 0x89, 0xb2, 0xdf, 0x37,
+	0xfa, 0x34, 0xdf, 0x4f, 0x63, 0x36, 0xca, 0x11, 0x94, 0x70, 0x67, 0x7c, 0x53, 0x1b, 0x67, 0xe2,
+	0xbb, 0xeb, 0x46, 0x71, 0x8d, 0xee, 0x93, 0xa9, 0x3f, 0xf0, 0xd6, 0x9a, 0xdc, 0x2b, 0x4d, 0x69,
+	0xc8, 0x14, 0xed, 0xbf, 0x6e, 0x6e, 0x92, 0x4a, 0x63, 0x95, 0xb1, 0x22, 0x07, 0x8b, 0xe2, 0xe3,
+	0x71, 0x8e, 0x0e, 0x8e, 0x85, 0x34, 0x95, 0xf6, 0xfe, 0x01, 0xc5, 0xb6, 0x3f, 0x9d, 0x30, 0xfd,
+	0x12, 0xb2, 0xc1, 0xc2, 0x96, 0x6f, 0x36, 0xa8, 0x67, 0x08, 0x2a, 0x1e, 0xb3, 0xb0, 0x2a, 0x92,
+	0xe0, 0x30, 0x38, 0xba, 0x93, 0x85, 0x55, 0x11, 0x3f, 0x65, 0x07, 0xb2, 0x46, 0x70, 0xa6, 0x5e,
+	0x42, 0x51, 0xd4, 0x68, 0x6d, 0x12, 0x92, 0x39, 0xf6, 0xf2, 0xab, 0x4e, 0x8d, 0xef, 0xb3, 0xc8,
+	0xa2, 0xac, 0xd1, 0x25, 0x7b, 0xe4, 0xfb, 0x57, 0xfc, 0x92, 0x45, 0xa0, 0x4c, 0xa3, 0x5d, 0xd2,
+	0x3f, 0x0c, 0x8e, 0x06, 0x27, 0x0f, 0x78, 0xb7, 0x22, 0x6f, 0x57, 0xe4, 0x7e, 0x45, 0x3e, 0x37,
+	0x95, 0x9e, 0xf5, 0xcf, 0x7f, 0x3c, 0xea, 0x65, 0x7e, 0x9c, 0x02, 0xe5, 0x0a, 0x15, 0x24, 0xb7,
+	0x7c, 0x20, 0xbd, 0xe2, 0x17, 0xac, 0x5f, 0x80, 0x83, 0x24, 0xa2, 0xb8, 0x09, 0xff, 0x9b, 0x0c,
+	0x6f, 0x7b, 0xbc, 0x06, 0x07, 0x94, 0x17, 0x64, 0x34, 0x1d, 0x3f, 0x61, 0x23, 0xb9, 0x86, 0x4a,
+	0x5d, 0xb6, 0xd8, 0xa7, 0xd0, 0x21, 0x89, 0xbe, 0xc3, 0xf4, 0x5b, 0xc8, 0x46, 0x0b, 0x5b, 0xbe,
+	0xdb, 0x14, 0xe0, 0xf0, 0x3a, 0x1c, 0x0d, 0xb9, 0x57, 0x70, 0x78, 0xf9, 0x37, 0x8e, 0x3f, 0xb5,
+	0xf7, 0x6e, 0x56, 0xfb, 0x94, 0x45, 0xd6, 0x81, 0x6b, 0x2c, 0xf1, 0x1a, 0x9f, 0x3c, 0xfc, 0x77,
+	0xc1, 0xb7, 0x0e, 0x1c, 0x66, 0x7e, 0x94, 0xda, 0x81, 0x96, 0xb8, 0x5e, 0xd6, 0x08, 0xd6, 0x68,
+	0x8f, 0x6c, 0xd8, 0x89, 0x19, 0x69, 0xf1, 0x63, 0x36, 0x5c, 0x55, 0x05, 0x2e, 0xa5, 0xd1, 0x0e,
+	0xb5, 0x23, 0x80, 0xb7, 0xb3, 0x41, 0xab, 0xcd, 0x3b, 0xe9, 0x92, 0xed, 0xfe, 0x4d, 0xd8, 0x4e,
+	0x97, 0x6c, 0xb8, 0xb0, 0xe5, 0xbc, 0x25, 0x79, 0xed, 0x0d, 0xb5, 0xe6, 0x55, 0x68, 0x5e, 0xfe,
+	0xcf, 0x0d, 0xcd, 0xe6, 0xe7, 0xdb, 0x34, 0xb8, 0xd8, 0xa6, 0xc1, 0xcf, 0x6d, 0x1a, 0x7c, 0xdd,
+	0xa5, 0xbd, 0x8b, 0x5d, 0xda, 0xfb, 0xbe, 0x4b, 0x7b, 0xef, 0x9f, 0x95, 0x95, 0x5b, 0x35, 0x39,
+	0x97, 0x46, 0x89, 0x75, 0xa3, 0x9e, 0xfb, 0x65, 0x85, 0x5c, 0x41, 0xa5, 0xc5, 0x99, 0xe8, 0xbe,
+	0xa2, 0xcf, 0x1b, 0xb4, 0x79, 0x44, 0x07, 0x7f, 0xfa, 0x2b, 0x00, 0x00, 0xff, 0xff, 0x62, 0xbd,
+	0x96, 0xa7, 0x5a, 0x03, 0x00, 0x00,
 }
 
 func (m *MsgOpenBeam) Marshal() (dAtA []byte, err error) {
@@ -353,18 +355,16 @@ func (m *MsgOpenBeam) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x2a
 	}
-	if m.Amount != nil {
-		{
-			size, err := m.Amount.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTx(dAtA, i, uint64(size))
+	{
+		size, err := m.Amount.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
 		}
-		i--
-		dAtA[i] = 0x22
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x22
 	if len(m.Secret) > 0 {
 		i -= len(m.Secret)
 		copy(dAtA[i:], m.Secret)
@@ -443,29 +443,27 @@ func (m *MsgUpdateBeam) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x20
 	}
-	if m.Amount != nil {
-		{
-			size, err := m.Amount.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTx(dAtA, i, uint64(size))
+	{
+		size, err := m.Amount.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
 		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.UpdaterAddress) > 0 {
+		i -= len(m.UpdaterAddress)
+		copy(dAtA[i:], m.UpdaterAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.UpdaterAddress)))
 		i--
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x12
 	}
 	if len(m.Id) > 0 {
 		i -= len(m.Id)
 		copy(dAtA[i:], m.Id)
 		i = encodeVarintTx(dAtA, i, uint64(len(m.Id)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.UpdaterAddress) > 0 {
-		i -= len(m.UpdaterAddress)
-		copy(dAtA[i:], m.UpdaterAddress)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.UpdaterAddress)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -499,17 +497,17 @@ func (m *MsgClaimBeam) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x1a
 	}
-	if len(m.Id) > 0 {
-		i -= len(m.Id)
-		copy(dAtA[i:], m.Id)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Id)))
-		i--
-		dAtA[i] = 0x12
-	}
 	if len(m.ClaimerAddress) > 0 {
 		i -= len(m.ClaimerAddress)
 		copy(dAtA[i:], m.ClaimerAddress)
 		i = encodeVarintTx(dAtA, i, uint64(len(m.ClaimerAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Id) > 0 {
+		i -= len(m.Id)
+		copy(dAtA[i:], m.Id)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Id)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -545,10 +543,8 @@ func (m *MsgOpenBeam) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.Amount != nil {
-		l = m.Amount.Size()
-		n += 1 + l + sovTx(uint64(l))
-	}
+	l = m.Amount.Size()
+	n += 1 + l + sovTx(uint64(l))
 	l = len(m.Schema)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
@@ -570,18 +566,16 @@ func (m *MsgUpdateBeam) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.UpdaterAddress)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
 	l = len(m.Id)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.Amount != nil {
-		l = m.Amount.Size()
+	l = len(m.UpdaterAddress)
+	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
+	l = m.Amount.Size()
+	n += 1 + l + sovTx(uint64(l))
 	if m.Status != 0 {
 		n += 1 + sovTx(uint64(m.Status))
 	}
@@ -605,11 +599,11 @@ func (m *MsgClaimBeam) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ClaimerAddress)
+	l = len(m.Id)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = len(m.Id)
+	l = len(m.ClaimerAddress)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -780,9 +774,6 @@ func (m *MsgOpenBeam) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Amount == nil {
-				m.Amount = &types.Coin{}
-			}
 			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -942,38 +933,6 @@ func (m *MsgUpdateBeam) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UpdaterAddress", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.UpdaterAddress = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
 			}
 			var stringLen uint64
@@ -1004,6 +963,38 @@ func (m *MsgUpdateBeam) Unmarshal(dAtA []byte) error {
 			}
 			m.Id = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UpdaterAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UpdaterAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
@@ -1032,9 +1023,6 @@ func (m *MsgUpdateBeam) Unmarshal(dAtA []byte) error {
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
-			}
-			if m.Amount == nil {
-				m.Amount = &types.Coin{}
 			}
 			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1202,38 +1190,6 @@ func (m *MsgClaimBeam) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ClaimerAddress", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ClaimerAddress = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
 			}
 			var stringLen uint64
@@ -1263,6 +1219,38 @@ func (m *MsgClaimBeam) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Id = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClaimerAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClaimerAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {

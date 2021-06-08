@@ -61,8 +61,8 @@ func CmdOpenBeam() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			var data types.BeamData
-			if len(argsData) > 0 {
+			var data *types.BeamData
+			if len(argsData) > 0 && argsData != "" {
 				if err = json.Unmarshal([]byte(argsData), &data); err != nil {
 					return err
 				}
@@ -84,7 +84,7 @@ func CmdOpenBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), argsOwner, &coin, hashedSecret, argsSchema, &data)
+			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), argsOwner, coin, hashedSecret, argsSchema, data)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -103,9 +103,9 @@ func CmdOpenBeam() *cobra.Command {
 // CmdUpdateBeam Command definition for beam increase dispatch
 func CmdUpdateBeam() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <id> <amount> [data]",
+		Use:   "update <id> <amount> [data] [cancel-reason] [hide-content]",
 		Short: "Update a given beam",
-		Args:  cobra.RangeArgs(2, 4),
+		Args:  cobra.RangeArgs(2, 5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Acquire the command arguments
 			argsId := args[0]
@@ -121,11 +121,23 @@ func CmdUpdateBeam() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			var data types.BeamData
-			if len(argsData) > 0 {
+			var data *types.BeamData
+			if len(argsData) > 0 && argsData != "" {
 				if err = json.Unmarshal([]byte(argsData), &data); err != nil {
 					return err
 				}
+			}
+
+			// Try to acquire the cancel reason
+			argsCancelReason, err := cmd.Flags().GetString(FlagCancelReason)
+			if err != nil {
+				return err
+			}
+
+			// Try to acquire the hide content param
+			argsHideContent, err := cmd.Flags().GetBool(FlagHideContent)
+			if err != nil {
+				return err
 			}
 
 			argsStatus, err := cmd.Flags().GetInt32(FlagStatus)
@@ -140,7 +152,7 @@ func CmdUpdateBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgUpdateBeam(clientCtx.GetFromAddress().String(), argsId, &coin, types.BeamState(argsStatus), &data)
+			msg := types.NewMsgUpdateBeam(clientCtx.GetFromAddress().String(), argsId, coin, types.BeamState(argsStatus), data, argsCancelReason, argsHideContent)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -157,11 +169,12 @@ func CmdUpdateBeam() *cobra.Command {
 // CmdClaimBeam Command definition for beam claim dispatch
 func CmdClaimBeam() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "claim [id]",
+		Use:   "claim <id> <secret>",
 		Short: "Claim a given beam",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsId := args[0]
+			argsSecret := args[1]
 
 			// Acquire the client context
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -170,7 +183,7 @@ func CmdClaimBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgClaimBeam(clientCtx.GetFromAddress().String(), argsId)
+			msg := types.NewMsgClaimBeam(clientCtx.GetFromAddress().String(), argsId, argsSecret)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

@@ -8,7 +8,7 @@ import (
 var _ sdk.Msg = &MsgOpenBeam{}
 
 // NewMsgOpenBeam Build a open beam message based on parameters
-func NewMsgOpenBeam(id string, creator string, owner string, amount *sdk.Coin, secret string, schema string, data *BeamData) *MsgOpenBeam {
+func NewMsgOpenBeam(id string, creator string, owner string, amount sdk.Coin, secret string, schema string, data *BeamData) *MsgOpenBeam {
 	return &MsgOpenBeam{
 		Id:             id,
 		CreatorAddress: creator,
@@ -68,7 +68,7 @@ func (msg *MsgOpenBeam) ValidateBasic() error {
 	}
 
 	// If we have an amount, make sure it is not negative nor zero
-	if msg.Amount != nil && msg.Amount.IsNegative() || msg.Amount.IsZero() {
+	if msg.Amount.IsNegative() || msg.Amount.IsZero() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "Invalid amount: must be greater than 0")
 	}
 	return nil

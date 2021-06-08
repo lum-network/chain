@@ -8,10 +8,11 @@ import (
 var _ sdk.Msg = &MsgClaimBeam{}
 
 // NewMsgClaimBeam Build a MsgClaimBeam instance
-func NewMsgClaimBeam(claimer string, id string) *MsgClaimBeam {
+func NewMsgClaimBeam(claimer string, id string, secret string) *MsgClaimBeam {
 	return &MsgClaimBeam{
 		ClaimerAddress: claimer,
 		Id:             id,
+		Secret:         secret,
 	}
 }
 
