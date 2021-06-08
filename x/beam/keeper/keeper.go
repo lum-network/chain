@@ -163,6 +163,10 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 	}
 
 	k.SetBeam(ctx, beam.GetId(), beam)
+
+	ctx.EventManager().Events().AppendEvents(sdk.Events{
+		sdk.NewEvent(types.EventTypeOpenBeam, sdk.NewAttribute(types.AttributeKeyOpener, msg.GetOwner())),
+	})
 	return nil
 }
 
@@ -249,6 +253,10 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 	}
 
 	k.SetBeam(ctx, beam.GetId(), beam)
+
+	ctx.EventManager().Events().AppendEvents(sdk.Events{
+		sdk.NewEvent(types.EventTypeUpdateBeam, sdk.NewAttribute(types.AttributeKeyUpdater, msg.GetUpdater())),
+	})
 	return nil
 }
 
@@ -291,5 +299,8 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 	beam.Owner = msg.GetClaimer()
 	k.SetBeam(ctx, msg.Id, beam)
 
+	ctx.EventManager().Events().AppendEvents(sdk.Events{
+		sdk.NewEvent(types.EventTypeClaimBeam, sdk.NewAttribute(types.AttributeKeyClaimer, msg.GetClaimer())),
+	})
 	return nil
 }
