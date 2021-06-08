@@ -33,9 +33,9 @@ func GetTxCmd() *cobra.Command {
 // CmdOpenBeam Command definition for beam opening dispatch
 func CmdOpenBeam() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "open <amount> <secret> <schema> [data]",
+		Use:   "open <amount> <secret> <schema> [data] [closes-at-block] [claim-expires-at-block]",
 		Short: "Open a new beam",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.RangeArgs(3, 6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Trying to acquire the amount
 			coin, err := sdk.ParseCoinNormalized(args[0])
@@ -74,6 +74,16 @@ func CmdOpenBeam() *cobra.Command {
 				return err
 			}
 
+			argsClosesAtBlock, err := cmd.Flags().GetInt32(FlagClosesAtBlock)
+			if err != nil {
+				return err
+			}
+
+			argsClaimExpiresAtBlock, err := cmd.Flags().GetInt32(FlagClaimExpiresAtBlock)
+			if err != nil {
+				return err
+			}
+
 			// Generate the random id
 			id := types.GenerateSecureToken(10)
 
@@ -84,7 +94,7 @@ func CmdOpenBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), argsOwner, coin, hashedSecret, argsSchema, data)
+			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), argsOwner, coin, hashedSecret, argsSchema, data, argsClosesAtBlock, argsClaimExpiresAtBlock)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -103,7 +113,7 @@ func CmdOpenBeam() *cobra.Command {
 // CmdUpdateBeam Command definition for beam increase dispatch
 func CmdUpdateBeam() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <id> <amount> [data] [cancel-reason] [hide-content]",
+		Use:   "update <id> <amount> [data] [cancel-reason] [hide-content] [closes-at-block] [claim-expires-at-block]",
 		Short: "Update a given beam",
 		Args:  cobra.RangeArgs(2, 5),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -145,6 +155,16 @@ func CmdUpdateBeam() *cobra.Command {
 				return err
 			}
 
+			argsClosesAtBlock, err := cmd.Flags().GetInt32(FlagClosesAtBlock)
+			if err != nil {
+				return err
+			}
+
+			argsClaimExpiresAtBlock, err := cmd.Flags().GetInt32(FlagClaimExpiresAtBlock)
+			if err != nil {
+				return err
+			}
+
 			// Acquire the client context
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -152,7 +172,7 @@ func CmdUpdateBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgUpdateBeam(clientCtx.GetFromAddress().String(), argsId, coin, types.BeamState(argsStatus), data, argsCancelReason, argsHideContent)
+			msg := types.NewMsgUpdateBeam(clientCtx.GetFromAddress().String(), argsId, coin, types.BeamState(argsStatus), data, argsCancelReason, argsHideContent, argsClosesAtBlock, argsClaimExpiresAtBlock)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

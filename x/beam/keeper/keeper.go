@@ -150,6 +150,14 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 		beam.Claimed = true
 	}
 
+	if msg.GetClosesAtBlock() > 0 {
+		beam.ClosesAtBlock = msg.GetClosesAtBlock()
+	}
+
+	if msg.GetClaimExpiresAtBlock() > 0 {
+		beam.ClaimExpiresAtBlock = msg.GetClaimExpiresAtBlock()
+	}
+
 	// Only try to process coins move if present
 	if msg.GetAmount().IsPositive() {
 		creatorAddress, err := sdk.AccAddressFromBech32(msg.GetCreatorAddress())
@@ -208,6 +216,19 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 		}
 
 		beam.Amount = beam.GetAmount().Add(msg.GetAmount())
+	}
+
+	if len(msg.GetClaimAddress()) > 0 {
+		beam.ClaimAddress = msg.GetClaimAddress()
+		beam.Claimed = true
+	}
+
+	if msg.GetClosesAtBlock() > 0 {
+		beam.ClosesAtBlock = msg.GetClosesAtBlock()
+	}
+
+	if msg.GetClaimExpiresAtBlock() > 0 {
+		beam.ClaimExpiresAtBlock = msg.GetClaimExpiresAtBlock()
 	}
 
 	// We then check the status and return if required

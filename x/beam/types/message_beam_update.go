@@ -8,15 +8,17 @@ import (
 var _ sdk.Msg = &MsgUpdateBeam{}
 
 // NewMsgUpdateBeam Build a increase beam message based on parameters
-func NewMsgUpdateBeam(updater string, id string, amount sdk.Coin, status BeamState, data *BeamData, cancelReason string, hideContent bool) *MsgUpdateBeam {
+func NewMsgUpdateBeam(updater string, id string, amount sdk.Coin, status BeamState, data *BeamData, cancelReason string, hideContent bool, closesAtBlock int32, claimExpiresAtBlock int32) *MsgUpdateBeam {
 	return &MsgUpdateBeam{
-		UpdaterAddress: updater,
-		Id:             id,
-		Amount:         amount,
-		Status:         status,
-		Data:           data,
-		HideContent:    hideContent,
-		CancelReason:   cancelReason,
+		UpdaterAddress:      updater,
+		Id:                  id,
+		Amount:              amount,
+		Status:              status,
+		Data:                data,
+		HideContent:         hideContent,
+		CancelReason:        cancelReason,
+		ClosesAtBlock:       closesAtBlock,
+		ClaimExpiresAtBlock: claimExpiresAtBlock,
 	}
 }
 

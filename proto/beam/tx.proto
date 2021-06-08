@@ -19,6 +19,8 @@ message MsgOpenBeam {
 
     BeamData data = 6 [(gogoproto.nullable) = true];
     string claim_address = 7;
+    int32 claim_expires_at_block = 8;
+    int32 closes_at_block = 9;
 }
 
 message MsgUpdateBeam {
@@ -30,6 +32,10 @@ message MsgUpdateBeam {
     bool hide_content = 6;
 
     BeamData data = 7 [(gogoproto.nullable) = true];
+
+    string claim_address = 8;
+    int32 claim_expires_at_block = 9;
+    int32 closes_at_block = 10;
 }
 
 message MsgClaimBeam {
