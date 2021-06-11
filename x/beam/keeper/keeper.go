@@ -306,7 +306,7 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 
 	// Make sure transaction signer is authorized
 	if types.CompareHashAndString(beam.Secret, msg.Secret) == false {
-		return types.ErrBeamNotAuthorized
+		return types.ErrBeamInvalidSecret
 	}
 
 	// Acquire the claimer address

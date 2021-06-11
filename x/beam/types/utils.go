@@ -1,8 +1,8 @@
 package types
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
-	"golang.org/x/crypto/bcrypt"
 	"math/rand"
 	"time"
 )
@@ -18,17 +18,13 @@ func GenerateSecureToken(length int) string {
 }
 
 // GenerateHashFromString is used to generate a hashed version of the argument passed string
-func GenerateHashFromString(secret string) (string, error) {
-	hashed, err := bcrypt.GenerateFromPassword([]byte(secret), bcrypt.DefaultCost)
-	if err != nil {
-		return "", err
-	}
-
-	return string(hashed), nil
+func GenerateHashFromString(secret string) []byte {
+	hash := sha256.Sum256([]byte(secret))
+	return hash[:]
 }
 
 // CompareHashAndString is used to verify that a string matches a provided hash
-func CompareHashAndString(hash string, str string) bool {
-	res := bcrypt.CompareHashAndPassword([]byte(hash), []byte(str))
-	return res == nil
+func CompareHashAndString(hash string, secret string) bool {
+	hashedStr := GenerateHashFromString(secret)
+	return hex.EncodeToString(hashedStr) == hash
 }

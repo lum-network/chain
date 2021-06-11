@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -88,10 +89,7 @@ func CmdOpenBeam() *cobra.Command {
 			id := types.GenerateSecureToken(10)
 
 			// Encode the secret
-			hashedSecret, err := types.GenerateHashFromString(argsSecret)
-			if err != nil {
-				return err
-			}
+			hashedSecret := hex.EncodeToString(types.GenerateHashFromString(argsSecret))
 
 			// Construct the message and validate
 			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), argsOwner, coin, hashedSecret, argsSchema, data, argsClosesAtBlock, argsClaimExpiresAtBlock)
