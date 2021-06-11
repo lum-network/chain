@@ -54,13 +54,12 @@ func CmdOpenBeam() *cobra.Command {
 				return nil
 			}
 
-			if len(amount) == 0 {
-				amount = "0ulum"
-			}
-
-			coin, err := sdk.ParseCoinNormalized(amount)
-			if err != nil {
-				return err
+			var coin *sdk.Coin
+			if len(amount) > 0 {
+				coin, err = types.ExtractCoinPointerFromString(amount)
+				if err != nil {
+					return err
+				}
 			}
 
 			// Try to acquire the data arg
@@ -130,13 +129,12 @@ func CmdUpdateBeam() *cobra.Command {
 				return nil
 			}
 
-			if len(amount) == 0 {
-				amount = "0ulum"
-			}
-
-			coin, err := sdk.ParseCoinNormalized(amount)
-			if err != nil {
-				return err
+			var coin *sdk.Coin
+			if len(amount) > 0 {
+				coin, err = types.ExtractCoinPointerFromString(amount)
+				if err != nil {
+					return err
+				}
 			}
 
 			// Try to acquire the data arg

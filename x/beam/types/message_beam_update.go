@@ -8,7 +8,7 @@ import (
 var _ sdk.Msg = &MsgUpdateBeam{}
 
 // NewMsgUpdateBeam Build a increase beam message based on parameters
-func NewMsgUpdateBeam(updater string, id string, amount sdk.Coin, status BeamState, data *BeamData, cancelReason string, hideContent bool, closesAtBlock int32, claimExpiresAtBlock int32) *MsgUpdateBeam {
+func NewMsgUpdateBeam(updater string, id string, amount *sdk.Coin, status BeamState, data *BeamData, cancelReason string, hideContent bool, closesAtBlock int32, claimExpiresAtBlock int32) *MsgUpdateBeam {
 	return &MsgUpdateBeam{
 		UpdaterAddress:      updater,
 		Id:                  id,
@@ -56,7 +56,7 @@ func (msg *MsgUpdateBeam) ValidateBasic() error {
 	}
 
 	// If we have an amount, make sure it is not negative nor zero
-	if msg.Amount.IsNegative() {
+	if msg.Amount != nil && msg.Amount.IsNegative() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "Invalid amount: must be greater or equal 0")
 	}
 	return nil

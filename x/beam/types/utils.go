@@ -3,6 +3,7 @@ package types
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"math/rand"
 	"time"
 )
@@ -27,4 +28,13 @@ func GenerateHashFromString(secret string) []byte {
 func CompareHashAndString(hash string, secret string) bool {
 	hashedStr := GenerateHashFromString(secret)
 	return hex.EncodeToString(hashedStr) == hash
+}
+
+// ExtractCoinPointerFromString Return a coin instance pointer from a string
+func ExtractCoinPointerFromString(amount string) (*sdk.Coin, error) {
+	localCoin, err := sdk.ParseCoinNormalized(amount)
+	if err != nil {
+		return nil, err
+	}
+	return &localCoin, nil
 }

@@ -13,7 +13,7 @@ message MsgOpenBeam {
     string id = 1;
     string creator_address = 2;
     string secret = 3;
-    cosmos.base.v1beta1.Coin amount = 4 [(gogoproto.nullable) = false];
+    cosmos.base.v1beta1.Coin amount = 4 [(gogoproto.nullable) = true];
 
     string schema = 5;
 
@@ -26,7 +26,7 @@ message MsgOpenBeam {
 message MsgUpdateBeam {
     string id = 1;
     string updater_address = 2;
-    cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+    cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = true];
     BeamState status = 4;
     string cancel_reason = 5;
     bool hide_content = 6;

@@ -134,14 +134,18 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 		CreatorAddress: msg.GetCreatorAddress(),
 		Id:             msg.GetId(),
 		Secret:         msg.GetSecret(),
-		Amount:         msg.GetAmount(),
 		Status:         types.BeamState_OPEN,
+		Amount:         sdk.NewCoin("ulum", sdk.NewInt(0)),
 		FundsWithdrawn: false,
 		Claimed:        false,
 		HideContent:    false,
 		CancelReason:   "",
 		Schema:         msg.GetSchema(),
 		Data:           msg.GetData(),
+	}
+
+	if msg.GetAmount() != nil && msg.GetAmount().IsPositive() {
+		beam.Amount = *msg.GetAmount()
 	}
 
 	// If the payload includes a owner field, we auto claim it
@@ -159,13 +163,13 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 	}
 
 	// Only try to process coins move if present
-	if msg.GetAmount().IsPositive() {
+	if msg.GetAmount() != nil && msg.GetAmount().IsPositive() {
 		creatorAddress, err := sdk.AccAddressFromBech32(msg.GetCreatorAddress())
 		if err != nil {
 			return sdkerrors.ErrInvalidAddress
 		}
 
-		err = k.moveCoinsToModuleAccount(ctx, creatorAddress, msg.GetAmount())
+		err = k.moveCoinsToModuleAccount(ctx, creatorAddress, *msg.GetAmount())
 		if err != nil {
 			return err
 		}
@@ -204,18 +208,18 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 		beam.Data = msg.GetData()
 	}
 
-	if msg.GetAmount().IsPositive() {
+	if msg.GetAmount() != nil && msg.GetAmount().IsPositive() {
 		updaterAddress, err := sdk.AccAddressFromBech32(msg.GetUpdaterAddress())
 		if err != nil {
 			return sdkerrors.ErrInvalidAddress
 		}
 
-		err = k.moveCoinsToModuleAccount(ctx, updaterAddress, msg.GetAmount())
+		err = k.moveCoinsToModuleAccount(ctx, updaterAddress, *msg.GetAmount())
 		if err != nil {
 			return err
 		}
 
-		beam.Amount = beam.GetAmount().Add(msg.GetAmount())
+		beam.Amount = beam.GetAmount().Add(*msg.GetAmount())
 	}
 
 	if len(msg.GetClaimAddress()) > 0 {
@@ -317,10 +321,12 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 
 	// Transfer funds only if beam is already closed
 	if beam.GetStatus() == types.BeamState_CLOSED && beam.GetFundsWithdrawn() == false {
-		if err = k.moveCoinsToAccount(ctx, claimerAddress, beam.GetAmount()); err != nil {
-			return err
+		if beam.GetAmount().IsPositive() {
+			if err = k.moveCoinsToAccount(ctx, claimerAddress, beam.GetAmount()); err != nil {
+				return err
+			}
+			beam.FundsWithdrawn = true
 		}
-		beam.FundsWithdrawn = true
 	}
 
 	// Update beam status
