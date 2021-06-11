@@ -34,25 +34,31 @@ func GetTxCmd() *cobra.Command {
 // CmdOpenBeam Command definition for beam opening dispatch
 func CmdOpenBeam() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "open <amount> <secret> <schema> [data] [closes-at-block] [claim-expires-at-block]",
+		Use:   "open <secret> <schema> [amount] [data] [closes-at-block] [claim-expires-at-block]",
 		Short: "Open a new beam",
-		Args:  cobra.RangeArgs(3, 6),
+		Args:  cobra.RangeArgs(2, 6),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Trying to acquire the amount
-			coin, err := sdk.ParseCoinNormalized(args[0])
-			if err != nil {
-				return err
-			}
-
 			// Acquire the command arguments
-			argsSecret := args[1]
-			argsSchema := args[2]
-			if err != nil {
-				return err
-			}
+			argsSecret := args[0]
+			argsSchema := args[1]
 
 			// Acquire the client context
 			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// Try to acquire the amount flag
+			amount, err := cmd.Flags().GetString(FlagAmount)
+			if err != nil {
+				return nil
+			}
+
+			if len(amount) == 0 {
+				amount = "0ulum"
+			}
+
+			coin, err := sdk.ParseCoinNormalized(amount)
 			if err != nil {
 				return err
 			}
@@ -111,15 +117,24 @@ func CmdOpenBeam() *cobra.Command {
 // CmdUpdateBeam Command definition for beam increase dispatch
 func CmdUpdateBeam() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <id> <amount> [data] [cancel-reason] [hide-content] [closes-at-block] [claim-expires-at-block]",
+		Use:   "update <id> [amount] [data] [cancel-reason] [hide-content] [closes-at-block] [claim-expires-at-block]",
 		Short: "Update a given beam",
-		Args:  cobra.RangeArgs(2, 5),
+		Args:  cobra.RangeArgs(1, 7),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Acquire the command arguments
 			argsId := args[0]
 
-			// Trying to acquire the amount
-			coin, err := sdk.ParseCoinNormalized(args[1])
+			// Try to acquire the amount flag
+			amount, err := cmd.Flags().GetString(FlagAmount)
+			if err != nil {
+				return nil
+			}
+
+			if len(amount) == 0 {
+				amount = "0ulum"
+			}
+
+			coin, err := sdk.ParseCoinNormalized(amount)
 			if err != nil {
 				return err
 			}

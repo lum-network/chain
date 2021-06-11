@@ -8,6 +8,7 @@ const (
 	FlagOwner  = "owner"
 	FlagData   = "data"
 	FlagStatus = "status"
+	FlagAmount = "amount"
 	FlagHideContent = "hide-content"
 	FlagCancelReason = "cancel-reason"
 	FlagClosesAtBlock = "closes-at-block"
@@ -23,6 +24,7 @@ func flagSetOwner() *flag.FlagSet {
 func flagSetBeamMetadata() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
+	fs.String(FlagAmount, "", "Beam amount")
 	fs.String(FlagData, "", "Beam metadata")
 	fs.Int32(FlagStatus, 0, "Beam new status")
 	fs.Bool(FlagHideContent, false, "Beam hide content")

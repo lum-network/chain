@@ -70,8 +70,8 @@ func (msg *MsgOpenBeam) ValidateBasic() error {
 	}
 
 	// If we have an amount, make sure it is not negative nor zero
-	if msg.Amount.IsNegative() || msg.Amount.IsZero() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "Invalid amount: must be greater than 0")
+	if msg.Amount.IsNegative() {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "Invalid amount: must be greater or equal 0")
 	}
 	return nil
 }
