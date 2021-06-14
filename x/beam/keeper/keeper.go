@@ -44,10 +44,6 @@ func (k Keeper) GetStore(ctx sdk.Context) prefix.Store {
 
 // moveCoinsToModuleAccount This moves coins from a given address to the beam module account
 func (k Keeper) moveCoinsToModuleAccount(ctx sdk.Context, account sdk.AccAddress, amount sdk.Coin) error {
-	if k.BankKeeper.GetBalance(ctx, account, types.ModuleCurrencyName).IsLT(amount) {
-		return sdkerrors.ErrInsufficientFunds
-	}
-
 	err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, account, types.ModuleName, sdk.NewCoins(amount))
 	if err != nil {
 		return err
@@ -58,10 +54,6 @@ func (k Keeper) moveCoinsToModuleAccount(ctx sdk.Context, account sdk.AccAddress
 
 // moveCoinsToAccount This moves coins from the beam module account to a end user account
 func (k Keeper) moveCoinsToAccount(ctx sdk.Context, account sdk.AccAddress, amount sdk.Coin) error {
-	if k.BankKeeper.GetBalance(ctx, account, types.ModuleCurrencyName).IsLT(amount) {
-		return sdkerrors.ErrInsufficientFunds
-	}
-
 	err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, account, sdk.NewCoins(amount))
 	if err != nil {
 		return err
