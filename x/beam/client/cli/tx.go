@@ -161,7 +161,7 @@ func CmdUpdateBeam() *cobra.Command {
 				return err
 			}
 
-			argsStatus, err := cmd.Flags().GetInt32(FlagStatus)
+			argStatus, err := cmd.Flags().GetInt32(FlagStatus)
 			if err != nil {
 				return err
 			}
@@ -183,7 +183,7 @@ func CmdUpdateBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgUpdateBeam(clientCtx.GetFromAddress().String(), argsId, coin, types.BeamState(argsStatus), data, argsCancelReason, argsHideContent, argsClosesAtBlock, argsClaimExpiresAtBlock)
+			msg := types.NewMsgUpdateBeam(clientCtx.GetFromAddress().String(), argsId, coin, types.BeamState(argStatus), data, argsCancelReason, argsHideContent, argsClosesAtBlock, argsClaimExpiresAtBlock)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
