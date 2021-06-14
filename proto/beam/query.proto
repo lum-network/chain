@@ -11,11 +11,11 @@ option go_package = "github.com/lum-network/chain/x/beam/types";
 // Query defines the gRPC querier service.
 service Query {
   rpc Beam(QueryGetBeamRequest) returns (QueryGetBeamResponse) {
-    option (google.api.http).get = "/lumnetwork/beam/get/{id}";
+    option (google.api.http).get = "/lum-network/beams/{id}";
   }
 
   rpc Beams(QueryFetchBeamsRequest) returns (QueryFetchBeamsResponse) {
-    option (google.api.http).get = "/lumnetwork/beam/fetch";
+    option (google.api.http).get = "/lum-network/beams";
   }
 }
 
@@ -24,7 +24,7 @@ message QueryGetBeamRequest {
 }
 
 message QueryGetBeamResponse {
-  Beam Beam = 1;
+  Beam beam = 1;
 }
 
 message QueryFetchBeamsRequest {
@@ -32,6 +32,6 @@ message QueryFetchBeamsRequest {
 }
 
 message QueryFetchBeamsResponse {
-  repeated Beam Beam = 1;
+  repeated Beam beams = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

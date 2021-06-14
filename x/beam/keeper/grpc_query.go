@@ -43,7 +43,7 @@ func (k Keeper) Beams(c context.Context, req *types.QueryFetchBeamsRequest) (*ty
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryFetchBeamsResponse{Beam: beams, Pagination: pageRes}, nil
+	return &types.QueryFetchBeamsResponse{Beams: beams, Pagination: pageRes}, nil
 }
 
 func (k Keeper) Beam(c context.Context, req *types.QueryGetBeamRequest) (*types.QueryGetBeamResponse, error) {
