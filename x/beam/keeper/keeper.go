@@ -280,8 +280,6 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 				return err
 			}
 			break
-		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "This status update cannot be proceeded")
 		}
 	}
 
