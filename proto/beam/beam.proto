@@ -7,9 +7,10 @@ import "cosmos/base/v1beta1/coin.proto";
 option go_package = "github.com/lum-network/chain/x/beam/types";
 
 enum BeamState {
-    OPEN = 0;
-    CANCELED = 1;
-    CLOSED = 2;
+    UNSPECIFIED = 0;
+    OPEN = 1;
+    CANCELED = 2;
+    CLOSED = 3;
 }
 
 message BeamMedia {

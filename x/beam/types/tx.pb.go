@@ -203,7 +203,7 @@ func (m *MsgUpdateBeam) GetStatus() BeamState {
 	if m != nil {
 		return m.Status
 	}
-	return BeamState_OPEN
+	return BeamState_UNSPECIFIED
 }
 
 func (m *MsgUpdateBeam) GetCancelReason() string {

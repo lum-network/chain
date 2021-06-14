@@ -236,7 +236,7 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 	}
 
 	// We then check the status and return if required
-	if msg.GetStatus() != beam.GetStatus() {
+	if msg.GetStatus() != types.BeamState_UNSPECIFIED {
 		switch msg.GetStatus() {
 		case types.BeamState_CLOSED:
 			beam.Status = types.BeamState_CLOSED
