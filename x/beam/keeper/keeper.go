@@ -44,21 +44,17 @@ func (k Keeper) GetStore(ctx sdk.Context) prefix.Store {
 
 // moveCoinsToModuleAccount This moves coins from a given address to the beam module account
 func (k Keeper) moveCoinsToModuleAccount(ctx sdk.Context, account sdk.AccAddress, amount sdk.Coin) error {
-	err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, account, types.ModuleName, sdk.NewCoins(amount))
-	if err != nil {
+	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, account, types.ModuleName, sdk.NewCoins(amount)); err != nil {
 		return err
 	}
-
 	return nil
 }
 
 // moveCoinsToAccount This moves coins from the beam module account to a end user account
 func (k Keeper) moveCoinsToAccount(ctx sdk.Context, account sdk.AccAddress, amount sdk.Coin) error {
-	err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, account, sdk.NewCoins(amount))
-	if err != nil {
+	if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, account, sdk.NewCoins(amount)); err != nil {
 		return err
 	}
-
 	return nil
 }
 

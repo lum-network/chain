@@ -1,7 +1,7 @@
 version: 1
 accounts:
   - name: user1
-    coins: ["120000000ulum"]
+    coins: ["120000000000ulum"]
   - name: user2
     coins: ["100ulum"]
 validator:
@@ -19,3 +19,8 @@ genesis:
     staking:
       params:
         bond_denom: "ulum"
+faucet:
+  name: user1
+  coins: ["10ulum"]
+  coins_max: ["120000000ulum"]
+  port: 4500
