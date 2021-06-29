@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/lum-network/chain/x/beam/simulation"
+	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -103,6 +106,26 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
+func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+	return nil
+}
+
+func (am AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+	return nil
+}
+
+func (am AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
+	registry[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+}
+
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return []simtypes.WeightedOperation{}
+}
+
 func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
@@ -162,4 +185,9 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // returns no validator updates.
 func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+}
+
+// ConsensusVersion returns the current module store definitions version
+func (am AppModule) ConsensusVersion() uint64 {
+	return types.ModuleVersion
 }

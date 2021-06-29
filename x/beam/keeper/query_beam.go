@@ -18,9 +18,12 @@ func fetchBeams(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.LegacyAm
 }
 
 func getBeam(ctx sdk.Context, id string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	msg := keeper.GetBeam(ctx, id)
+	beam, err := keeper.GetBeam(ctx, id)
+	if err != nil {
+		return nil, err
+	}
 
-	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, msg)
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, beam)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
@@ -37,11 +36,6 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// GetStore Return an initialized store instance
-func (k Keeper) GetStore(ctx sdk.Context) prefix.Store {
-	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BeamKey))
-}
-
 // moveCoinsToModuleAccount This moves coins from a given address to the beam module account
 func (k Keeper) moveCoinsToModuleAccount(ctx sdk.Context, account sdk.AccAddress, amount sdk.Coin) error {
 	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, account, types.ModuleName, sdk.NewCoins(amount)); err != nil {
@@ -59,31 +53,37 @@ func (k Keeper) moveCoinsToAccount(ctx sdk.Context, account sdk.AccAddress, amou
 }
 
 // GetBeam Return a beam instance for the given key
-func (k Keeper) GetBeam(ctx sdk.Context, key string) types.Beam {
+func (k Keeper) GetBeam(ctx sdk.Context, key string) (*types.Beam, error) {
 	// Acquire the store instance
-	store := k.GetStore(ctx)
+	store := ctx.KVStore(k.storeKey)
+
+	// Acquire the data stream
+	bz := store.Get(types.KeyBeam(key))
+	if bz == nil {
+		return nil, sdkerrors.Wrapf(types.ErrBeamNotFound, "beam not found: %s", key)
+	}
 
 	// Acquire the beam instance and return
-	var beam types.Beam
-	k.cdc.MustUnmarshalBinaryBare(store.Get(types.KeyPrefix(types.BeamKey+key)), &beam)
-	return beam
+	var beam *types.Beam
+	k.cdc.MustUnmarshalBinaryBare(bz, beam)
+	return beam, nil
 }
 
 // ListBeams Return a list of in store beams
-func (k Keeper) ListBeams(ctx sdk.Context) (msgs []types.Beam) {
+func (k Keeper) ListBeams(ctx sdk.Context) (msgs []*types.Beam) {
 	// Acquire the store instance
-	store := k.GetStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 
 	// Define the iterator
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefix(types.BeamKey))
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyBeam(""))
 
 	// Defer the iterator shutdown
 	defer iterator.Close()
 
 	// For each beam, unmarshal and append to return structure
 	for ; iterator.Valid(); iterator.Next() {
-		var msg types.Beam
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &msg)
+		var msg *types.Beam
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), msg)
 		msgs = append(msgs, msg)
 	}
 
@@ -93,22 +93,22 @@ func (k Keeper) ListBeams(ctx sdk.Context) (msgs []types.Beam) {
 // HasBeam Check if a beam instance exists or not (by its key)
 func (k Keeper) HasBeam(ctx sdk.Context, id string) bool {
 	// Acquire the store instance
-	store := k.GetStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 
 	// Return the presence boolean
-	return store.Has(types.KeyPrefix(types.BeamKey + id))
+	return store.Has(types.KeyBeam(id))
 }
 
 // SetBeam Replace the beam at the specified "id" position
-func (k Keeper) SetBeam(ctx sdk.Context, key string, beam types.Beam) {
+func (k Keeper) SetBeam(ctx sdk.Context, key string, beam *types.Beam) {
 	// Acquire the store instance
-	store := k.GetStore(ctx)
+	store := ctx.KVStore(k.storeKey)
 
 	// Encode the beam
-	encodedBeam := k.cdc.MustMarshalBinaryBare(&beam)
+	encodedBeam := k.cdc.MustMarshalBinaryBare(beam)
 
 	// Update in store
-	store.Set(types.KeyPrefix(types.BeamKey+key), encodedBeam)
+	store.Set(types.KeyBeam(key), encodedBeam)
 }
 
 // OpenBeam Create a new beam instance
@@ -118,7 +118,7 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 		return types.ErrBeamAlreadyExists
 	}
 
-	var beam = types.Beam{
+	var beam = &types.Beam{
 		CreatorAddress: msg.GetCreatorAddress(),
 		Id:             msg.GetId(),
 		Secret:         msg.GetSecret(),
@@ -179,7 +179,10 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 	}
 
 	// Acquire the beam instance
-	beam := k.GetBeam(ctx, msg.Id)
+	beam, err := k.GetBeam(ctx, msg.Id)
+	if err != nil {
+		return err
+	}
 
 	// Is the beam still updatable
 	if beam.GetStatus() != types.BeamState_OPEN {
@@ -287,7 +290,10 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 	}
 
 	// Acquire the beam instance
-	beam := k.GetBeam(ctx, msg.Id)
+	beam, err := k.GetBeam(ctx, msg.Id)
+	if err != nil {
+		return err
+	}
 
 	// If beam is already claimed, we should not be able to
 	if beam.GetClaimed() {
