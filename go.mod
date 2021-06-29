@@ -19,6 +19,7 @@ require (
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/prometheus/client_golang v1.10.0 // indirect
 	github.com/prometheus/common v0.23.0 // indirect
+	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
 	github.com/rs/zerolog v1.21.0 // indirect
 	github.com/spf13/cast v1.3.1
