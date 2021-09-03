@@ -130,7 +130,7 @@ func operationSimulateMsgUpdateBeam(k keeper.Keeper, ak account.AccountKeeper, b
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUpdateBeam, "skip update beam"), nil, nil
 		}
 
-		msg := types.NewMsgUpdateBeam(simAccount.Address.String(), beamID, &coins[0], types.BeamState_UNSPECIFIED, nil, "", false, 0, 0)
+		msg := types.NewMsgUpdateBeam(simAccount.Address.String(), beamID, &coins[0], types.BeamState_StateUnspecified, nil, "", false, 0, 0)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())

@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -17,16 +19,18 @@ type (
 		cdc        codec.Marshaler
 		storeKey   sdk.StoreKey
 		memKey     sdk.StoreKey
+		AuthKeeper authkeeper.AccountKeeper
 		BankKeeper bankkeeper.Keeper
 	}
 )
 
 // NewKeeper Create a new keeper instance and return the pointer
-func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey, bank bankkeeper.Keeper) *Keeper {
+func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper) *Keeper {
 	return &Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
 		memKey:     memKey,
+		AuthKeeper: auth,
 		BankKeeper: bank,
 	}
 }
@@ -34,6 +38,11 @@ func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey, bank bankkeep
 // Logger Return a keeper logger instance
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+// GetBeamAccount Return the beam module account interface
+func (k Keeper) GetBeamAccount(ctx sdk.Context) authtypes.ModuleAccountI {
+	return k.AuthKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
 // moveCoinsToModuleAccount This moves coins from a given address to the beam module account
@@ -122,7 +131,7 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 		CreatorAddress: msg.GetCreatorAddress(),
 		Id:             msg.GetId(),
 		Secret:         msg.GetSecret(),
-		Status:         types.BeamState_OPEN,
+		Status:         types.BeamState_StateOpen,
 		Amount:         sdk.NewCoin("ulum", sdk.NewInt(0)),
 		FundsWithdrawn: false,
 		Claimed:        false,
@@ -185,7 +194,7 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 	}
 
 	// Is the beam still updatable
-	if beam.GetStatus() != types.BeamState_OPEN {
+	if beam.GetStatus() != types.BeamState_StateOpen {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "Beam is closed and thus cannot be updated")
 	}
 
@@ -227,10 +236,10 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 	}
 
 	// We then check the status and return if required
-	if msg.GetStatus() != types.BeamState_UNSPECIFIED {
+	if msg.GetStatus() != types.BeamState_StateUnspecified {
 		switch msg.GetStatus() {
-		case types.BeamState_CLOSED:
-			beam.Status = types.BeamState_CLOSED
+		case types.BeamState_StateClosed:
+			beam.Status = types.BeamState_StateClosed
 
 			if msg.GetHideContent() != beam.GetHideContent() {
 				beam.HideContent = msg.GetHideContent()
@@ -250,8 +259,8 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 			}
 			break
 
-		case types.BeamState_CANCELED:
-			beam.Status = types.BeamState_CANCELED
+		case types.BeamState_StateCanceled:
+			beam.Status = types.BeamState_StateCanceled
 
 			if msg.GetCancelReason() != beam.GetCancelReason() {
 				beam.CancelReason = msg.GetCancelReason()
@@ -312,7 +321,7 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 	}
 
 	// Transfer funds only if beam is already closed
-	if beam.GetStatus() == types.BeamState_CLOSED && beam.GetFundsWithdrawn() == false {
+	if beam.GetStatus() == types.BeamState_StateClosed && beam.GetFundsWithdrawn() == false {
 		if beam.GetAmount().IsPositive() {
 			if err = k.moveCoinsToAccount(ctx, claimerAddress, beam.GetAmount()); err != nil {
 				return err

@@ -307,7 +307,7 @@ func New(
 
 	app.beamKeeper = *beamkeeper.NewKeeper(
 		appCodec, keys[beamtypes.StoreKey], keys[beamtypes.MemStoreKey],
-		app.BankKeeper,
+		app.AccountKeeper, app.BankKeeper,
 	)
 
 	/****  Module Options ****/
