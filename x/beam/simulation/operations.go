@@ -22,7 +22,7 @@ const (
 	OpWeightMsgClaimBeam  = "op_weight_msg_claim_beam"
 )
 
-func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONMarshaler, ak account.AccountKeeper,
+func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak account.AccountKeeper,
 	bk bank.Keeper, k keeper.Keeper, wContents []simtypes.WeightedProposalContent) simulation.WeightedOperations {
 	var (
 		weightMsgOpenBeam   int
@@ -86,7 +86,7 @@ func operationSimulateMsgClaimBeam(k keeper.Keeper, ak account.AccountKeeper, bk
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
 	}
 }
 
@@ -113,7 +113,7 @@ func SimulateMsgOpenBeam(k keeper.Keeper, ak account.AccountKeeper, bk bank.Keep
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
 	}
 }
 
@@ -159,7 +159,7 @@ func operationSimulateMsgUpdateBeam(k keeper.Keeper, ak account.AccountKeeper, b
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
+		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
 	}
 }
 

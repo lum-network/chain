@@ -16,7 +16,7 @@ import (
 
 type (
 	Keeper struct {
-		cdc        codec.Marshaler
+		cdc        codec.Codec
 		storeKey   sdk.StoreKey
 		memKey     sdk.StoreKey
 		AuthKeeper authkeeper.AccountKeeper
@@ -25,7 +25,7 @@ type (
 )
 
 // NewKeeper Create a new keeper instance and return the pointer
-func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper) *Keeper {
+func NewKeeper(cdc codec.Codec, storeKey, memKey sdk.StoreKey, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper) *Keeper {
 	return &Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
@@ -74,7 +74,7 @@ func (k Keeper) GetBeam(ctx sdk.Context, key string) (*types.Beam, error) {
 
 	// Acquire the beam instance and return
 	var beam *types.Beam
-	k.cdc.MustUnmarshalBinaryBare(bz, beam)
+	k.cdc.MustUnmarshal(bz, beam)
 	return beam, nil
 }
 
@@ -92,7 +92,7 @@ func (k Keeper) ListBeams(ctx sdk.Context) (msgs []*types.Beam) {
 	// For each beam, unmarshal and append to return structure
 	for ; iterator.Valid(); iterator.Next() {
 		var msg *types.Beam
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), msg)
+		k.cdc.MustUnmarshal(iterator.Value(), msg)
 		msgs = append(msgs, msg)
 	}
 
@@ -114,7 +114,7 @@ func (k Keeper) SetBeam(ctx sdk.Context, key string, beam *types.Beam) {
 	store := ctx.KVStore(k.storeKey)
 
 	// Encode the beam
-	encodedBeam := k.cdc.MustMarshalBinaryBare(beam)
+	encodedBeam := k.cdc.MustMarshal(beam)
 
 	// Update in store
 	store.Set(types.KeyBeam(key), encodedBeam)
