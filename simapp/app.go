@@ -173,7 +173,7 @@ type SimApp struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
-	beamKeeper beamkeeper.Keeper
+	BeamKeeper beamkeeper.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -314,7 +314,7 @@ func NewSimApp(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
-	app.beamKeeper = *beamkeeper.NewKeeper(
+	app.BeamKeeper = *beamkeeper.NewKeeper(
 		appCodec, keys[beamtypes.StoreKey], keys[beamtypes.MemStoreKey],
 		app.AccountKeeper, app.BankKeeper,
 	)
@@ -344,7 +344,7 @@ func NewSimApp(
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		beam.NewAppModule(appCodec, app.beamKeeper),
+		beam.NewAppModule(appCodec, app.BeamKeeper),
 	)
 
 	app.mm.SetOrderBeginBlockers(
@@ -398,7 +398,7 @@ func NewSimApp(
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		beam.NewAppModule(appCodec, app.beamKeeper),
+		beam.NewAppModule(appCodec, app.BeamKeeper),
 		transferModule,
 	)
 	app.sm.RegisterStoreDecoders()
