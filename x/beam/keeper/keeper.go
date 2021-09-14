@@ -16,7 +16,7 @@ import (
 
 type (
 	Keeper struct {
-		cdc        codec.Codec
+		cdc        codec.BinaryCodec
 		storeKey   sdk.StoreKey
 		memKey     sdk.StoreKey
 		AuthKeeper authkeeper.AccountKeeper
@@ -25,7 +25,7 @@ type (
 )
 
 // NewKeeper Create a new keeper instance and return the pointer
-func NewKeeper(cdc codec.Codec, storeKey, memKey sdk.StoreKey, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper) *Keeper {
 	return &Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
@@ -62,24 +62,27 @@ func (k Keeper) moveCoinsToAccount(ctx sdk.Context, account sdk.AccAddress, amou
 }
 
 // GetBeam Return a beam instance for the given key
-func (k Keeper) GetBeam(ctx sdk.Context, key string) (*types.Beam, error) {
+func (k Keeper) GetBeam(ctx sdk.Context, key string) (types.Beam, error) {
 	// Acquire the store instance
 	store := ctx.KVStore(k.storeKey)
 
 	// Acquire the data stream
 	bz := store.Get(types.KeyBeam(key))
 	if bz == nil {
-		return nil, sdkerrors.Wrapf(types.ErrBeamNotFound, "beam not found: %s", key)
+		return types.Beam{}, sdkerrors.Wrapf(types.ErrBeamNotFound, "beam not found: %s", key)
 	}
 
 	// Acquire the beam instance and return
-	var beam *types.Beam
-	k.cdc.MustUnmarshal(bz, beam)
+	var beam types.Beam
+	err := k.cdc.Unmarshal(bz, &beam)
+	if err != nil {
+		return types.Beam{}, err
+	}
 	return beam, nil
 }
 
 // ListBeams Return a list of in store beams
-func (k Keeper) ListBeams(ctx sdk.Context) (msgs []*types.Beam) {
+func (k Keeper) ListBeams(ctx sdk.Context) (msgs []types.Beam) {
 	// Acquire the store instance
 	store := ctx.KVStore(k.storeKey)
 
@@ -91,8 +94,8 @@ func (k Keeper) ListBeams(ctx sdk.Context) (msgs []*types.Beam) {
 
 	// For each beam, unmarshal and append to return structure
 	for ; iterator.Valid(); iterator.Next() {
-		var msg *types.Beam
-		k.cdc.MustUnmarshal(iterator.Value(), msg)
+		var msg types.Beam
+		k.cdc.MustUnmarshal(iterator.Value(), &msg)
 		msgs = append(msgs, msg)
 	}
 
@@ -283,7 +286,7 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 		}
 	}
 
-	k.SetBeam(ctx, beam.GetId(), beam)
+	k.SetBeam(ctx, beam.GetId(), &beam)
 
 	ctx.EventManager().Events().AppendEvents(sdk.Events{
 		sdk.NewEvent(types.EventTypeUpdateBeam, sdk.NewAttribute(types.AttributeKeyUpdater, msg.GetUpdaterAddress())),
@@ -333,7 +336,7 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 	// Update beam status
 	beam.Claimed = true
 	beam.ClaimAddress = msg.GetClaimerAddress()
-	k.SetBeam(ctx, msg.Id, beam)
+	k.SetBeam(ctx, msg.Id, &beam)
 
 	ctx.EventManager().Events().AppendEvents(sdk.Events{
 		sdk.NewEvent(types.EventTypeClaimBeam, sdk.NewAttribute(types.AttributeKeyClaimer, msg.GetClaimerAddress())),

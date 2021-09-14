@@ -6,6 +6,7 @@ import (
 
 const (
 	AccountAddressPrefix = "lum"
+	CoinBondDenom        = "ulum"
 	CoinType             = 837
 )
 
