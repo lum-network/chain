@@ -434,26 +434,26 @@ func New(
 
 	// Install the v0.43 - v0.44 migration handler
 	// TODO: remove once executed
-	planName := "upgrade-43-44"
+	planName := "upgrade-43-44-2"
 	app.UpgradeKeeper.SetUpgradeHandler(planName, func(ctx sdk.Context, plan upgradetypes.Plan, _ module.VersionMap) (module.VersionMap, error) {
 		// First time running migration, we set the 1 as fromVersion to avoid running InitGenesis on these
 		fromVM := map[string]uint64{
-			"auth":         1,
-			"bank":         1,
-			"capability":   1,
-			"crisis":       1,
-			"distribution": 1,
-			"evidence":     1,
-			"gov":          1,
-			"mint":         1,
-			"params":       1,
-			"slashing":     1,
-			"staking":      1,
-			"upgrade":      1,
-			"vesting":      1,
-			"ibc":          1,
-			"genutil":      1,
-			"transfer":     1,
+			"auth":         2,
+			"bank":         2,
+			"capability":   2,
+			"crisis":       2,
+			"distribution": 2,
+			"evidence":     2,
+			"gov":          2,
+			"mint":         2,
+			"params":       2,
+			"slashing":     2,
+			"staking":      2,
+			"upgrade":      2,
+			"vesting":      2,
+			"ibc":          2,
+			"genutil":      2,
+			"transfer":     2,
 			"beam":         1,
 		}
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
@@ -490,6 +490,10 @@ func (app *App) Name() string { return app.BaseApp.Name() }
 // BeginBlocker application updates every begin block
 func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
+}
+
+func (app *App) RunMigrations(ctx sdk.Context, migrateFromVersions module.MigrationMap) error {
+
 }
 
 // EndBlocker application updates every end block
