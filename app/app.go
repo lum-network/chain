@@ -492,10 +492,6 @@ func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 	return app.mm.BeginBlock(ctx, req)
 }
 
-func (app *App) RunMigrations(ctx sdk.Context, migrateFromVersions module.MigrationMap) error {
-
-}
-
 // EndBlocker application updates every end block
 func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	return app.mm.EndBlock(ctx, req)
