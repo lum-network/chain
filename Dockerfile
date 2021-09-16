@@ -1,5 +1,5 @@
 # Build image
-FROM golang:1.15-alpine AS build-env
+FROM golang:1.16-alpine AS build-env
 
 # Setup
 ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev python3
@@ -23,7 +23,7 @@ FROM alpine:edge
 ENV CHAIN /chain
 
 # Install ca-certificates
-RUN apk add --update ca-certificates
+RUN apk add --update ca-certificates zip python3
 
 RUN addgroup chain && adduser -S -G chain chain -h "$CHAIN"
 
