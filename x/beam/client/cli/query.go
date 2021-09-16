@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 
@@ -59,7 +58,7 @@ func CmdFetchBeams() *cobra.Command {
 			}
 
 			// Post and acquire response
-			res, err := queryClient.Beams(context.Background(), params)
+			res, err := queryClient.Beams(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
@@ -91,7 +90,7 @@ func CmdGetBeam() *cobra.Command {
 			}
 
 			// Post and acquire the response
-			res, err := queryClient.Beam(context.Background(), params)
+			res, err := queryClient.Beam(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
