@@ -101,6 +101,161 @@ func (suite *KeeperTestSuite) TestClaimOpenBeam() {
 	require.NoError(suite.T(), err)
 	require.True(suite.T(), beam.GetClaimed())
 	require.Equal(suite.T(), beam.GetClaimAddress(), claimer.String())
+	require.Equal(suite.T(), beam.GetStatus(), types.BeamState_StateOpen)
+}
+
+// TestClaimClosedBeam Test to claim a closed beam and make sure funds were transfered
+func (suite *KeeperTestSuite) TestClaimClosedBeam() {
+	app := suite.app
+	ctx := suite.ctx
+
+	// Create the required accounts
+	creator := suite.addrs[0]
+	claimer := suite.addrs[1]
+	require.NotEqual(suite.T(), creator.String(), claimer.String())
+
+	// We store the initial claimer funds
+	claimerFunds := app.BankKeeper.GetBalance(ctx, claimer, "stake")
+
+	// Create a random token as claim secret
+	claimSecret := types.GenerateSecureToken(4)
+
+	// Create a beam with 100 tokens
+	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
+	msg := types.NewMsgOpenBeam(
+		types.GenerateSecureToken(12),
+		creator.String(),
+		"",
+		&msgVal,
+		hex.EncodeToString(types.GenerateHashFromString(claimSecret)),
+		types.BEAM_SCHEMA_REVIEW,
+		nil,
+		0,
+		0,
+	)
+	err := app.BeamKeeper.OpenBeam(ctx, *msg)
+	require.NoError(suite.T(), err)
+	require.True(suite.T(), app.BeamKeeper.HasBeam(ctx, msg.GetId()))
+
+	// Close the beam
+	msgClose := types.NewMsgUpdateBeam(
+		creator.String(),
+		msg.GetId(),
+		nil,
+		types.BeamState_StateClosed,
+		nil,
+		"",
+		false,
+		0,
+		0,
+	)
+	err = app.BeamKeeper.UpdateBeam(ctx, *msgClose)
+	require.NoError(suite.T(), err)
+
+	// If we try to update again, should pass
+	err = app.BeamKeeper.UpdateBeam(ctx, *msgClose)
+	require.Error(suite.T(), err)
+
+	// Get the beam and ensure properties
+	beam, err := app.BeamKeeper.GetBeam(ctx, msg.GetId())
+	require.NoError(suite.T(), err)
+	require.False(suite.T(), beam.GetClaimed())
+	require.False(suite.T(), beam.GetHideContent())
+	require.Zero(suite.T(), beam.GetClosedAt())
+	require.Zero(suite.T(), beam.GetClosesAtBlock())
+
+	// Claim the beam
+	err = app.BeamKeeper.ClaimBeam(ctx, *types.NewMsgClaimBeam(
+		claimer.String(),
+		msg.GetId(),
+		claimSecret,
+	))
+	require.NoError(suite.T(), err)
+
+	// Try to claim again
+	err = app.BeamKeeper.ClaimBeam(ctx, *types.NewMsgClaimBeam(
+		claimer.String(),
+		msg.GetId(),
+		claimSecret,
+	))
+	require.Error(suite.T(), err)
+
+	// Now the funds should've been transfered
+	require.Equal(suite.T(), claimerFunds.Add(beam.GetAmount()), app.BankKeeper.GetBalance(ctx, claimer, "stake"))
+}
+
+// Test to cancel a beam and make sure funds were returned to the sender
+func (suite *KeeperTestSuite) TestCancelBeam() {
+	app := suite.app
+	ctx := suite.ctx
+
+	// Create the required accounts
+	creator := suite.addrs[0]
+	claimer := suite.addrs[1]
+	require.NotEqual(suite.T(), creator.String(), claimer.String())
+
+	// Create a random token as claim secret
+	claimSecret := types.GenerateSecureToken(4)
+
+	// We store the initial claimer funds
+	creatorFunds := app.BankKeeper.GetBalance(ctx, creator, "stake")
+
+	// Create a beam with 100 tokens
+	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
+	msg := types.NewMsgOpenBeam(
+		types.GenerateSecureToken(12),
+		creator.String(),
+		"",
+		&msgVal,
+		hex.EncodeToString(types.GenerateHashFromString(claimSecret)),
+		types.BEAM_SCHEMA_REVIEW,
+		nil,
+		0,
+		0,
+	)
+	err := app.BeamKeeper.OpenBeam(ctx, *msg)
+	require.NoError(suite.T(), err)
+	require.True(suite.T(), app.BeamKeeper.HasBeam(ctx, msg.GetId()))
+
+	// Make sure the creator was debited
+	require.Equal(suite.T(), creatorFunds.SubAmount(sdk.NewInt(100)), app.BankKeeper.GetBalance(ctx, creator, "stake"))
+
+	// Cancel the beam
+	msgCancel := types.NewMsgUpdateBeam(
+		creator.String(),
+		msg.GetId(),
+		nil,
+		types.BeamState_StateCanceled,
+		nil,
+		"Test Cancel",
+		true,
+		0,
+		0,
+	)
+	err = app.BeamKeeper.UpdateBeam(ctx, *msgCancel)
+	require.NoError(suite.T(), err)
+	beam, err := app.BeamKeeper.GetBeam(ctx, msg.GetId())
+	require.NoError(suite.T(), err)
+	require.Equal(suite.T(), beam.GetStatus(), types.BeamState_StateCanceled)
+	require.Equal(suite.T(), beam.GetCancelReason(), msgCancel.GetCancelReason())
+
+	// Make sure the creator was credited back
+	require.Equal(suite.T(), creatorFunds, app.BankKeeper.GetBalance(ctx, creator, "stake"))
+
+	// Try to cancel again and make sure it cannot happen
+	msgCancel = types.NewMsgUpdateBeam(
+		creator.String(),
+		msg.GetId(),
+		nil,
+		types.BeamState_StateCanceled,
+		nil,
+		"Test Cancel",
+		true,
+		0,
+		0,
+	)
+	err = app.BeamKeeper.UpdateBeam(ctx, *msgCancel)
+	require.Error(suite.T(), err)
 }
 
 // TestUnknownBeam Make sure we cannot get an unknown beam
@@ -139,10 +294,6 @@ func (suite *KeeperTestSuite) TestOpenNewBeam() {
 	require.NoError(suite.T(), err)
 	require.True(suite.T(), app.BeamKeeper.HasBeam(ctx, msg.GetId()))
 
-	// Ask for the list of beams and make sure we have it
-	beams := app.BeamKeeper.ListBeams(ctx)
-	require.GreaterOrEqual(suite.T(), len(beams), 1)
-
 	// Make sure we can get it
 	beam, err := app.BeamKeeper.GetBeam(ctx, msg.GetId())
 	require.NoError(suite.T(), err)
@@ -156,6 +307,43 @@ func (suite *KeeperTestSuite) TestOpenNewBeam() {
 	require.Equal(suite.T(), msg.GetClosesAtBlock(), beam.GetClosesAtBlock())
 	require.Equal(suite.T(), msg.GetClaimExpiresAtBlock(), beam.GetClaimExpiresAtBlock())
 	require.Equal(suite.T(), beam.GetStatus(), types.BeamState_StateOpen)
+}
+
+// TestFetchBeams Open a new beam and try to fetch it through the list
+func (suite *KeeperTestSuite) TestFetchBeams(){
+	app := suite.app
+	ctx := suite.ctx
+
+	// Create the original owner
+	owner := suite.addrs[0]
+
+	// Create value and the linked message
+	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
+	msg := types.NewMsgOpenBeam(
+		types.GenerateSecureToken(12),
+		owner.String(),
+		owner.String(),
+		&msgVal,
+		types.GenerateSecureToken(4),
+		types.BEAM_SCHEMA_REVIEW,
+		nil,
+		0,
+		0,
+	)
+
+	// Open the beam and make sure there was no error
+	err := app.BeamKeeper.OpenBeam(ctx, *msg)
+	require.NoError(suite.T(), err)
+	require.True(suite.T(), app.BeamKeeper.HasBeam(ctx, msg.GetId()))
+
+	// Ask for the list of beams and make sure we have it
+	beams := app.BeamKeeper.ListBeams(ctx)
+	require.GreaterOrEqual(suite.T(), len(beams), 1)
+
+	// Try to get the beam via the ID taken from list
+	beam, err := app.BeamKeeper.GetBeam(ctx, beams[0].GetId())
+	require.NoError(suite.T(), err)
+	require.Equal(suite.T(), beam.GetId(), msg.GetId())
 }
 
 // TestKeeperSuite Main entry point for the testing suite
