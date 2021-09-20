@@ -1,5 +1,7 @@
 package types
 
+import sdk "github.com/cosmos/cosmos-sdk/types"
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "beam"
@@ -21,39 +23,27 @@ const (
 )
 
 var (
-	PrefixBeamQueue       = []byte{0x01}
-	PrefixOpenBeamQueue   = []byte{0x02}
-	PrefixClosedBeamQueue = []byte{0x03}
-
-	delimiter = []byte("/")
+	BeamsIndex            = []byte{0x01}
+	OpenBeamsQueueIndex   = []byte{0x02}
+	ClosedBeamsQueueIndex = []byte{0x03}
 )
 
-// BeamKey Get a beam ID as bytes array from string
-func BeamKey(beamID string) []byte {
-	key := append(PrefixBeamQueue, delimiter...)
-	if len(beamID) > 0 {
-		key = append(key, []byte(beamID)...)
-		key = append(key, delimiter...)
-	}
-	return key
+func GetBeamIDBytes(beamID string) []byte {
+	return []byte(beamID)
 }
 
-// OpenBeamQueueKey Return a key constructed for the active beams queue
-func OpenBeamQueueKey(beamID string) []byte {
-	key := append(PrefixOpenBeamQueue, delimiter...)
-	if len(beamID) > 0 {
-		key = append(key, []byte(beamID)...)
-		key = append(key, delimiter...)
-	}
-	return key
+func GetBeamIDFromBytes(beamID []byte) string {
+	return string(beamID)
 }
 
-// ClosedBeamQueueKey Return a key constructed for the closed beams queue
-func ClosedBeamQueueKey(beamID string) []byte {
-	key := append(PrefixClosedBeamQueue, delimiter...)
-	if len(beamID) > 0 {
-		key = append(key, []byte(beamID)...)
-		key = append(key, delimiter...)
-	}
-	return key
+func GetBeamKey(beamID string) []byte {
+	return append(BeamsIndex, GetBeamIDBytes(beamID)...)
+}
+
+func GetOpenBeamQueueKey(beamID string, height int64) []byte {
+	return append(append(OpenBeamsQueueIndex, sdk.Uint64ToBigEndian(uint64(height))...), GetBeamIDBytes(beamID)...)
+}
+
+func GetClosedBeamQueueKey(beamID string, height int64) []byte {
+	return append(append(ClosedBeamsQueueIndex, sdk.Uint64ToBigEndian(uint64(height))...), GetBeamIDBytes(beamID)...)
 }

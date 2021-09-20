@@ -25,7 +25,7 @@ func (k Keeper) Beams(c context.Context, req *types.QueryFetchBeamsRequest) (*ty
 
 	// Acquire the store instance
 	store := ctx.KVStore(k.storeKey)
-	beamStore := prefix.NewStore(store, types.BeamKey(""))
+	beamStore := prefix.NewStore(store, types.GetBeamKey(""))
 
 	// Make the paginated query
 	pageRes, err := query.Paginate(beamStore, req.Pagination, func(key []byte, value []byte) error {
@@ -47,21 +47,15 @@ func (k Keeper) Beams(c context.Context, req *types.QueryFetchBeamsRequest) (*ty
 }
 
 func (k Keeper) Beam(c context.Context, req *types.QueryGetBeamRequest) (*types.QueryGetBeamResponse, error) {
-	// Is the payload valid?
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	var beam types.Beam
-
-	// Acquire the context instance
 	ctx := sdk.UnwrapSDKContext(c)
 
-	// Acquire the store instance
-	store := ctx.KVStore(k.storeKey)
-
-	// Acquire the beam instance
-	k.cdc.MustUnmarshal(store.Get(types.BeamKey(req.Id)), &beam)
-
+	beam, err := k.GetBeam(ctx, req.GetId())
+	if err != nil {
+		return nil, status.Error(codes.NotFound, types.ErrBeamNotFound.Error())
+	}
 	return &types.QueryGetBeamResponse{Beam: &beam}, nil
 }

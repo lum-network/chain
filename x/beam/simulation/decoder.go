@@ -11,7 +11,7 @@ import (
 func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
-		case bytes.Equal(kvA.Key[:1], types.PrefixBeamQueue):
+		case bytes.Equal(kvA.Key[:1], types.BeamsIndex):
 			var beamA, beamB types.Beam
 			cdc.MustUnmarshal(kvA.Value, &beamA)
 			cdc.MustUnmarshal(kvB.Value, &beamB)

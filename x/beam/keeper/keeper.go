@@ -61,30 +61,30 @@ func (k Keeper) moveCoinsToAccount(ctx sdk.Context, account sdk.AccAddress, amou
 	return nil
 }
 
-// InsertActiveBeamQueue Insert a beam ID inside the active beam queue
-func (k Keeper) InsertActiveBeamQueue(ctx sdk.Context, beamID string) {
+// InsertOpenBeamQueue Insert a beam ID inside the active beam queue
+func (k Keeper) InsertOpenBeamQueue(ctx sdk.Context, beamID string, height int64) {
 	store := ctx.KVStore(k.storeKey)
-	bz := types.BeamKey(beamID)
-	store.Set(types.OpenBeamQueueKey(beamID), bz)
+	bz := types.GetBeamIDBytes(beamID)
+	store.Set(types.GetOpenBeamQueueKey(beamID, height), bz)
 }
 
-// RemoveFromActiveBeamQueue Remove a beam ID from the active beam queue
-func (k Keeper) RemoveFromActiveBeamQueue(ctx sdk.Context, beamID string) {
+// RemoveFromOpenBeamQueue Remove a beam ID from the active beam queue
+func (k Keeper) RemoveFromOpenBeamQueue(ctx sdk.Context, beamID string, height int64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.OpenBeamQueueKey(beamID))
+	store.Delete(types.GetOpenBeamQueueKey(beamID, height))
 }
 
 // InsertClosedBeamQueue Insert a beam ID inside the closed beam queue
-func (k Keeper) InsertClosedBeamQueue(ctx sdk.Context, beamID string) {
+func (k Keeper) InsertClosedBeamQueue(ctx sdk.Context, beamID string, height int64) {
 	store := ctx.KVStore(k.storeKey)
-	bz := types.BeamKey(beamID)
-	store.Set(types.ClosedBeamQueueKey(beamID), bz)
+	bz := types.GetBeamIDBytes(beamID)
+	store.Set(types.GetClosedBeamQueueKey(beamID, height), bz)
 }
 
 // RemoveFromClosedBeamQueue Remove a beam ID from the closed beam queue
-func (k Keeper) RemoveFromClosedBeamQueue(ctx sdk.Context, beamID string) {
+func (k Keeper) RemoveFromClosedBeamQueue(ctx sdk.Context, beamID string, height int64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.ClosedBeamQueueKey(beamID))
+	store.Delete(types.GetClosedBeamQueueKey(beamID, height))
 }
 
 // GetBeam Return a beam instance for the given key
@@ -93,7 +93,7 @@ func (k Keeper) GetBeam(ctx sdk.Context, key string) (types.Beam, error) {
 	store := ctx.KVStore(k.storeKey)
 
 	// Acquire the data stream
-	bz := store.Get(types.BeamKey(key))
+	bz := store.Get(types.GetBeamKey(key))
 	if bz == nil {
 		return types.Beam{}, sdkerrors.Wrapf(types.ErrBeamNotFound, "beam not found: %s", key)
 	}
@@ -109,7 +109,7 @@ func (k Keeper) GetBeam(ctx sdk.Context, key string) (types.Beam, error) {
 
 // ListBeams Return a list of in store beams
 func (k Keeper) ListBeams(ctx sdk.Context) (beams []types.Beam) {
-	k.IterateBeamsQueue(ctx, func(beam types.Beam) bool {
+	k.IterateBeams(ctx, func(beam types.Beam) bool {
 		beams = append(beams, beam)
 		return false
 	})
@@ -117,16 +117,16 @@ func (k Keeper) ListBeams(ctx sdk.Context) (beams []types.Beam) {
 }
 
 // HasBeam Check if a beam instance exists or not (by its key)
-func (k Keeper) HasBeam(ctx sdk.Context, id string) bool {
+func (k Keeper) HasBeam(ctx sdk.Context, beamID string) bool {
 	// Acquire the store instance
 	store := ctx.KVStore(k.storeKey)
 
 	// Return the presence boolean
-	return store.Has(types.BeamKey(id))
+	return store.Has(types.GetBeamKey(beamID))
 }
 
 // SetBeam Replace the beam at the specified "id" position
-func (k Keeper) SetBeam(ctx sdk.Context, key string, beam *types.Beam) {
+func (k Keeper) SetBeam(ctx sdk.Context, beamID string, beam *types.Beam) {
 	// Acquire the store instance
 	store := ctx.KVStore(k.storeKey)
 
@@ -134,7 +134,7 @@ func (k Keeper) SetBeam(ctx sdk.Context, key string, beam *types.Beam) {
 	encodedBeam := k.cdc.MustMarshal(beam)
 
 	// Update in store
-	store.Set(types.BeamKey(key), encodedBeam)
+	store.Set(types.GetBeamKey(beamID), encodedBeam)
 }
 
 // OpenBeam Create a new beam instance
@@ -190,7 +190,7 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 	}
 
 	k.SetBeam(ctx, beam.GetId(), beam)
-	k.InsertActiveBeamQueue(ctx, beam.GetId())
+	k.InsertOpenBeamQueue(ctx, beam.GetId(), int64(msg.GetClosesAtBlock()))
 
 	ctx.EventManager().Events().AppendEvents(sdk.Events{
 		sdk.NewEvent(types.EventTypeOpenBeam, sdk.NewAttribute(types.AttributeKeyOpener, msg.GetCreatorAddress())),
@@ -225,8 +225,8 @@ func (k Keeper) UpdateBeamStatus(ctx sdk.Context, beamID string, newStatus types
 		}
 
 		// Update the queues
-		k.RemoveFromActiveBeamQueue(ctx, beam.GetId())
-		k.InsertClosedBeamQueue(ctx, beam.GetId())
+		k.RemoveFromOpenBeamQueue(ctx, beam.GetId(), int64(beam.GetClosesAtBlock()))
+		k.InsertClosedBeamQueue(ctx, beam.GetId(), int64(beam.GetClosesAtBlock()))
 		break
 
 	case types.BeamState_StateCanceled:
@@ -244,8 +244,8 @@ func (k Keeper) UpdateBeamStatus(ctx sdk.Context, beamID string, newStatus types
 		}
 
 		// Update the queues
-		k.RemoveFromActiveBeamQueue(ctx, beam.GetId())
-		k.InsertClosedBeamQueue(ctx, beam.GetId())
+		k.RemoveFromOpenBeamQueue(ctx, beam.GetId(), int64(beam.GetClosesAtBlock()))
+		k.InsertClosedBeamQueue(ctx, beam.GetId(), int64(beam.GetClosesAtBlock()))
 		break
 	}
 
@@ -386,15 +386,17 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 	return nil
 }
 
-// IterateBeamsQueue Iterate over the whole beam queue
-func (k Keeper) IterateBeamsQueue(ctx sdk.Context, cb func(beam types.Beam) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.BeamKey(""))
+// IterateBeams Iterate over the whole beam queue
+func (k Keeper) IterateBeams(ctx sdk.Context, cb func(beam types.Beam) (stop bool)) {
+	iterator := k.BeamsIterator(ctx)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		var beam types.Beam
-		k.cdc.MustUnmarshal(iterator.Value(), &beam)
+		err := k.cdc.Unmarshal(iterator.Value(), &beam)
+		if err != nil {
+			panic(err)
+		}
 		if cb(beam) {
 			break
 		}
@@ -435,20 +437,20 @@ func (k Keeper) IterateClosedBeamsQueue(ctx sdk.Context, cb func(beam types.Beam
 	}
 }
 
-// BeamsQueueIterator Return a ready to use iterator for the whole beams queue
-func (k Keeper) BeamsQueueIterator(ctx sdk.Context) sdk.Iterator {
+// BeamsIterator Return a ready to use iterator for the whole beams queue
+func (k Keeper) BeamsIterator(ctx sdk.Context) sdk.Iterator {
 	kvStore := ctx.KVStore(k.storeKey)
-	return kvStore.Iterator(types.PrefixBeamQueue, types.BeamKey(""))
+	return sdk.KVStorePrefixIterator(kvStore, types.BeamsIndex)
 }
 
 // OpenBeamsQueueIterator Return a ready to use iterator for the open only beams queue
 func (k Keeper) OpenBeamsQueueIterator(ctx sdk.Context) sdk.Iterator {
 	kvStore := ctx.KVStore(k.storeKey)
-	return kvStore.Iterator(types.PrefixOpenBeamQueue, types.BeamKey(""))
+	return kvStore.Iterator(types.OpenBeamsQueueIndex, nil)
 }
 
 // ClosedBeamsQueueIterator Return a ready to use iterator for the closed only beams queue
 func (k Keeper) ClosedBeamsQueueIterator(ctx sdk.Context) sdk.Iterator {
 	kvStore := ctx.KVStore(k.storeKey)
-	return kvStore.Iterator(types.PrefixClosedBeamQueue, types.BeamKey(""))
+	return kvStore.Iterator(types.ClosedBeamsQueueIndex, nil)
 }

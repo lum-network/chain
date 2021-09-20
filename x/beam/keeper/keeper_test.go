@@ -256,6 +256,12 @@ func (suite *KeeperTestSuite) TestCancelBeam() {
 	)
 	err = app.BeamKeeper.UpdateBeam(ctx, *msgCancel)
 	require.Error(suite.T(), err)
+
+	// Make sure the beam is now present in the closed beams queue
+	closedIterator := app.BeamKeeper.ClosedBeamsQueueIterator(ctx)
+	require.True(suite.T(), closedIterator.Valid())
+	require.Equal(suite.T(), beam.GetId(), string(closedIterator.Value()))
+	closedIterator.Close()
 }
 
 // TestUnknownBeam Make sure we cannot get an unknown beam
@@ -307,6 +313,16 @@ func (suite *KeeperTestSuite) TestOpenNewBeam() {
 	require.Equal(suite.T(), msg.GetClosesAtBlock(), beam.GetClosesAtBlock())
 	require.Equal(suite.T(), msg.GetClaimExpiresAtBlock(), beam.GetClaimExpiresAtBlock())
 	require.Equal(suite.T(), beam.GetStatus(), types.BeamState_StateOpen)
+
+	// Make sure the beam is now present in the open beams queue
+	openIterator := app.BeamKeeper.OpenBeamsQueueIterator(ctx)
+	require.True(suite.T(), openIterator.Valid())
+	require.Equal(suite.T(), beam.GetId(), string(openIterator.Value()))
+	openIterator.Close()
+
+	// Make sure the closed beams queue is empty
+	closedIterator := app.BeamKeeper.ClosedBeamsQueueIterator(ctx)
+	require.False(suite.T(), closedIterator.Valid())
 }
 
 // TestFetchBeams Open a new beam and try to fetch it through the list
