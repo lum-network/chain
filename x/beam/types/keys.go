@@ -1,7 +1,5 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
-
 const (
 	// ModuleName defines the module name
 	ModuleName = "beam"
@@ -40,10 +38,22 @@ func GetBeamKey(beamID string) []byte {
 	return append(BeamsIndex, GetBeamIDBytes(beamID)...)
 }
 
-func GetOpenBeamQueueKey(beamID string, height int64) []byte {
-	return append(append(OpenBeamsQueueIndex, sdk.Uint64ToBigEndian(uint64(height))...), GetBeamIDBytes(beamID)...)
+func GetOpenBeamQueueKey(beamID string) []byte {
+	return append(OpenBeamsQueueIndex, GetBeamIDBytes(beamID)...)
 }
 
-func GetClosedBeamQueueKey(beamID string, height int64) []byte {
-	return append(append(ClosedBeamsQueueIndex, sdk.Uint64ToBigEndian(uint64(height))...), GetBeamIDBytes(beamID)...)
+func GetClosedBeamQueueKey(beamID string) []byte {
+	return append(ClosedBeamsQueueIndex, GetBeamIDBytes(beamID)...)
+}
+
+func SplitBeamKey(key []byte) []byte {
+	return key[1:]
+}
+
+func SplitOpenBeamQueueKey(key []byte) (beamID []byte) {
+	return key[1:]
+}
+
+func SplitClosedBeamQueueKey(key []byte) (beamID []byte) {
+	return key[1:]
 }
