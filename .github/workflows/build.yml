@@ -10,9 +10,27 @@ env:
   REGISTRY_ADDRESS_PROJECT: chain
 
 jobs:
+  test:
+    name: Build and test the commit before build the docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v2.1.3
+        with:
+          go-version: 1.16
+
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          fetch-depth: '0'
+
+      - name: Run the test suite
+        run: |
+          make test
+
   bump-version-push-tag:
     name: Bump version and push new tag
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - name: Checkout
         uses: actions/checkout@master
