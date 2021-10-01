@@ -2,7 +2,7 @@
 FROM golang:1.16-alpine AS build-env
 
 # Setup
-ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev python3
+ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev python3 curl
 
 # Set working directory for the build
 WORKDIR /go/src/github.com/lum-network/chain
