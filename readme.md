@@ -13,7 +13,7 @@ Lum Network is a customer reward protocol and introduces mutable data channel in
 
 Lum Network is starport compatible and thus, you will require it to start the project in development mode.
 
-You can install it by following the instructions [here](https://docs.starport.network/intro/install.html)
+You can install it by following the instructions [here](https://docs.starport.network/guide/install.html)
 
 Then just use the following command to generate the protobuf and the chain binary
 
