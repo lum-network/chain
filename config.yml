@@ -19,6 +19,9 @@ genesis:
     staking:
       params:
         bond_denom: "ulum"
+    gov:
+      deposit_params:
+        min_deposit: [{"amount": "1000000000", "denom": "ulum"}]
 faucet:
   name: user1
   coins: ["10ulum"]
