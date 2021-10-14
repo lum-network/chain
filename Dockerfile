@@ -23,7 +23,7 @@ FROM alpine:edge
 ENV CHAIN /chain
 
 # Install dependencies
-RUN apk add --update ca-certificates zip python3 python3-pip
+RUN apk add --update ca-certificates zip python3 py3-pip
 RUN pip3 install pyyaml
 
 RUN addgroup chain && adduser -S -G chain chain -h "$CHAIN"
