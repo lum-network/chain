@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/lum-network/chain/cmd/chaind/cmd"
+	"github.com/lum-network/chain/cmd/lumd/cmd"
 )
 
 func main() {

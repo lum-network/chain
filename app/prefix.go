@@ -25,5 +25,5 @@ func SetConfig() {
 	config.SetBech32PrefixForConsensusNode(ConsNodeAddressPrefix, ConsNodePubKeyPrefix)
 	config.SetCoinType(CoinType)
 	config.SetFullFundraiserPath("m/44'/837'/0'/0/0")
-	config.Seal()
+	// config.Seal()
 }
