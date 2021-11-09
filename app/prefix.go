@@ -7,7 +7,7 @@ import (
 const (
 	AccountAddressPrefix = "lum"
 	CoinBondDenom        = "ulum"
-	CoinType             = 837
+	CoinType             = 880
 )
 
 var (
@@ -24,6 +24,6 @@ func SetConfig() {
 	config.SetBech32PrefixForValidator(ValidatorAddressPrefix, ValidatorPubKeyPrefix)
 	config.SetBech32PrefixForConsensusNode(ConsNodeAddressPrefix, ConsNodePubKeyPrefix)
 	config.SetCoinType(CoinType)
-	config.SetFullFundraiserPath("m/44'/837'/0'/0/0")
-	// config.Seal()
+	config.SetFullFundraiserPath("m/44'/880'/0'/0/0")
+	config.Seal()
 }
