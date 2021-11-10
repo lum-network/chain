@@ -259,6 +259,7 @@ func (suite *KeeperTestSuite) TestCancelBeam() {
 
 	// Make sure the beam is now present in the closed beams queue
 	closedIterator := app.BeamKeeper.ClosedBeamsQueueIterator(ctx)
+	require.NoError(suite.T(), closedIterator.Error())
 	require.True(suite.T(), closedIterator.Valid())
 	require.Equal(suite.T(), beam.GetId(), string(closedIterator.Value()))
 	closedIterator.Close()
@@ -316,13 +317,10 @@ func (suite *KeeperTestSuite) TestOpenNewBeam() {
 
 	// Make sure the beam is now present in the open beams queue
 	openIterator := app.BeamKeeper.OpenBeamsQueueIterator(ctx)
+	require.NoError(suite.T(), openIterator.Error())
 	require.True(suite.T(), openIterator.Valid())
 	require.Equal(suite.T(), beam.GetId(), string(openIterator.Value()))
 	openIterator.Close()
-
-	// Make sure the closed beams queue is empty
-	closedIterator := app.BeamKeeper.ClosedBeamsQueueIterator(ctx)
-	require.False(suite.T(), closedIterator.Valid())
 }
 
 // TestFetchBeams Open a new beam and try to fetch it through the list

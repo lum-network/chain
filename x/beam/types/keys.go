@@ -21,9 +21,9 @@ const (
 )
 
 var (
-	BeamsIndex            = []byte{0x01}
-	OpenBeamsQueueIndex   = []byte{0x02}
-	ClosedBeamsQueueIndex = []byte{0x03}
+	BeamsPrefix            = []byte{0x01}
+	OpenBeamsQueuePrefix   = []byte{0x02}
+	ClosedBeamsQueuePrefix = []byte{0x03}
 )
 
 func GetBeamIDBytes(beamID string) []byte {
@@ -35,15 +35,15 @@ func GetBeamIDFromBytes(beamID []byte) string {
 }
 
 func GetBeamKey(beamID string) []byte {
-	return append(BeamsIndex, GetBeamIDBytes(beamID)...)
+	return append(BeamsPrefix, GetBeamIDBytes(beamID)...)
 }
 
 func GetOpenBeamQueueKey(beamID string) []byte {
-	return append(OpenBeamsQueueIndex, GetBeamIDBytes(beamID)...)
+	return append(OpenBeamsQueuePrefix, GetBeamIDBytes(beamID)...)
 }
 
 func GetClosedBeamQueueKey(beamID string) []byte {
-	return append(ClosedBeamsQueueIndex, GetBeamIDBytes(beamID)...)
+	return append(ClosedBeamsQueuePrefix, GetBeamIDBytes(beamID)...)
 }
 
 func SplitBeamKey(key []byte) []byte {

@@ -439,17 +439,17 @@ func (k Keeper) IterateClosedBeamsQueue(ctx sdk.Context, cb func(beam types.Beam
 // BeamsIterator Return a ready to use iterator for the whole beams queue
 func (k Keeper) BeamsIterator(ctx sdk.Context) sdk.Iterator {
 	kvStore := ctx.KVStore(k.storeKey)
-	return sdk.KVStorePrefixIterator(kvStore, types.BeamsIndex)
+	return sdk.KVStorePrefixIterator(kvStore, types.BeamsPrefix)
 }
 
 // OpenBeamsQueueIterator Return a ready to use iterator for the open only beams queue
 func (k Keeper) OpenBeamsQueueIterator(ctx sdk.Context) sdk.Iterator {
 	kvStore := ctx.KVStore(k.storeKey)
-	return kvStore.Iterator(types.OpenBeamsQueueIndex, nil)
+	return sdk.KVStorePrefixIterator(kvStore, types.OpenBeamsQueuePrefix)
 }
 
 // ClosedBeamsQueueIterator Return a ready to use iterator for the closed only beams queue
 func (k Keeper) ClosedBeamsQueueIterator(ctx sdk.Context) sdk.Iterator {
 	kvStore := ctx.KVStore(k.storeKey)
-	return kvStore.Iterator(types.ClosedBeamsQueueIndex, nil)
+	return sdk.KVStorePrefixIterator(kvStore, types.ClosedBeamsQueuePrefix)
 }
