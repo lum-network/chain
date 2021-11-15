@@ -1,3 +1,3 @@
 package cmd
 
-const appName = "lumd"
+const appName = "lum"
