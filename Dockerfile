@@ -35,7 +35,7 @@ USER chain
 WORKDIR $CHAIN
 
 # Copy over binaries from the build-env
-COPY --from=build-env /go/bin/chaind /usr/bin/chaind
+COPY --from=build-env /go/bin/lumd /usr/bin/lumd
 
 # Run lumd by default, omit entrypoint to ease using container with chaincli
-CMD ["chaind"]
+CMD ["lumd"]

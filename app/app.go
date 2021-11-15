@@ -155,7 +155,7 @@ func init() {
 		panic(err)
 	}
 
-	DefaultNodeHome = filepath.Join(userHomeDir, ".lum")
+	DefaultNodeHome = filepath.Join(userHomeDir, ".lumd")
 }
 
 // App extends an ABCI application, but with most of its parameters exported.
