@@ -24,7 +24,7 @@ ENV CHAIN /chain
 
 # Install dependencies
 RUN apk add --update ca-certificates zip python3 py3-pip
-RUN pip3 install pyyaml
+RUN pip3 install pyyaml toml
 
 RUN addgroup chain && adduser -S -G chain chain -h "$CHAIN"
 
@@ -36,6 +36,9 @@ WORKDIR $CHAIN
 
 # Copy over binaries from the build-env
 COPY --from=build-env /go/bin/lumd /usr/bin/lumd
+
+# Add the init node script
+COPY --from=build-env /go/src/github.com/lum-network/chain/scripts/init_node.py /usr/bin/init_node.py
 
 # Run lumd by default, omit entrypoint to ease using container with chaincli
 CMD ["lumd"]
