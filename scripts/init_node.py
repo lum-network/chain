@@ -53,7 +53,7 @@ def init_primary(chain_id, home, mnemonic, action):
 
     # Init the faucet wallet
     if mnemonic is not None and len(mnemonic) > 0:
-        os.system("{} | lumd keys add faucet --coin-type {} --recover --home {}".format(mnemonic, coinType, home))
+        os.system("echo '{}' | lumd keys add faucet --coin-type {} --recover --home {}".format(mnemonic, coinType, home))
 
     # Add the genesis accounts
     os.system("lumd add-genesis-account $(lumd keys show bootnode -a --home {}) 30000000000000ulum --home {}".format(home, home))
@@ -135,13 +135,7 @@ def main():
     if args.action == 'download' and (not args.path or not args.checksum):
         parser.error("--action download requires path and checksum")
 
-    # Make sure the path is a directory and it exists
-    if not os.path.isdir(args.home):
-        raise ValueError(
-            "invalid_parameter: The path does not exists or it is not a dir"
-        )
-
-        # Information logging
+    # Information logging
     logging.info("Hostname is {}".format(hostname))
 
     # What type of node do we want to init
