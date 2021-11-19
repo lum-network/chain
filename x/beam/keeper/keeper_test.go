@@ -324,7 +324,7 @@ func (suite *KeeperTestSuite) TestOpenNewBeam() {
 }
 
 // TestFetchBeams Open a new beam and try to fetch it through the list
-func (suite *KeeperTestSuite) TestFetchBeams(){
+func (suite *KeeperTestSuite) TestFetchBeams() {
 	app := suite.app
 	ctx := suite.ctx
 

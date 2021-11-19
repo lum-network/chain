@@ -86,6 +86,10 @@ import (
 	beamtypes "github.com/lum-network/chain/x/beam/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
+	"github.com/lum-network/chain/x/airdrop"
+	airdropkeeper "github.com/lum-network/chain/x/airdrop/keeper"
+	airdroptypes "github.com/lum-network/chain/x/airdrop/types"
+
 	ibctransferkeeper "github.com/cosmos/ibc-go/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/modules/apps/transfer/types"
 	ibcclient "github.com/cosmos/ibc-go/modules/core/02-client"
@@ -129,6 +133,7 @@ var (
 		authzmodule.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		beam.AppModuleBasic{},
+		airdrop.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -141,6 +146,7 @@ var (
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		beamtypes.ModuleName:           nil,
+		airdroptypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
 	}
 )
 
@@ -178,6 +184,7 @@ type App struct {
 	memKeys map[string]*sdk.MemoryStoreKey
 
 	// keepers
+	AirdropKeeper    *airdropkeeper.Keeper
 	AccountKeeper    authkeeper.AccountKeeper
 	BankKeeper       bankkeeper.Keeper
 	CapabilityKeeper *capabilitykeeper.Keeper
@@ -232,7 +239,7 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey,
-		beamtypes.StoreKey,
+		beamtypes.StoreKey, airdroptypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -292,9 +299,6 @@ func New(
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
 	)
-	app.StakingKeeper = stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
-	)
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec, keys[ibctransfertypes.StoreKey], app.GetSubspace(ibctransfertypes.ModuleName),
 		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
@@ -322,17 +326,23 @@ func New(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter,
 	)
-	app.GovKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks(
-	// Register the gov hooks
-	))
 
 	app.EvidenceKeeper = evidencekeeper.NewKeeper(appCodec, keys[evidencetypes.StoreKey], app.StakingKeeper, app.SlashingKeeper)
 
-	// Register our own keepers
+	app.AirdropKeeper = airdropkeeper.NewKeeper(appCodec, keys[airdroptypes.StoreKey], keys[airdroptypes.MemStoreKey], app.AccountKeeper, app.BankKeeper, stakingKeeper, app.DistrKeeper)
+
 	app.beamKeeper = *beamkeeper.NewKeeper(
 		appCodec, keys[beamtypes.StoreKey], keys[beamtypes.MemStoreKey],
 		app.AccountKeeper, app.BankKeeper,
 	)
+
+	app.StakingKeeper = stakingKeeper.SetHooks(
+		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.AirdropKeeper.Hooks()),
+	)
+
+	app.GovKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks(
+		govtypes.NewMultiGovHooks(app.AirdropKeeper.Hooks()),
+	))
 
 	/****  Module Options ****/
 
@@ -366,6 +376,7 @@ func New(
 		transferModule,
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		beam.NewAppModule(appCodec, app.beamKeeper),
+		airdrop.NewAppModule(appCodec, *app.AirdropKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -391,6 +402,7 @@ func New(
 		feegrant.ModuleName,
 		authz.ModuleName,
 		beamtypes.ModuleName,
+		airdroptypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -415,6 +427,7 @@ func New(
 		feegrant.ModuleName,
 		authz.ModuleName,
 		beamtypes.ModuleName,
+		airdroptypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)

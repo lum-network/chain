@@ -37,4 +37,3 @@ type LumApp interface {
 	// ModuleAccountAddrs All the registered module account addreses.
 	ModuleAccountAddrs() map[string]bool
 }
-

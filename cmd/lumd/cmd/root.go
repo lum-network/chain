@@ -243,7 +243,7 @@ func overwriteFlagDefaults(c *cobra.Command, defaults map[string]string) {
 	set := func(s *pflag.FlagSet, key, val string) {
 		if f := s.Lookup(key); f != nil {
 			f.DefValue = val
-            f.Value.Set(val)
+			f.Value.Set(val)
 		}
 	}
 	for key, val := range defaults {

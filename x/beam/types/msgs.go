@@ -1,7 +1,7 @@
 package types
 
 const (
-	TypeMsgOpenBeam = "OpenBeam"
+	TypeMsgOpenBeam   = "OpenBeam"
 	TypeMsgUpdateBeam = "UpdateBeam"
-	TypeMsgClaimBeam = "ClaimBeam"
+	TypeMsgClaimBeam  = "ClaimBeam"
 )

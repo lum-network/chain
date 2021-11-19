@@ -79,6 +79,9 @@ import (
 	ibchost "github.com/cosmos/ibc-go/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/modules/core/keeper"
 	"github.com/gorilla/mux"
+	"github.com/lum-network/chain/x/airdrop"
+	airdropkeeper "github.com/lum-network/chain/x/airdrop/keeper"
+	airdroptypes "github.com/lum-network/chain/x/airdrop/types"
 	"github.com/lum-network/chain/x/beam"
 	beamkeeper "github.com/lum-network/chain/x/beam/keeper"
 	beamtypes "github.com/lum-network/chain/x/beam/types"
@@ -121,6 +124,7 @@ var (
 		authzmodule.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		beam.AppModuleBasic{},
+		airdrop.AppModuleBasic{},
 	)
 	maccPerms = map[string][]string{
 		authtypes.FeeCollectorName:     nil,
@@ -131,6 +135,7 @@ var (
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		beamtypes.ModuleName:           nil,
+		airdroptypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
 	}
 )
 
@@ -153,6 +158,7 @@ type SimApp struct {
 	memKeys map[string]*sdk.MemoryStoreKey
 
 	// keepers
+	AirdropKeeper    *airdropkeeper.Keeper
 	AccountKeeper    authkeeper.AccountKeeper
 	BankKeeper       bankkeeper.Keeper
 	CapabilityKeeper *capabilitykeeper.Keeper
@@ -213,7 +219,7 @@ func NewSimApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey,
-		beamtypes.StoreKey,
+		beamtypes.StoreKey, airdroptypes.StoreKey,
 	)
 
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -270,12 +276,6 @@ func NewSimApp(
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp)
 	app.registerUpgradeHandlers()
 
-	// register the staking hooks
-	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
-	app.StakingKeeper = *stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
-	)
-
 	// ... other modules keepers
 
 	// Create IBC Keeper
@@ -290,7 +290,7 @@ func NewSimApp(
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper))
-	app.GovKeeper = govkeeper.NewKeeper(
+	govKeeper := govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, govRouter,
 	)
@@ -317,10 +317,21 @@ func NewSimApp(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
+	app.AirdropKeeper = airdropkeeper.NewKeeper(appCodec, keys[airdroptypes.StoreKey], keys[airdroptypes.MemStoreKey], app.AccountKeeper, app.BankKeeper, stakingKeeper, app.DistrKeeper)
+
 	app.BeamKeeper = *beamkeeper.NewKeeper(
 		appCodec, keys[beamtypes.StoreKey], keys[beamtypes.MemStoreKey],
 		app.AccountKeeper, app.BankKeeper,
 	)
+
+	// register the staking hooks
+	app.StakingKeeper = *stakingKeeper.SetHooks(
+		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.AirdropKeeper.Hooks()),
+	)
+
+	app.GovKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks(
+		govtypes.NewMultiGovHooks(app.AirdropKeeper.Hooks()),
+	))
 
 	/* Module Options */
 	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
@@ -348,6 +359,7 @@ func NewSimApp(
 		transferModule,
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		beam.NewAppModule(appCodec, app.BeamKeeper),
+		airdrop.NewAppModule(appCodec, *app.AirdropKeeper),
 	)
 
 	app.mm.SetOrderBeginBlockers(
@@ -355,7 +367,7 @@ func NewSimApp(
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
 	)
 
-	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName)
+	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, feegrant.ModuleName, authz.ModuleName, beamtypes.ModuleName, airdroptypes.ModuleName)
 
 	app.mm.SetOrderInitGenesis(
 		capabilitytypes.ModuleName,
@@ -374,6 +386,7 @@ func NewSimApp(
 		authz.ModuleName,
 		feegrant.ModuleName,
 		beamtypes.ModuleName,
+		airdroptypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
