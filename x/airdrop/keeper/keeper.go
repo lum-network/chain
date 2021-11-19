@@ -23,10 +23,10 @@ type (
 		cdc           codec.BinaryCodec
 		storeKey      sdk.StoreKey
 		memKey        sdk.StoreKey
-		accountKeeper authkeeper.AccountKeeper
-		bankKeeper    bankkeeper.Keeper
-		stakingKeeper stakingkeeper.Keeper
-		distrKeeper   distrkeeper.Keeper
+		AuthKeeper    authkeeper.AccountKeeper
+		BankKeeper    bankkeeper.Keeper
+		StakingKeeper stakingkeeper.Keeper
+		DistrKeeper   distrkeeper.Keeper
 	}
 )
 
@@ -44,10 +44,10 @@ func NewKeeper(
 		cdc:           cdc,
 		storeKey:      storeKey,
 		memKey:        memKey,
-		accountKeeper: ak,
-		bankKeeper:    bk,
-		stakingKeeper: sk,
-		distrKeeper:   dk,
+		AuthKeeper:    ak,
+		BankKeeper:    bk,
+		StakingKeeper: sk,
+		DistrKeeper:   dk,
 	}
 }
 
@@ -56,15 +56,15 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k Keeper) GetAirdropAccount(ctx sdk.Context) sdk.AccAddress {
-	return k.accountKeeper.GetModuleAddress(types.ModuleName)
+	return k.AuthKeeper.GetModuleAddress(types.ModuleName)
 }
 
 // CreateModuleAccount create the module account
 func (k Keeper) CreateModuleAccount(ctx sdk.Context, amount sdk.Coin) {
 	moduleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter)
-	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
+	k.AuthKeeper.SetModuleAccount(ctx, moduleAcc)
 
-	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount)); err != nil {
+	if err := k.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount)); err != nil {
 		panic(err)
 	}
 }
@@ -76,7 +76,7 @@ func (k Keeper) GetAirdropAccountBalance(ctx sdk.Context) sdk.Coin {
 	if err != nil {
 		panic(err)
 	}
-	return k.bankKeeper.GetBalance(ctx, moduleAccAddr, params.ClaimDenom)
+	return k.BankKeeper.GetBalance(ctx, moduleAccAddr, params.ClaimDenom)
 }
 
 func (k Keeper) EndAirdrop(ctx sdk.Context) error {
@@ -269,7 +269,7 @@ func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action
 		return nil, err
 	}
 
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, claimableAmount)
+	err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, claimableAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -296,5 +296,5 @@ func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action
 func (k Keeper) fundRemainingsToCommunity(ctx sdk.Context) error {
 	moduleAccAddr := k.GetAirdropAccount(ctx)
 	amt := k.GetAirdropAccountBalance(ctx)
-	return k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(amt), moduleAccAddr)
+	return k.DistrKeeper.FundCommunityPool(ctx, sdk.NewCoins(amt), moduleAccAddr)
 }

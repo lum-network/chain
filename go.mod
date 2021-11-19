@@ -11,6 +11,7 @@ require (
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.6.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
@@ -22,6 +23,7 @@ require (
 	github.com/tendermint/tm-db v0.6.4
 	google.golang.org/genproto v0.0.0-20210903162649-d08c68adba83
 	google.golang.org/grpc v1.40.0
+	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.0.0 // indirect
 	google.golang.org/protobuf v1.27.1
 
 )

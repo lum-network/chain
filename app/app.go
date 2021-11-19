@@ -331,11 +331,6 @@ func New(
 
 	app.AirdropKeeper = airdropkeeper.NewKeeper(appCodec, keys[airdroptypes.StoreKey], keys[airdroptypes.MemStoreKey], app.AccountKeeper, app.BankKeeper, stakingKeeper, app.DistrKeeper)
 
-	app.beamKeeper = *beamkeeper.NewKeeper(
-		appCodec, keys[beamtypes.StoreKey], keys[beamtypes.MemStoreKey],
-		app.AccountKeeper, app.BankKeeper,
-	)
-
 	app.StakingKeeper = stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.AirdropKeeper.Hooks()),
 	)
@@ -343,6 +338,11 @@ func New(
 	app.GovKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks(
 		govtypes.NewMultiGovHooks(app.AirdropKeeper.Hooks()),
 	))
+
+	app.beamKeeper = *beamkeeper.NewKeeper(
+		appCodec, keys[beamtypes.StoreKey], keys[beamtypes.MemStoreKey],
+		app.AccountKeeper, app.BankKeeper, *app.StakingKeeper,
+	)
 
 	/****  Module Options ****/
 

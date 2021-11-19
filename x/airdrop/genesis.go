@@ -30,9 +30,12 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	if err != nil {
 		panic(err)
 	}
-	genesis := types.DefaultGenesis()
-	genesis.ModuleAccountBalance = k.GetAirdropAccountBalance(ctx)
-	genesis.Params = params
-	genesis.ClaimRecords = k.GetClaimRecords(ctx)
-	return genesis
+
+	records := k.GetClaimRecords(ctx)
+
+	return &types.GenesisState{
+		ModuleAccountBalance: k.GetAirdropAccountBalance(ctx),
+		Params: params,
+		ClaimRecords: records,
+	}
 }

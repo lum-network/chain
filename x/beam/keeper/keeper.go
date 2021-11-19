@@ -6,6 +6,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -21,17 +22,19 @@ type (
 		memKey     sdk.StoreKey
 		AuthKeeper authkeeper.AccountKeeper
 		BankKeeper bankkeeper.Keeper
+		StakingKeeper stakingkeeper.Keeper
 	}
 )
 
 // NewKeeper Create a new keeper instance and return the pointer
-func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper, sk stakingkeeper.Keeper) *Keeper {
 	return &Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
 		memKey:     memKey,
 		AuthKeeper: auth,
 		BankKeeper: bank,
+		StakingKeeper: sk,
 	}
 }
 
@@ -41,8 +44,25 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetBeamAccount Return the beam module account interface
-func (k Keeper) GetBeamAccount(ctx sdk.Context) authtypes.ModuleAccountI {
-	return k.AuthKeeper.GetModuleAccount(ctx, types.ModuleName)
+func (k Keeper) GetBeamAccount(ctx sdk.Context) sdk.AccAddress {
+	return k.AuthKeeper.GetModuleAddress(types.ModuleName)
+}
+
+// CreateBeamModuleAccount create the module account
+func (k Keeper) CreateBeamModuleAccount(ctx sdk.Context, amount sdk.Coin) {
+	moduleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter)
+	k.AuthKeeper.SetModuleAccount(ctx, moduleAcc)
+
+	if err := k.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount)); err != nil {
+		panic(err)
+	}
+}
+
+// GetBeamAccountBalance gets the airdrop coin balance of module account
+func (k Keeper) GetBeamAccountBalance(ctx sdk.Context) sdk.Coin {
+	moduleAccAddr := k.GetBeamAccount(ctx)
+	params := k.StakingKeeper.GetParams(ctx)
+	return k.BankKeeper.GetBalance(ctx, moduleAccAddr, params.GetBondDenom())
 }
 
 // moveCoinsToModuleAccount This moves coins from a given address to the beam module account
@@ -144,12 +164,15 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 		return types.ErrBeamAlreadyExists
 	}
 
+	// Acquire the staking params for default bond denom
+	params := k.StakingKeeper.GetParams(ctx)
+
 	var beam = &types.Beam{
 		CreatorAddress: msg.GetCreatorAddress(),
 		Id:             msg.GetId(),
 		Secret:         msg.GetSecret(),
 		Status:         types.BeamState_StateOpen,
-		Amount:         sdk.NewCoin("ulum", sdk.NewInt(0)),
+		Amount:         sdk.NewCoin(params.GetBondDenom(), sdk.NewInt(0)),
 		FundsWithdrawn: false,
 		Claimed:        false,
 		HideContent:    false,
