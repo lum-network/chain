@@ -319,11 +319,6 @@ func NewSimApp(
 
 	app.AirdropKeeper = airdropkeeper.NewKeeper(appCodec, keys[airdroptypes.StoreKey], keys[airdroptypes.MemStoreKey], app.AccountKeeper, app.BankKeeper, stakingKeeper, app.DistrKeeper)
 
-	app.BeamKeeper = *beamkeeper.NewKeeper(
-		appCodec, keys[beamtypes.StoreKey], keys[beamtypes.MemStoreKey],
-		app.AccountKeeper, app.BankKeeper,
-	)
-
 	// register the staking hooks
 	app.StakingKeeper = *stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.AirdropKeeper.Hooks()),
@@ -332,6 +327,11 @@ func NewSimApp(
 	app.GovKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks(
 		govtypes.NewMultiGovHooks(app.AirdropKeeper.Hooks()),
 	))
+
+	app.BeamKeeper = *beamkeeper.NewKeeper(
+		appCodec, keys[beamtypes.StoreKey], keys[beamtypes.MemStoreKey],
+		app.AccountKeeper, app.BankKeeper, app.StakingKeeper,
+	)
 
 	/* Module Options */
 	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
