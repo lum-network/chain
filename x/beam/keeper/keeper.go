@@ -108,9 +108,9 @@ func (k Keeper) GetBeam(ctx sdk.Context, key string) (types.Beam, error) {
 }
 
 // ListBeams Return a list of in store beams
-func (k Keeper) ListBeams(ctx sdk.Context) (beams []types.Beam) {
+func (k Keeper) ListBeams(ctx sdk.Context) (beams []*types.Beam) {
 	k.IterateBeams(ctx, func(beam types.Beam) bool {
-		beams = append(beams, beam)
+		beams = append(beams, &beam)
 		return false
 	})
 	return

@@ -1,9 +1,13 @@
 syntax = "proto3";
 package lum.network.beam;
 
+import "beam/beam.proto";
+
+
 option go_package = "github.com/lum-network/chain/x/beam/types";
 
 // GenesisState defines the capability module's genesis state.
 message GenesisState {
+    repeated Beam beams = 1;
 }
 

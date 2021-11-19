@@ -8,8 +8,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// InitGenesis initializes the capability module's state from a provided genesis
-// state.
+// InitGenesis initializes the capability module's state from a provided genesis state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) (res []abci.ValidatorUpdate) {
 	// Acquire the module account, if it does not exist yet, it is created
 	moduleAcc := k.GetBeamAccount(ctx)
@@ -28,5 +27,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 // ExportGenesis returns the capability module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	return types.DefaultGenesis()
+	beams := k.ListBeams(ctx)
+
+	return &types.GenesisState{
+		Beams: beams,
+	}
 }
