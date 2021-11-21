@@ -106,7 +106,7 @@ def init_secondary(chain_id, home, action, path, checksum):
         os.system("cp /config/genesis.json {}/config/genesis.json".format(home))
     elif action == 'download':
         logging.info("Downloading genesis from remote location")
-        os.system("wget {} -O {}/config/genesis.json".format(path, home))
+        os.system("curl -s '{}' > {}/config/genesis.json".format(path, home))
 
         # Ensure the checksum matches
         # csum = hashlib.md5("{}/config/genesis.json".format(path)).hexdigest()
