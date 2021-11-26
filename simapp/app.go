@@ -603,6 +603,14 @@ func GetMaccPerms() map[string][]string {
 	return dupMaccPerms
 }
 
+func FundAccount(bankKeeper bankkeeper.Keeper, ctx sdk.Context, addr sdk.AccAddress, amounts sdk.Coins) error {
+	if err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, amounts); err != nil {
+		return err
+	}
+
+	return bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, amounts)
+}
+
 // initParamsKeeper init params keeper and its subspaces
 func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
