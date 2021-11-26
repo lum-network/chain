@@ -549,6 +549,15 @@ func (suite *KeeperTestSuite) TestModuleBalance() {
 	suite.Equal(sdk.NewInt64Coin(defaultClaimDenom, defaultClaimBalance), supply)
 	moduleBalance = suite.app.AirdropKeeper.GetAirdropAccountBalance(suite.ctx)
 	suite.Equal(sdk.NewInt64Coin(defaultClaimDenom, defaultClaimBalance-900_000), moduleBalance)
+
+	// Ending the airdrop should send the unclaimed amounts into the community pool
+	communityBalance := suite.app.DistrKeeper.GetFeePoolCommunityCoins(suite.ctx)
+	suite.Equal(sdk.NewDec(0), communityBalance.AmountOf(defaultClaimDenom))
+
+	err = suite.app.AirdropKeeper.EndAirdrop(suite.ctx)
+	suite.Require().NoError(err)
+	communityBalance = suite.app.DistrKeeper.GetFeePoolCommunityCoins(suite.ctx)
+	suite.Equal(sdk.NewDec(100_000), communityBalance.AmountOf(defaultClaimDenom))
 }
 
 // TestKeeperSuite Main entry point for the testing suite
