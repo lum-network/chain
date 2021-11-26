@@ -3,9 +3,10 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"time"
 )
 
 type Actions []Action
