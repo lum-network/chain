@@ -2,6 +2,10 @@ package app
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -13,9 +17,6 @@ import (
 	"github.com/cosmos/ibc-go/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/modules/core"
 	"github.com/spf13/cast"
-	"io"
-	"os"
-	"path/filepath"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -630,6 +631,12 @@ func (app *App) registerUpgradeHandlers() {
 		// x/auth runs 1->2 migration
 		fromVM[authtypes.ModuleName] = auth.AppModule{}.ConsensusVersion()
 
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	})
+
+	app.UpgradeKeeper.SetUpgradeHandler("v1.0.4", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		// Upgrade contains
+		// - Airdrop module fixes 2->3
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
 
