@@ -180,7 +180,7 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress
 		panic(err)
 	}
 
-	zeroCoin := sdk.NewCoin(params.ClaimDenom, sdk.NewInt(0))
+	zeroCoin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0))
 	claimRecord, err := k.GetClaimRecord(ctx, addr)
 	if err != nil {
 		return zeroCoin, zeroCoin, err
@@ -191,7 +191,7 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress
 	}
 
 	// if action already completed, nothing is claimable
-	if claimRecord.ActionCompleted[action] {
+	if len(claimRecord.ActionCompleted) > int(action) && claimRecord.ActionCompleted[action] {
 		return zeroCoin, zeroCoin, nil
 	}
 
