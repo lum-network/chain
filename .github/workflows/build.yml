@@ -90,10 +90,16 @@ jobs:
           go mod download
           cd cmd/lumd
           go build .
+
+      - uses: papeloto/action-zip@v1
+        with:
+          files: cmd/lumd/lumd
+          dest: lumd_${{ matrix.targetos }}_${{ matrix.arch }}.zip
+
       - uses: actions/upload-artifact@v2
         with:
           name: lumd_${{ matrix.targetos }}_${{ matrix.arch }}
-          path: cmd/lumd/lumd/lumd
+          path: lumd_${{ matrix.targetos }}_${{ matrix.arch }}.zip
 
   release-on-github:
     name: Release on Github
