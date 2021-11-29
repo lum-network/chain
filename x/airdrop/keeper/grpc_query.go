@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/lum-network/chain/x/airdrop/types"
 	"google.golang.org/grpc/codes"
@@ -64,10 +65,10 @@ func (k Keeper) ClaimableForAction(
 		return nil, err
 	}
 
-	coins, err := k.GetClaimableAmountForAction(ctx, addr, req.Action)
+	cfc, cvc, err := k.GetClaimableAmountForAction(ctx, addr, req.Action)
 
 	return &types.QueryClaimableForActionResponse{
-		Coins: coins,
+		Coins: sdk.Coins{cfc, cvc},
 	}, err
 }
 
@@ -86,9 +87,9 @@ func (k Keeper) TotalClaimable(
 		return nil, err
 	}
 
-	coins, err := k.GetUserTotalClaimable(ctx, addr)
+	cfc, cvc, err := k.GetUserTotalClaimable(ctx, addr)
 
 	return &types.QueryTotalClaimableResponse{
-		Coins: coins,
+		Coins: sdk.Coins{cfc, cvc},
 	}, err
 }
