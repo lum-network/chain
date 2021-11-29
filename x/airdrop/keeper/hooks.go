@@ -8,14 +8,14 @@ import (
 )
 
 func (k Keeper) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
-	_, err := k.ClaimCoinsForAction(ctx, voterAddr, types.ActionVote)
+	_, _, err := k.ClaimCoinsForAction(ctx, voterAddr, types.ActionVote)
 	if err != nil {
 		panic(err.Error())
 	}
 }
 
 func (k Keeper) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	_, err := k.ClaimCoinsForAction(ctx, delAddr, types.ActionDelegateStake)
+	_, _, err := k.ClaimCoinsForAction(ctx, delAddr, types.ActionDelegateStake)
 	if err != nil {
 		panic(err.Error())
 	}
