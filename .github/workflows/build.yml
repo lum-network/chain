@@ -93,7 +93,7 @@ jobs:
           go build .
       - uses: actions/upload-artifact@v2
         with:
-          name: lumd_${{ matrix.targetos }}_${{ matrix.arch }}
+          name: lumd_binary_${{ matrix.targetos }}_${{ matrix.arch }}
           path: cmd/lumd/lumd
 
   release-on-github:
@@ -116,6 +116,6 @@ jobs:
       - name: Upload release assets
         uses: csexton/release-asset-action@v2
         with:
-          pattern: "lumd_*"
+          pattern: "lumd_binary_*"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           release-url: ${{ steps.create_release.outputs.upload_url }}
