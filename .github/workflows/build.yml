@@ -127,7 +127,6 @@ jobs:
         with:
           tag_name: ${{github.ref_name}}
           release_name: ${{github.ref_name}}
-          body_path: release_notes.md
 
       - name: Upload release assets
         uses: csexton/release-asset-action@v2
