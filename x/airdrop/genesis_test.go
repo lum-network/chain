@@ -19,35 +19,35 @@ var acc1 = sdk.AccAddress([]byte("addr1---------------"))
 var acc2 = sdk.AccAddress([]byte("addr2---------------"))
 var acc3 = sdk.AccAddress([]byte("addr3---------------"))
 var testGenesis = types.GenesisState{
-	ModuleAccountBalance: sdk.NewInt64Coin(types.DefaultClaimDenom, 15_000),
+	ModuleAccountBalance: sdk.NewInt64Coin(sdk.DefaultBondDenom, 15_000),
 	Params: types.Params{
 		AirdropStartTime:   now,
 		DurationUntilDecay: types.DefaultDurationUntilDecay,
 		DurationOfDecay:    types.DefaultDurationOfDecay,
-		ClaimDenom:         types.DefaultClaimDenom, // ulum
+		ClaimDenom:         sdk.DefaultBondDenom, // ulum
 	},
 	ClaimRecords: []types.ClaimRecord{
 		{
 			Address: acc1.String(),
 			InitialClaimableAmount: sdk.Coins{
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 1_000),
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 5_000),
+				sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000),
+				sdk.NewInt64Coin(sdk.DefaultBondDenom, 5_000),
 			},
 			ActionCompleted: []bool{false, false},
 		},
 		{
 			Address: acc2.String(),
 			InitialClaimableAmount: sdk.Coins{
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 3_000),
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 2_000),
+				sdk.NewInt64Coin(sdk.DefaultBondDenom, 3_000),
+				sdk.NewInt64Coin(sdk.DefaultBondDenom, 2_000),
 			},
 			ActionCompleted: []bool{false, false},
 		},
 		{
 			Address: acc3.String(),
 			InitialClaimableAmount: sdk.Coins{
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 1_000),
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 3_000),
+				sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000),
+				sdk.NewInt64Coin(sdk.DefaultBondDenom, 3_000),
 			},
 			ActionCompleted: []bool{false, false},
 		},
@@ -94,28 +94,28 @@ func TestAirdropExportGenesis(t *testing.T) {
 	require.Equal(t, claimRecord, types.ClaimRecord{
 		Address: acc1.String(),
 		InitialClaimableAmount: sdk.Coins{
-			sdk.NewInt64Coin(types.DefaultClaimDenom, 1_000),
-			sdk.NewInt64Coin(types.DefaultClaimDenom, 5_000),
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000),
+			sdk.NewInt64Coin(sdk.DefaultBondDenom, 5_000),
 		},
 		ActionCompleted: []bool{false, false},
 	})
 
 	claimableFreeAmount, claimableVestedAmount, err := app.AirdropKeeper.GetClaimableAmountForAction(ctx, acc1, types.ActionVote)
 	require.NoError(t, err)
-	require.Equal(t, claimableFreeAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 500))
-	require.Equal(t, claimableVestedAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 2_500))
+	require.Equal(t, claimableFreeAmount, sdk.NewInt64Coin(sdk.DefaultBondDenom, 500))
+	require.Equal(t, claimableVestedAmount, sdk.NewInt64Coin(sdk.DefaultBondDenom, 2_500))
 
 	app.AirdropKeeper.AfterProposalVote(ctx, 12, acc1)
 
 	claimableFreeAmount, claimableVestedAmount, err = app.AirdropKeeper.GetClaimableAmountForAction(ctx, acc1, types.ActionVote)
 	require.NoError(t, err)
-	require.Equal(t, claimableFreeAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 0))
-	require.Equal(t, claimableVestedAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 0))
+	require.Equal(t, claimableFreeAmount, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
+	require.Equal(t, claimableVestedAmount, sdk.NewInt64Coin(sdk.DefaultBondDenom, 0))
 
 	claimableFreeAmount, claimableVestedAmount, err = app.AirdropKeeper.GetClaimableAmountForAction(ctx, acc1, types.ActionDelegateStake)
 	require.NoError(t, err)
-	require.Equal(t, claimableFreeAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 500))
-	require.Equal(t, claimableVestedAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 2_500))
+	require.Equal(t, claimableFreeAmount, sdk.NewInt64Coin(sdk.DefaultBondDenom, 500))
+	require.Equal(t, claimableVestedAmount, sdk.NewInt64Coin(sdk.DefaultBondDenom, 2_500))
 
 	genesisExported := airdrop.ExportGenesis(ctx, *app.AirdropKeeper)
 	require.Equal(t, genesisExported.ModuleAccountBalance, genesis.ModuleAccountBalance.Sub(claimableFreeAmount).Sub(claimableVestedAmount))
@@ -124,24 +124,24 @@ func TestAirdropExportGenesis(t *testing.T) {
 		{
 			Address: acc1.String(),
 			InitialClaimableAmount: sdk.Coins{
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 1_000),
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 5_000),
+				sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000),
+				sdk.NewInt64Coin(sdk.DefaultBondDenom, 5_000),
 			},
 			ActionCompleted: []bool{true, false},
 		},
 		{
 			Address: acc2.String(),
 			InitialClaimableAmount: sdk.Coins{
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 3_000),
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 2_000),
+				sdk.NewInt64Coin(sdk.DefaultBondDenom, 3_000),
+				sdk.NewInt64Coin(sdk.DefaultBondDenom, 2_000),
 			},
 			ActionCompleted: []bool{false, false},
 		},
 		{
 			Address: acc3.String(),
 			InitialClaimableAmount: sdk.Coins{
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 1_000),
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 3_000),
+				sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000),
+				sdk.NewInt64Coin(sdk.DefaultBondDenom, 3_000),
 			},
 			ActionCompleted: []bool{false, false},
 		},
