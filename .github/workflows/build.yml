@@ -93,7 +93,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: lumd_${{ matrix.targetos }}_${{ matrix.arch }}
-          path: cmd/lumd/lumd
+          path: cmd/lumd/lumd/lumd
 
   release-on-github:
     name: Release on Github
