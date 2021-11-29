@@ -1,7 +1,6 @@
 name: Run the unit test suite
 on:
   pull_request:
-  push:
   workflow_dispatch:
 
 jobs:
