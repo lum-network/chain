@@ -91,7 +91,7 @@ jobs:
         include:
           - targetos: windows
             arch: amd64
-    name: lum network ${{ matrix.arch }} for ${{ matrix.targetos }}
+    name: Build the lum daemon on ${{ matrix.arch }} for ${{ matrix.targetos }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2.1.4
@@ -112,6 +112,7 @@ jobs:
           path: cmd/lumd/lumd
 
   release-on-github:
+    name: Release on Github
     needs: build-release
     runs-on: ubuntu-latest
     steps:
