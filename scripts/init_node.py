@@ -29,8 +29,8 @@ def replace_entries_in_file(file, find, replace):
 # This is utility function to replace common entries in the config file
 def prepare_config_file(file):
     data = toml.load(file)
-    # data['api']['enable'] = True
-    # data['telemetry']['enabled'] = True
+    data['api']['enable'] = True
+    data['telemetry']['enabled'] = True
     data['instrumentation']['prometheus'] = True
     data['rpc']['laddr'] = "tcp://0.0.0.0:26657"
 
