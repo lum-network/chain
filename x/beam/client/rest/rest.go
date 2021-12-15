@@ -13,17 +13,20 @@ const (
 
 // RegisterRoutes registers chain-related REST handlers to a router
 func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
-	r.HandleFunc("/bank/balances/{address}", QueryBalancesRequestHandlerFn(clientCtx)).Methods("GET")
-	r.HandleFunc("/supply/total", totalSupplyHandlerFn(clientCtx)).Methods("GET")
-	r.HandleFunc("/supply/total/{denom}", supplyOfHandlerFn(clientCtx)).Methods("GET")
+	r.HandleFunc("/node_info", NodeInfoRequestHandlerFn(clientCtx)).Methods(MethodGet)
+	r.HandleFunc("/syncing", NodeSyncingRequestHandlerFn(clientCtx)).Methods(MethodGet)
 
-	r.HandleFunc("/staking/delegators/{delegatorAddr}/delegations", delegatorDelegationsHandlerFn(clientCtx)).Methods("GET")
-	r.HandleFunc("/staking/delegators/{delegatorAddr}/unbonding_delegations", delegatorUnbondingDelegationsHandlerFn(clientCtx)).Methods("GET")
-	r.HandleFunc("/staking/pool", poolHandlerFn(clientCtx)).Methods("GET")
+	r.HandleFunc("/bank/balances/{address}", QueryBalancesRequestHandlerFn(clientCtx)).Methods(MethodGet)
+	r.HandleFunc("/supply/total", totalSupplyHandlerFn(clientCtx)).Methods(MethodGet)
+	r.HandleFunc("/supply/total/{denom}", supplyOfHandlerFn(clientCtx)).Methods(MethodGet)
 
-	r.HandleFunc("/distribution/delegators/{delegatorAddr}/rewards", delegatorRewardsHandlerFn(clientCtx)).Methods("GET")
+	r.HandleFunc("/staking/delegators/{delegatorAddr}/delegations", delegatorDelegationsHandlerFn(clientCtx)).Methods(MethodGet)
+	r.HandleFunc("/staking/delegators/{delegatorAddr}/unbonding_delegations", delegatorUnbondingDelegationsHandlerFn(clientCtx)).Methods(MethodGet)
+	r.HandleFunc("/staking/pool", poolHandlerFn(clientCtx)).Methods(MethodGet)
 
-	r.HandleFunc("/minting/inflation", queryInflationHandlerFn(clientCtx)).Methods("GET")
+	r.HandleFunc("/distribution/delegators/{delegatorAddr}/rewards", delegatorRewardsHandlerFn(clientCtx)).Methods(MethodGet)
+
+	r.HandleFunc("/minting/inflation", queryInflationHandlerFn(clientCtx)).Methods(MethodGet)
 }
 
 func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
