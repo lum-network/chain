@@ -70,14 +70,15 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/cosmos/ibc-go/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/modules/core"
-	ibcclient "github.com/cosmos/ibc-go/modules/core/02-client"
-	porttypes "github.com/cosmos/ibc-go/modules/core/05-port/types"
-	ibchost "github.com/cosmos/ibc-go/modules/core/24-host"
-	ibckeeper "github.com/cosmos/ibc-go/modules/core/keeper"
+	"github.com/cosmos/ibc-go/v2/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v2/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v2/modules/core"
+	ibcclient "github.com/cosmos/ibc-go/v2/modules/core/02-client"
+	ibcclienttypes "github.com/cosmos/ibc-go/v2/modules/core/02-client/types"
+	porttypes "github.com/cosmos/ibc-go/v2/modules/core/05-port/types"
+	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
+	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
 	"github.com/gorilla/mux"
 	"github.com/lum-network/chain/x/airdrop"
 	airdropkeeper "github.com/lum-network/chain/x/airdrop/keeper"
@@ -289,6 +290,7 @@ func NewSimApp(
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
+		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper))
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
