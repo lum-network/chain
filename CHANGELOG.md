@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v1.0.5]
 
+-   Software upgrade v1.0.5 has been added to the upgrade handler
 -   Critical upgrade fixing issues related to the Staking module and IBC
     -   Upgrade to IBC v2
     -   Fix Staking module initialization
