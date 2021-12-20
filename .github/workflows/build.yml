@@ -86,6 +86,7 @@ jobs:
 
       - name: Compile lumd
         run: |
+          go mod tidy
           go mod download
           cd cmd/lumd
           go build .
