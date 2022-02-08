@@ -1,0 +1,25 @@
+name: Build and push the develop images
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+env:
+  REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+  REGISTRY_ADDRESS: rg.fr-par.scw.cloud/lum-network
+  REGISTRY_ADDRESS_PROJECT: chain
+
+jobs:
+  build-docker:
+    name: Build the image and push on docker registry
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build, tag and push the built image
+        run: |
+          docker login $REGISTRY_ADDRESS -u nologin -p $REGISTRY_TOKEN
+          docker build -t $REGISTRY_ADDRESS/$REGISTRY_ADDRESS_PROJECT:develop .
+          docker push $REGISTRY_ADDRESS/$REGISTRY_ADDRESS_PROJECT:develop
