@@ -33,6 +33,7 @@ def prepare_config_file(file):
     if 'api' in data:
         if 'enable' in data['api']:
             data['api']['enable'] = True
+
     if 'telemetry' in data:
         if 'enabled' in data['telemetry']:
             data['telemetry']['enabled'] = True
@@ -76,6 +77,7 @@ def init_primary(chain_id, home, mnemonic, action):
 
     # Prepare the configuration file
     prepare_config_file("{}/config/config.toml".format(home))
+    prepare_config_file("{}/config/app.toml".format(home))
 
     # Generate the first transaction
     os.system("lumd gentx bootnode 100000000ulum --chain-id {} --home {}".format(chain_id, home))
@@ -111,6 +113,7 @@ def init_secondary(chain_id, home, action, path, checksum):
 
     # Prepare the configuration file
     prepare_config_file("{}/config/config.toml".format(home))
+    prepare_config_file("{}/config/app.toml".format(home))
 
     if action == 'copy':
         logging.info("Copying genesis and node id files from shared storage")
