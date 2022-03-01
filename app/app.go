@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"io"
 	"net/http"
 	"os"
@@ -213,7 +214,7 @@ type App struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
-	beamKeeper beamkeeper.Keeper
+	BeamKeeper beamkeeper.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -349,7 +350,7 @@ func New(
 		govtypes.NewMultiGovHooks(app.AirdropKeeper.Hooks()),
 	))
 
-	app.beamKeeper = *beamkeeper.NewKeeper(
+	app.BeamKeeper = *beamkeeper.NewKeeper(
 		appCodec, keys[beamtypes.StoreKey], keys[beamtypes.MemStoreKey],
 		app.AccountKeeper, app.BankKeeper, *app.StakingKeeper,
 	)
@@ -385,7 +386,7 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		beam.NewAppModule(appCodec, app.beamKeeper),
+		beam.NewAppModule(appCodec, app.BeamKeeper),
 		airdrop.NewAppModule(appCodec, *app.AirdropKeeper),
 	)
 
@@ -402,15 +403,39 @@ func New(
 		evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
 		ibchost.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		govtypes.ModuleName,
+		crisistypes.ModuleName,
+		genutiltypes.ModuleName,
+		authz.ModuleName,
+		feegrant.ModuleName,
+		paramstypes.ModuleName,
+		vestingtypes.ModuleName,
+		ibctransfertypes.ModuleName,
 		beamtypes.ModuleName,
+		airdroptypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName,
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
-		feegrant.ModuleName,
+		capabilitytypes.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		distrtypes.ModuleName,
+		slashingtypes.ModuleName,
+		minttypes.ModuleName,
+		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
 		authz.ModuleName,
+		feegrant.ModuleName,
+		paramstypes.ModuleName,
+		upgradetypes.ModuleName,
+		vestingtypes.ModuleName,
+		ibchost.ModuleName,
+		ibctransfertypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
 	)
@@ -435,6 +460,9 @@ func New(
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		feegrant.ModuleName,
+		paramstypes.ModuleName,
+		upgradetypes.ModuleName,
+		vestingtypes.ModuleName,
 		authz.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
@@ -461,7 +489,7 @@ func New(
 		ibc.NewAppModule(app.IBCKeeper),
 		transferModule,
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		beam.NewAppModule(appCodec, app.beamKeeper),
+		beam.NewAppModule(appCodec, app.BeamKeeper),
 	)
 	app.sm.RegisterStoreDecoders()
 
