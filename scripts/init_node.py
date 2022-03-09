@@ -101,7 +101,7 @@ def main():
     logging.info("Using {} as home path".format(config.homePath))
     logging.info("Downloading snapshot {}".format(config.withSnapshot))
 
-    # initialize_node(config)
+    initialize_node(config)
 
 if __name__ == "__main__":
     main()
