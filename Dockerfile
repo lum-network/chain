@@ -37,8 +37,9 @@ WORKDIR $CHAIN
 # Copy over binaries from the build-env
 COPY --from=build-env /go/bin/lumd /usr/bin/lumd
 
-# Add the init node script
+# Add the scripts
 COPY --from=build-env /go/src/github.com/lum-network/chain/scripts/init_node.py /usr/bin/init_node.py
+COPY --from=build-env /go/src/github.com/lum-network/chain/scripts/apply_statesync_params.py /usr/bin/apply_statesync_params.py
 
 # Run lumd by default, omit entrypoint to ease using container with chaincli
 CMD ["lumd"]
