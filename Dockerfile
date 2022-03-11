@@ -16,6 +16,8 @@ RUN go version
 # Install minimum necessary dependencies, build Cosmos SDK, remove packages
 RUN apk add --no-cache $PACKAGES && make install
 
+RUN lumd version
+
 # Final image
 FROM alpine:edge
 
