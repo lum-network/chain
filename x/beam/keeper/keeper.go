@@ -7,6 +7,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -17,11 +18,11 @@ import (
 
 type (
 	Keeper struct {
-		cdc        codec.BinaryCodec
-		storeKey   sdk.StoreKey
-		memKey     sdk.StoreKey
-		AuthKeeper authkeeper.AccountKeeper
-		BankKeeper bankkeeper.Keeper
+		cdc           codec.BinaryCodec
+		storeKey      sdk.StoreKey
+		memKey        sdk.StoreKey
+		AuthKeeper    authkeeper.AccountKeeper
+		BankKeeper    bankkeeper.Keeper
 		StakingKeeper stakingkeeper.Keeper
 	}
 )
@@ -29,11 +30,11 @@ type (
 // NewKeeper Create a new keeper instance and return the pointer
 func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper, sk stakingkeeper.Keeper) *Keeper {
 	return &Keeper{
-		cdc:        cdc,
-		storeKey:   storeKey,
-		memKey:     memKey,
-		AuthKeeper: auth,
-		BankKeeper: bank,
+		cdc:           cdc,
+		storeKey:      storeKey,
+		memKey:        memKey,
+		AuthKeeper:    auth,
+		BankKeeper:    bank,
 		StakingKeeper: sk,
 	}
 }
@@ -179,6 +180,7 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 		CancelReason:   "",
 		Schema:         msg.GetSchema(),
 		Data:           msg.GetData(),
+		CreatedAt:      time.Now(),
 	}
 
 	if msg.GetAmount() != nil && msg.GetAmount().IsPositive() {
