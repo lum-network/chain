@@ -2,7 +2,7 @@
 FROM golang:1.16-alpine AS build-env
 
 # Setup
-ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev python3 curl nano
+ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev python3 curl nano lz4 jq
 
 # Set working directory for the build
 WORKDIR /go/src/github.com/lum-network/chain
@@ -16,8 +16,6 @@ RUN go version
 # Install minimum necessary dependencies, build Cosmos SDK, remove packages
 RUN apk add --no-cache $PACKAGES && make install
 
-RUN lumd version
-
 # Final image
 FROM alpine:edge
 
@@ -25,7 +23,7 @@ FROM alpine:edge
 ENV CHAIN /chain
 
 # Install dependencies
-RUN apk add --update ca-certificates zip python3 py3-pip curl jq
+RUN apk add --update ca-certificates zip python3 py3-pip curl jq lz4
 RUN pip3 install pyyaml toml
 
 RUN addgroup chain && adduser -S -G chain chain -h "$CHAIN"

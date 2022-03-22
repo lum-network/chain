@@ -93,7 +93,7 @@ def main():
 
     if config.withSnapshot:
         if not config.snapshotUrl:
-            parser.error("--withSnapshot true requires a --snapshoturl argument")
+            parser.error("--withsnapshot true requires a --snapshoturl argument")
 
     # Debug print
     logging.info("Machine hostname is {}".format(config.hostname))
