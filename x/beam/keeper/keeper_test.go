@@ -265,6 +265,104 @@ func (suite *KeeperTestSuite) TestCancelBeam() {
 	closedIterator.Close()
 }
 
+func (suite *KeeperTestSuite) TestOpenCloseIterators() {
+	app := suite.app
+	ctx := suite.ctx
+
+	// Create the required accounts
+	creator := suite.addrs[0]
+	claimer := suite.addrs[1]
+	require.NotEqual(suite.T(), creator.String(), claimer.String())
+
+	// Create a random token as claim secret
+	claimSecret := types.GenerateSecureToken(4)
+
+	// Create a beam with 100 tokens
+	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
+	msg := types.NewMsgOpenBeam(
+		types.GenerateSecureToken(12),
+		creator.String(),
+		"",
+		&msgVal,
+		hex.EncodeToString(types.GenerateHashFromString(claimSecret)),
+		types.BEAM_SCHEMA_REVIEW,
+		nil,
+		0,
+		0,
+	)
+	err := app.BeamKeeper.OpenBeam(ctx, *msg)
+	require.NoError(suite.T(), err)
+	require.True(suite.T(), app.BeamKeeper.HasBeam(ctx, msg.GetId()))
+
+	// Is the beam present in the open queue
+	openedIterator := app.BeamKeeper.OpenBeamsQueueIterator(ctx)
+	require.NoError(suite.T(), openedIterator.Error())
+	require.True(suite.T(), openedIterator.Valid())
+	openedIterator.Close()
+
+	// But not on closed queue
+	closedIterator := app.BeamKeeper.ClosedBeamsQueueIterator(ctx)
+	require.Error(suite.T(), closedIterator.Error())
+	require.False(suite.T(), closedIterator.Valid())
+	closedIterator.Close()
+
+	// Close the beam
+	msgCancel := types.NewMsgUpdateBeam(
+		creator.String(),
+		msg.GetId(),
+		nil,
+		types.BeamState_StateCanceled,
+		nil,
+		"Test Cancel",
+		true,
+		0,
+		0,
+	)
+	err = app.BeamKeeper.UpdateBeam(ctx, *msgCancel)
+	require.NoError(suite.T(), err)
+
+	// We should not have it inside open beams queue
+	openedIterator = app.BeamKeeper.OpenBeamsQueueIterator(ctx)
+	require.Error(suite.T(), openedIterator.Error())
+	require.False(suite.T(), openedIterator.Valid())
+	openedIterator.Close()
+
+	// But in the closed queue
+	closedIterator = app.BeamKeeper.ClosedBeamsQueueIterator(ctx)
+	require.NoError(suite.T(), closedIterator.Error())
+	require.True(suite.T(), closedIterator.Valid())
+	closedIterator.Close()
+
+	// Create another beam
+	msgVal = sdk.NewCoin("stake", sdk.NewInt(100))
+	msg = types.NewMsgOpenBeam(
+		types.GenerateSecureToken(12),
+		creator.String(),
+		"",
+		&msgVal,
+		hex.EncodeToString(types.GenerateHashFromString(claimSecret)),
+		types.BEAM_SCHEMA_REVIEW,
+		nil,
+		0,
+		0,
+	)
+	err = app.BeamKeeper.OpenBeam(ctx, *msg)
+	require.NoError(suite.T(), err)
+	require.True(suite.T(), app.BeamKeeper.HasBeam(ctx, msg.GetId()))
+
+	// Is the beam present in the open queue
+	openedIterator = app.BeamKeeper.OpenBeamsQueueIterator(ctx)
+	require.NoError(suite.T(), openedIterator.Error())
+	require.True(suite.T(), openedIterator.Valid())
+	openedIterator.Close()
+
+	// But not on closed queue
+	closedIterator = app.BeamKeeper.ClosedBeamsQueueIterator(ctx)
+	require.NoError(suite.T(), closedIterator.Error())
+	require.True(suite.T(), closedIterator.Valid())
+	closedIterator.Close()
+}
+
 // TestUnknownBeam Make sure we cannot get an unknown beam
 func (suite *KeeperTestSuite) TestUnknownBeam() {
 	app := suite.app
