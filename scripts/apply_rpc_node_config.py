@@ -7,6 +7,7 @@ import toml
 def apply_params(home):
     path = "{}/config/app.toml".format(home)
     data = toml.load(path)
+
     data['api']['rpc-read-timeout'] = 30
     data['api']['rpc-write-timeout'] = 30
 
@@ -19,7 +20,7 @@ def main():
     logging.basicConfig(level=logging.INFO)
 
     # Setup the arguments
-    parser = argparse.ArgumentParser(description='Apply default parameters to app.toml file')
+    parser = argparse.ArgumentParser(description='Apply RPC node parameters to app.toml file')
     parser.add_argument('--home', type=str, help='The path to the chain root folder', required=True)
     args = parser.parse_args()
 

@@ -8,7 +8,8 @@ def apply_params(home):
     path = "{}/config/config.toml".format(home)
     data = toml.load(path)
     data['p2p']['allow_duplicate_ip'] = True
-    data['rpc']['timeout_broadcast_tx_commit'] = '30s'
+    data['p2p']['max_num_inbound_peers'] = 300
+    data['p2p']['max_num_outbound_peers'] = 300
 
     f = open(path, 'w')
     toml.dump(data, f)
