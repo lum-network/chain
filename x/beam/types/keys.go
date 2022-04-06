@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "beam"
@@ -24,26 +26,36 @@ var (
 	BeamsPrefix            = []byte{0x01}
 	OpenBeamsQueuePrefix   = []byte{0x02}
 	ClosedBeamsQueuePrefix = []byte{0x03}
+
+	OpenBeamsByBlockQueuePrefix = []byte{0x04}
 )
 
-func GetBeamIDBytes(beamID string) []byte {
-	return []byte(beamID)
+func StringKeyToBytes(key string) []byte {
+	return []byte(key)
 }
 
-func GetBeamIDFromBytes(beamID []byte) string {
-	return string(beamID)
+func BytesKeyToString(key []byte) string {
+	return string(key)
+}
+
+func IntKeyToString(key int) string {
+	return fmt.Sprintf("%d", key)
 }
 
 func GetBeamKey(beamID string) []byte {
-	return append(BeamsPrefix, GetBeamIDBytes(beamID)...)
+	return append(BeamsPrefix, StringKeyToBytes(beamID)...)
 }
 
 func GetOpenBeamQueueKey(beamID string) []byte {
-	return append(OpenBeamsQueuePrefix, GetBeamIDBytes(beamID)...)
+	return append(OpenBeamsQueuePrefix, StringKeyToBytes(beamID)...)
 }
 
 func GetClosedBeamQueueKey(beamID string) []byte {
-	return append(ClosedBeamsQueuePrefix, GetBeamIDBytes(beamID)...)
+	return append(ClosedBeamsQueuePrefix, StringKeyToBytes(beamID)...)
+}
+
+func GetOpenBeamsByBlockQueueKey(height int) []byte {
+	return append(OpenBeamsByBlockQueuePrefix, IntKeyToString(height)...)
 }
 
 func SplitBeamKey(key []byte) []byte {
