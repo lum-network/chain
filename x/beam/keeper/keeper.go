@@ -96,6 +96,7 @@ func (k Keeper) RemoveFromOpenBeamQueue(ctx sdk.Context, beamID string) {
 	store.Delete(types.GetOpenBeamQueueKey(beamID))
 }
 
+// GetBeamIDsFromBlockQueue Return a slice of beam IDs for a given height
 func (k Keeper) GetBeamIDsFromBlockQueue(ctx sdk.Context, height int) []string {
 	// Acquire the store and key instance
 	store := ctx.KVStore(k.storeKey)
@@ -118,25 +119,48 @@ func (k Keeper) InsertOpenBeamByBlockQueue(ctx sdk.Context, height int, beamID s
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetOpenBeamsByBlockQueueKey(height)
 
-	// Does it exists? If not, create the entry
+	// Does it exist? If not, create the entry
 	if exists := store.Has(key); !exists {
 		dest := strings.Join([]string{beamID}, ",")
 		store.Set(key, types.StringKeyToBytes(dest))
 		return
 	}
 
-	// Otherwise append the content
+	// Otherwise, append the content
 	content := store.Get(key)
 	ids := strings.Split(types.BytesKeyToString(content), ",")
 	ids = append(ids, beamID)
 
 	// Put it back
-	dest := strings.Join([]string{beamID}, ",")
+	dest := strings.Join(ids, ",")
 	store.Set(key, types.StringKeyToBytes(dest))
 }
 
+// RemoveFromOpenBeamByBlockQueue Remove a beam ID from the active beam queue by its height
 func (k Keeper) RemoveFromOpenBeamByBlockQueue(ctx sdk.Context, height int, beamID string) {
+	// Acquire the store and key instance
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetOpenBeamsByBlockQueueKey(height)
 
+	// Does it exist? If not, create the entry
+	if exists := store.Has(key); !exists {
+		return
+	}
+
+	// Remove from the content
+	content := store.Get(key)
+	ids := strings.Split(types.BytesKeyToString(content), ",")
+	ids = types.RemoveFromArray(ids, beamID)
+
+	// If there is no more ID inside the slice, just delete the key
+	if len(ids) <= 0 {
+		store.Delete(key)
+		return
+	}
+
+	// Put it back
+	dest := strings.Join(ids, ",")
+	store.Set(key, types.StringKeyToBytes(dest))
 }
 
 // InsertClosedBeamQueue Insert a beam ID inside the closed beam queue
