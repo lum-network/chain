@@ -294,8 +294,10 @@ func (suite *KeeperTestSuite) TestOpenCloseIterators() {
 	require.NoError(suite.T(), err)
 	require.True(suite.T(), app.BeamKeeper.HasBeam(ctx, msg.GetId()))
 
-	// Is the beam present in the open queue
-	// TODO
+	// The beam should not be present since we disabled the auto close with 0 block height
+	openQueue := app.BeamKeeper.OpenBeamsByBlockQueueIterator(ctx)
+	require.False(suite.T(), openQueue.Valid())
+	openQueue.Close()
 
 	// But not on closed queue
 	closedIterator := app.BeamKeeper.ClosedBeamsQueueIterator(ctx)
@@ -319,7 +321,9 @@ func (suite *KeeperTestSuite) TestOpenCloseIterators() {
 	require.NoError(suite.T(), err)
 
 	// We should not have it inside open beams queue
-	// TODO
+	openQueue = app.BeamKeeper.OpenBeamsByBlockQueueIterator(ctx)
+	require.False(suite.T(), openQueue.Valid())
+	openQueue.Close()
 
 	// But in the closed queue
 	closedIterator = app.BeamKeeper.ClosedBeamsQueueIterator(ctx)
@@ -337,7 +341,7 @@ func (suite *KeeperTestSuite) TestOpenCloseIterators() {
 		hex.EncodeToString(types.GenerateHashFromString(claimSecret)),
 		types.BEAM_SCHEMA_REVIEW,
 		nil,
-		0,
+		10,
 		0,
 	)
 	err = app.BeamKeeper.OpenBeam(ctx, *msg)
@@ -345,7 +349,9 @@ func (suite *KeeperTestSuite) TestOpenCloseIterators() {
 	require.True(suite.T(), app.BeamKeeper.HasBeam(ctx, msg.GetId()))
 
 	// Is the beam present in the open queue
-	// TODO
+	openQueue = app.BeamKeeper.OpenBeamsByBlockQueueIterator(ctx)
+	require.True(suite.T(), openQueue.Valid())
+	openQueue.Close()
 
 	// But not on closed queue
 	closedIterator = app.BeamKeeper.ClosedBeamsQueueIterator(ctx)
@@ -381,7 +387,7 @@ func (suite *KeeperTestSuite) TestOpenNewBeam() {
 		types.GenerateSecureToken(4),
 		types.BEAM_SCHEMA_REVIEW,
 		nil,
-		0,
+		120,
 		0,
 	)
 
@@ -405,7 +411,9 @@ func (suite *KeeperTestSuite) TestOpenNewBeam() {
 	require.Equal(suite.T(), beam.GetStatus(), types.BeamState_StateOpen)
 
 	// Make sure the beam is now present in the open beams queue
-	// TODO
+	openQueue := app.BeamKeeper.OpenBeamsByBlockQueueIterator(ctx)
+	require.True(suite.T(), openQueue.Valid())
+	openQueue.Close()
 }
 
 func (suite *KeeperTestSuite) TestOpenAutoCloseBeam() {

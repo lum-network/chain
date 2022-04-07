@@ -529,3 +529,9 @@ func (k Keeper) ClosedBeamsQueueIterator(ctx sdk.Context) sdk.Iterator {
 	kvStore := ctx.KVStore(k.storeKey)
 	return sdk.KVStorePrefixIterator(kvStore, types.ClosedBeamsQueuePrefix)
 }
+
+// OpenBeamsByBlockQueueIterator Return a ready to use iterator for the open by block only beams queue
+func (k Keeper) OpenBeamsByBlockQueueIterator(ctx sdk.Context) sdk.Iterator {
+	kvStore := ctx.KVStore(k.storeKey)
+	return sdk.KVStorePrefixIterator(kvStore, types.OpenBeamsByBlockQueuePrefix)
+}
