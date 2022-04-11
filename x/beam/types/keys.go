@@ -20,6 +20,8 @@ const (
 
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_capability"
+
+	MemStoreQueueSeparator = ","
 )
 
 var (

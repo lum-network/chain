@@ -109,7 +109,7 @@ func (k Keeper) GetBeamIDsFromBlockQueue(ctx sdk.Context, height int) []string {
 
 	// Get the content
 	content := store.Get(key)
-	ids := strings.Split(types.BytesKeyToString(content), ",")
+	ids := strings.Split(types.BytesKeyToString(content), types.MemStoreQueueSeparator)
 	return ids
 }
 
@@ -121,18 +121,18 @@ func (k Keeper) InsertOpenBeamByBlockQueue(ctx sdk.Context, height int, beamID s
 
 	// Does it exist? If not, create the entry
 	if exists := store.Has(key); !exists {
-		dest := strings.Join([]string{beamID}, ",")
+		dest := strings.Join([]string{beamID}, types.MemStoreQueueSeparator)
 		store.Set(key, types.StringKeyToBytes(dest))
 		return
 	}
 
 	// Otherwise, append the content
 	content := store.Get(key)
-	ids := strings.Split(types.BytesKeyToString(content), ",")
+	ids := strings.Split(types.BytesKeyToString(content), types.MemStoreQueueSeparator)
 	ids = append(ids, beamID)
 
 	// Put it back
-	dest := strings.Join(ids, ",")
+	dest := strings.Join(ids, types.MemStoreQueueSeparator)
 	store.Set(key, types.StringKeyToBytes(dest))
 }
 
@@ -149,7 +149,7 @@ func (k Keeper) RemoveFromOpenBeamByBlockQueue(ctx sdk.Context, height int, beam
 
 	// Remove from the content
 	content := store.Get(key)
-	ids := strings.Split(types.BytesKeyToString(content), ",")
+	ids := strings.Split(types.BytesKeyToString(content), types.MemStoreQueueSeparator)
 	ids = types.RemoveFromArray(ids, beamID)
 
 	// If there is no more ID inside the slice, just delete the key
@@ -159,7 +159,7 @@ func (k Keeper) RemoveFromOpenBeamByBlockQueue(ctx sdk.Context, height int, beam
 	}
 
 	// Put it back
-	dest := strings.Join(ids, ",")
+	dest := strings.Join(ids, types.MemStoreQueueSeparator)
 	store.Set(key, types.StringKeyToBytes(dest))
 }
 
@@ -229,7 +229,7 @@ func (k Keeper) SetBeam(ctx sdk.Context, beamID string, beam *types.Beam) {
 // OpenBeam Create a new beam instance
 func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 	// Make sure the ID is in the correct format
-	if strings.Contains(msg.GetId(), ",") {
+	if strings.Contains(msg.GetId(), types.MemStoreQueueSeparator) {
 		return types.ErrBeamIdContainsForbiddenChar
 	}
 
