@@ -8,9 +8,12 @@ jobs:
     name: Build and test the commit before build the docker image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v2.1.3
+      - uses: actions/setup-go@v2.1.4
         with:
-          go-version: 1.16
+          go-version: '^1.18'
+        env:
+          GOOS: ${{ matrix.targetos }}
+          GOARCH: ${{ matrix.arch }}
 
       - name: Checkout
         uses: actions/checkout@master
