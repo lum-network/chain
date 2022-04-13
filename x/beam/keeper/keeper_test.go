@@ -457,6 +457,34 @@ func (suite *KeeperTestSuite) TestFetchBeams() {
 	require.Equal(suite.T(), beam.GetId(), msg.GetId())
 }
 
+// TestIncorrectBeamId A beam id that contains a comma must be refused
+func (suite *KeeperTestSuite) TestIncorrectBeamId() {
+	app := suite.app
+	ctx := suite.ctx
+
+	// Create the original owner
+	owner := suite.addrs[0]
+
+	// Create value and the linked message
+	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
+	msg := types.NewMsgOpenBeam(
+		"i-am-a-beam-id-with-a,comma",
+		owner.String(),
+		owner.String(),
+		&msgVal,
+		types.GenerateSecureToken(4),
+		types.BEAM_SCHEMA_REVIEW,
+		nil,
+		120,
+		0,
+	)
+
+	// Open the beam and make sure there was an error
+	err := app.BeamKeeper.OpenBeam(ctx, *msg)
+	require.Error(suite.T(), err)
+	require.False(suite.T(), app.BeamKeeper.HasBeam(ctx, msg.GetId()))
+}
+
 // TestKeeperSuite Main entry point for the testing suite
 func TestKeeperSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
