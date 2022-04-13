@@ -7,7 +7,7 @@ const (
 	ModuleName = "beam"
 
 	// ModuleVersion defines the current module version
-	ModuleVersion = 1
+	ModuleVersion = 2
 
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
@@ -21,6 +21,7 @@ const (
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_capability"
 
+	// MemStoreQueueSeparator Used to separate content in the by-height-open-beams queue
 	MemStoreQueueSeparator = ","
 )
 
