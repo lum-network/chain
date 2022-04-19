@@ -1,5 +1,5 @@
 # Build image
-FROM golang:1.16-alpine AS build-env
+FROM golang:1.18-alpine AS build-env
 
 # Setup
 ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev python3 curl nano lz4 jq
