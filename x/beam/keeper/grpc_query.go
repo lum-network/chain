@@ -25,7 +25,18 @@ func (k Keeper) Beams(c context.Context, req *types.QueryFetchBeamsRequest) (*ty
 
 	// Acquire the store instance
 	store := ctx.KVStore(k.storeKey)
-	beamStore := prefix.NewStore(store, types.GetBeamKey(""))
+	var beamStore prefix.Store
+	if req.State == types.BeamState_StateUnspecified {
+		beamStore = prefix.NewStore(store, types.GetBeamKey(""))
+	} else if req.State == types.BeamState_StateOpen {
+		beamStore = prefix.NewStore(store, types.ClosedBeamsQueuePrefix)
+	} else if req.State == types.BeamState_StateClosed {
+		if req.Old {
+			beamStore = prefix.NewStore(store, types.OpenBeamsQueuePrefix)
+		} else {
+			beamStore = prefix.NewStore(store, types.OpenBeamsByBlockQueuePrefix)
+		}
+	}
 
 	// Make the paginated query
 	pageRes, err := query.Paginate(beamStore, req.Pagination, func(key []byte, value []byte) error {

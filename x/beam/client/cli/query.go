@@ -28,17 +28,20 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 
 	cmd.AddCommand(
 		CmdFetchBeams(),
+		CmdFetchOpenBeamsQueue(),
+		CmdFetchClosedBeamsQueue(),
+		CmdFetchOldOpenBeamsQueue(),
 		CmdGetBeam(),
 	)
 
 	return cmd
 }
 
-// CmdFetchBeams Query the blockchain and print the list of beams
+// CmdFetchBeams Query the blockchain and print the list of beams from the store
 func CmdFetchBeams() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fetch",
-		Short: "Fetch all beams",
+		Short: "Fetch all the beams from the store",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Acquire the client instance
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -54,6 +57,125 @@ func CmdFetchBeams() *cobra.Command {
 
 			// Construct the params payload
 			params := &types.QueryFetchBeamsRequest{
+				Old:        false,
+				State:      types.BeamState_StateUnspecified,
+				Pagination: pageReq,
+			}
+
+			// Post and acquire response
+			res, err := queryClient.Beams(cmd.Context(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "all beams")
+	return cmd
+}
+
+// CmdFetchOpenBeamsQueue Query the blockchain and print the list of beams from the open queue system
+func CmdFetchOpenBeamsQueue() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "fetch-open-queue",
+		Short: "Fetch all the beams from the open queue",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Acquire the client instance
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			// Acquire the pagination
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			// Acquire the query client from the context
+			queryClient := types.NewQueryClient(clientCtx)
+
+			// Construct the params payload
+			params := &types.QueryFetchBeamsRequest{
+				Old:        false,
+				State:      types.BeamState_StateOpen,
+				Pagination: pageReq,
+			}
+
+			// Post and acquire response
+			res, err := queryClient.Beams(cmd.Context(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "all beams")
+	return cmd
+}
+
+// CmdFetchClosedBeamsQueue Query the blockchain and print the list of beams from the closed queue system
+func CmdFetchClosedBeamsQueue() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "fetch-closed-queue",
+		Short: "Fetch all the beams from the closed queue",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Acquire the client instance
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			// Acquire the pagination
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			// Acquire the query client from the context
+			queryClient := types.NewQueryClient(clientCtx)
+
+			// Construct the params payload
+			params := &types.QueryFetchBeamsRequest{
+				Old:        false,
+				State:      types.BeamState_StateClosed,
+				Pagination: pageReq,
+			}
+
+			// Post and acquire response
+			res, err := queryClient.Beams(cmd.Context(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "all beams")
+	return cmd
+}
+
+// CmdFetchOldOpenBeamsQueue Query the blockchain and print the list of beams from the old open queue system
+func CmdFetchOldOpenBeamsQueue() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "fetch-open-old-queue",
+		Short: "Fetch all beams from the old open queue",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Acquire the client instance
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			// Acquire the pagination
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			// Acquire the query client from the context
+			queryClient := types.NewQueryClient(clientCtx)
+
+			// Construct the params payload
+			params := &types.QueryFetchBeamsRequest{
+				Old:        true,
+				State:      types.BeamState_StateOpen,
 				Pagination: pageReq,
 			}
 

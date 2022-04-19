@@ -7,6 +7,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"strings"
 	"time"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -85,7 +86,7 @@ func (k Keeper) moveCoinsToAccount(ctx sdk.Context, account sdk.AccAddress, amou
 // InsertOpenBeamQueue Insert a beam ID inside the active beam queue
 func (k Keeper) InsertOpenBeamQueue(ctx sdk.Context, beamID string) {
 	store := ctx.KVStore(k.storeKey)
-	bz := types.GetBeamIDBytes(beamID)
+	bz := types.StringKeyToBytes(beamID)
 	store.Set(types.GetOpenBeamQueueKey(beamID), bz)
 }
 
@@ -95,10 +96,77 @@ func (k Keeper) RemoveFromOpenBeamQueue(ctx sdk.Context, beamID string) {
 	store.Delete(types.GetOpenBeamQueueKey(beamID))
 }
 
+// GetBeamIDsFromBlockQueue Return a slice of beam IDs for a given height
+func (k Keeper) GetBeamIDsFromBlockQueue(ctx sdk.Context, height int) []string {
+	// Acquire the store and key instance
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetOpenBeamsByBlockQueueKey(height)
+
+	// If key does not exists, return an empty array
+	if !store.Has(key) {
+		return []string{}
+	}
+
+	// Get the content
+	content := store.Get(key)
+	ids := strings.Split(types.BytesKeyToString(content), types.MemStoreQueueSeparator)
+	return ids
+}
+
+// InsertOpenBeamByBlockQueue Insert a beam ID inside the by-block store entry
+func (k Keeper) InsertOpenBeamByBlockQueue(ctx sdk.Context, height int, beamID string) {
+	// Acquire the store and key instance
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetOpenBeamsByBlockQueueKey(height)
+
+	// Does it exist? If not, create the entry
+	if exists := store.Has(key); !exists {
+		dest := strings.Join([]string{beamID}, types.MemStoreQueueSeparator)
+		store.Set(key, types.StringKeyToBytes(dest))
+		return
+	}
+
+	// Otherwise, append the content
+	content := store.Get(key)
+	ids := strings.Split(types.BytesKeyToString(content), types.MemStoreQueueSeparator)
+	ids = append(ids, beamID)
+
+	// Put it back
+	dest := strings.Join(ids, types.MemStoreQueueSeparator)
+	store.Set(key, types.StringKeyToBytes(dest))
+}
+
+// RemoveFromOpenBeamByBlockQueue Remove a beam ID from the active beam queue by its height
+func (k Keeper) RemoveFromOpenBeamByBlockQueue(ctx sdk.Context, height int, beamID string) {
+	// Acquire the store and key instance
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetOpenBeamsByBlockQueueKey(height)
+
+	// Does it exist? If not, create the entry
+	if exists := store.Has(key); !exists {
+		return
+	}
+
+	// Remove from the content
+	content := store.Get(key)
+	ids := strings.Split(types.BytesKeyToString(content), types.MemStoreQueueSeparator)
+	ids = types.RemoveFromArray(ids, beamID)
+
+	// If there is no more ID inside the slice, just delete the key
+	if len(ids) <= 0 {
+		store.Delete(key)
+		return
+	}
+
+	// Put it back
+	dest := strings.Join(ids, types.MemStoreQueueSeparator)
+	store.Set(key, types.StringKeyToBytes(dest))
+}
+
 // InsertClosedBeamQueue Insert a beam ID inside the closed beam queue
 func (k Keeper) InsertClosedBeamQueue(ctx sdk.Context, beamID string) {
 	store := ctx.KVStore(k.storeKey)
-	bz := types.GetBeamIDBytes(beamID)
+	bz := types.StringKeyToBytes(beamID)
 	store.Set(types.GetClosedBeamQueueKey(beamID), bz)
 }
 
@@ -160,6 +228,11 @@ func (k Keeper) SetBeam(ctx sdk.Context, beamID string, beam *types.Beam) {
 
 // OpenBeam Create a new beam instance
 func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
+	// Make sure the ID is in the correct format
+	if strings.Contains(msg.GetId(), types.MemStoreQueueSeparator) {
+		return types.ErrBeamIdContainsForbiddenChar
+	}
+
 	// If the generated ID already exists, refuse the payload
 	if k.HasBeam(ctx, msg.GetId()) {
 		return types.ErrBeamAlreadyExists
@@ -194,6 +267,9 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 	}
 
 	if msg.GetClosesAtBlock() > 0 {
+		if int(msg.GetClosesAtBlock()) <= int(ctx.BlockHeight()) {
+			return types.ErrBeamAutoCloseInThePast
+		}
 		beam.ClosesAtBlock = msg.GetClosesAtBlock()
 	}
 
@@ -214,7 +290,11 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 	}
 
 	k.SetBeam(ctx, beam.GetId(), beam)
-	k.InsertOpenBeamQueue(ctx, beam.GetId())
+
+	// If the beam is actually intended to auto close, we put it inside the by-block queue
+	if beam.GetClosesAtBlock() > 0 {
+		k.InsertOpenBeamByBlockQueue(ctx, int(msg.GetClosesAtBlock()), beam.GetId())
+	}
 
 	ctx.EventManager().Events().AppendEvents(sdk.Events{
 		sdk.NewEvent(types.EventTypeOpenBeam, sdk.NewAttribute(types.AttributeKeyOpener, msg.GetCreatorAddress())),
@@ -433,7 +513,24 @@ func (k Keeper) IterateOpenBeamsQueue(ctx sdk.Context, cb func(beam types.Beam) 
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		beam, error := k.GetBeam(ctx, types.GetBeamIDFromBytes(types.SplitOpenBeamQueueKey(iterator.Key())))
+		beam, error := k.GetBeam(ctx, types.BytesKeyToString(types.SplitBeamKey(iterator.Key())))
+		if error != nil {
+			panic(error)
+		}
+
+		if cb(beam) {
+			break
+		}
+	}
+}
+
+// IterateOpenBeamsByBlockQueue Iterate over the open by block beams queue
+func (k Keeper) IterateOpenBeamsByBlockQueue(ctx sdk.Context, cb func(beam types.Beam) (stop bool)) {
+	iterator := k.OpenBeamsByBlockQueueIterator(ctx)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		beam, error := k.GetBeam(ctx, types.BytesKeyToString(types.SplitBeamKey(iterator.Key())))
 		if error != nil {
 			panic(error)
 		}
@@ -450,7 +547,7 @@ func (k Keeper) IterateClosedBeamsQueue(ctx sdk.Context, cb func(beam types.Beam
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		beam, error := k.GetBeam(ctx, types.GetBeamIDFromBytes(types.SplitClosedBeamQueueKey(iterator.Key())))
+		beam, error := k.GetBeam(ctx, types.BytesKeyToString(types.SplitBeamKey(iterator.Key())))
 		if error != nil {
 			panic(error)
 		}
@@ -477,4 +574,10 @@ func (k Keeper) OpenBeamsQueueIterator(ctx sdk.Context) sdk.Iterator {
 func (k Keeper) ClosedBeamsQueueIterator(ctx sdk.Context) sdk.Iterator {
 	kvStore := ctx.KVStore(k.storeKey)
 	return sdk.KVStorePrefixIterator(kvStore, types.ClosedBeamsQueuePrefix)
+}
+
+// OpenBeamsByBlockQueueIterator Return a ready to use iterator for the open by block only beams queue
+func (k Keeper) OpenBeamsByBlockQueueIterator(ctx sdk.Context) sdk.Iterator {
+	kvStore := ctx.KVStore(k.storeKey)
+	return sdk.KVStorePrefixIterator(kvStore, types.OpenBeamsByBlockQueuePrefix)
 }
