@@ -13,6 +13,9 @@ COPY . .
 # Display used go version
 RUN go version
 
+# Patch any issue with go mod file
+RUN go mod tidy && go mod download
+
 # Install minimum necessary dependencies, build Cosmos SDK, remove packages
 RUN apk add --no-cache $PACKAGES && make install
 
