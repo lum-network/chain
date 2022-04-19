@@ -64,11 +64,3 @@ func GetOpenBeamsByBlockQueueKey(height int) []byte {
 func SplitBeamKey(key []byte) []byte {
 	return key[1:]
 }
-
-func SplitOpenBeamQueueKey(key []byte) (beamID []byte) {
-	return key[1:]
-}
-
-func SplitClosedBeamQueueKey(key []byte) (beamID []byte) {
-	return key[1:]
-}

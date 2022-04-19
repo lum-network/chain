@@ -17,7 +17,7 @@ func TestOpenBeamsQueueKey(t *testing.T) {
 	beamID := GenerateSecureToken(8)
 	key := GetOpenBeamQueueKey(beamID)
 	require.NotEqual(t, beamID, string(key))
-	parsedBeamID := BytesKeyToString(SplitOpenBeamQueueKey(key))
+	parsedBeamID := BytesKeyToString(SplitBeamKey(key))
 	require.Equal(t, beamID, parsedBeamID)
 }
 
@@ -25,6 +25,6 @@ func TestClosedBeamsQueueKey(t *testing.T) {
 	beamID := GenerateSecureToken(8)
 	key := GetClosedBeamQueueKey(beamID)
 	require.NotEqual(t, beamID, string(key))
-	parsedBeamID := BytesKeyToString(SplitClosedBeamQueueKey(key))
+	parsedBeamID := BytesKeyToString(SplitBeamKey(key))
 	require.Equal(t, beamID, parsedBeamID)
 }

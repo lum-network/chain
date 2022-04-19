@@ -29,6 +29,8 @@ message QueryGetBeamResponse {
 
 message QueryFetchBeamsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  BeamState state = 2;
+  bool old = 3;
 }
 
 message QueryFetchBeamsResponse {

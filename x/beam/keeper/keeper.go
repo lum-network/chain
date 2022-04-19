@@ -513,7 +513,24 @@ func (k Keeper) IterateOpenBeamsQueue(ctx sdk.Context, cb func(beam types.Beam) 
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		beam, error := k.GetBeam(ctx, types.BytesKeyToString(types.SplitOpenBeamQueueKey(iterator.Key())))
+		beam, error := k.GetBeam(ctx, types.BytesKeyToString(types.SplitBeamKey(iterator.Key())))
+		if error != nil {
+			panic(error)
+		}
+
+		if cb(beam) {
+			break
+		}
+	}
+}
+
+// IterateOpenBeamsByBlockQueue Iterate over the open by block beams queue
+func (k Keeper) IterateOpenBeamsByBlockQueue(ctx sdk.Context, cb func(beam types.Beam) (stop bool)) {
+	iterator := k.OpenBeamsByBlockQueueIterator(ctx)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		beam, error := k.GetBeam(ctx, types.BytesKeyToString(types.SplitBeamKey(iterator.Key())))
 		if error != nil {
 			panic(error)
 		}
@@ -530,7 +547,7 @@ func (k Keeper) IterateClosedBeamsQueue(ctx sdk.Context, cb func(beam types.Beam
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		beam, error := k.GetBeam(ctx, types.BytesKeyToString(types.SplitClosedBeamQueueKey(iterator.Key())))
+		beam, error := k.GetBeam(ctx, types.BytesKeyToString(types.SplitBeamKey(iterator.Key())))
 		if error != nil {
 			panic(error)
 		}
