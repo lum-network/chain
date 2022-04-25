@@ -1,15 +1,19 @@
-import sys
-import os
-import toml
-import socket
 import logging
 import argparse
-import hashlib
+import socket
+import os
+import toml
 
 # Global variables
 coinType = 880
-hostname = socket.gethostname()
 
+# Global  definitions
+class Config:
+    chainId: str = ''
+    homePath: str = ''
+    genesisUrl: str = ''
+    snapshotUrl: str = ''
+    withSnapshot: bool = False
 
 # This is utility function to replace entries in file
 def replace_entries_in_file(file, find, replace):
@@ -25,7 +29,6 @@ def replace_entries_in_file(file, find, replace):
     fileOut.write(newContent)
     fileOut.close()
 
-
 # This is utility function to replace common entries in the config file
 def prepare_config_file(file):
     data = toml.load(file)
@@ -38,112 +41,67 @@ def prepare_config_file(file):
     toml.dump(data, f)
     f.close()
 
-
-# This makes all the required steps for initializing a primary node
-def init_primary(chain_id, home, mnemonic, action):
-    logging.info("Initializing the primary node")
-
+# Here we do the things
+def initialize_node(config):
     # Create the destination folder if it does not exists
-    if not os.path.exists(home):
-        os.mkdir(home)
+    if not os.path.exists(config.homePath):
+        os.mkdir(config.homePath)
 
-    # Init the node and the corresponding wallet
-    os.system("lumd init --chain-id {} --home {} {} ".format(chain_id, home, hostname))
-    os.system("lumd keys add bootnode --coin-type {} --home {}".format(coinType, home))
+    # Initialize the node
+    logging.info("Initialize the node")
+    os.system("lumd init --chain-id {} --home {} {}".format(config.chainId, config.homePath, config.hostname))
 
-    # Init the faucet wallet
-    if mnemonic is not None and len(mnemonic) > 0:
-        os.system("echo '{}' | lumd keys add faucet --coin-type {} --recover --home {}".format(mnemonic, coinType, home))
+    # Download the genesis file
+    logging.info("Download the genesis file")
+    os.system("curl -s '{}' > {}/config/genesis.json".format(config.genesisUrl, config.homePath))
 
-    # Add the genesis accounts
-    os.system("lumd add-genesis-account $(lumd keys show bootnode -a --home {}) 30000000000000ulum --home {}".format(home, home))
-    if mnemonic is not None and len(mnemonic) > 0:
-        os.system("lumd add-genesis-account $(lumd keys show faucet -a --home {}) 10000000000000ulum --home {}".format(home, home))
+    if config.withSnapshot:
+        # Clear the old data directory
+        logging.info("Delete the old data folder")
+        os.system("rm -rf {}/data".format(config.homePath))
 
-    # Edit the genesis file and replace stake with ulum
-    replace_entries_in_file("{}/config/genesis.json".format(home), "stake", "ulum")
+        # Download the snapshot
+        logging.info("Download the snapshot file")
+        os.system("curl -s '{}' > {}/snapshot.tar.lz4".format(config.snapshotUrl, config.homePath))
 
-    # Prepare the configuration file
-    prepare_config_file("{}/config/config.toml".format(home))
+        # Install it
+        logging.info("Decompress the snapshot file")
+        os.system("cd {} && lz4 -d snapshot.tar.lz4 | tar xf -".format(config.homePath))
 
-    # Generate the first transaction
-    os.system("lumd gentx bootnode 100000000ulum --chain-id {} --home {}".format(chain_id, home))
-
-    # Prepare the genesis
-    os.system("lumd collect-gentxs --home {}".format(home))
-    os.system("lumd validate-genesis --home {}".format(home))
-
-    # Copy the genesis file to the shared storage
-    if action == 'copy':
-        logging.info("Copying genesis and node id files to shared storage")
-        os.system("cp {}/config/genesis.json /config/genesis.json".format(home))
-
-        logging.info("Copying the node id to shared storage")
-        node_id = os.popen("lumd tendermint show-node-id --home {}".format(home))
-        os.system("echo '{}@{}:26657' >> /config/primary_peer_id.txt".format(node_id, hostname))
-    else:
-        logging.error("Action download not available for primary node")
-
-    logging.info("Primary node initialized")
-
-
-# This makes all the steps for initializing a secondary node
-def init_secondary(chain_id, home, action, path, checksum):
-    logging.info("Initializing the secondary node")
-
-    # Create the destination folder if it does not exists
-    if not os.path.exists(home):
-        os.mkdir(home)
-
-    # Init the node
-    os.system("lumd init --chain-id {} --home {} {} ".format(chain_id, home, hostname))
-
-    # Prepare the configuration file
-    prepare_config_file("{}/config/config.toml".format(home))
-
-    if action == 'copy':
-        logging.info("Copying genesis and node id files from shared storage")
-        os.system("cp /config/genesis.json {}/config/genesis.json".format(home))
-    elif action == 'download':
-        logging.info("Downloading genesis from remote location")
-        os.system("curl -s '{}' > {}/config/genesis.json".format(path, home))
-
-        # Ensure the checksum matches
-        # csum = hashlib.md5("{}/config/genesis.json".format(path)).hexdigest()
-        # if csum != checksum:
-        #    logging.error("Both checksum does not match {} != {}".format(csum, checksum))
-
-    logging.info('Secondary node initialized')
-
-
-# This is the main file entrypoint
+# Main entrypoint
 def main():
     # Setup the logging instance
     logging.basicConfig(level=logging.INFO)
 
     # Setup the arguments
-    parser = argparse.ArgumentParser(description='Init a Lum Network chain node')
-    parser.add_argument('--chainid', type=str, help='The chain ID to pass to nodes', required=True)
-    parser.add_argument('--type', choices=['primary', 'secondary'], type=str, help='The type of node to init', required=True)
-    parser.add_argument('--home', type=str, help='The path to the root folder of blockchain', required=True)
-    parser.add_argument('--mnemonic', type=str, help='The faucet mnemonic used for bootnode')
-    parser.add_argument('--action', type=str, choices=['copy', 'download'], help='Once generated, copy the genesis file to the shared storage', required=True)
-    parser.add_argument('--path', type=str, help='The path from where to download the genesis file')
-    parser.add_argument('--checksum', type=str, help='The downloaded genesis file checksum', required='--path' in sys.argv)
+    parser = argparse.ArgumentParser(description='Init a Lum Network passive node')
+    parser.add_argument('--chainid', type=str, help='The chain ID to pass to binary arguments', required=True)
+    parser.add_argument('--home', type=str, help='The path to the chain root folder', required=True)
+    parser.add_argument('--withsnapshot', action=argparse.BooleanOptionalAction, help='Should the script download and install snapshot or not', required=True)
+    parser.add_argument('--genesisurl', type=str, help='The URL to the genesis file to download', required=True)
+    parser.add_argument('--snapshoturl', type=str, help='The QuickSync snapshot URL to start from')
     args = parser.parse_args()
 
-    if args.action == 'download' and (not args.path or not args.checksum):
-        parser.error("--action download requires path and checksum")
+    # Config object initialize
+    config = Config()
+    config.chainId = args.chainid
+    config.homePath = args.home
+    config.genesisUrl = args.genesisurl
+    config.snapshotUrl = args.snapshoturl
+    config.hostname = socket.gethostname()
+    config.withSnapshot = args.withsnapshot
 
-    # Information logging
-    logging.info("Hostname is {}".format(hostname))
+    if config.withSnapshot:
+        if not config.snapshotUrl:
+            parser.error("--withsnapshot true requires a --snapshoturl argument")
 
-    # What type of node do we want to init
-    if args.type == "primary":
-        init_primary(args.chainid, args.home, args.mnemonic, args.action)
-    else:
-        init_secondary(args.chainid, args.home, args.action, args.path, args.checksum)
+    # Debug print
+    logging.info("Machine hostname is {}".format(config.hostname))
+    logging.info("Initializing node on network {}".format(config.chainId))
+    logging.info("Using {} as home path".format(config.homePath))
+    logging.info("Downloading snapshot {}".format(config.withSnapshot))
 
+    initialize_node(config)
 
 if __name__ == "__main__":
     main()

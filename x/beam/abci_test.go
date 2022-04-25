@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"testing"
 )
 
 type ABCITestSuite struct {
@@ -76,7 +77,7 @@ func (suite *ABCITestSuite) TestTickBeamAutoClose() {
 	require.True(suite.T(), app.BeamKeeper.HasBeam(ctx, msg.GetId()))
 
 	// Make sure the open beam queue is now valid
-	openQueue = app.BeamKeeper.OpenBeamsQueueIterator(ctx)
+	openQueue = app.BeamKeeper.OpenBeamsByBlockQueueIterator(ctx)
 	require.True(suite.T(), openQueue.Valid())
 	openQueue.Close()
 
@@ -101,4 +102,8 @@ func (suite *ABCITestSuite) TestTickBeamAutoClose() {
 	closedQueue = app.BeamKeeper.ClosedBeamsQueueIterator(ctx)
 	require.True(suite.T(), closedQueue.Valid())
 	closedQueue.Close()
+}
+
+func TestABCISuite(t *testing.T) {
+	suite.Run(t, new(ABCITestSuite))
 }

@@ -12,8 +12,11 @@ const (
 )
 
 // RegisterRoutes registers chain-related REST handlers to a router
+// This is not intended to stay here, backwards compatibility for KEPLR
 func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
+	r.HandleFunc("/cosmos/base/tendermint/v1beta1/node_info", NodeInfoRequestHandlerFn(clientCtx)).Methods(MethodGet)
 	r.HandleFunc("/node_info", NodeInfoRequestHandlerFn(clientCtx)).Methods(MethodGet)
+	r.HandleFunc("/cosmos/base/tendermint/v1beta1/syncing", NodeSyncingRequestHandlerFn(clientCtx)).Methods(MethodGet)
 	r.HandleFunc("/syncing", NodeSyncingRequestHandlerFn(clientCtx)).Methods(MethodGet)
 
 	r.HandleFunc("/bank/balances/{address}", QueryBalancesRequestHandlerFn(clientCtx)).Methods(MethodGet)

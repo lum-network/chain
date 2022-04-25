@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/lum-network/chain/x/beam/migrations"
 	"github.com/lum-network/chain/x/beam/simulation"
 	"math/rand"
 
@@ -155,6 +156,10 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+
+	// Register the migrations
+	migrator := migrations.NewMigrator(am.keeper)
+	cfg.RegisterMigration(types.ModuleName, 1, migrator.Migrate1To2)
 }
 
 // RegisterInvariants registers the capability module's invariants.

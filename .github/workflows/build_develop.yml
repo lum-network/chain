@@ -1,0 +1,63 @@
+name: Build and push the develop images
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+env:
+  REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+  REGISTRY_ADDRESS: rg.fr-par.scw.cloud/lum-network
+  REGISTRY_ADDRESS_PROJECT: chain
+
+jobs:
+  bump-version-push-tag:
+    name: Bump version and push new tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          fetch-depth: '0'
+
+      - name: Bump version and push new tag
+        id: bump_version
+        uses: anothrNick/github-tag-action@1.17.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
+          RELEASE_BRANCHES: production
+
+      - name: Save new version number result into file
+        shell: bash
+        run: |
+          echo ${{ steps.bump_version.outputs.tag }} > new_version.txt
+
+      - name: Upload version number for further use
+        uses: actions/upload-artifact@v1
+        with:
+          name: new_version
+          path: new_version.txt
+
+  build-docker:
+    name: Build the image and push on docker registry
+    runs-on: ubuntu-latest
+    needs: bump-version-push-tag
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Download version number from bump-version-push-tag
+        uses: actions/download-artifact@v1
+        with:
+          name: new_version
+
+      - name: Create version number variable
+        id: vars
+        run: echo ::set-output name=version_tag_number::$(cat new_version/new_version.txt)
+
+      - name: Build, tag and push the built image
+        run: |
+          docker login $REGISTRY_ADDRESS -u nologin -p $REGISTRY_TOKEN
+          docker build -t $REGISTRY_ADDRESS/$REGISTRY_ADDRESS_PROJECT:develop-${{ steps.vars.outputs.version_tag_number }} .
+          docker push $REGISTRY_ADDRESS/$REGISTRY_ADDRESS_PROJECT:develop-${{ steps.vars.outputs.version_tag_number }}

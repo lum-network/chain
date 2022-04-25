@@ -265,6 +265,101 @@ func (suite *KeeperTestSuite) TestCancelBeam() {
 	closedIterator.Close()
 }
 
+func (suite *KeeperTestSuite) TestOpenCloseIterators() {
+	app := suite.app
+	ctx := suite.ctx
+
+	// Create the required accounts
+	creator := suite.addrs[0]
+	claimer := suite.addrs[1]
+	require.NotEqual(suite.T(), creator.String(), claimer.String())
+
+	// Create a random token as claim secret
+	claimSecret := types.GenerateSecureToken(4)
+
+	// Create a beam with 100 tokens
+	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
+	msg := types.NewMsgOpenBeam(
+		types.GenerateSecureToken(12),
+		creator.String(),
+		"",
+		&msgVal,
+		hex.EncodeToString(types.GenerateHashFromString(claimSecret)),
+		types.BEAM_SCHEMA_REVIEW,
+		nil,
+		0,
+		0,
+	)
+	err := app.BeamKeeper.OpenBeam(ctx, *msg)
+	require.NoError(suite.T(), err)
+	require.True(suite.T(), app.BeamKeeper.HasBeam(ctx, msg.GetId()))
+
+	// The beam should not be present since we disabled the auto close with 0 block height
+	openQueue := app.BeamKeeper.OpenBeamsByBlockQueueIterator(ctx)
+	require.False(suite.T(), openQueue.Valid())
+	openQueue.Close()
+
+	// But not on closed queue
+	closedIterator := app.BeamKeeper.ClosedBeamsQueueIterator(ctx)
+	require.Error(suite.T(), closedIterator.Error())
+	require.False(suite.T(), closedIterator.Valid())
+	closedIterator.Close()
+
+	// Close the beam
+	msgCancel := types.NewMsgUpdateBeam(
+		creator.String(),
+		msg.GetId(),
+		nil,
+		types.BeamState_StateCanceled,
+		nil,
+		"Test Cancel",
+		true,
+		0,
+		0,
+	)
+	err = app.BeamKeeper.UpdateBeam(ctx, *msgCancel)
+	require.NoError(suite.T(), err)
+
+	// We should not have it inside open beams queue
+	openQueue = app.BeamKeeper.OpenBeamsByBlockQueueIterator(ctx)
+	require.False(suite.T(), openQueue.Valid())
+	openQueue.Close()
+
+	// But in the closed queue
+	closedIterator = app.BeamKeeper.ClosedBeamsQueueIterator(ctx)
+	require.NoError(suite.T(), closedIterator.Error())
+	require.True(suite.T(), closedIterator.Valid())
+	closedIterator.Close()
+
+	// Create another beam
+	msgVal = sdk.NewCoin("stake", sdk.NewInt(100))
+	msg = types.NewMsgOpenBeam(
+		types.GenerateSecureToken(12),
+		creator.String(),
+		"",
+		&msgVal,
+		hex.EncodeToString(types.GenerateHashFromString(claimSecret)),
+		types.BEAM_SCHEMA_REVIEW,
+		nil,
+		10,
+		0,
+	)
+	err = app.BeamKeeper.OpenBeam(ctx, *msg)
+	require.NoError(suite.T(), err)
+	require.True(suite.T(), app.BeamKeeper.HasBeam(ctx, msg.GetId()))
+
+	// Is the beam present in the open queue
+	openQueue = app.BeamKeeper.OpenBeamsByBlockQueueIterator(ctx)
+	require.True(suite.T(), openQueue.Valid())
+	openQueue.Close()
+
+	// But not on closed queue
+	closedIterator = app.BeamKeeper.ClosedBeamsQueueIterator(ctx)
+	require.NoError(suite.T(), closedIterator.Error())
+	require.True(suite.T(), closedIterator.Valid())
+	closedIterator.Close()
+}
+
 // TestUnknownBeam Make sure we cannot get an unknown beam
 func (suite *KeeperTestSuite) TestUnknownBeam() {
 	app := suite.app
@@ -292,7 +387,7 @@ func (suite *KeeperTestSuite) TestOpenNewBeam() {
 		types.GenerateSecureToken(4),
 		types.BEAM_SCHEMA_REVIEW,
 		nil,
-		0,
+		120,
 		0,
 	)
 
@@ -316,11 +411,13 @@ func (suite *KeeperTestSuite) TestOpenNewBeam() {
 	require.Equal(suite.T(), beam.GetStatus(), types.BeamState_StateOpen)
 
 	// Make sure the beam is now present in the open beams queue
-	openIterator := app.BeamKeeper.OpenBeamsQueueIterator(ctx)
-	require.NoError(suite.T(), openIterator.Error())
-	require.True(suite.T(), openIterator.Valid())
-	require.Equal(suite.T(), beam.GetId(), string(openIterator.Value()))
-	openIterator.Close()
+	openQueue := app.BeamKeeper.OpenBeamsByBlockQueueIterator(ctx)
+	require.True(suite.T(), openQueue.Valid())
+	openQueue.Close()
+}
+
+func (suite *KeeperTestSuite) TestOpenAutoCloseBeam() {
+
 }
 
 // TestFetchBeams Open a new beam and try to fetch it through the list
@@ -358,6 +455,34 @@ func (suite *KeeperTestSuite) TestFetchBeams() {
 	beam, err := app.BeamKeeper.GetBeam(ctx, beams[0].GetId())
 	require.NoError(suite.T(), err)
 	require.Equal(suite.T(), beam.GetId(), msg.GetId())
+}
+
+// TestIncorrectBeamId A beam id that contains a comma must be refused
+func (suite *KeeperTestSuite) TestIncorrectBeamId() {
+	app := suite.app
+	ctx := suite.ctx
+
+	// Create the original owner
+	owner := suite.addrs[0]
+
+	// Create value and the linked message
+	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
+	msg := types.NewMsgOpenBeam(
+		"i-am-a-beam-id-with-a,comma",
+		owner.String(),
+		owner.String(),
+		&msgVal,
+		types.GenerateSecureToken(4),
+		types.BEAM_SCHEMA_REVIEW,
+		nil,
+		120,
+		0,
+	)
+
+	// Open the beam and make sure there was an error
+	err := app.BeamKeeper.OpenBeam(ctx, *msg)
+	require.Error(suite.T(), err)
+	require.False(suite.T(), app.BeamKeeper.HasBeam(ctx, msg.GetId()))
 }
 
 // TestKeeperSuite Main entry point for the testing suite
