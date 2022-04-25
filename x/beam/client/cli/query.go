@@ -57,7 +57,6 @@ func CmdFetchBeams() *cobra.Command {
 
 			// Construct the params payload
 			params := &types.QueryFetchBeamsRequest{
-				Old:        false,
 				State:      types.BeamState_StateUnspecified,
 				Pagination: pageReq,
 			}
@@ -80,7 +79,7 @@ func CmdFetchBeams() *cobra.Command {
 func CmdFetchOpenBeamsQueue() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fetch-open-queue",
-		Short: "Fetch all the beams from the open queue",
+		Short: "Fetch all the beam IDs from the open queue",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Acquire the client instance
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -95,14 +94,12 @@ func CmdFetchOpenBeamsQueue() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			// Construct the params payload
-			params := &types.QueryFetchBeamsRequest{
-				Old:        false,
-				State:      types.BeamState_StateOpen,
+			params := &types.QueryFetchBeamsOpenQueueRequest{
 				Pagination: pageReq,
 			}
 
 			// Post and acquire response
-			res, err := queryClient.Beams(cmd.Context(), params)
+			res, err := queryClient.BeamsOpenQueue(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
@@ -135,7 +132,6 @@ func CmdFetchClosedBeamsQueue() *cobra.Command {
 
 			// Construct the params payload
 			params := &types.QueryFetchBeamsRequest{
-				Old:        false,
 				State:      types.BeamState_StateClosed,
 				Pagination: pageReq,
 			}
@@ -174,7 +170,6 @@ func CmdFetchOldOpenBeamsQueue() *cobra.Command {
 
 			// Construct the params payload
 			params := &types.QueryFetchBeamsRequest{
-				Old:        true,
 				State:      types.BeamState_StateOpen,
 				Pagination: pageReq,
 			}

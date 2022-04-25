@@ -1,6 +1,6 @@
 package types
 
 const (
-	QueryFetchBeams = "fetch-beams"
-	QueryGetBeam    = "get-beam"
+	QueryFetchBeams = "fetch"
+	QueryGetBeam    = "get"
 )
