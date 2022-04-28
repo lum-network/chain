@@ -11,13 +11,13 @@ Lum Network is a customer reward protocol and introduces mutable data channel in
 
 ## Development
 
-Lum Network is starport compatible and thus, you will require it to start the project in development mode.
+Lum Network is ignite compatible and thus, you will require it to start the project in development mode.
 
-You can install it by following the instructions [here](https://docs.starport.network/guide/install.html)
+You can install it by following the instructions [here](https://docs.ignite.com/)
 
 Then just use the following command to generate the protobuf and the chain binary
 
-    starport serve
+    ignite chain serve
 
 Please also make sure to have a look to the [contributing guidelines](https://github.com/lum-network/chain/blob/master/CONTRIBUTING.md)
 
