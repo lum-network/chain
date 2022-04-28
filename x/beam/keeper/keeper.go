@@ -7,10 +7,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"strings"
-	"time"
-
 	"github.com/tendermint/tendermint/libs/log"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -253,7 +251,7 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 		CancelReason:   "",
 		Schema:         msg.GetSchema(),
 		Data:           msg.GetData(),
-		CreatedAt:      time.Now(),
+		CreatedAt:      ctx.BlockTime(),
 	}
 
 	if msg.GetAmount() != nil && msg.GetAmount().IsPositive() {

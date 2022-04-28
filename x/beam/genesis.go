@@ -11,6 +11,9 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) (res []abci.ValidatorUpdate) {
 	k.CreateBeamModuleAccount(ctx, genState.ModuleAccountBalance)
 
+	for _, beam := range genState.Beams {
+		k.SetBeam(ctx, beam.GetId(), beam)
+	}
 	return nil
 }
 
@@ -19,7 +22,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	beams := k.ListBeams(ctx)
 
 	return &types.GenesisState{
-		Beams: beams,
+		Beams:                beams,
 		ModuleAccountBalance: k.GetBeamAccountBalance(ctx),
 	}
 }
