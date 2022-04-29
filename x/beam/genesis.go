@@ -11,9 +11,26 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) (res []abci.ValidatorUpdate) {
 	k.CreateBeamModuleAccount(ctx, genState.ModuleAccountBalance)
 
+	// Persist the beams to raw store
 	for _, beam := range genState.Beams {
 		k.SetBeam(ctx, beam.GetId(), beam)
 	}
+
+	// Persist the closed queue
+	for _, beam := range genState.BeamClosedQueue {
+		k.InsertClosedBeamQueue(ctx, beam.GetId())
+	}
+
+	// Persist the old open queue
+	for _, beam := range genState.BeamOpenOldQueue {
+		k.InsertOpenBeamQueue(ctx, beam.GetId())
+	}
+
+	// Persist the open beam by block queue
+	for _, beam := range genState.BeamOpenQueue {
+		k.InsertOpenBeamByBlockQueue(ctx, int(beam.GetClosesAtBlock()), beam.GetId())
+	}
+
 	return nil
 }
 
@@ -21,8 +38,15 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	beams := k.ListBeams(ctx)
 
+	beamsFromOldOpenQueue := k.ListBeamsFromOldOpenQueue(ctx)
+	beamsFromClosedQueue := k.ListBeamsFromClosedQueue(ctx)
+	beamsFromOpenQueue := k.ListBeamsFromOpenQueue(ctx)
+
 	return &types.GenesisState{
 		Beams:                beams,
+		BeamOpenOldQueue:     beamsFromOldOpenQueue,
+		BeamClosedQueue:      beamsFromClosedQueue,
+		BeamOpenQueue:        beamsFromOpenQueue,
 		ModuleAccountBalance: k.GetBeamAccountBalance(ctx),
 	}
 }

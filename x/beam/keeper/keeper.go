@@ -203,6 +203,32 @@ func (k Keeper) ListBeams(ctx sdk.Context) (beams []*types.Beam) {
 	return
 }
 
+// ListBeamsFromOldOpenQueue Return a list of in store queue beams
+func (k Keeper) ListBeamsFromOldOpenQueue(ctx sdk.Context) (beams []*types.Beam) {
+	k.IterateOpenBeamsQueue(ctx, func(beam types.Beam) bool {
+		beams = append(beams, &beam)
+		return false
+	})
+	return
+}
+
+// ListBeamsFromClosedQueue Return a list of in store queue beams
+func (k Keeper) ListBeamsFromClosedQueue(ctx sdk.Context) (beams []*types.Beam) {
+	k.IterateClosedBeamsQueue(ctx, func(beam types.Beam) bool {
+		beams = append(beams, &beam)
+		return false
+	})
+	return
+}
+
+func (k Keeper) ListBeamsFromOpenQueue(ctx sdk.Context) (beams []*types.Beam) {
+	k.IterateOpenBeamsByBlockQueue(ctx, func(beam types.Beam) bool {
+		beams = append(beams, &beam)
+		return false
+	})
+	return
+}
+
 // HasBeam Check if a beam instance exists or not (by its key)
 func (k Keeper) HasBeam(ctx sdk.Context, beamID string) bool {
 	// Acquire the store instance
@@ -528,13 +554,16 @@ func (k Keeper) IterateOpenBeamsByBlockQueue(ctx sdk.Context, cb func(beam types
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		beam, error := k.GetBeam(ctx, types.BytesKeyToString(types.SplitBeamKey(iterator.Key())))
-		if error != nil {
-			panic(error)
-		}
+		ids := strings.Split(types.BytesKeyToString(iterator.Value()), types.MemStoreQueueSeparator)
+		for _, id := range ids {
+			beam, error := k.GetBeam(ctx, id)
+			if error != nil {
+				panic(error)
+			}
 
-		if cb(beam) {
-			break
+			if cb(beam) {
+				break
+			}
 		}
 	}
 }
