@@ -353,7 +353,9 @@ func (k Keeper) UpdateBeamStatus(ctx sdk.Context, beamID string, newStatus types
 		}
 
 		// Update the queues
-		k.RemoveFromOpenBeamQueue(ctx, beam.GetId())
+		if beam.GetClosesAtBlock() > 0 {
+			k.RemoveFromOpenBeamByBlockQueue(ctx, int(beam.GetClosesAtBlock()), beam.GetId())
+		}
 		k.InsertClosedBeamQueue(ctx, beam.GetId())
 		break
 
@@ -372,7 +374,9 @@ func (k Keeper) UpdateBeamStatus(ctx sdk.Context, beamID string, newStatus types
 		}
 
 		// Update the queues
-		k.RemoveFromOpenBeamQueue(ctx, beam.GetId())
+		if beam.GetClosesAtBlock() > 0 {
+			k.RemoveFromOpenBeamByBlockQueue(ctx, int(beam.GetClosesAtBlock()), beam.GetId())
+		}
 		k.InsertClosedBeamQueue(ctx, beam.GetId())
 		break
 	}

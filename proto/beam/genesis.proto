@@ -16,9 +16,5 @@ message GenesisState {
     ];
 
     repeated Beam beams = 2;
-
-    repeated Beam beam_open_old_queue = 3;
-    repeated Beam beam_closed_queue = 4;
-    repeated Beam beam_open_queue = 5;
 }
 

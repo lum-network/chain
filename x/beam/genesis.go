@@ -1,6 +1,7 @@
 package beam
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/lum-network/chain/x/beam/keeper"
 	"github.com/lum-network/chain/x/beam/types"
@@ -14,21 +15,23 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// Persist the beams to raw store
 	for _, beam := range genState.Beams {
 		k.SetBeam(ctx, beam.GetId(), beam)
-	}
 
-	// Persist the closed queue
-	for _, beam := range genState.BeamClosedQueue {
-		k.InsertClosedBeamQueue(ctx, beam.GetId())
-	}
+		// Append to the correct queue from the beam state
+		toQueue := false
+		if beam.GetStatus() == types.BeamState_StateClosed || beam.GetStatus() == types.BeamState_StateCanceled {
+			k.InsertClosedBeamQueue(ctx, beam.GetId())
+			toQueue = true
+		} else if beam.GetStatus() == types.BeamState_StateOpen {
+			// Make sure we don't add a beam that is intended to be already closed at the current height
+			if beam.GetClosesAtBlock() > 0 && int(beam.GetClosesAtBlock()) > int(ctx.BlockHeight()) {
+				k.InsertOpenBeamByBlockQueue(ctx, int(beam.GetClosesAtBlock()), beam.GetId())
+				toQueue = true
+			}
+		} else {
+			ctx.Logger().Info(fmt.Sprintf("Not appending beam %s to any queue due to unhandled status", beam.GetId()), "height", ctx.BlockHeight(), "state", beam.GetStatus())
+		}
 
-	// Persist the old open queue
-	for _, beam := range genState.BeamOpenOldQueue {
-		k.InsertOpenBeamQueue(ctx, beam.GetId())
-	}
-
-	// Persist the open beam by block queue
-	for _, beam := range genState.BeamOpenQueue {
-		k.InsertOpenBeamByBlockQueue(ctx, int(beam.GetClosesAtBlock()), beam.GetId())
+		ctx.Logger().Info(fmt.Sprintf("Persisted beam %s from genesis file", beam.GetId()), "height", ctx.BlockHeight(), "state", beam.GetStatus(), "added_in_queue", toQueue)
 	}
 
 	return nil
@@ -38,15 +41,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	beams := k.ListBeams(ctx)
 
-	beamsFromOldOpenQueue := k.ListBeamsFromOldOpenQueue(ctx)
-	beamsFromClosedQueue := k.ListBeamsFromClosedQueue(ctx)
-	beamsFromOpenQueue := k.ListBeamsFromOpenQueue(ctx)
-
 	return &types.GenesisState{
 		Beams:                beams,
-		BeamOpenOldQueue:     beamsFromOldOpenQueue,
-		BeamClosedQueue:      beamsFromClosedQueue,
-		BeamOpenQueue:        beamsFromOpenQueue,
 		ModuleAccountBalance: k.GetBeamAccountBalance(ctx),
 	}
 }

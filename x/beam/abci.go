@@ -23,6 +23,6 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		if err != nil {
 			panic(err)
 		}
-		keeper.Logger(ctx).Info(fmt.Sprintf("Canceling beam #%s due to crossed auto close thresold", value))
+		keeper.Logger(ctx).Info(fmt.Sprintf("Canceling beam #%s due to crossed auto close thresold", value), "height", ctx.BlockHeight())
 	}
 }
