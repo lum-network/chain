@@ -284,7 +284,7 @@ func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 		beam.Amount = *msg.GetAmount()
 	}
 
-	// If the payload includes a owner field, we auto claim it
+	// If the payload includes an owner field, we auto claim it
 	if len(msg.GetClaimAddress()) > 0 {
 		beam.ClaimAddress = msg.GetClaimAddress()
 		beam.Claimed = true
