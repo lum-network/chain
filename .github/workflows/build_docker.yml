@@ -1,0 +1,23 @@
+name: Build and manually push the docker image
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The version to build one'
+        required: true
+        default: 'v1.1.3'
+
+jobs:
+  build-docker:
+    name: Build the image and push on docker registry
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build, tag and push the built image
+        run: |
+          docker login $REGISTRY_ADDRESS -u nologin -p $REGISTRY_TOKEN
+          docker build -t $REGISTRY_ADDRESS/$REGISTRY_ADDRESS_PROJECT:latest -t $REGISTRY_ADDRESS/$REGISTRY_ADDRESS_PROJECT:"${{ github.event.inputs.version }}" .
+          docker push $REGISTRY_ADDRESS/$REGISTRY_ADDRESS_PROJECT:${{ github.event.inputs.version }}
+          docker push $REGISTRY_ADDRESS/$REGISTRY_ADDRESS_PROJECT:latest
