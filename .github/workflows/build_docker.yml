@@ -7,6 +7,11 @@ on:
         required: true
         default: 'v1.1.3'
 
+env:
+  REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+  REGISTRY_ADDRESS: rg.fr-par.scw.cloud/lum-network
+  REGISTRY_ADDRESS_PROJECT: chain
+
 jobs:
   build-docker:
     name: Build the image and push on docker registry
