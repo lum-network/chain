@@ -10,7 +10,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/lum-network/chain/simapp"
+	"github.com/lum-network/chain/app"
+	apptypes "github.com/lum-network/chain/app"
+	apptesting "github.com/lum-network/chain/app/testing"
 	"github.com/lum-network/chain/x/beam/types"
 )
 
@@ -19,13 +21,13 @@ type KeeperTestSuite struct {
 
 	ctx         sdk.Context
 	queryClient types.QueryClient
-	app         *simapp.SimApp
+	app         *app.App
 	addrs       []sdk.AccAddress
 }
 
 // SetupTest Create our testing app, and make sure everything is correctly usable
 func (suite *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(suite.T(), false)
+	app := apptypes.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
@@ -35,7 +37,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = app
 	suite.ctx = ctx
 	suite.queryClient = queryClient
-	suite.addrs = simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
+	suite.addrs = apptesting.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
 }
 
 // TestClaimNewBeam Try to create a beam and claim it using another account

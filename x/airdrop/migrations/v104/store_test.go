@@ -1,6 +1,7 @@
 package v104_test
 
 import (
+	apptypes "github.com/lum-network/chain/app"
 	"testing"
 	"time"
 
@@ -10,7 +11,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/lum-network/chain/simapp"
 	v104 "github.com/lum-network/chain/x/airdrop/migrations/v104"
 	"github.com/lum-network/chain/x/airdrop/types"
 	"github.com/stretchr/testify/suite"
@@ -25,12 +25,12 @@ type StoreMigrationTestSuite struct {
 
 	ctx         sdk.Context
 	queryClient types.QueryClient
-	app         *simapp.SimApp
+	app         *apptypes.App
 }
 
 // SetupTest Create our testing app, and make sure everything is correctly usable
 func (suite *StoreMigrationTestSuite) SetupTest() {
-	app := simapp.Setup(suite.T(), false)
+	app := apptypes.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
@@ -136,7 +136,7 @@ func (suite *StoreMigrationTestSuite) TestMigration() {
 	suite.Equal(sdk.NewInt64Coin(defaultClaimDenom, 0), moduleBalance)
 
 	// Run migration
-	err = v104.MigrateModuleBalance(suite.ctx, suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AirdropKeeper.GetClaimRecords(suite.ctx))
+	err = v104.MigrateModuleBalance(suite.ctx, *suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.AirdropKeeper.GetClaimRecords(suite.ctx))
 	suite.Require().NoError(err)
 
 	//// Check state post migration

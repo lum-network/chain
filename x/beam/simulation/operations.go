@@ -69,6 +69,7 @@ func operationSimulateMsgClaimBeam(k keeper.Keeper, ak account.AccountKeeper, bk
 
 		txGenerator := params.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
+			r,
 			txGenerator,
 			[]sdk.Msg{msg},
 			fees,
@@ -142,6 +143,7 @@ func operationSimulateMsgUpdateBeam(k keeper.Keeper, ak account.AccountKeeper, b
 
 		txGenerator := params.MakeTestEncodingConfig().TxConfig
 		tx, err := helpers.GenTx(
+			r,
 			txGenerator,
 			[]sdk.Msg{msg},
 			fees,
@@ -190,7 +192,7 @@ func sendMsgOpenBeam(r *rand.Rand, app *baseapp.BaseApp, bk bank.Keeper, ak acco
 	}
 
 	txGenerator := params.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenTx(txGenerator, []sdk.Msg{msg}, fees, helpers.DefaultGenTxGas, chainID, []uint64{fromAccount.GetAccountNumber()}, []uint64{fromAccount.GetSequence()}, privkeys...)
+	tx, err := helpers.GenTx(r, txGenerator, []sdk.Msg{msg}, fees, helpers.DefaultGenTxGas, chainID, []uint64{fromAccount.GetAccountNumber()}, []uint64{fromAccount.GetSequence()}, privkeys...)
 	if err != nil {
 		return err
 	}

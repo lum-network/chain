@@ -4,7 +4,8 @@ import (
 	"encoding/hex"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/lum-network/chain/simapp"
+	apptypes "github.com/lum-network/chain/app"
+	apptesting "github.com/lum-network/chain/app/testing"
 	"github.com/lum-network/chain/x/beam"
 	"github.com/lum-network/chain/x/beam/types"
 	"github.com/stretchr/testify/require"
@@ -19,13 +20,13 @@ type ABCITestSuite struct {
 
 	ctx         sdk.Context
 	queryClient types.QueryClient
-	app         *simapp.SimApp
+	app         *apptypes.App
 	addrs       []sdk.AccAddress
 }
 
 // SetupTest Create our testing app, and make sure everything is correctly usable
 func (suite *ABCITestSuite) SetupTest() {
-	app := simapp.Setup(suite.T(), false)
+	app := apptypes.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
@@ -35,7 +36,7 @@ func (suite *ABCITestSuite) SetupTest() {
 	suite.app = app
 	suite.ctx = ctx
 	suite.queryClient = queryClient
-	suite.addrs = simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
+	suite.addrs = apptesting.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
 }
 
 func (suite *ABCITestSuite) TestTickBeamAutoClose() {
@@ -92,7 +93,7 @@ func (suite *ABCITestSuite) TestTickBeamAutoClose() {
 	closedQueue.Close()
 
 	// Call the end blocker function to trigger beam expiration
-	beam.EndBlocker(ctx, app.BeamKeeper)
+	beam.EndBlocker(ctx, *app.BeamKeeper)
 
 	// Make sure the open beam queue is now invalid
 	openQueue = app.BeamKeeper.OpenBeamsQueueIterator(ctx)

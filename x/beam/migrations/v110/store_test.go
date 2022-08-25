@@ -3,7 +3,7 @@ package v110_test
 import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/lum-network/chain/simapp"
+	apptypes "github.com/lum-network/chain/app"
 	v110 "github.com/lum-network/chain/x/beam/migrations/v110"
 	"github.com/lum-network/chain/x/beam/types"
 	"github.com/stretchr/testify/require"
@@ -16,11 +16,11 @@ type StoreMigrationTestSuite struct {
 	suite.Suite
 
 	ctx sdk.Context
-	app *simapp.SimApp
+	app *apptypes.App
 }
 
 func (suite *StoreMigrationTestSuite) SetupTest() {
-	app := simapp.Setup(suite.T(), false)
+	app := apptypes.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	suite.app = app
@@ -83,7 +83,7 @@ func (suite *StoreMigrationTestSuite) TestDisabledAutoCloseMigration() {
 	openedIterator.Close()
 
 	// Run the migration
-	err := v110.MigrateBeamQueues(suite.ctx, suite.app.BeamKeeper)
+	err := v110.MigrateBeamQueues(suite.ctx, *suite.app.BeamKeeper)
 	suite.Require().NoError(err)
 
 	// Make sure the open beam queue is empty and now invalid
@@ -161,7 +161,7 @@ func (suite *StoreMigrationTestSuite) TestEnabledAutoCloseMigration() {
 	openedIterator.Close()
 
 	// Run the migration
-	err := v110.MigrateBeamQueues(suite.ctx, suite.app.BeamKeeper)
+	err := v110.MigrateBeamQueues(suite.ctx, *suite.app.BeamKeeper)
 	suite.Require().NoError(err)
 
 	// Make sure the legacy open beam iterator is invalid
