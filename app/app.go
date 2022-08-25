@@ -83,7 +83,7 @@ import (
 	"github.com/lum-network/chain/x/airdrop"
 	airdroptypes "github.com/lum-network/chain/x/airdrop/types"
 
-	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
+	"github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v3/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v3/modules/core/02-client/client"
@@ -615,6 +615,13 @@ func (app *App) registerUpgradeHandlers() {
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
+	if upgradeInfo.Name == "v1.2.0" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := storetypes.StoreUpgrades{
+			Added: []string{icacontrollertypes.StoreKey, icahosttypes.StoreKey},
+		}
+
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
 }
