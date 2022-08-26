@@ -1,7 +1,7 @@
 package beam_test
 
 import (
-	"github.com/lum-network/chain/simapp"
+	apptypes "github.com/lum-network/chain/app"
 	"github.com/lum-network/chain/x/beam/types"
 	"github.com/stretchr/testify/require"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
@@ -10,7 +10,7 @@ import (
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
-	app := simapp.Setup(t, false)
+	app := apptypes.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	app.InitChain(

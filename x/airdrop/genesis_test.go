@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/lum-network/chain/simapp"
+	apptypes "github.com/lum-network/chain/app"
 	"github.com/lum-network/chain/x/airdrop"
 	"github.com/lum-network/chain/x/airdrop/types"
 	"github.com/stretchr/testify/require"
@@ -55,7 +55,7 @@ var testGenesis = types.GenesisState{
 }
 
 func TestAirdropInitGenesis(t *testing.T) {
-	app := simapp.Setup(t, false)
+	app := apptypes.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
@@ -76,7 +76,7 @@ func TestAirdropInitGenesis(t *testing.T) {
 }
 
 func TestAirdropExportGenesis(t *testing.T) {
-	app := simapp.Setup(t, false)
+	app := apptypes.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
@@ -149,11 +149,11 @@ func TestAirdropExportGenesis(t *testing.T) {
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
-	app := simapp.Setup(t, false)
+	app := apptypes.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 
-	encodingConfig := simapp.MakeTestEncodingConfig()
+	encodingConfig := apptypes.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 	am := airdrop.NewAppModule(appCodec, *app.AirdropKeeper)
 
@@ -162,7 +162,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)
 	require.NotPanics(t, func() {
-		app := simapp.Setup(t, false)
+		app := apptypes.SetupForTesting(false)
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
 		am := airdrop.NewAppModule(appCodec, *app.AirdropKeeper)

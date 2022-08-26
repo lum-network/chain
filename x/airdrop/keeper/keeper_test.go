@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/lum-network/chain/app"
 	"testing"
 	"time"
 
@@ -11,7 +13,7 @@ import (
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/lum-network/chain/simapp"
+	apptypes "github.com/lum-network/chain/app"
 	"github.com/lum-network/chain/x/airdrop/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -26,12 +28,12 @@ type KeeperTestSuite struct {
 
 	ctx         sdk.Context
 	queryClient types.QueryClient
-	app         *simapp.SimApp
+	app         *app.App
 }
 
 // SetupTest Create our testing app, and make sure everything is correctly usable
 func (suite *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(suite.T(), false)
+	app := apptypes.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
@@ -287,7 +289,7 @@ func (suite *KeeperTestSuite) TestDelegationAutoWithdrawAndDelegateMore() {
 	// set addr[0] as a validator
 	validator, err := stakingtypes.NewValidator(sdk.ValAddress(addrs[0]), pub1, stakingtypes.Description{})
 	suite.Require().NoError(err)
-	validator = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validator, true)
+	validator = stakingkeeper.TestingUpdateValidator(*suite.app.StakingKeeper, suite.ctx, validator, true)
 	suite.app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator.GetOperator())
 
 	validator, _ = validator.AddTokensFromDel(sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction))
