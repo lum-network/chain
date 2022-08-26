@@ -48,6 +48,8 @@ import (
 	airdroptypes "github.com/lum-network/chain/x/airdrop/types"
 	beamkeeper "github.com/lum-network/chain/x/beam/keeper"
 	beamtypes "github.com/lum-network/chain/x/beam/types"
+	dfractkeeper "github.com/lum-network/chain/x/dfract/keeper"
+	dfracttypes "github.com/lum-network/chain/x/dfract/types"
 )
 
 type AppKeepers struct {
@@ -78,6 +80,7 @@ type AppKeepers struct {
 	// Custom Keepers
 	AirdropKeeper *airdropkeeper.Keeper
 	BeamKeeper    *beamkeeper.Keeper
+	DFractKeeper  *dfractkeeper.Keeper
 }
 
 // InitSpecialKeepers Init the "special" keepers in the order of definition
@@ -235,6 +238,10 @@ func (app *App) InitNormalKeepers() {
 	// Initialize our custom airdrop keeper
 	airdropKeeper := airdropkeeper.NewKeeper(appCodec, keys[airdroptypes.StoreKey], keys[airdroptypes.MemStoreKey], *app.AccountKeeper, app.BankKeeper, *app.StakingKeeper, *app.DistrKeeper)
 	app.AirdropKeeper = airdropKeeper
+
+	// Initialize our custom dfract keeper
+	dfractKeeper := dfractkeeper.NewKeeper(appCodec, keys[dfracttypes.StoreKey], keys[dfracttypes.StoreKey], *app.AccountKeeper, app.BankKeeper, *app.GovKeeper)
+	app.DFractKeeper = dfractKeeper
 }
 
 func (app *App) SetupHooks() {
@@ -265,6 +272,7 @@ func (app *App) InitParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.
 	paramsKeeper.Subspace(authz.ModuleName)
 
 	paramsKeeper.Subspace(beamtypes.ModuleName)
+	paramsKeeper.Subspace(dfracttypes.ModuleName)
 
 	return paramsKeeper
 }

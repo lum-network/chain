@@ -7,6 +7,7 @@ import (
 	icacontrollertypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
+	"github.com/lum-network/chain/x/dfract"
 	"io"
 	"net/http"
 	"os"
@@ -78,6 +79,7 @@ import (
 	appparams "github.com/lum-network/chain/app/params"
 	"github.com/lum-network/chain/x/beam"
 	beamtypes "github.com/lum-network/chain/x/beam/types"
+	dfracttypes "github.com/lum-network/chain/x/dfract/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
 	"github.com/lum-network/chain/x/airdrop"
@@ -210,7 +212,7 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey,
-		beamtypes.StoreKey, airdroptypes.StoreKey,
+		beamtypes.StoreKey, airdroptypes.StoreKey, dfracttypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -264,6 +266,7 @@ func New(
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		beam.NewAppModule(appCodec, *app.BeamKeeper),
 		airdrop.NewAppModule(appCodec, *app.AirdropKeeper),
+		dfract.NewAppModule(appCodec, *app.DFractKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -291,6 +294,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
+		dfracttypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -314,6 +318,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
+		dfracttypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -342,6 +347,7 @@ func New(
 		authz.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
+		dfracttypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
@@ -366,6 +372,7 @@ func New(
 		app.transferModule,
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		beam.NewAppModule(appCodec, *app.BeamKeeper),
+		dfract.NewAppModule(appCodec, *app.DFractKeeper),
 	)
 	app.sm.RegisterStoreDecoders()
 
