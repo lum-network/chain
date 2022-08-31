@@ -13,6 +13,7 @@ import (
 	"github.com/lum-network/chain/x/dfract/client/cli"
 	"github.com/lum-network/chain/x/dfract/client/rest"
 	"github.com/lum-network/chain/x/dfract/keeper"
+	"github.com/lum-network/chain/x/dfract/simulation"
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -123,6 +124,16 @@ func (a AppModule) LegacyQuerierHandler(amino *codec.LegacyAmino) sdk.Querier {
 func (a AppModule) RegisterServices(configurator module.Configurator) {
 }
 
+// BeginBlock executes all ABCI BeginBlock logic respective to the capability module.
+func (a AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
+
+// EndBlock executes all ABCI EndBlock logic respective to the capability module. It
+// returns no validator updates.
+func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	EndBlocker(ctx, a.keeper)
+	return []abci.ValidatorUpdate{}
+}
+
 func (a AppModule) ConsensusVersion() uint64 {
 	return types.ModuleVersion
 }
@@ -135,6 +146,10 @@ func (a AppModule) ProposalContents(simState module.SimulationState) []simtypes.
 
 func (a AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return nil
+}
+
+func (a AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
+	registry[types.StoreKey] = simulation.NewDecodeStore(a.cdc)
 }
 
 func (a AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
