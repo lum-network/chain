@@ -23,6 +23,7 @@ func NewSpendAndAdjustProposal(title string, description string, spendDestinatio
 		Title:            title,
 		Description:      description,
 		SpendDestination: spendDestination,
+		MintAmount:       mintAmount,
 	}
 }
 
@@ -51,6 +52,19 @@ func (prop *SpendAndAdjustProposal) ProposalType() string {
 }
 
 func (prop *SpendAndAdjustProposal) ValidateBasic() error {
+	err := govtypes.ValidateAbstract(prop)
+	if err != nil {
+		return err
+	}
+
+	if len(prop.GetSpendDestination()) <= 0 {
+		return ErrEmptySpendDestination
+	}
+
+	if prop.MintAmount.IsZero() {
+		return ErrEmptyMintAmount
+	}
+
 	return nil
 }
 
