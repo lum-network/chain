@@ -21,5 +21,13 @@ func NewDFractProposalHandler(k keeper.Keeper) govtypes.Handler {
 }
 
 func handleSpendAndAdjustProposal(ctx sdk.Context, k keeper.Keeper, p *types.SpendAndAdjustProposal) error {
+	if err := k.Spend(ctx, p.GetSpendDestination()); err != nil {
+		return err
+	}
+
+	if err := k.Mint(ctx, p.GetMintAmount()); err != nil {
+		return err
+	}
+
 	return nil
 }

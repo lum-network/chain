@@ -163,15 +163,19 @@ func (k Keeper) Spend(ctx sdk.Context, destinationAddressStr string) error {
 	return nil
 }
 
-func (k Keeper) Mint(ctx sdk.Context, amount sdk.Int) error {
+func (k Keeper) Mint(ctx sdk.Context, amount sdk.Coin) error {
 	// Acquire the parameters to get the mint denom
 	params, err := k.GetParams(ctx)
 	if err != nil {
 		return err
 	}
 
+	if params.GetMintDenom() != amount.GetDenom() {
+		return types.ErrUnauthorizedDenom
+	}
+
 	// Mint the coins
-	if err := k.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(params.GetMintDenom(), amount))); err != nil {
+	if err := k.MintKeeper.MintCoins(ctx, sdk.NewCoins(amount)); err != nil {
 		return err
 	}
 
