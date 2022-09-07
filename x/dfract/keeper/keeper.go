@@ -42,20 +42,28 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
+// GetModuleAccount Return the module account address
 func (k Keeper) GetModuleAccount(ctx sdk.Context) sdk.AccAddress {
 	return k.AuthKeeper.GetModuleAddress(types.ModuleName)
 }
 
-func (k Keeper) CreateModuleAccount(ctx sdk.Context, amount sdk.Coin) {
+// CreateModuleAccount Initialize the module account and set the original amount of coins
+func (k Keeper) CreateModuleAccount(ctx sdk.Context, amount sdk.Coins) {
 	moduleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter)
 	k.AuthKeeper.SetModuleAccount(ctx, moduleAcc)
 
-	if err := k.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount)); err != nil {
+	if err := k.BankKeeper.MintCoins(ctx, types.ModuleName, amount); err != nil {
 		panic(err)
 	}
 }
 
-func (k Keeper) GetModuleAccountBalance(ctx sdk.Context, denom string) sdk.Coin {
+func (k Keeper) GetModuleAccountBalance(ctx sdk.Context) sdk.Coins {
+	moduleAcc := k.GetModuleAccount(ctx)
+	return k.BankKeeper.GetAllBalances(ctx, moduleAcc)
+}
+
+// GetModuleAccountBalanceForDenom Return the module account's balance
+func (k Keeper) GetModuleAccountBalanceForDenom(ctx sdk.Context, denom string) sdk.Coin {
 	moduleAcc := k.GetModuleAccount(ctx)
 	params, err := k.GetParams(ctx)
 	if err != nil {
@@ -69,6 +77,7 @@ func (k Keeper) GetModuleAccountBalance(ctx sdk.Context, denom string) sdk.Coin 
 	return k.BankKeeper.GetBalance(ctx, moduleAcc, denom)
 }
 
+// GetDeposit Return a deposit type instance for a given id
 func (k Keeper) GetDeposit(ctx sdk.Context, depositId string) (types.Deposit, error) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -85,17 +94,20 @@ func (k Keeper) GetDeposit(ctx sdk.Context, depositId string) (types.Deposit, er
 	return deposit, nil
 }
 
+// HasDeposit Check wether the given depositId exist in the store
 func (k Keeper) HasDeposit(ctx sdk.Context, depositId string) bool {
 	store := ctx.KVStore(k.storeKey)
 	return store.Has(types.GetDepositKey(depositId))
 }
 
+// SetDeposit Add a new deposit entry in the store
 func (k Keeper) SetDeposit(ctx sdk.Context, depositId string, deposit *types.Deposit) {
 	store := ctx.KVStore(k.storeKey)
 	encodedDeposit := k.cdc.MustMarshal(deposit)
 	store.Set(types.GetDepositKey(depositId), encodedDeposit)
 }
 
+// CreateDeposit Process the deposit message
 func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 	// Make sure our ID does not exist yet
 	if k.HasDeposit(ctx, msg.GetId()) {
@@ -140,6 +152,7 @@ func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 	return nil
 }
 
+// Spend Send the entire module account balance to a given address
 func (k Keeper) Spend(ctx sdk.Context, destinationAddressStr string) error {
 	// Acquire the parameters to get the denoms
 	params, err := k.GetParams(ctx)
@@ -154,7 +167,7 @@ func (k Keeper) Spend(ctx sdk.Context, destinationAddressStr string) error {
 	}
 
 	// Acquire balance
-	balance := k.GetModuleAccountBalance(ctx, params.GetDepositDenom())
+	balance := k.GetModuleAccountBalanceForDenom(ctx, params.GetDepositDenom())
 
 	// Move funds to the destination address
 	if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destinationAddress, sdk.NewCoins(balance)); err != nil {
@@ -163,6 +176,7 @@ func (k Keeper) Spend(ctx sdk.Context, destinationAddressStr string) error {
 	return nil
 }
 
+// Mint Emit a new amount of coins
 func (k Keeper) Mint(ctx sdk.Context, amount sdk.Coin) error {
 	// Acquire the parameters to get the mint denom
 	params, err := k.GetParams(ctx)
@@ -183,11 +197,13 @@ func (k Keeper) Mint(ctx sdk.Context, amount sdk.Coin) error {
 	return nil
 }
 
+// DepositsIterator Return an iterator for the deposits entities
 func (k Keeper) DepositsIterator(ctx sdk.Context) sdk.Iterator {
 	kvStore := ctx.KVStore(k.storeKey)
 	return sdk.KVStorePrefixIterator(kvStore, types.DepositsPrefix)
 }
 
+// IterateDeposits Process a lambda function for listing the deposits
 func (k Keeper) IterateDeposits(ctx sdk.Context, cb func(deposit types.Deposit) (stop bool)) {
 	iterator := k.DepositsIterator(ctx)
 	defer iterator.Close()

@@ -100,11 +100,16 @@ func (a AppModule) Name() string {
 }
 
 func (a AppModule) InitGenesis(context sdk.Context, jsonCodec codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {
-	return nil
+	var genState types.GenesisState
+	jsonCodec.MustUnmarshalJSON(message, &genState)
+
+	InitGenesis(context, a.keeper, genState)
+	return []abci.ValidatorUpdate{}
 }
 
 func (a AppModule) ExportGenesis(context sdk.Context, jsonCodec codec.JSONCodec) json.RawMessage {
-	return nil
+	genState := ExportGenesis(context, a.keeper)
+	return jsonCodec.MustMarshalJSON(genState)
 }
 
 func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {}
