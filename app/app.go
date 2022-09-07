@@ -142,6 +142,7 @@ var (
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		beamtypes.ModuleName:           nil,
 		airdroptypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
+		dfracttypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
 	}
 )
 
