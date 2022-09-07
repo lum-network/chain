@@ -9,6 +9,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -21,18 +22,19 @@ type (
 		AuthKeeper authkeeper.AccountKeeper
 		BankKeeper bankkeeper.Keeper
 		GovKeeper  govkeeper.Keeper
+		MintKeeper mintkeeper.Keeper
 	}
 )
 
 // NewKeeper Create a new keeper instance and return the pointer
-func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper, gk govkeeper.Keeper) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper, mk mintkeeper.Keeper) *Keeper {
 	return &Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
 		memKey:     memKey,
 		AuthKeeper: auth,
 		BankKeeper: bank,
-		GovKeeper:  gk,
+		MintKeeper: mk,
 	}
 }
 
@@ -95,7 +97,7 @@ func (k Keeper) SetDeposit(ctx sdk.Context, depositId string, deposit *types.Dep
 }
 
 func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
-	// Make sure our ID does not exists yet
+	// Make sure our ID does not exist yet
 	if k.HasDeposit(ctx, msg.GetId()) {
 		return types.ErrDepositAlreadyExists
 	}
@@ -119,8 +121,15 @@ func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 		DepositedAt:      ctx.BlockTime(),
 	}
 
+	creatorAddress, err := sdk.AccAddressFromBech32(msg.GetDepositorAddress())
+	if err != nil {
+		return sdkerrors.ErrInvalidAddress
+	}
+
 	// Move the funds
-	// TODO: implement
+	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, creatorAddress, types.ModuleName, sdk.NewCoins(msg.GetAmount())); err != nil {
+		return err
+	}
 
 	// Store the deposit
 	k.SetDeposit(ctx, deposit.GetId(), deposit)
@@ -128,6 +137,45 @@ func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 	ctx.EventManager().Events().AppendEvents(sdk.Events{
 		sdk.NewEvent(types.EventTypeDeposit, sdk.NewAttribute(types.AttributeKeyDepositor, msg.GetDepositorAddress())),
 	})
+	return nil
+}
+
+func (k Keeper) Spend(ctx sdk.Context, destinationAddressStr string) error {
+	// Acquire the parameters to get the denoms
+	params, err := k.GetParams(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Prepare destination address
+	destinationAddress, err := sdk.AccAddressFromBech32(destinationAddressStr)
+	if err != nil {
+		return sdkerrors.ErrInvalidAddress
+	}
+
+	// Acquire balance
+	balance := k.GetModuleAccountBalance(ctx, params.GetDepositDenom())
+
+	// Move funds to the destination address
+	if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destinationAddress, sdk.NewCoins(balance)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (k Keeper) Mint(ctx sdk.Context, amount sdk.Int) error {
+	// Acquire the parameters to get the mint denom
+	params, err := k.GetParams(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Mint the coins
+	if err := k.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(params.GetMintDenom(), amount))); err != nil {
+		return err
+	}
+
+	// TODO: whom to transfer minted coins to
 	return nil
 }
 

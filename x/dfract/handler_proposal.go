@@ -8,7 +8,7 @@ import (
 	"github.com/lum-network/chain/x/dfract/types"
 )
 
-func NewProposalHandler(k keeper.Keeper) govtypes.Handler {
+func NewDFractProposalHandler(k keeper.Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
 		case *types.SpendAndAdjustProposal:
