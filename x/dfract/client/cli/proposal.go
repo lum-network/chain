@@ -8,6 +8,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/spf13/cobra"
+	"strconv"
 )
 
 func NewSubmitSpendAndAdjustProposal() *cobra.Command {
@@ -47,12 +48,12 @@ func NewSubmitSpendAndAdjustProposal() *cobra.Command {
 
 			// Extract the other parameters
 			destinationAddress := args[0]
-			mintAmount, err := sdk.ParseCoinNormalized(args[1])
+			mintRate, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			content := types.NewSpendAndAdjustProposal(title, description, destinationAddress, mintAmount)
+			content := types.NewSpendAndAdjustProposal(title, description, destinationAddress, mintRate)
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err

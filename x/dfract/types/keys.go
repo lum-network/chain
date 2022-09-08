@@ -24,9 +24,24 @@ const (
 )
 
 var (
-	DepositsPrefix = []byte{0x01}
+	DepositsPrefix                     = []byte{0x01}
+	WaitingProposalDepositsQueuePrefix = []byte{0x02}
+	WaitingMintDepositsQueuePrefix     = []byte{0x03}
+	MintedDepositsQueuePrefix          = []byte{0x04}
 )
 
 func GetDepositKey(depositId string) []byte {
 	return append(DepositsPrefix, []byte(depositId)...)
+}
+
+func GetWaitingProposalDepositsQueueKey(depositId string) []byte {
+	return append(WaitingProposalDepositsQueuePrefix, []byte(depositId)...)
+}
+
+func GetWaitingMintDepositsQueueKey(depositId string) []byte {
+	return append(WaitingMintDepositsQueuePrefix, []byte(depositId)...)
+}
+
+func GetMintedDepositsQueueKey(depositId string) []byte {
+	return append(MintedDepositsQueuePrefix, []byte(depositId)...)
 }

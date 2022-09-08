@@ -71,7 +71,7 @@ func (k Keeper) GetModuleAccountBalanceForDenom(ctx sdk.Context, denom string) s
 	}
 
 	if denom != params.DepositDenom && denom != params.MintDenom {
-		//TODO: handle that case
+		return sdk.Coin{}
 	}
 
 	return k.BankKeeper.GetBalance(ctx, moduleAcc, denom)
@@ -146,6 +146,9 @@ func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 	// Store the deposit
 	k.SetDeposit(ctx, deposit.GetId(), deposit)
 
+	// Insert into queue
+	k.InsertIntoWaitingProposalQueue(ctx, deposit.GetId())
+
 	ctx.EventManager().Events().AppendEvents(sdk.Events{
 		sdk.NewEvent(types.EventTypeDeposit, sdk.NewAttribute(types.AttributeKeyDepositor, msg.GetDepositorAddress())),
 	})
@@ -177,34 +180,64 @@ func (k Keeper) Spend(ctx sdk.Context, destinationAddressStr string) error {
 }
 
 // Mint Emit a new amount of coins
-func (k Keeper) Mint(ctx sdk.Context, amount sdk.Coin) error {
+func (k Keeper) Mint(ctx sdk.Context, mintRate int64) error {
 	// Acquire the parameters to get the mint denom
 	params, err := k.GetParams(ctx)
 	if err != nil {
 		return err
 	}
 
-	if params.GetMintDenom() != amount.GetDenom() {
-		return types.ErrUnauthorizedDenom
-	}
+	// Compute the total amount
+	totalAmount := sdk.NewInt(0)
+	k.IterateWaitingMintDepositsQueue(ctx, func(depositId string) bool {
+		// Acquire the deposit
+		deposit, err := k.GetDeposit(ctx, depositId)
+		if err != nil {
+			return true
+		}
+
+		// Add to the total amount
+		totalAmount.AddRaw(deposit.GetAmount().Amount.Int64())
+		return false
+	})
 
 	// Mint the coins
-	if err := k.MintKeeper.MintCoins(ctx, sdk.NewCoins(amount)); err != nil {
+	totalAmount.MulRaw(mintRate)
+	if err := k.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(params.MintDenom, totalAmount))); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Distribute Split the amount of emitted coins
-func (k Keeper) Distribute(ctx sdk.Context, distributions []*types.SpendAndAdjustDistribution) error {
-	for _, distribution := range distributions {
-		destinationAddress, err := sdk.AccAddressFromBech32(distribution.GetAddress())
+// Distribute Split the amount of emitted coins and distribute them to the depositors
+func (k Keeper) Distribute(ctx sdk.Context, mintRate int64, deposits []*types.Deposit) error {
+	// Acquire the parameters to get the mint denom
+	params, err := k.GetParams(ctx)
+	if err != nil {
+		return err
+	}
+
+	// For each deposit, we will compute the amount of coins to send from the mint rate and process the distribution
+	for _, deposit := range deposits {
+		// Correctly format address
+		destinationAddress, err := sdk.AccAddressFromBech32(deposit.GetDepositorAddress())
 		if err != nil {
 			return sdkerrors.ErrInvalidAddress
 		}
-		if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destinationAddress, sdk.NewCoins(distribution.GetAmount())); err != nil {
+
+		// Compute the coins to send from the rate
+		mintedAmount := sdk.NewCoin(params.MintDenom, deposit.GetAmount().Amount.MulRaw(mintRate))
+
+		// Transfer the coins
+		if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destinationAddress, sdk.NewCoins(mintedAmount)); err != nil {
 			return err
 		}
+	}
+
+	// For each deposit, we will remove them from the waiting mint queue
+	for _, deposit := range deposits {
+		k.RemoveFromWaitingMintQueue(ctx, deposit.GetId())
+		k.InsertIntoMintedQueue(ctx, deposit.GetId())
 	}
 	return nil
 }

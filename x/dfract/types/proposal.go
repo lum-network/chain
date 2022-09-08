@@ -2,8 +2,6 @@ package types
 
 import (
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"strings"
 )
@@ -19,12 +17,12 @@ func init() {
 	govtypes.RegisterProposalTypeCodec(&SpendAndAdjustProposal{}, "lum-network/SpendAndAdjustProposal")
 }
 
-func NewSpendAndAdjustProposal(title string, description string, spendDestination string, mintAmount sdk.Coin) *SpendAndAdjustProposal {
+func NewSpendAndAdjustProposal(title string, description string, spendDestination string, mintRate int64) *SpendAndAdjustProposal {
 	return &SpendAndAdjustProposal{
 		Title:            title,
 		Description:      description,
 		SpendDestination: spendDestination,
-		MintAmount:       mintAmount,
+		MintRate:         mintRate,
 	}
 }
 
@@ -40,12 +38,8 @@ func (prop *SpendAndAdjustProposal) GetSpendDestination() string {
 	return prop.SpendDestination
 }
 
-func (prop *SpendAndAdjustProposal) GetMintAmount() sdk.Coin {
-	return prop.MintAmount
-}
-
-func (prop *SpendAndAdjustProposal) GetDistribution() []*SpendAndAdjustDistribution {
-	return prop.Distribution
+func (prop *SpendAndAdjustProposal) GetMintRate() int64 {
+	return prop.MintRate
 }
 
 func (prop *SpendAndAdjustProposal) ProposalRoute() string {
@@ -65,23 +59,6 @@ func (prop *SpendAndAdjustProposal) ValidateBasic() error {
 	if len(prop.GetSpendDestination()) <= 0 {
 		return ErrEmptySpendDestination
 	}
-
-	if prop.MintAmount.IsZero() {
-		return ErrEmptyMintAmount
-	}
-
-	// Make sure the computed distribution equals the mint amount
-	var total sdk.Coin
-	for _, distribution := range prop.GetDistribution() {
-		_, err := sdk.AccAddressFromBech32(distribution.GetAddress())
-		if err != nil {
-			return sdkerrors.ErrInvalidAddress
-		}
-		total.Add(distribution.GetAmount())
-	}
-	if !prop.MintAmount.IsEqual(total) {
-		return ErrMintDontMatchTotal
-	}
 	return nil
 }
 
@@ -91,7 +68,7 @@ func (prop *SpendAndAdjustProposal) String() string {
 		Title:				%s
 		Description:		%s
 		Spend Destination: 	%s
-		Mint Amount:		%d %s
-	`, prop.GetTitle(), prop.GetDescription(), prop.GetSpendDestination(), prop.GetMintAmount().Amount.Int64(), prop.GetMintAmount().Denom))
+		Mint Rate:		%d %s
+	`, prop.GetTitle(), prop.GetDescription(), prop.GetSpendDestination(), prop.GetMintRate()))
 	return b.String()
 }
