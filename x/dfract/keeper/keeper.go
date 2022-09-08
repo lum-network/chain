@@ -232,10 +232,8 @@ func (k Keeper) Distribute(ctx sdk.Context, mintRate int64, deposits []*types.De
 		if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destinationAddress, sdk.NewCoins(mintedAmount)); err != nil {
 			return err
 		}
-	}
 
-	// For each deposit, we will remove them from the waiting mint queue
-	for _, deposit := range deposits {
+		// Remove from the waiting queue and move to minted
 		k.RemoveFromWaitingMintQueue(ctx, deposit.GetId())
 		k.InsertIntoMintedQueue(ctx, deposit.GetId())
 	}
