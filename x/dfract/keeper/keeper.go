@@ -192,8 +192,20 @@ func (k Keeper) Mint(ctx sdk.Context, amount sdk.Coin) error {
 	if err := k.MintKeeper.MintCoins(ctx, sdk.NewCoins(amount)); err != nil {
 		return err
 	}
+	return nil
+}
 
-	// TODO: whom to transfer minted coins to
+// Distribute Split the amount of emitted coins
+func (k Keeper) Distribute(ctx sdk.Context, distributions []*types.SpendAndAdjustDistribution) error {
+	for _, distribution := range distributions {
+		destinationAddress, err := sdk.AccAddressFromBech32(distribution.GetAddress())
+		if err != nil {
+			return sdkerrors.ErrInvalidAddress
+		}
+		if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destinationAddress, sdk.NewCoins(distribution.GetAmount())); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

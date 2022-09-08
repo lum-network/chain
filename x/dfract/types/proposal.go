@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"strings"
 )
@@ -43,6 +44,10 @@ func (prop *SpendAndAdjustProposal) GetMintAmount() sdk.Coin {
 	return prop.MintAmount
 }
 
+func (prop *SpendAndAdjustProposal) GetDistribution() []*SpendAndAdjustDistribution {
+	return prop.Distribution
+}
+
 func (prop *SpendAndAdjustProposal) ProposalRoute() string {
 	return RouterKey
 }
@@ -65,6 +70,18 @@ func (prop *SpendAndAdjustProposal) ValidateBasic() error {
 		return ErrEmptyMintAmount
 	}
 
+	// Make sure the computed distribution equals the mint amount
+	var total sdk.Coin
+	for _, distribution := range prop.GetDistribution() {
+		_, err := sdk.AccAddressFromBech32(distribution.GetAddress())
+		if err != nil {
+			return sdkerrors.ErrInvalidAddress
+		}
+		total.Add(distribution.GetAmount())
+	}
+	if !prop.MintAmount.IsEqual(total) {
+		return ErrMintDontMatchTotal
+	}
 	return nil
 }
 

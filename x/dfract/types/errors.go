@@ -8,4 +8,5 @@ var (
 	ErrDepositAlreadyExists  = sdkerrors.Register(ModuleName, 1202, "Deposit ID already exists")
 	ErrEmptySpendDestination = sdkerrors.Register(ModuleName, 1203, "Empty spend destination")
 	ErrEmptyMintAmount       = sdkerrors.Register(ModuleName, 1204, "Empty mint amount")
+	ErrMintDontMatchTotal    = sdkerrors.Register(ModuleName, 1205, "The total of distributions must match the mint amount")
 )
