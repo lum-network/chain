@@ -23,3 +23,11 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 	store.Set([]byte(types.ParamsKey), bz)
 	return nil
 }
+
+// DefaultParams return the default dfract module params
+func DefaultParams() types.Params {
+	return types.Params{
+		DepositDenom: "ulum",
+		MintDenom:    "dfr",
+	}
+}
