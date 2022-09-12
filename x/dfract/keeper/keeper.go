@@ -110,7 +110,7 @@ func (k Keeper) SetDeposit(ctx sdk.Context, depositId string, deposit *types.Dep
 // CreateDeposit Process the deposit message
 func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 	// Make sure our ID does not exist yet
-	if k.HasDeposit(ctx, msg.GetId()) {
+	if len(msg.GetId()) <= 0 || k.HasDeposit(ctx, msg.GetId()) {
 		return types.ErrDepositAlreadyExists
 	}
 
@@ -123,6 +123,11 @@ func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 	// Make sure the deposit is made of allowed denom
 	if params.DepositDenom != msg.GetAmount().Denom {
 		return types.ErrUnauthorizedDenom
+	}
+
+	// Make sure we have an actual deposit to do
+	if msg.GetAmount().IsNegative() || msg.GetAmount().IsZero() {
+		return types.ErrEmptyDepositAmount
 	}
 
 	// Create the deposit
