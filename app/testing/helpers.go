@@ -65,6 +65,22 @@ func AddTestAddrs(app *app.App, ctx sdk.Context, accNum int, accAmt sdk.Int) []s
 	return addTestAddrs(app, ctx, accNum, accAmt, createRandomAccounts)
 }
 
+func AddTestAddrsWithDenom(app *app.App, ctx sdk.Context, accNum int, accAmt sdk.Int, denom string) []sdk.AccAddress {
+	return addTestAddrsWithDenom(app, ctx, accNum, accAmt, denom, createRandomAccounts)
+}
+
+func addTestAddrsWithDenom(app *app.App, ctx sdk.Context, accNum int, accAmt sdk.Int, denom string, strategy GenerateAccountStrategy) []sdk.AccAddress {
+	testAddrs := strategy(accNum)
+
+	initCoins := sdk.NewCoins(sdk.NewCoin(denom, accAmt))
+
+	for _, addr := range testAddrs {
+		initAccountWithCoins(app, ctx, addr, initCoins)
+	}
+
+	return testAddrs
+}
+
 func addTestAddrs(app *app.App, ctx sdk.Context, accNum int, accAmt sdk.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
 

@@ -7,6 +7,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/lum-network/chain/utils"
 	"github.com/tendermint/tendermint/libs/log"
 	"strings"
 
@@ -148,7 +149,7 @@ func (k Keeper) RemoveFromOpenBeamByBlockQueue(ctx sdk.Context, height int, beam
 	// Remove from the content
 	content := store.Get(key)
 	ids := strings.Split(types.BytesKeyToString(content), types.MemStoreQueueSeparator)
-	ids = types.RemoveFromArray(ids, beamID)
+	ids = utils.RemoveFromArray(ids, beamID)
 
 	// If there is no more ID inside the slice, just delete the key
 	if len(ids) <= 0 {
@@ -487,7 +488,7 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 	}
 
 	// Make sure transaction signer is authorized
-	if types.CompareHashAndString(beam.Secret, msg.Secret) == false {
+	if utils.CompareHashAndString(beam.Secret, msg.Secret) == false {
 		return types.ErrBeamInvalidSecret
 	}
 

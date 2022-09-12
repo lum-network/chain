@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	apptypes "github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
+	"github.com/lum-network/chain/utils"
 	"github.com/lum-network/chain/x/beam"
 	"github.com/lum-network/chain/x/beam/types"
 	"github.com/stretchr/testify/require"
@@ -58,16 +59,16 @@ func (suite *ABCITestSuite) TestTickBeamAutoClose() {
 	require.NotEqual(suite.T(), creator.String(), claimer.String())
 
 	// Create a random token as claim secret
-	claimSecret := types.GenerateSecureToken(4)
+	claimSecret := utils.GenerateSecureToken(4)
 
 	// Create a beam
 	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
 	msg := types.NewMsgOpenBeam(
-		types.GenerateSecureToken(12),
+		utils.GenerateSecureToken(12),
 		creator.String(),
 		"",
 		&msgVal,
-		hex.EncodeToString(types.GenerateHashFromString(claimSecret)),
+		hex.EncodeToString(utils.GenerateHashFromString(claimSecret)),
 		types.BEAM_SCHEMA_REVIEW,
 		nil,
 		10,
