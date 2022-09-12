@@ -68,7 +68,7 @@ func (prop *SpendAndAdjustProposal) String() string {
 		Title:				%s
 		Description:		%s
 		Spend Destination: 	%s
-		Mint Rate:		%d %s
+		Mint Rate:			%d
 	`, prop.GetTitle(), prop.GetDescription(), prop.GetSpendDestination(), prop.GetMintRate()))
 	return b.String()
 }
