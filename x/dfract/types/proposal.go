@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"strings"
 )
@@ -56,8 +57,19 @@ func (prop *SpendAndAdjustProposal) ValidateBasic() error {
 		return err
 	}
 
+	// Make sure we have an address
 	if len(prop.GetSpendDestination()) <= 0 {
 		return ErrEmptySpendDestination
+	}
+
+	// Make sure it's actually an address
+	_, err = sdk.AccAddressFromBech32(prop.GetSpendDestination())
+	if err != nil {
+		return err
+	}
+
+	if prop.GetMintRate() < 0 {
+		return ErrEmptyMintAmount
 	}
 	return nil
 }
