@@ -571,9 +571,7 @@ func (app *App) registerUpgradeHandlers() {
 		fromVM[icatypes.ModuleName] = app.mm.Modules[icatypes.ModuleName].ConsensusVersion()
 
 		// create ICS27 Controller submodule params, controller module not enabled.
-		controllerParams := icacontrollertypes.Params{
-			ControllerEnabled: true,
-		}
+		controllerParams := icacontrollertypes.Params{}
 
 		// create ICS27 Host submodule params
 		hostParams := icahosttypes.Params{
