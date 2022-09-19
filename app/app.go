@@ -121,6 +121,7 @@ var (
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
 		ibc.AppModuleBasic{},
+		ica.AppModuleBasic{},
 		feegrantmodule.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
@@ -135,6 +136,7 @@ var (
 	maccPerms = map[string][]string{
 		authtypes.FeeCollectorName:     nil,
 		distrtypes.ModuleName:          nil,
+		icatypes.ModuleName:            nil,
 		minttypes.ModuleName:           {authtypes.Minter},
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
@@ -213,7 +215,7 @@ func New(
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
+		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, icahosttypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey,
 		beamtypes.StoreKey, airdroptypes.StoreKey, dfracttypes.StoreKey,
 	)
@@ -264,6 +266,7 @@ func New(
 		upgrade.NewAppModule(*app.UpgradeKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
+		ica.NewAppModule(nil, app.ICAHostKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
 		app.transferModule,
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
@@ -285,6 +288,7 @@ func New(
 		evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
 		ibchost.ModuleName,
+		icatypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		govtypes.ModuleName,
@@ -318,6 +322,7 @@ func New(
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		ibchost.ModuleName,
+		icatypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
@@ -340,6 +345,7 @@ func New(
 		minttypes.ModuleName,
 		crisistypes.ModuleName,
 		ibchost.ModuleName,
+		icatypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -576,9 +582,7 @@ func (app *App) registerUpgradeHandlers() {
 		fromVM[icatypes.ModuleName] = app.mm.Modules[icatypes.ModuleName].ConsensusVersion()
 
 		// create ICS27 Controller submodule params, controller module not enabled.
-		controllerParams := icacontrollertypes.Params{
-			ControllerEnabled: true,
-		}
+		controllerParams := icacontrollertypes.Params{}
 
 		// create ICS27 Host submodule params
 		hostParams := icahosttypes.Params{

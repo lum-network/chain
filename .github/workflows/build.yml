@@ -64,14 +64,11 @@ jobs:
 
   build-release:
     needs: bump-version-push-tag
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         arch: [ amd64, arm64 ]
-        targetos: [ darwin, linux ]
-        include:
-          - targetos: windows
-            arch: amd64
+        targetos: [ macos-latest, ubuntu-latest, windows-latest ]
+    runs-on: ${{ matrix.targetos }}
     name: Build the lum daemon on ${{ matrix.arch }} for ${{ matrix.targetos }}
     steps:
       - uses: actions/checkout@v2

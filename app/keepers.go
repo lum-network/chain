@@ -36,6 +36,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
+	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
+	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
 	"github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v3/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
@@ -62,6 +65,7 @@ type AppKeepers struct {
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
+	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
 	// Normal Keepers
@@ -72,6 +76,7 @@ type AppKeepers struct {
 	DistrKeeper    *distrkeeper.Keeper
 	SlashingKeeper *slashingkeeper.Keeper
 	IBCKeeper      *ibckeeper.Keeper
+	ICAHostKeeper  *icahostkeeper.Keeper
 	TransferKeeper *ibctransferkeeper.Keeper
 	EvidenceKeeper *evidencekeeper.Keeper
 	MintKeeper     *mintkeeper.Keeper
@@ -108,6 +113,7 @@ func (app *App) InitSpecialKeepers(
 	// Add capability keeper and ScopeToModule for ibc module
 	app.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
 	app.ScopedIBCKeeper = app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
+	app.ScopedICAHostKeeper = app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	app.ScopedTransferKeeper = app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	app.CapabilityKeeper.Seal()
 
@@ -194,9 +200,22 @@ func (app *App) InitNormalKeepers() {
 	app.transferModule = transfer.NewAppModule(*app.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(*app.TransferKeeper)
 
+	// Initialize the ICA host keeper
+	icaHostKeeper := icahostkeeper.NewKeeper(
+		appCodec, keys[icahosttypes.StoreKey],
+		app.GetSubspace(icahosttypes.SubModuleName),
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		app.AccountKeeper,
+		app.ScopedICAHostKeeper,
+		app.MsgServiceRouter(),
+	)
+	app.ICAHostKeeper = &icaHostKeeper
+	icaHostIBCModule := icahost.NewIBCModule(*app.ICAHostKeeper)
+
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
-	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
+	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
 	// Initialize the evidence keeper
@@ -270,6 +289,7 @@ func (app *App) InitParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 	paramsKeeper.Subspace(feegrant.ModuleName)
 	paramsKeeper.Subspace(authz.ModuleName)
 
