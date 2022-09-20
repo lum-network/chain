@@ -28,6 +28,6 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 func DefaultParams() types.Params {
 	return types.Params{
 		DepositDenom: "ulum",
-		MintDenom:    "dfr",
+		MintDenom:    "udfr",
 	}
 }

@@ -77,43 +77,8 @@ func (k Keeper) GetModuleAccountBalanceForDenom(ctx sdk.Context, denom string) s
 	return k.BankKeeper.GetBalance(ctx, moduleAcc, denom)
 }
 
-// GetDeposit Return a deposit type instance for a given id
-func (k Keeper) GetDeposit(ctx sdk.Context, depositId string) (types.Deposit, error) {
-	store := ctx.KVStore(k.storeKey)
-
-	bz := store.Get(types.GetDepositKey(depositId))
-	if bz == nil {
-		return types.Deposit{}, sdkerrors.Wrapf(types.ErrDepositNotFound, "ID %s does not exist", depositId)
-	}
-
-	var deposit types.Deposit
-	err := k.cdc.Unmarshal(bz, &deposit)
-	if err != nil {
-		return types.Deposit{}, err
-	}
-	return deposit, nil
-}
-
-// HasDeposit Check wether the given depositId exist in the store
-func (k Keeper) HasDeposit(ctx sdk.Context, depositId string) bool {
-	store := ctx.KVStore(k.storeKey)
-	return store.Has(types.GetDepositKey(depositId))
-}
-
-// SetDeposit Add a new deposit entry in the store
-func (k Keeper) SetDeposit(ctx sdk.Context, depositId string, deposit *types.Deposit) {
-	store := ctx.KVStore(k.storeKey)
-	encodedDeposit := k.cdc.MustMarshal(deposit)
-	store.Set(types.GetDepositKey(depositId), encodedDeposit)
-}
-
 // CreateDeposit Process the deposit message
 func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
-	// Make sure our ID does not exist yet
-	if len(msg.GetId()) <= 0 || k.HasDeposit(ctx, msg.GetId()) {
-		return types.ErrDepositAlreadyExists
-	}
-
 	// Acquire the parameters to get the denoms
 	params, err := k.GetParams(ctx)
 	if err != nil {
@@ -130,30 +95,33 @@ func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 		return types.ErrEmptyDepositAmount
 	}
 
-	// Create the deposit
-	var deposit = &types.Deposit{
-		DepositorAddress: msg.GetDepositorAddress(),
-		Id:               msg.GetId(),
-		Amount:           msg.GetAmount(),
-		DepositedAt:      ctx.BlockTime(),
+	// Does the deposit exists ? If not, create it otherwise just append the amount
+	deposit, found := k.GetFromWaitingProposalDeposits(ctx, msg.GetDepositorAddress())
+	if !found {
+		deposit = types.Deposit{
+			DepositorAddress: msg.GetDepositorAddress(),
+			Amount:           msg.GetAmount(),
+			CreatedAt:        ctx.BlockTime(),
+		}
+	} else {
+		deposit.Amount = deposit.Amount.Add(msg.GetAmount())
 	}
 
-	creatorAddress, err := sdk.AccAddressFromBech32(msg.GetDepositorAddress())
+	// Cast the depositor address
+	depositorAddress, err := sdk.AccAddressFromBech32(msg.GetDepositorAddress())
 	if err != nil {
 		return sdkerrors.ErrInvalidAddress
 	}
 
 	// Move the funds
-	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, creatorAddress, types.ModuleName, sdk.NewCoins(msg.GetAmount())); err != nil {
+	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, depositorAddress, types.ModuleName, sdk.NewCoins(msg.GetAmount())); err != nil {
 		return err
 	}
 
-	// Store the deposit
-	k.SetDeposit(ctx, deposit.GetId(), deposit)
-
 	// Insert into queue
-	k.InsertIntoWaitingProposalQueue(ctx, deposit.GetId())
+	k.InsertIntoWaitingProposalDeposits(ctx, deposit.GetDepositorAddress(), deposit)
 
+	// Trigger the events
 	ctx.EventManager().Events().AppendEvents(sdk.Events{
 		sdk.NewEvent(types.EventTypeDeposit, sdk.NewAttribute(types.AttributeKeyDepositor, msg.GetDepositorAddress())),
 	})
@@ -194,17 +162,15 @@ func (k Keeper) Mint(ctx sdk.Context, mintRate int64) error {
 
 	// Compute the total amount
 	totalAmount := sdk.NewInt(0)
-	k.IterateWaitingMintDepositsQueue(ctx, func(depositId string) bool {
-		// Acquire the deposit
-		deposit, err := k.GetDeposit(ctx, depositId)
-		if err != nil {
-			return true
-		}
+	deposits := k.ListWaitingMintDeposits(ctx)
+	for _, deposit := range deposits {
+		totalAmount = totalAmount.Add(deposit.GetAmount().Amount)
+	}
 
-		// Add to the total amount
-		totalAmount.AddRaw(deposit.GetAmount().Amount.Int64())
-		return false
-	})
+	// Make sure we actually have something to mint
+	if totalAmount.IsZero() {
+		return types.ErrMintDontMatchTotal
+	}
 
 	// Mint the coins
 	totalAmount.MulRaw(mintRate)
@@ -239,31 +205,8 @@ func (k Keeper) Distribute(ctx sdk.Context, mintRate int64, deposits []*types.De
 		}
 
 		// Remove from the waiting queue and move to minted
-		k.RemoveFromWaitingMintQueue(ctx, deposit.GetId())
-		k.InsertIntoMintedQueue(ctx, deposit.GetId())
+		k.RemoveFromWaitingMintDeposits(ctx, deposit.GetDepositorAddress())
+		k.InsertIntoMintedDeposits(ctx, deposit.GetDepositorAddress(), *deposit)
 	}
 	return nil
-}
-
-// DepositsIterator Return an iterator for the deposits entities
-func (k Keeper) DepositsIterator(ctx sdk.Context) sdk.Iterator {
-	kvStore := ctx.KVStore(k.storeKey)
-	return sdk.KVStorePrefixIterator(kvStore, types.DepositsPrefix)
-}
-
-// IterateDeposits Process a lambda function for listing the deposits
-func (k Keeper) IterateDeposits(ctx sdk.Context, cb func(deposit types.Deposit) (stop bool)) {
-	iterator := k.DepositsIterator(ctx)
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		var deposit types.Deposit
-		err := k.cdc.Unmarshal(iterator.Value(), &deposit)
-		if err != nil {
-			panic(err)
-		}
-		if cb(deposit) {
-			break
-		}
-	}
 }

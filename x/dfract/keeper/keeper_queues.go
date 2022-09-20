@@ -5,102 +5,144 @@ import (
 	"github.com/lum-network/chain/x/dfract/types"
 )
 
-func (k Keeper) InsertIntoWaitingProposalQueue(ctx sdk.Context, depositID string) {
+func (k Keeper) InsertIntoWaitingProposalDeposits(ctx sdk.Context, depositorAddress string, deposit types.Deposit) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetWaitingProposalDepositsQueueKey(depositID), []byte(depositID))
+	encodedDeposit := k.cdc.MustMarshal(&deposit)
+	store.Set(types.GetWaitingProposalDepositsKey(depositorAddress), encodedDeposit)
 }
 
-func (k Keeper) RemoveFromWaitingProposalQueue(ctx sdk.Context, depositID string) {
+func (k Keeper) GetFromWaitingProposalDeposits(ctx sdk.Context, depositorAddress string) (deposit types.Deposit, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetWaitingProposalDepositsQueueKey(depositID))
+	if store.Has(types.GetWaitingProposalDepositsKey(depositorAddress)) {
+		err := k.cdc.Unmarshal(store.Get(types.GetWaitingProposalDepositsKey(depositorAddress)), &deposit)
+		if err != nil {
+			return deposit, false
+		}
+		return deposit, true
+	}
+	return deposit, false
 }
 
-func (k Keeper) InsertIntoWaitingMintQueue(ctx sdk.Context, depositID string) {
+func (k Keeper) RemoveFromWaitingProposalDeposits(ctx sdk.Context, depositorAddress string) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetWaitingMintDepositsQueueKey(depositID), []byte(depositID))
+	store.Delete(types.GetWaitingProposalDepositsKey(depositorAddress))
 }
 
-func (k Keeper) RemoveFromWaitingMintQueue(ctx sdk.Context, depositID string) {
+func (k Keeper) InsertIntoWaitingMintDeposits(ctx sdk.Context, depositorAddress string, deposit types.Deposit) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetWaitingMintDepositsQueueKey(depositID))
+	encodedDeposit := k.cdc.MustMarshal(&deposit)
+	store.Set(types.GetWaitingMintDepositsKey(depositorAddress), encodedDeposit)
 }
 
-func (k Keeper) InsertIntoMintedQueue(ctx sdk.Context, depositID string) {
+func (k Keeper) GetFromWaitingMintDeposits(ctx sdk.Context, depositorAddress string) (deposit types.Deposit, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetMintedDepositsQueueKey(depositID), []byte(depositID))
+	if store.Has(types.GetWaitingMintDepositsKey(depositorAddress)) {
+		err := k.cdc.Unmarshal(store.Get(types.GetWaitingMintDepositsKey(depositorAddress)), &deposit)
+		if err != nil {
+			return deposit, false
+		}
+		return deposit, true
+	}
+	return deposit, false
 }
 
-func (k Keeper) RemoveFromMintedQueue(ctx sdk.Context, depositID string) {
+func (k Keeper) RemoveFromWaitingMintDeposits(ctx sdk.Context, depositorAddress string) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetMintedDepositsQueueKey(depositID))
+	store.Delete(types.GetWaitingMintDepositsKey(depositorAddress))
 }
 
-func (k Keeper) IterateWaitingProposalDepositsQueue(ctx sdk.Context, cb func(depositID string) bool) {
+func (k Keeper) InsertIntoMintedDeposits(ctx sdk.Context, depositorAddress string, deposit types.Deposit) {
+	store := ctx.KVStore(k.storeKey)
+	encodedDeposit := k.cdc.MustMarshal(&deposit)
+	store.Set(types.GetMintedDepositsKey(depositorAddress), encodedDeposit)
+}
+
+func (k Keeper) GetFromMintedDeposits(ctx sdk.Context, depositorAddress string) (deposit types.Deposit, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	if store.Has(types.GetMintedDepositsKey(depositorAddress)) {
+		err := k.cdc.Unmarshal(store.Get(types.GetMintedDepositsKey(depositorAddress)), &deposit)
+		if err != nil {
+			return deposit, false
+		}
+		return deposit, true
+	}
+	return deposit, false
+}
+
+func (k Keeper) RemoveFromMintedDeposits(ctx sdk.Context, depositorAddress string) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetMintedDepositsKey(depositorAddress))
+}
+
+func (k Keeper) IterateWaitingProposalDeposits(ctx sdk.Context, cb func(deposit types.Deposit) bool) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.WaitingProposalDepositsQueuePrefix)
+	iterator := sdk.KVStorePrefixIterator(store, types.WaitingProposalDepositsPrefix)
 
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		depositID := string(iterator.Value())
-		if cb(depositID) {
+		var deposit types.Deposit
+		k.cdc.MustUnmarshal(iterator.Value(), &deposit)
+
+		if cb(deposit) {
 			break
 		}
 	}
 }
 
 func (k Keeper) ListWaitingProposalDeposits(ctx sdk.Context) (deposits []*types.Deposit) {
-	k.IterateWaitingProposalDepositsQueue(ctx, func(depositID string) bool {
-		deposit, _ := k.GetDeposit(ctx, depositID)
+	k.IterateWaitingProposalDeposits(ctx, func(deposit types.Deposit) bool {
 		deposits = append(deposits, &deposit)
 		return false
 	})
 	return deposits
 }
 
-func (k Keeper) IterateWaitingMintDepositsQueue(ctx sdk.Context, cb func(depositID string) bool) {
+func (k Keeper) IterateWaitingMintDeposits(ctx sdk.Context, cb func(deposit types.Deposit) bool) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.WaitingMintDepositsQueuePrefix)
+	iterator := sdk.KVStorePrefixIterator(store, types.WaitingMintDepositsPrefix)
 
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		depositID := string(iterator.Value())
-		if cb(depositID) {
+		var deposit types.Deposit
+		k.cdc.MustUnmarshal(iterator.Value(), &deposit)
+
+		if cb(deposit) {
 			break
 		}
 	}
 }
 
 func (k Keeper) ListWaitingMintDeposits(ctx sdk.Context) (deposits []*types.Deposit) {
-	k.IterateWaitingMintDepositsQueue(ctx, func(depositID string) bool {
-		deposit, _ := k.GetDeposit(ctx, depositID)
+	k.IterateWaitingMintDeposits(ctx, func(deposit types.Deposit) bool {
 		deposits = append(deposits, &deposit)
 		return false
 	})
 	return deposits
 }
 
-func (k Keeper) IterateMintedDepositsQueue(ctx sdk.Context, cb func(depositID string) bool) {
+func (k Keeper) IterateMintedDeposits(ctx sdk.Context, cb func(deposit types.Deposit) bool) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.MintedDepositsQueuePrefix)
+	iterator := sdk.KVStorePrefixIterator(store, types.MintedDepositsPrefix)
 
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		depositID := string(iterator.Value())
-		if cb(depositID) {
+		var deposit types.Deposit
+		k.cdc.MustUnmarshal(iterator.Value(), &deposit)
+
+		if cb(deposit) {
 			break
 		}
 	}
 }
 
 func (k Keeper) ListMintedDeposits(ctx sdk.Context) (deposits []*types.Deposit) {
-	k.IterateMintedDepositsQueue(ctx, func(depositID string) bool {
-		deposit, _ := k.GetDeposit(ctx, depositID)
+	k.IterateMintedDeposits(ctx, func(deposit types.Deposit) bool {
 		deposits = append(deposits, &deposit)
 		return false
 	})

@@ -9,8 +9,6 @@ option go_package = "github.com/lum-network/chain/x/dfract/types";
 
 message Deposit {
   string depositor_address = 1;
-  string id = 2;
-  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
-
-  google.protobuf.Timestamp deposited_at = 4 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp created_at = 3 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }

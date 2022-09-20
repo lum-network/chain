@@ -46,8 +46,8 @@ func handleSpendAndAdjustProposal(ctx sdk.Context, k keeper.Keeper, p *types.Spe
 
 	// Remove the waiting proposal deposits and move them to waiting mint deposits
 	for _, deposit := range waitingProposalDeposits {
-		k.RemoveFromWaitingProposalQueue(ctx, deposit.GetId())
-		k.InsertIntoWaitingMintQueue(ctx, deposit.GetId())
+		k.RemoveFromWaitingProposalDeposits(ctx, deposit.GetDepositorAddress())
+		k.InsertIntoWaitingMintDeposits(ctx, deposit.GetDepositorAddress(), *deposit)
 	}
 
 	return nil

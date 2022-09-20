@@ -7,9 +7,8 @@ import (
 
 var _ sdk.Msg = &MsgDeposit{}
 
-func NewMsgDeposit(id string, depositor string, amount sdk.Coin) *MsgDeposit {
+func NewMsgDeposit(depositor string, amount sdk.Coin) *MsgDeposit {
 	return &MsgDeposit{
-		Id:               id,
 		DepositorAddress: depositor,
 		Amount:           amount,
 	}
@@ -37,10 +36,6 @@ func (msg *MsgDeposit) GetSignBytes() []byte {
 }
 
 func (msg *MsgDeposit) ValidateBasic() error {
-	if len(msg.Id) <= 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "Invalid id supplied (%d)", len(msg.Id))
-	}
-
 	// Ensure the address is correct and that we are able to acquire it
 	_, err := sdk.AccAddressFromBech32(msg.GetDepositorAddress())
 	if err != nil {

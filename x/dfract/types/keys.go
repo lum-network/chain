@@ -24,24 +24,19 @@ const (
 )
 
 var (
-	DepositsPrefix                     = []byte{0x01}
-	WaitingProposalDepositsQueuePrefix = []byte{0x02}
-	WaitingMintDepositsQueuePrefix     = []byte{0x03}
-	MintedDepositsQueuePrefix          = []byte{0x04}
+	WaitingProposalDepositsPrefix = []byte{0x01}
+	WaitingMintDepositsPrefix     = []byte{0x02}
+	MintedDepositsPrefix          = []byte{0x03}
 )
 
-func GetDepositKey(depositId string) []byte {
-	return append(DepositsPrefix, []byte(depositId)...)
+func GetWaitingProposalDepositsKey(depositorAddress string) []byte {
+	return append(WaitingProposalDepositsPrefix, []byte(depositorAddress)...)
 }
 
-func GetWaitingProposalDepositsQueueKey(depositId string) []byte {
-	return append(WaitingProposalDepositsQueuePrefix, []byte(depositId)...)
+func GetWaitingMintDepositsKey(depositorAddress string) []byte {
+	return append(WaitingMintDepositsPrefix, []byte(depositorAddress)...)
 }
 
-func GetWaitingMintDepositsQueueKey(depositId string) []byte {
-	return append(WaitingMintDepositsQueuePrefix, []byte(depositId)...)
-}
-
-func GetMintedDepositsQueueKey(depositId string) []byte {
-	return append(MintedDepositsQueuePrefix, []byte(depositId)...)
+func GetMintedDepositsKey(depositorAddress string) []byte {
+	return append(MintedDepositsPrefix, []byte(depositorAddress)...)
 }
