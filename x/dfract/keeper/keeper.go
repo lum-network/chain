@@ -15,6 +15,16 @@ import (
 	"strconv"
 )
 
+func permContains(perms []string, perm string) bool {
+	for _, v := range perms {
+		if v == perm {
+			return true
+		}
+	}
+
+	return false
+}
+
 type (
 	Keeper struct {
 		cdc        codec.BinaryCodec
@@ -29,6 +39,19 @@ type (
 
 // NewKeeper Create a new keeper instance and return the pointer
 func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper, mk mintkeeper.Keeper) *Keeper {
+	moduleAddr, perms := auth.GetModuleAddressAndPermissions(types.ModuleName)
+	if moduleAddr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	}
+
+	// Ensure our module account have the required permissions
+	if !permContains(perms, authtypes.Minter) {
+		panic(fmt.Sprintf("%s module account should have the minter permission", types.ModuleName))
+	}
+	if !permContains(perms, authtypes.Burner) {
+		panic(fmt.Sprintf("%s module account should have the burner permission", types.ModuleName))
+	}
+
 	return &Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
@@ -143,13 +166,15 @@ func (k Keeper) ProcessSpendAndAdjustProposal(ctx sdk.Context, proposal *types.S
 	waitingProposalDeposits := k.ListWaitingProposalDeposits(ctx)
 	waitingMintDeposits := k.ListWaitingMintDeposits(ctx)
 
-	// Spend the coins from the module account
-	destinationAddress, err := sdk.AccAddressFromBech32(proposal.GetSpendDestination())
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress
-	}
-	if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destinationAddress, sdk.NewCoins(balance)); err != nil {
-		return err
+	// Spend the coins from the module account if we have one
+	if balance.Amount.IsPositive() {
+		destinationAddress, err := sdk.AccAddressFromBech32(proposal.GetSpendDestination())
+		if err != nil {
+			return sdkerrors.ErrInvalidAddress
+		}
+		if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destinationAddress, sdk.NewCoins(balance)); err != nil {
+			return err
+		}
 	}
 
 	// Process the waiting mint deposits
@@ -160,7 +185,7 @@ func (k Keeper) ProcessSpendAndAdjustProposal(ctx sdk.Context, proposal *types.S
 		}
 
 		toMint := sdk.NewCoin(params.MintDenom, deposit.GetAmount().Amount.MulRaw(proposal.GetMintRate()))
-		if err := k.MintKeeper.MintCoins(ctx, sdk.NewCoins(toMint)); err != nil {
+		if err := k.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(toMint)); err != nil {
 			return err
 		}
 

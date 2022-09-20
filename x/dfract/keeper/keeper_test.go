@@ -193,53 +193,63 @@ func (suite *KeeperTestSuite) TestFullProcess() {
 	require.Equal(suite.T(), 2, len(waitingProposalDeposits))
 	require.Equal(suite.T(), 0, len(waitingMintDeposits))
 
-	// Move the funds from the module account to the spend address
-	err = app.DFractKeeper.Spend(ctx, destinationAccount.String())
+	// Process the first proposal iteration
+	err = app.DFractKeeper.ProcessSpendAndAdjustProposal(ctx, &types.SpendAndAdjustProposal{
+		MintRate:         mintRate,
+		Title:            "test",
+		Description:      "test",
+		SpendDestination: destinationAccount.String(),
+	})
 	require.NoError(suite.T(), err)
 
 	// Now the module account should be empty and the destination account must contain initial allocation plus deposited tokens
-	afterSpendModuleAccount := app.BankKeeper.GetBalance(ctx, app.DFractKeeper.GetModuleAccount(ctx), params.DepositDenom)
-	afterSpendDestinationAccount := app.BankKeeper.GetBalance(ctx, destinationAccount, params.DepositDenom)
-	require.Equal(suite.T(), afterSpendModuleAccount.Amount.Int64(), int64(0))
-	require.Equal(suite.T(), afterSpendDestinationAccount.Amount.Int64(), int64(300000000+200000000))
+	afterFirstProposalModuleAccount := app.BankKeeper.GetBalance(ctx, app.DFractKeeper.GetModuleAccount(ctx), params.DepositDenom)
+	afterFirstProposalDestinationAccount := app.BankKeeper.GetBalance(ctx, destinationAccount, params.DepositDenom)
+	require.Equal(suite.T(), afterFirstProposalModuleAccount.Amount.Int64(), int64(0))
+	require.Equal(suite.T(), afterFirstProposalDestinationAccount.Amount.Int64(), int64(300000000+200000000))
 
 	// We make sure our users have no mint balance
 	depositor1MintBalance = app.BankKeeper.GetBalance(ctx, depositor1, params.MintDenom)
 	depositor2MintBalance = app.BankKeeper.GetBalance(ctx, depositor2, params.MintDenom)
-	require.Equal(suite.T(), depositor1MintBalance.Amount.Int64(), int64(0))
-	require.Equal(suite.T(), depositor2MintBalance.Amount.Int64(), int64(0))
+	require.Equal(suite.T(), int64(0), depositor1MintBalance.Amount.Int64())
+	require.Equal(suite.T(), int64(0), depositor2MintBalance.Amount.Int64())
 
-	// Simulate the end of the proposal
-	for _, deposit := range waitingProposalDeposits {
-		app.DFractKeeper.RemoveFromWaitingProposalDeposits(ctx, deposit.GetDepositorAddress())
-		app.DFractKeeper.InsertIntoWaitingMintDeposits(ctx, deposit.GetDepositorAddress(), *deposit)
-	}
+	// Ensure the queues state
+	waitingProposalDeposits = app.DFractKeeper.ListWaitingProposalDeposits(ctx)
+	waitingMintDeposits = app.DFractKeeper.ListWaitingMintDeposits(ctx)
+	mintedDepositsBefore := app.DFractKeeper.ListMintedDeposits(ctx)
+	require.Equal(suite.T(), 0, len(waitingProposalDeposits))
+	require.Equal(suite.T(), 2, len(waitingMintDeposits))
+	require.Equal(suite.T(), 0, len(mintedDepositsBefore))
+
+	// Process our second proposal
+	err = app.DFractKeeper.ProcessSpendAndAdjustProposal(ctx, &types.SpendAndAdjustProposal{
+		MintRate:         mintRate,
+		Title:            "test 2",
+		Description:      "test",
+		SpendDestination: destinationAccount.String(),
+	})
+	require.NoError(suite.T(), err)
+
+	// Our module account balance must not have changed
+	afterSecondProposalModuleAccount := app.BankKeeper.GetBalance(ctx, app.DFractKeeper.GetModuleAccount(ctx), params.DepositDenom)
+	afterSecondProposalDestinationAccount := app.BankKeeper.GetBalance(ctx, destinationAccount, params.DepositDenom)
+	require.Equal(suite.T(), afterFirstProposalModuleAccount.Amount.Int64(), afterSecondProposalModuleAccount.Amount.Int64())
+	require.Equal(suite.T(), afterFirstProposalDestinationAccount.Amount.Int64(), afterSecondProposalDestinationAccount.Amount.Int64())
 
 	// Make sure the queues swapped
 	waitingProposalDeposits = app.DFractKeeper.ListWaitingProposalDeposits(ctx)
 	waitingMintDeposits = app.DFractKeeper.ListWaitingMintDeposits(ctx)
-	require.Equal(suite.T(), 0, len(waitingProposalDeposits))
-	require.Equal(suite.T(), 2, len(waitingMintDeposits))
-
-	// Mint the tokens based on the mint rate
-	err = app.DFractKeeper.Mint(ctx, mintRate)
-	require.NoError(suite.T(), err)
-
-	// Distribute the allocations to the waiting mint
-	err = app.DFractKeeper.Distribute(ctx, mintRate, waitingMintDeposits)
-	require.NoError(suite.T(), err)
-
-	// We make sure our users have mint balance
-	depositor1MintBalance = app.BankKeeper.GetBalance(ctx, depositor1, params.MintDenom)
-	depositor2MintBalance = app.BankKeeper.GetBalance(ctx, depositor2, params.MintDenom)
-	require.Equal(suite.T(), depositor1MintBalance.Amount.Int64(), int64(100000000*mintRate))
-	require.Equal(suite.T(), depositor2MintBalance.Amount.Int64(), int64(100000000*mintRate))
-
-	// Make sure the queues are now totally empty
-	waitingProposalDeposits = app.DFractKeeper.ListWaitingProposalDeposits(ctx)
-	waitingMintDeposits = app.DFractKeeper.ListWaitingMintDeposits(ctx)
+	mintedDepositsAfter := app.DFractKeeper.ListMintedDeposits(ctx)
 	require.Equal(suite.T(), 0, len(waitingProposalDeposits))
 	require.Equal(suite.T(), 0, len(waitingMintDeposits))
+	require.Equal(suite.T(), 2, len(mintedDepositsAfter))
+
+	// Make sure our users have their tokens
+	depositor1MintBalance = app.BankKeeper.GetBalance(ctx, depositor1, params.MintDenom)
+	depositor2MintBalance = app.BankKeeper.GetBalance(ctx, depositor2, params.MintDenom)
+	require.Equal(suite.T(), int64(100000000*mintRate), depositor1MintBalance.Amount.Int64())
+	require.Equal(suite.T(), int64(100000000*mintRate), depositor2MintBalance.Amount.Int64())
 }
 
 func TestKeeperSuite(t *testing.T) {
