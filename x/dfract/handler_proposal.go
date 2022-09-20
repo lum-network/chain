@@ -25,30 +25,8 @@ func handleSpendAndAdjustProposal(ctx sdk.Context, k keeper.Keeper, p *types.Spe
 		return err
 	}
 
-	// Acquire the list of waiting proposal & waiting mint deposits
-	waitingProposalDeposits := k.ListWaitingProposalDeposits(ctx)
-	waitingMintDeposits := k.ListWaitingMintDeposits(ctx)
-
-	// Move the funds from module account to destination address
-	if err := k.Spend(ctx, p.GetSpendDestination()); err != nil {
+	if err := k.ProcessSpendAndAdjustProposal(ctx, p); err != nil {
 		return err
 	}
-
-	// Mint the funds at the provided rate
-	if err := k.Mint(ctx, p.GetMintRate()); err != nil {
-		return err
-	}
-
-	// Distribute the funds to the waiting proposal deposits, and move them to minted deposits
-	if err := k.Distribute(ctx, p.GetMintRate(), waitingMintDeposits); err != nil {
-		return err
-	}
-
-	// Remove the waiting proposal deposits and move them to waiting mint deposits
-	for _, deposit := range waitingProposalDeposits {
-		k.RemoveFromWaitingProposalDeposits(ctx, deposit.GetDepositorAddress())
-		k.InsertIntoWaitingMintDeposits(ctx, deposit.GetDepositorAddress(), *deposit)
-	}
-
 	return nil
 }

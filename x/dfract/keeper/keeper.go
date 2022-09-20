@@ -12,6 +12,7 @@ import (
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/tendermint/tendermint/libs/log"
+	"strconv"
 )
 
 type (
@@ -128,85 +129,59 @@ func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 	return nil
 }
 
-// Spend Send the entire module account balance to a given address
-func (k Keeper) Spend(ctx sdk.Context, destinationAddressStr string) error {
+func (k Keeper) ProcessSpendAndAdjustProposal(ctx sdk.Context, proposal *types.SpendAndAdjustProposal) error {
 	// Acquire the parameters to get the denoms
 	params, err := k.GetParams(ctx)
 	if err != nil {
 		return err
 	}
 
-	// Prepare destination address
-	destinationAddress, err := sdk.AccAddressFromBech32(destinationAddressStr)
+	// Acquire the module account balance
+	balance := k.GetModuleAccountBalanceForDenom(ctx, params.GetDepositDenom())
+
+	// Acquire the list of waiting proposal & waiting mint deposits
+	waitingProposalDeposits := k.ListWaitingProposalDeposits(ctx)
+	waitingMintDeposits := k.ListWaitingMintDeposits(ctx)
+
+	// Spend the coins from the module account
+	destinationAddress, err := sdk.AccAddressFromBech32(proposal.GetSpendDestination())
 	if err != nil {
 		return sdkerrors.ErrInvalidAddress
 	}
-
-	// Acquire balance
-	balance := k.GetModuleAccountBalanceForDenom(ctx, params.GetDepositDenom())
-
-	// Move funds to the destination address
 	if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destinationAddress, sdk.NewCoins(balance)); err != nil {
 		return err
 	}
-	return nil
-}
 
-// Mint Emit a new amount of coins
-func (k Keeper) Mint(ctx sdk.Context, mintRate int64) error {
-	// Acquire the parameters to get the mint denom
-	params, err := k.GetParams(ctx)
-	if err != nil {
-		return err
-	}
-
-	// Compute the total amount
-	totalAmount := sdk.NewInt(0)
-	deposits := k.ListWaitingMintDeposits(ctx)
-	for _, deposit := range deposits {
-		totalAmount = totalAmount.Add(deposit.GetAmount().Amount)
-	}
-
-	// Make sure we actually have something to mint
-	if totalAmount.IsZero() {
-		return types.ErrMintDontMatchTotal
-	}
-
-	// Mint the coins
-	totalAmount.MulRaw(mintRate)
-	if err := k.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(params.MintDenom, totalAmount))); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Distribute Split the amount of emitted coins and distribute them to the depositors
-func (k Keeper) Distribute(ctx sdk.Context, mintRate int64, deposits []*types.Deposit) error {
-	// Acquire the parameters to get the mint denom
-	params, err := k.GetParams(ctx)
-	if err != nil {
-		return err
-	}
-
-	// For each deposit, we will compute the amount of coins to send from the mint rate and process the distribution
-	for _, deposit := range deposits {
-		// Correctly format address
-		destinationAddress, err := sdk.AccAddressFromBech32(deposit.GetDepositorAddress())
+	// Process the waiting mint deposits
+	for _, deposit := range waitingMintDeposits {
+		depositorAddress, err := sdk.AccAddressFromBech32(deposit.GetDepositorAddress())
 		if err != nil {
 			return sdkerrors.ErrInvalidAddress
 		}
 
-		// Compute the coins to send from the rate
-		mintedAmount := sdk.NewCoin(params.MintDenom, deposit.GetAmount().Amount.MulRaw(mintRate))
-
-		// Transfer the coins
-		if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destinationAddress, sdk.NewCoins(mintedAmount)); err != nil {
+		toMint := sdk.NewCoin(params.MintDenom, deposit.GetAmount().Amount.MulRaw(proposal.GetMintRate()))
+		if err := k.MintKeeper.MintCoins(ctx, sdk.NewCoins(toMint)); err != nil {
 			return err
 		}
 
-		// Remove from the waiting queue and move to minted
+		if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositorAddress, sdk.NewCoins(toMint)); err != nil {
+			return err
+		}
+
 		k.RemoveFromWaitingMintDeposits(ctx, deposit.GetDepositorAddress())
 		k.InsertIntoMintedDeposits(ctx, deposit.GetDepositorAddress(), *deposit)
 	}
+
+	// Process the waiting proposal deposits
+	for _, deposit := range waitingProposalDeposits {
+		k.RemoveFromWaitingProposalDeposits(ctx, deposit.GetDepositorAddress())
+		k.InsertIntoWaitingMintDeposits(ctx, deposit.GetDepositorAddress(), *deposit)
+	}
+
+	// Trigger the events
+	ctx.EventManager().Events().AppendEvents(sdk.Events{
+		sdk.NewEvent(types.EventTypeMint, sdk.NewAttribute(types.AttributeKeyMintBlock, strconv.FormatInt(ctx.BlockHeight(), 10))),
+	})
+
 	return nil
 }
