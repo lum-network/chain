@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
-	"github.com/lum-network/chain/x/dfract/keeper"
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -30,7 +29,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = ctx
 
 	// Setup the module params
-	err := app.DFractKeeper.SetParams(ctx, keeper.DefaultParams())
+	err := app.DFractKeeper.SetParams(ctx, types.DefaultParams())
 	suite.Require().NoError(err)
 
 	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 3, sdk.NewInt(300000000), "ulum")
