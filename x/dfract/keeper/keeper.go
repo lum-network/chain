@@ -206,7 +206,7 @@ func (k Keeper) ProcessWithdrawAndMintProposal(ctx sdk.Context, proposal *types.
 		}
 
 		k.RemoveDepositPendingMint(ctx, depositorAddress)
-		k.SetDepositMinted(ctx, depositorAddress, *deposit)
+		k.AddDepositMinted(ctx, depositorAddress, *deposit)
 		ctx.EventManager().Events().AppendEvents(sdk.Events{
 			sdk.NewEvent(
 				types.EventTypeMint,

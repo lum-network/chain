@@ -57,7 +57,18 @@ func (k Keeper) SetDepositMinted(ctx sdk.Context, depositorAddress sdk.AccAddres
 	store.Set(types.GetDepositsMintedKey(depositorAddress), encodedDeposit)
 }
 
-func (k Keeper) GetMintedDeposit(ctx sdk.Context, depositorAddress sdk.AccAddress) (deposit types.Deposit, found bool) {
+// AddDepositMinted same as SetDepositMinted but takes into account the existing value
+func (k Keeper) AddDepositMinted(ctx sdk.Context, depositorAddress sdk.AccAddress, deposit types.Deposit) {
+	previousDeposit, found := k.GetDepositMinted(ctx, depositorAddress)
+	if !found {
+		k.SetDepositMinted(ctx, depositorAddress, deposit)
+	} else {
+		deposit.Amount = deposit.Amount.Add(previousDeposit.Amount)
+		k.SetDepositMinted(ctx, depositorAddress, deposit)
+	}
+}
+
+func (k Keeper) GetDepositMinted(ctx sdk.Context, depositorAddress sdk.AccAddress) (deposit types.Deposit, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	if store.Has(types.GetDepositsMintedKey(depositorAddress)) {
 		err := k.cdc.Unmarshal(store.Get(types.GetDepositsMintedKey(depositorAddress)), &deposit)
@@ -69,7 +80,7 @@ func (k Keeper) GetMintedDeposit(ctx sdk.Context, depositorAddress sdk.AccAddres
 	return deposit, false
 }
 
-func (k Keeper) RemoveMintedDeposit(ctx sdk.Context, depositorAddress sdk.AccAddress) {
+func (k Keeper) RemoveDepositMinted(ctx sdk.Context, depositorAddress sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetDepositsMintedKey(depositorAddress))
 }

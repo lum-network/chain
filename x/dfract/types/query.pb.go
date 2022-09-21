@@ -208,7 +208,7 @@ func (m *QueryGetDepositsForAddressResponse) GetWaitingMintDeposits() *Deposit {
 	return nil
 }
 
-func (m *QueryGetDepositsForAddressResponse) GetMintedDeposits() *Deposit {
+func (m *QueryGetDepositsForAddressResponse) GetDepositMinteds() *Deposit {
 	if m != nil {
 		return m.MintedDeposits
 	}

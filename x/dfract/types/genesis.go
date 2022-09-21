@@ -7,11 +7,7 @@ func NewGenesisState(params Params) *GenesisState {
 }
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
-		Params: Params{
-			MintDenom:        "udfr",
-			DepositDenom:     "ulum",
-			MinDepositAmount: 1000000,
-		},
+		Params: DefaultParams(),
 	}
 }
 
