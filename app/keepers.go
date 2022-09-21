@@ -244,7 +244,7 @@ func (app *App) InitNormalKeepers() {
 	app.AirdropKeeper = airdropKeeper
 
 	// Initialize our custom dfract keeper
-	dfractKeeper := dfractkeeper.NewKeeper(appCodec, keys[dfracttypes.StoreKey], keys[dfracttypes.StoreKey], *app.AccountKeeper, app.BankKeeper, *app.MintKeeper)
+	dfractKeeper := dfractkeeper.NewKeeper(appCodec, keys[dfracttypes.StoreKey], keys[dfracttypes.StoreKey], *app.AccountKeeper, app.BankKeeper, *app.StakingKeeper)
 	app.DFractKeeper = dfractKeeper
 
 	// Initialize the governance router

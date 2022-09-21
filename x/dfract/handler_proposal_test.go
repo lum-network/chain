@@ -1,6 +1,8 @@
 package dfract_test
 
 import (
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/lum-network/chain/app"
@@ -9,7 +11,6 @@ import (
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"testing"
 )
 
 type HandlerTestSuite struct {
@@ -32,31 +33,26 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 2, sdk.NewInt(300000000), "ulum")
 }
 
-func generateSpendAndAdjustProposal(spendDestination string, mintRate int64) *types.SpendAndAdjustProposal {
-	return types.NewSpendAndAdjustProposal("title", "description", spendDestination, mintRate)
+func generateWithdrawAndMintProposal(withdrawalAddress string, microMintRate int64) *types.WithdrawAndMintProposal {
+	return types.NewWithdrawAndMintProposal("title", "description", withdrawalAddress, microMintRate)
 }
 
-func (suite *HandlerTestSuite) TestSpendAndAdjustProposal() {
+func (suite *HandlerTestSuite) TestWithdrawAndMintProposal() {
 	cases := []struct {
 		name        string
-		proposal    *types.SpendAndAdjustProposal
+		proposal    *types.WithdrawAndMintProposal
 		expectError bool
 	}{
 		{
-			"invalid mint rate",
-			generateSpendAndAdjustProposal(suite.addrs[0].String(), -1),
+			"micro mint rate cannot be negative",
+			generateWithdrawAndMintProposal(suite.addrs[0].String(), -1),
 			true,
 		},
 		{
 			"invalid address",
-			generateSpendAndAdjustProposal("test", 0),
+			generateWithdrawAndMintProposal("test", 0),
 			true,
 		},
-		/*{
-			"valid proposal",
-			generateSpendAndAdjustProposal(suite.addrs[1].String(), 0),
-			false,
-		},*/
 	}
 
 	for _, tc := range cases {

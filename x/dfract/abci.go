@@ -6,5 +6,4 @@ import (
 )
 
 func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
-
 }

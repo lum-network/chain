@@ -11,10 +11,12 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
+
+const MicroPrecision = 1000000
 
 func permContains(perms []string, perm string) bool {
 	for _, v := range perms {
@@ -28,18 +30,18 @@ func permContains(perms []string, perm string) bool {
 
 type (
 	Keeper struct {
-		cdc        codec.BinaryCodec
-		storeKey   sdk.StoreKey
-		memKey     sdk.StoreKey
-		AuthKeeper authkeeper.AccountKeeper
-		BankKeeper bankkeeper.Keeper
-		GovKeeper  govkeeper.Keeper
-		MintKeeper mintkeeper.Keeper
+		cdc           codec.BinaryCodec
+		storeKey      sdk.StoreKey
+		memKey        sdk.StoreKey
+		AuthKeeper    authkeeper.AccountKeeper
+		BankKeeper    bankkeeper.Keeper
+		GovKeeper     govkeeper.Keeper
+		StakingKeeper stakingkeeper.Keeper
 	}
 )
 
 // NewKeeper Create a new keeper instance and return the pointer
-func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper, mk mintkeeper.Keeper) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper, sk stakingkeeper.Keeper) *Keeper {
 	moduleAddr, perms := auth.GetModuleAddressAndPermissions(types.ModuleName)
 	if moduleAddr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -54,12 +56,12 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, auth authke
 	}
 
 	return &Keeper{
-		cdc:        cdc,
-		storeKey:   storeKey,
-		memKey:     memKey,
-		AuthKeeper: auth,
-		BankKeeper: bank,
-		MintKeeper: mk,
+		cdc:           cdc,
+		storeKey:      storeKey,
+		memKey:        memKey,
+		AuthKeeper:    auth,
+		BankKeeper:    bank,
+		StakingKeeper: sk,
 	}
 }
 
@@ -112,7 +114,7 @@ func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 
 	// Make sure the deposit is made of allowed denom
 	if params.DepositDenom != msg.GetAmount().Denom {
-		return types.ErrUnauthorizedDenom
+		return types.ErrUnauthorizedDepositDenom
 	}
 
 	// Make sure we have an actual deposit to do
@@ -120,8 +122,19 @@ func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 		return types.ErrEmptyDepositAmount
 	}
 
+	// Make sure the deposit is sufficient
+	if msg.GetAmount().Amount.LT(sdk.NewInt(params.MinDepositAmount)) {
+		return types.ErrInsufficientDepositAmount
+	}
+
+	// Cast the depositor address
+	depositorAddress, err := sdk.AccAddressFromBech32(msg.GetDepositorAddress())
+	if err != nil {
+		return sdkerrors.ErrInvalidAddress
+	}
+
 	// Does the deposit exists ? If not, create it otherwise just append the amount
-	deposit, found := k.GetFromWaitingProposalDeposits(ctx, msg.GetDepositorAddress())
+	deposit, found := k.GetDepositPendingWithdrawal(ctx, depositorAddress)
 	if !found {
 		deposit = types.Deposit{
 			DepositorAddress: msg.GetDepositorAddress(),
@@ -132,19 +145,13 @@ func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 		deposit.Amount = deposit.Amount.Add(msg.GetAmount())
 	}
 
-	// Cast the depositor address
-	depositorAddress, err := sdk.AccAddressFromBech32(msg.GetDepositorAddress())
-	if err != nil {
-		return sdkerrors.ErrInvalidAddress
-	}
-
 	// Move the funds
 	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, depositorAddress, types.ModuleName, sdk.NewCoins(msg.GetAmount())); err != nil {
 		return err
 	}
 
 	// Insert into queue
-	k.InsertIntoWaitingProposalDeposits(ctx, deposit.GetDepositorAddress(), deposit)
+	k.SetDepositPendingWithdrawal(ctx, depositorAddress, deposit)
 
 	// Trigger the events
 	ctx.EventManager().Events().AppendEvents(sdk.Events{
@@ -153,7 +160,7 @@ func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 	return nil
 }
 
-func (k Keeper) ProcessSpendAndAdjustProposal(ctx sdk.Context, proposal *types.SpendAndAdjustProposal) error {
+func (k Keeper) ProcessWithdrawAndMintProposal(ctx sdk.Context, proposal *types.WithdrawAndMintProposal) error {
 	// Acquire the parameters to get the denoms
 	params, err := k.GetParams(ctx)
 	if err != nil {
@@ -163,13 +170,13 @@ func (k Keeper) ProcessSpendAndAdjustProposal(ctx sdk.Context, proposal *types.S
 	// Acquire the module account balance
 	balance := k.GetModuleAccountBalanceForDenom(ctx, params.GetDepositDenom())
 
-	// Acquire the list of waiting proposal & waiting mint deposits
-	waitingProposalDeposits := k.ListWaitingProposalDeposits(ctx)
-	waitingMintDeposits := k.ListWaitingMintDeposits(ctx)
+	// Acquire the list of deposits pending withdrawal and mint
+	depositsPendingWithdrawal := k.ListDepositsPendingWithdrawal(ctx)
+	depositsPendingMint := k.ListDepositsPendingMint(ctx)
 
-	// Spend the coins from the module account if we have one
+	// Withdrawal the coins from the pending withdrawal deposits using the module account
 	if balance.Amount.IsPositive() {
-		destinationAddress, err := sdk.AccAddressFromBech32(proposal.GetSpendDestination())
+		destinationAddress, err := sdk.AccAddressFromBech32(proposal.GetWithdrawalAddress())
 		if err != nil {
 			return sdkerrors.ErrInvalidAddress
 		}
@@ -178,14 +185,15 @@ func (k Keeper) ProcessSpendAndAdjustProposal(ctx sdk.Context, proposal *types.S
 		}
 	}
 
-	// Process the waiting mint deposits
-	for _, deposit := range waitingMintDeposits {
+	// Mint the coins for all the pending mint deposits and add them to the the minted deposits
+	for _, deposit := range depositsPendingMint {
 		depositorAddress, err := sdk.AccAddressFromBech32(deposit.GetDepositorAddress())
 		if err != nil {
 			return sdkerrors.ErrInvalidAddress
 		}
 
-		toMint := sdk.NewCoin(params.MintDenom, deposit.GetAmount().Amount.MulRaw(proposal.GetMintRate()))
+		// TODO - this should take into consideration the microMintRate
+		toMint := sdk.NewCoin(params.MintDenom, deposit.GetAmount().Amount.MulRaw(proposal.GetMicroMintRate()).QuoRaw(MicroPrecision))
 		if err := k.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(toMint)); err != nil {
 			return err
 		}
@@ -194,14 +202,18 @@ func (k Keeper) ProcessSpendAndAdjustProposal(ctx sdk.Context, proposal *types.S
 			return err
 		}
 
-		k.RemoveFromWaitingMintDeposits(ctx, deposit.GetDepositorAddress())
-		k.InsertIntoMintedDeposits(ctx, deposit.GetDepositorAddress(), *deposit)
+		k.RemoveDepositPendingMint(ctx, depositorAddress)
+		k.SetDepositMinted(ctx, depositorAddress, *deposit)
 	}
 
 	// Process the waiting proposal deposits
-	for _, deposit := range waitingProposalDeposits {
-		k.RemoveFromWaitingProposalDeposits(ctx, deposit.GetDepositorAddress())
-		k.InsertIntoWaitingMintDeposits(ctx, deposit.GetDepositorAddress(), *deposit)
+	for _, deposit := range depositsPendingWithdrawal {
+		depositorAddress, err := sdk.AccAddressFromBech32(deposit.GetDepositorAddress())
+		if err != nil {
+			return sdkerrors.ErrInvalidAddress
+		}
+		k.RemoveDepositPendingWithdrawal(ctx, depositorAddress)
+		k.SetDepositPendingMint(ctx, depositorAddress, *deposit)
 	}
 
 	// Trigger the events

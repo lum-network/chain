@@ -2,31 +2,47 @@ package dfract
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/lum-network/chain/x/dfract/keeper"
 	"github.com/lum-network/chain/x/dfract/types"
 )
 
 // InitGenesis initializes the dfract module's state from a provided genesis state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) error {
 	k.CreateModuleAccount(ctx, genState.ModuleAccountBalance)
 	if err := k.SetParams(ctx, genState.Params); err != nil {
 		panic(err)
 	}
 
 	// Process the minted deposits
-	for _, deposit := range genState.MintedDeposits {
-		k.InsertIntoMintedDeposits(ctx, deposit.GetDepositorAddress(), *deposit)
+	for _, deposit := range genState.DepositsMinted {
+		depositorAddress, err := sdk.AccAddressFromBech32(deposit.GetDepositorAddress())
+		if err != nil {
+			return sdkerrors.ErrInvalidAddress
+		}
+		k.SetDepositMinted(ctx, depositorAddress, *deposit)
 	}
 
 	// Process the waiting mint deposits
-	for _, deposit := range genState.WaitingMintDeposits {
-		k.InsertIntoWaitingMintDeposits(ctx, deposit.GetDepositorAddress(), *deposit)
+	for _, deposit := range genState.DepositsPendingMint {
+		depositorAddress, err := sdk.AccAddressFromBech32(deposit.GetDepositorAddress())
+		if err != nil {
+			return sdkerrors.ErrInvalidAddress
+		}
+		k.SetDepositPendingMint(ctx, depositorAddress, *deposit)
 	}
 
 	// Process the waiting proposal deposits
-	for _, deposit := range genState.WaitingProposalDeposits {
-		k.InsertIntoWaitingProposalDeposits(ctx, deposit.GetDepositorAddress(), *deposit)
+	for _, deposit := range genState.DepositsPendingWithdrawal {
+		depositorAddress, err := sdk.AccAddressFromBech32(deposit.GetDepositorAddress())
+		if err != nil {
+			return sdkerrors.ErrInvalidAddress
+		}
+		k.SetDepositPendingWithdrawal(ctx, depositorAddress, *deposit)
 	}
+
+	return nil
 }
 
 // ExportGenesis returns the dfract module's exported genesis.
@@ -37,10 +53,10 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 
 	return &types.GenesisState{
-		ModuleAccountBalance:    k.GetModuleAccountBalance(ctx),
-		Params:                  params,
-		MintedDeposits:          k.ListMintedDeposits(ctx),
-		WaitingMintDeposits:     k.ListWaitingMintDeposits(ctx),
-		WaitingProposalDeposits: k.ListWaitingProposalDeposits(ctx),
+		ModuleAccountBalance:      k.GetModuleAccountBalance(ctx),
+		Params:                    params,
+		DepositsMinted:            k.ListDepositsMinted(ctx),
+		DepositsPendingMint:       k.ListDepositsPendingMint(ctx),
+		DepositsPendingWithdrawal: k.ListDepositsPendingWithdrawal(ctx),
 	}
 }

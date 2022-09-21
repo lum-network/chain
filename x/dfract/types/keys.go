@@ -1,5 +1,7 @@
 package types
 
+import sdk "github.com/cosmos/cosmos-sdk/types"
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "dfract"
@@ -24,19 +26,19 @@ const (
 )
 
 var (
-	WaitingProposalDepositsPrefix = []byte{0x01}
-	WaitingMintDepositsPrefix     = []byte{0x02}
-	MintedDepositsPrefix          = []byte{0x03}
+	DepositsPendingWithdrawalPrefix = []byte{0x01}
+	DepositsPendingMintPrefix       = []byte{0x02}
+	DepositsMintedPrefix            = []byte{0x03}
 )
 
-func GetWaitingProposalDepositsKey(depositorAddress string) []byte {
-	return append(WaitingProposalDepositsPrefix, []byte(depositorAddress)...)
+func GetDepositsPendingWithdrawalKey(depositorAddress sdk.AccAddress) []byte {
+	return append(DepositsPendingWithdrawalPrefix, depositorAddress.Bytes()...)
 }
 
-func GetWaitingMintDepositsKey(depositorAddress string) []byte {
-	return append(WaitingMintDepositsPrefix, []byte(depositorAddress)...)
+func GetDepositsPendingMintKey(depositorAddress sdk.AccAddress) []byte {
+	return append(DepositsPendingMintPrefix, depositorAddress.Bytes()...)
 }
 
-func GetMintedDepositsKey(depositorAddress string) []byte {
-	return append(MintedDepositsPrefix, []byte(depositorAddress)...)
+func GetDepositsMintedKey(depositorAddress sdk.AccAddress) []byte {
+	return append(DepositsMintedPrefix, depositorAddress.Bytes()...)
 }

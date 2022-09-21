@@ -5,16 +5,16 @@ import (
 	"github.com/lum-network/chain/x/dfract/types"
 )
 
-func (k Keeper) InsertIntoWaitingProposalDeposits(ctx sdk.Context, depositorAddress string, deposit types.Deposit) {
+func (k Keeper) SetDepositPendingWithdrawal(ctx sdk.Context, depositorAddress sdk.AccAddress, deposit types.Deposit) {
 	store := ctx.KVStore(k.storeKey)
 	encodedDeposit := k.cdc.MustMarshal(&deposit)
-	store.Set(types.GetWaitingProposalDepositsKey(depositorAddress), encodedDeposit)
+	store.Set(types.GetDepositsPendingWithdrawalKey(depositorAddress), encodedDeposit)
 }
 
-func (k Keeper) GetFromWaitingProposalDeposits(ctx sdk.Context, depositorAddress string) (deposit types.Deposit, found bool) {
+func (k Keeper) GetDepositPendingWithdrawal(ctx sdk.Context, depositorAddress sdk.AccAddress) (deposit types.Deposit, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	if store.Has(types.GetWaitingProposalDepositsKey(depositorAddress)) {
-		err := k.cdc.Unmarshal(store.Get(types.GetWaitingProposalDepositsKey(depositorAddress)), &deposit)
+	if store.Has(types.GetDepositsPendingWithdrawalKey(depositorAddress)) {
+		err := k.cdc.Unmarshal(store.Get(types.GetDepositsPendingWithdrawalKey(depositorAddress)), &deposit)
 		if err != nil {
 			return deposit, false
 		}
@@ -23,21 +23,21 @@ func (k Keeper) GetFromWaitingProposalDeposits(ctx sdk.Context, depositorAddress
 	return deposit, false
 }
 
-func (k Keeper) RemoveFromWaitingProposalDeposits(ctx sdk.Context, depositorAddress string) {
+func (k Keeper) RemoveDepositPendingWithdrawal(ctx sdk.Context, depositorAddress sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetWaitingProposalDepositsKey(depositorAddress))
+	store.Delete(types.GetDepositsPendingWithdrawalKey(depositorAddress))
 }
 
-func (k Keeper) InsertIntoWaitingMintDeposits(ctx sdk.Context, depositorAddress string, deposit types.Deposit) {
+func (k Keeper) SetDepositPendingMint(ctx sdk.Context, depositorAddress sdk.AccAddress, deposit types.Deposit) {
 	store := ctx.KVStore(k.storeKey)
 	encodedDeposit := k.cdc.MustMarshal(&deposit)
-	store.Set(types.GetWaitingMintDepositsKey(depositorAddress), encodedDeposit)
+	store.Set(types.GetDepositsPendingMintKey(depositorAddress), encodedDeposit)
 }
 
-func (k Keeper) GetFromWaitingMintDeposits(ctx sdk.Context, depositorAddress string) (deposit types.Deposit, found bool) {
+func (k Keeper) GetDepositPendingMint(ctx sdk.Context, depositorAddress sdk.AccAddress) (deposit types.Deposit, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	if store.Has(types.GetWaitingMintDepositsKey(depositorAddress)) {
-		err := k.cdc.Unmarshal(store.Get(types.GetWaitingMintDepositsKey(depositorAddress)), &deposit)
+	if store.Has(types.GetDepositsPendingMintKey(depositorAddress)) {
+		err := k.cdc.Unmarshal(store.Get(types.GetDepositsPendingMintKey(depositorAddress)), &deposit)
 		if err != nil {
 			return deposit, false
 		}
@@ -46,21 +46,21 @@ func (k Keeper) GetFromWaitingMintDeposits(ctx sdk.Context, depositorAddress str
 	return deposit, false
 }
 
-func (k Keeper) RemoveFromWaitingMintDeposits(ctx sdk.Context, depositorAddress string) {
+func (k Keeper) RemoveDepositPendingMint(ctx sdk.Context, depositorAddress sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetWaitingMintDepositsKey(depositorAddress))
+	store.Delete(types.GetDepositsPendingMintKey(depositorAddress))
 }
 
-func (k Keeper) InsertIntoMintedDeposits(ctx sdk.Context, depositorAddress string, deposit types.Deposit) {
+func (k Keeper) SetDepositMinted(ctx sdk.Context, depositorAddress sdk.AccAddress, deposit types.Deposit) {
 	store := ctx.KVStore(k.storeKey)
 	encodedDeposit := k.cdc.MustMarshal(&deposit)
-	store.Set(types.GetMintedDepositsKey(depositorAddress), encodedDeposit)
+	store.Set(types.GetDepositsMintedKey(depositorAddress), encodedDeposit)
 }
 
-func (k Keeper) GetFromMintedDeposits(ctx sdk.Context, depositorAddress string) (deposit types.Deposit, found bool) {
+func (k Keeper) GetMintedDeposit(ctx sdk.Context, depositorAddress sdk.AccAddress) (deposit types.Deposit, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	if store.Has(types.GetMintedDepositsKey(depositorAddress)) {
-		err := k.cdc.Unmarshal(store.Get(types.GetMintedDepositsKey(depositorAddress)), &deposit)
+	if store.Has(types.GetDepositsMintedKey(depositorAddress)) {
+		err := k.cdc.Unmarshal(store.Get(types.GetDepositsMintedKey(depositorAddress)), &deposit)
 		if err != nil {
 			return deposit, false
 		}
@@ -69,15 +69,15 @@ func (k Keeper) GetFromMintedDeposits(ctx sdk.Context, depositorAddress string) 
 	return deposit, false
 }
 
-func (k Keeper) RemoveFromMintedDeposits(ctx sdk.Context, depositorAddress string) {
+func (k Keeper) RemoveMintedDeposit(ctx sdk.Context, depositorAddress sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetMintedDepositsKey(depositorAddress))
+	store.Delete(types.GetDepositsMintedKey(depositorAddress))
 }
 
-func (k Keeper) IterateWaitingProposalDeposits(ctx sdk.Context, cb func(deposit types.Deposit) bool) {
+func (k Keeper) IterateDepositsPendingWithdrawal(ctx sdk.Context, cb func(deposit types.Deposit) bool) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.WaitingProposalDepositsPrefix)
+	iterator := sdk.KVStorePrefixIterator(store, types.DepositsPendingWithdrawalPrefix)
 
 	defer iterator.Close()
 
@@ -91,18 +91,18 @@ func (k Keeper) IterateWaitingProposalDeposits(ctx sdk.Context, cb func(deposit 
 	}
 }
 
-func (k Keeper) ListWaitingProposalDeposits(ctx sdk.Context) (deposits []*types.Deposit) {
-	k.IterateWaitingProposalDeposits(ctx, func(deposit types.Deposit) bool {
+func (k Keeper) ListDepositsPendingWithdrawal(ctx sdk.Context) (deposits []*types.Deposit) {
+	k.IterateDepositsPendingWithdrawal(ctx, func(deposit types.Deposit) bool {
 		deposits = append(deposits, &deposit)
 		return false
 	})
 	return deposits
 }
 
-func (k Keeper) IterateWaitingMintDeposits(ctx sdk.Context, cb func(deposit types.Deposit) bool) {
+func (k Keeper) IterateDepositsPendingMint(ctx sdk.Context, cb func(deposit types.Deposit) bool) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.WaitingMintDepositsPrefix)
+	iterator := sdk.KVStorePrefixIterator(store, types.DepositsPendingMintPrefix)
 
 	defer iterator.Close()
 
@@ -116,18 +116,18 @@ func (k Keeper) IterateWaitingMintDeposits(ctx sdk.Context, cb func(deposit type
 	}
 }
 
-func (k Keeper) ListWaitingMintDeposits(ctx sdk.Context) (deposits []*types.Deposit) {
-	k.IterateWaitingMintDeposits(ctx, func(deposit types.Deposit) bool {
+func (k Keeper) ListDepositsPendingMint(ctx sdk.Context) (deposits []*types.Deposit) {
+	k.IterateDepositsPendingMint(ctx, func(deposit types.Deposit) bool {
 		deposits = append(deposits, &deposit)
 		return false
 	})
 	return deposits
 }
 
-func (k Keeper) IterateMintedDeposits(ctx sdk.Context, cb func(deposit types.Deposit) bool) {
+func (k Keeper) IterateDepositsMinted(ctx sdk.Context, cb func(deposit types.Deposit) bool) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.MintedDepositsPrefix)
+	iterator := sdk.KVStorePrefixIterator(store, types.DepositsMintedPrefix)
 
 	defer iterator.Close()
 
@@ -141,8 +141,8 @@ func (k Keeper) IterateMintedDeposits(ctx sdk.Context, cb func(deposit types.Dep
 	}
 }
 
-func (k Keeper) ListMintedDeposits(ctx sdk.Context) (deposits []*types.Deposit) {
-	k.IterateMintedDeposits(ctx, func(deposit types.Deposit) bool {
+func (k Keeper) ListDepositsMinted(ctx sdk.Context) (deposits []*types.Deposit) {
+	k.IterateDepositsMinted(ctx, func(deposit types.Deposit) bool {
 		deposits = append(deposits, &deposit)
 		return false
 	})

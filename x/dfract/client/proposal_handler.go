@@ -1,15 +1,16 @@
 package client
 
 import (
+	"net/http"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	"github.com/lum-network/chain/x/dfract/client/cli"
-	"net/http"
 )
 
-var ProposalHandler = govclient.NewProposalHandler(cli.NewSubmitSpendAndAdjustProposal, emptyRestHandler)
+var ProposalHandler = govclient.NewProposalHandler(cli.NewSubmitWithdrawAndMintProposal, emptyRestHandler)
 
 func emptyRestHandler(client.Context) govrest.ProposalRESTHandler {
 	return govrest.ProposalRESTHandler{
