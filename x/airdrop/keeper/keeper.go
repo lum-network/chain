@@ -3,7 +3,6 @@ package keeper
 import (
 	"errors"
 	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -11,7 +10,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/gogo/protobuf/proto"
