@@ -23,7 +23,7 @@ var testGenesis = types.GenesisState{
 		MintDenom:    sdk.DefaultBondDenom,
 		DepositDenom: sdk.DefaultBondDenom,
 	},
-	MintedDeposits: []*types.Deposit{
+	DepositsMinted: []*types.Deposit{
 		{
 			Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 			DepositorAddress: acc1.String(),
@@ -37,7 +37,7 @@ var testGenesis = types.GenesisState{
 			DepositorAddress: acc3.String(),
 		},
 	},
-	WaitingMintDeposits: []*types.Deposit{
+	DepositsPendingMint: []*types.Deposit{
 		{
 			Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 			DepositorAddress: acc1.String(),
@@ -51,7 +51,7 @@ var testGenesis = types.GenesisState{
 			DepositorAddress: acc3.String(),
 		},
 	},
-	WaitingProposalDeposits: []*types.Deposit{
+	DepositsPendingWithdrawal: []*types.Deposit{
 		{
 			Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 			DepositorAddress: acc1.String(),
@@ -80,25 +80,25 @@ func TestInitGenesis(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, params, testGenesis.Params)
 
-	mintedDeposits := app.DFractKeeper.ListMintedDeposits(ctx)
-	require.Equal(t, len(mintedDeposits), len(testGenesis.MintedDeposits))
+	mintedDeposits := app.DFractKeeper.ListDepositsMinted(ctx)
+	require.Equal(t, len(mintedDeposits), len(testGenesis.DepositsMinted))
 
 	for i, dep := range mintedDeposits {
-		require.Equal(t, dep, testGenesis.MintedDeposits[i])
+		require.Equal(t, dep, testGenesis.DepositsMinted[i])
 	}
 
-	waitingProposalDeposits := app.DFractKeeper.ListMintedDeposits(ctx)
-	require.Equal(t, len(waitingProposalDeposits), len(testGenesis.WaitingProposalDeposits))
+	waitingProposalDeposits := app.DFractKeeper.ListDepositsPendingWithdrawal(ctx)
+	require.Equal(t, len(waitingProposalDeposits), len(testGenesis.DepositsPendingWithdrawal))
 
 	for i, dep := range waitingProposalDeposits {
-		require.Equal(t, dep, testGenesis.WaitingProposalDeposits[i])
+		require.Equal(t, dep, testGenesis.DepositsPendingWithdrawal[i])
 	}
 
-	waitingMintDeposits := app.DFractKeeper.ListMintedDeposits(ctx)
-	require.Equal(t, len(waitingMintDeposits), len(testGenesis.WaitingMintDeposits))
+	waitingMintDeposits := app.DFractKeeper.ListDepositsPendingMint(ctx)
+	require.Equal(t, len(waitingMintDeposits), len(testGenesis.DepositsPendingMint))
 
 	for i, dep := range waitingMintDeposits {
-		require.Equal(t, dep, testGenesis.WaitingMintDeposits[i])
+		require.Equal(t, dep, testGenesis.DepositsPendingMint[i])
 	}
 }
 
@@ -110,9 +110,9 @@ func TestExportGenesis(t *testing.T) {
 	dfract.InitGenesis(ctx, *app.DFractKeeper, testGenesis)
 	exportGenesis := dfract.ExportGenesis(ctx, *app.DFractKeeper)
 
-	require.Equal(t, len(exportGenesis.WaitingMintDeposits), len(testGenesis.WaitingMintDeposits))
-	require.Equal(t, len(exportGenesis.WaitingProposalDeposits), len(testGenesis.WaitingProposalDeposits))
-	require.Equal(t, len(exportGenesis.MintedDeposits), len(testGenesis.MintedDeposits))
+	require.Equal(t, len(exportGenesis.DepositsPendingMint), len(testGenesis.DepositsPendingMint))
+	require.Equal(t, len(exportGenesis.DepositsPendingWithdrawal), len(testGenesis.DepositsPendingWithdrawal))
+	require.Equal(t, len(exportGenesis.DepositsMinted), len(testGenesis.DepositsMinted))
 
 	require.Equal(t, exportGenesis.ModuleAccountBalance, testGenesis.ModuleAccountBalance)
 
