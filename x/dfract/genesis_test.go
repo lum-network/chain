@@ -1,68 +1,72 @@
 package dfract_test
 
 import (
+	"testing"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	apptypes "github.com/lum-network/chain/app"
 	"github.com/lum-network/chain/x/dfract"
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"testing"
-	"time"
 )
 
 var now = time.Now().UTC()
 var acc1 = sdk.AccAddress([]byte("addr1---------------"))
 var acc2 = sdk.AccAddress([]byte("addr2---------------"))
 var acc3 = sdk.AccAddress([]byte("addr3---------------"))
+
+const mintDenom = "udfr"
+
 var testGenesis = types.GenesisState{
 	ModuleAccountBalance: []sdk.Coin{
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 15_000),
 	},
 	Params: types.Params{
-		MintDenom:        sdk.DefaultBondDenom,
+		MintDenom:        mintDenom,
 		DepositDenom:     sdk.DefaultBondDenom,
 		MinDepositAmount: 1_000,
 	},
 	DepositsMinted: []*types.Deposit{
 		{
-			Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			Amount:           sdk.NewCoin(mintDenom, sdk.NewInt(100)),
 			DepositorAddress: acc1.String(),
 		},
 		{
-			Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200)),
+			Amount:           sdk.NewCoin(mintDenom, sdk.NewInt(200)),
 			DepositorAddress: acc2.String(),
 		},
 		{
-			Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(300)),
+			Amount:           sdk.NewCoin(mintDenom, sdk.NewInt(300)),
 			DepositorAddress: acc3.String(),
 		},
 	},
 	DepositsPendingMint: []*types.Deposit{
 		{
-			Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			Amount:           sdk.NewCoin(mintDenom, sdk.NewInt(100)),
 			DepositorAddress: acc1.String(),
 		},
 		{
-			Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200)),
+			Amount:           sdk.NewCoin(mintDenom, sdk.NewInt(200)),
 			DepositorAddress: acc2.String(),
 		},
 		{
-			Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(300)),
+			Amount:           sdk.NewCoin(mintDenom, sdk.NewInt(300)),
 			DepositorAddress: acc3.String(),
 		},
 	},
 	DepositsPendingWithdrawal: []*types.Deposit{
 		{
-			Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			Amount:           sdk.NewCoin(mintDenom, sdk.NewInt(100)),
 			DepositorAddress: acc1.String(),
 		},
 		{
-			Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200)),
+			Amount:           sdk.NewCoin(mintDenom, sdk.NewInt(200)),
 			DepositorAddress: acc2.String(),
 		},
 		{
-			Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(300)),
+			Amount:           sdk.NewCoin(mintDenom, sdk.NewInt(300)),
 			DepositorAddress: acc3.String(),
 		},
 	},
@@ -88,17 +92,17 @@ func TestInitGenesis(t *testing.T) {
 		require.Equal(t, dep, testGenesis.DepositsMinted[i])
 	}
 
-	waitingProposalDeposits := app.DFractKeeper.ListDepositsPendingWithdrawal(ctx)
-	require.Equal(t, len(waitingProposalDeposits), len(testGenesis.DepositsPendingWithdrawal))
+	depositsPendingWithdrawal := app.DFractKeeper.ListDepositsPendingWithdrawal(ctx)
+	require.Equal(t, len(depositsPendingWithdrawal), len(testGenesis.DepositsPendingWithdrawal))
 
-	for i, dep := range waitingProposalDeposits {
+	for i, dep := range depositsPendingWithdrawal {
 		require.Equal(t, dep, testGenesis.DepositsPendingWithdrawal[i])
 	}
 
-	waitingMintDeposits := app.DFractKeeper.ListDepositsPendingMint(ctx)
-	require.Equal(t, len(waitingMintDeposits), len(testGenesis.DepositsPendingMint))
+	depositsPendingMint := app.DFractKeeper.ListDepositsPendingMint(ctx)
+	require.Equal(t, len(depositsPendingMint), len(testGenesis.DepositsPendingMint))
 
-	for i, dep := range waitingMintDeposits {
+	for i, dep := range depositsPendingMint {
 		require.Equal(t, dep, testGenesis.DepositsPendingMint[i])
 	}
 }

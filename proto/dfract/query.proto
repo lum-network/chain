@@ -11,8 +11,8 @@ import "dfract/deposit.proto";
 option go_package = "github.com/lum-network/chain/x/dfract/types";
 
 enum DepositsQueryType {
-  WAITING_PROPOSAL = 0 [(gogoproto.enumvalue_customname) = "TypeWaitingProposal"];
-  WAITING_MINT = 1 [(gogoproto.enumvalue_customname) = "TypeWaitingMint"];
+  PENDING_WITHDRAWAL = 0 [(gogoproto.enumvalue_customname) = "TypePendingWithdrawal"];
+  PENDING_MINT = 1 [(gogoproto.enumvalue_customname) = "TypePendingMint"];
   MINTED = 2 [(gogoproto.enumvalue_customname) = "TypeMinted"];
 }
 

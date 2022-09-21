@@ -38,9 +38,9 @@ func (k Keeper) FetchDeposits(c context.Context, req *types.QueryFetchDepositsRe
 
 	store := ctx.KVStore(k.storeKey)
 	var depositStore prefix.Store
-	if req.Type == types.DepositsQueryType_TypeWaitingProposal {
+	if req.Type == types.DepositsQueryType_TypePendingWithdrawal {
 		depositStore = prefix.NewStore(store, types.DepositsPendingWithdrawalPrefix)
-	} else if req.Type == types.DepositsQueryType_TypeWaitingMint {
+	} else if req.Type == types.DepositsQueryType_TypePendingMint {
 		depositStore = prefix.NewStore(store, types.DepositsPendingMintPrefix)
 	} else if req.Type == types.DepositsQueryType_TypeMinted {
 		depositStore = prefix.NewStore(store, types.DepositsMintedPrefix)
