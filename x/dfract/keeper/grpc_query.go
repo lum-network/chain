@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"context"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/lum-network/chain/x/dfract/types"
 	"google.golang.org/grpc/codes"
@@ -15,9 +17,14 @@ var _ types.QueryServer = Keeper{}
 func (k Keeper) GetDepositsForAddress(c context.Context, req *types.QueryGetDepositsForAddressRequest) (*types.QueryGetDepositsForAddressResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	waitingProposal, _ := k.GetFromWaitingProposalDeposits(ctx, req.Address)
-	waitingMint, _ := k.GetFromWaitingMintDeposits(ctx, req.Address)
-	minted, _ := k.GetFromMintedDeposits(ctx, req.Address)
+	accAddr, err := sdk.AccAddressFromBech32(req.Address)
+	if req.Address == "" || err != nil {
+		return nil, sdkerrors.ErrInvalidAddress
+	}
+
+	waitingProposal, _ := k.GetDepositPendingWithdrawal(ctx, accAddr)
+	waitingMint, _ := k.GetDepositPendingMint(ctx, accAddr)
+	minted, _ := k.GetMintedDeposit(ctx, accAddr)
 
 	return &types.QueryGetDepositsForAddressResponse{
 		WaitingProposalDeposits: &waitingProposal,
@@ -32,11 +39,11 @@ func (k Keeper) FetchDeposits(c context.Context, req *types.QueryFetchDepositsRe
 	store := ctx.KVStore(k.storeKey)
 	var depositStore prefix.Store
 	if req.Type == types.DepositsQueryType_TypeWaitingProposal {
-		depositStore = prefix.NewStore(store, types.GetWaitingProposalDepositsKey(""))
+		depositStore = prefix.NewStore(store, types.DepositsPendingWithdrawalPrefix)
 	} else if req.Type == types.DepositsQueryType_TypeWaitingMint {
-		depositStore = prefix.NewStore(store, types.GetWaitingMintDepositsKey(""))
+		depositStore = prefix.NewStore(store, types.DepositsPendingMintPrefix)
 	} else if req.Type == types.DepositsQueryType_TypeMinted {
-		depositStore = prefix.NewStore(store, types.GetMintedDepositsKey(""))
+		depositStore = prefix.NewStore(store, types.DepositsMintedPrefix)
 	}
 
 	var deposits []types.Deposit
