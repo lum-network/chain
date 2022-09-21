@@ -20,6 +20,18 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 	if err != nil {
 		return err
 	}
+	if params.MinDepositAmount <= 0 {
+		return types.ErrInvalidMinDepositAmount
+	}
+	if params.MintDenom == "" {
+		return types.ErrInvalidMintDenom
+	}
+	if params.DepositDenom == "" {
+		return types.ErrInvalidDepositDenom
+	}
+	if params.MintDenom == k.StakingKeeper.BondDenom(ctx) {
+		return types.ErrIllegalMintDenom
+	}
 	store.Set([]byte(types.ParamsKey), bz)
 	return nil
 }

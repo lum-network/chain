@@ -11,8 +11,8 @@ import (
 func NewDFractProposalHandler(k keeper.Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
-		case *types.SpendAndAdjustProposal:
-			return handleSpendAndAdjustProposal(ctx, k, c)
+		case *types.WithdrawAndMintProposal:
+			return handleWithdrawAndMintProposal(ctx, k, c)
 
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized dfract proposal content type: %T", c)
@@ -20,12 +20,12 @@ func NewDFractProposalHandler(k keeper.Keeper) govtypes.Handler {
 	}
 }
 
-func handleSpendAndAdjustProposal(ctx sdk.Context, k keeper.Keeper, p *types.SpendAndAdjustProposal) error {
+func handleWithdrawAndMintProposal(ctx sdk.Context, k keeper.Keeper, p *types.WithdrawAndMintProposal) error {
 	if err := p.ValidateBasic(); err != nil {
 		return err
 	}
 
-	if err := k.ProcessSpendAndAdjustProposal(ctx, p); err != nil {
+	if err := k.ProcessWithdrawAndMintProposal(ctx, p); err != nil {
 		return err
 	}
 	return nil

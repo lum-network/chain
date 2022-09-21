@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,14 +10,13 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/spf13/cobra"
-	"strconv"
 )
 
-func NewSubmitSpendAndAdjustProposal() *cobra.Command {
+func NewSubmitWithdrawAndMintProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "spend-and-adjust [destinationAddress] [mintInfo] [flags]",
+		Use:   "withdraw-and-mint [withdrawalAddress] [mintInfo] [flags]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Submit a spend and adjust proposal",
+		Short: "Submit a withdraw and mint proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -48,12 +49,12 @@ func NewSubmitSpendAndAdjustProposal() *cobra.Command {
 
 			// Extract the other parameters
 			destinationAddress := args[0]
-			mintRate, err := strconv.ParseInt(args[1], 10, 64)
+			microMintRate, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			content := types.NewSpendAndAdjustProposal(title, description, destinationAddress, mintRate)
+			content := types.NewWithdrawAndMintProposal(title, description, destinationAddress, microMintRate)
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err

@@ -8,4 +8,5 @@ option go_package = "github.com/lum-network/chain/x/dfract/types";
 message Params {
   string deposit_denom = 1;
   string mint_denom = 2;
+  int64 min_deposit_amount = 3;
 }

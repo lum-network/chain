@@ -20,7 +20,7 @@ message GenesisState {
     (gogoproto.nullable) = false
   ];
 
-  repeated Deposit waiting_proposal_deposits = 3;
-  repeated Deposit waiting_mint_deposits = 4;
-  repeated Deposit minted_deposits = 5;
+  repeated Deposit deposits_pending_withdrawal = 3;
+  repeated Deposit deposits_pending_mint = 4;
+  repeated Deposit deposits_minted = 5;
 }
