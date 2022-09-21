@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -12,7 +14,6 @@ import (
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/tendermint/tendermint/libs/log"
-	"strconv"
 )
 
 func permContains(perms []string, perm string) bool {
