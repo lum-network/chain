@@ -155,7 +155,11 @@ func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 
 	// Trigger the events
 	ctx.EventManager().Events().AppendEvents(sdk.Events{
-		sdk.NewEvent(types.EventTypeDeposit, sdk.NewAttribute(types.AttributeKeyDepositor, msg.GetDepositorAddress())),
+		sdk.NewEvent(
+			types.EventTypeDeposit,
+			sdk.NewAttribute(types.AttributeKeyDepositor, msg.GetDepositorAddress()),
+			sdk.NewAttribute(types.AttributeKeyAmount, msg.GetAmount().String()),
+		),
 	})
 	return nil
 }
@@ -192,7 +196,6 @@ func (k Keeper) ProcessWithdrawAndMintProposal(ctx sdk.Context, proposal *types.
 			return sdkerrors.ErrInvalidAddress
 		}
 
-		// TODO - this should take into consideration the microMintRate
 		toMint := sdk.NewCoin(params.MintDenom, deposit.GetAmount().Amount.MulRaw(proposal.GetMicroMintRate()).QuoRaw(MicroPrecision))
 		if err := k.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(toMint)); err != nil {
 			return err
@@ -204,9 +207,18 @@ func (k Keeper) ProcessWithdrawAndMintProposal(ctx sdk.Context, proposal *types.
 
 		k.RemoveDepositPendingMint(ctx, depositorAddress)
 		k.SetDepositMinted(ctx, depositorAddress, *deposit)
+		ctx.EventManager().Events().AppendEvents(sdk.Events{
+			sdk.NewEvent(
+				types.EventTypeMint,
+				sdk.NewAttribute(types.AttributeKeyDepositor, depositorAddress.String()),
+				sdk.NewAttribute(types.AttributeKeyAmount, deposit.GetAmount().String()),
+				sdk.NewAttribute(types.AttributeKeyMinted, toMint.String()),
+				sdk.NewAttribute(types.AttributeKeyMicroMintRate, fmt.Sprintf("%d", proposal.GetMicroMintRate())),
+			),
+		})
 	}
 
-	// Process the waiting proposal deposits
+	// Process the pending withdrawal deposits
 	for _, deposit := range depositsPendingWithdrawal {
 		depositorAddress, err := sdk.AccAddressFromBech32(deposit.GetDepositorAddress())
 		if err != nil {
@@ -214,6 +226,13 @@ func (k Keeper) ProcessWithdrawAndMintProposal(ctx sdk.Context, proposal *types.
 		}
 		k.RemoveDepositPendingWithdrawal(ctx, depositorAddress)
 		k.SetDepositPendingMint(ctx, depositorAddress, *deposit)
+		ctx.EventManager().Events().AppendEvents(sdk.Events{
+			sdk.NewEvent(
+				types.EventTypeWithdraw,
+				sdk.NewAttribute(types.AttributeKeyDepositor, depositorAddress.String()),
+				sdk.NewAttribute(types.AttributeKeyAmount, deposit.GetAmount().String()),
+			),
+		})
 	}
 
 	// Trigger the events

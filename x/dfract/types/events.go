@@ -1,9 +1,13 @@
 package types
 
 const (
-	EventTypeDeposit = "deposit"
-	EventTypeMint    = "mint"
+	EventTypeDeposit  = "deposit"
+	EventTypeWithdraw = "withdraw"
+	EventTypeMint     = "mint"
 
-	AttributeKeyDepositor = "depositor"
-	AttributeKeyMintBlock = "mint_block"
+	AttributeKeyDepositor     = "depositor"
+	AttributeKeyAmount        = "amount"
+	AttributeKeyMinted        = "minted"
+	AttributeKeyMicroMintRate = "micro_mint_rate"
+	AttributeKeyMintBlock     = "mint_block"
 )
