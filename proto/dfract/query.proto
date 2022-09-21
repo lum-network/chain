@@ -1,7 +1,47 @@
 syntax = "proto3";
 package lum.network.dfract;
 
+import "google/api/annotations.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+import "dfract/deposit.proto";
 
 option go_package = "github.com/lum-network/chain/x/dfract/types";
+
+enum DepositsQueryType {
+  WAITING_PROPOSAL = 0 [(gogoproto.enumvalue_customname) = "TypeWaitingProposal"];
+  WAITING_MINT = 1 [(gogoproto.enumvalue_customname) = "TypeWaitingMint"];
+  MINTED = 2 [(gogoproto.enumvalue_customname) = "TypeMinted"];
+}
+
+service Query {
+  rpc GetDepositsForAddress(QueryGetDepositsForAddressRequest) returns (QueryGetDepositsForAddressResponse) {
+    option (google.api.http).get = "/lum-network/dfract/deposits/{address}";
+  }
+
+  rpc FetchDeposits(QueryFetchDepositsRequest) returns (QueryFetchDepositsResponse) {
+    option (google.api.http).get = "/lum-network/dfract/deposits";
+  }
+}
+
+message QueryGetDepositsForAddressRequest {
+  string address = 1;
+}
+
+message QueryFetchDepositsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  DepositsQueryType type = 2;
+}
+
+message QueryGetDepositsForAddressResponse {
+  Deposit waiting_proposal_deposits = 1;
+  Deposit waiting_mint_deposits = 2;
+  Deposit minted_deposits = 3;
+}
+
+message QueryFetchDepositsResponse {
+  repeated Deposit deposits = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

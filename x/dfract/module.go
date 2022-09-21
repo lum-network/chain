@@ -1,6 +1,7 @@
 package dfract
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -73,7 +74,8 @@ func (a AppModuleBasic) RegisterRESTRoutes(context client.Context, router *mux.R
 	rest.RegisterRoutes(context, router)
 }
 
-func (a AppModuleBasic) RegisterGRPCGatewayRoutes(context client.Context, mux *runtime.ServeMux) {
+func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	_ = types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -132,7 +134,8 @@ func (a AppModule) LegacyQuerierHandler(amino *codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 
-func (a AppModule) RegisterServices(configurator module.Configurator) {
+func (a AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterQueryServer(cfg.QueryServer(), a.keeper)
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the capability module.

@@ -130,6 +130,7 @@ var (
 		vesting.AppModuleBasic{},
 		beam.AppModuleBasic{},
 		airdrop.AppModuleBasic{},
+		dfract.AppModuleBasic{},
 	)
 
 	// module account permissions
