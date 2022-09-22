@@ -49,7 +49,7 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 }
 
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterCodec(cdc)
+	cdc.RegisterConcrete(&types.WithdrawAndMintProposal{}, "lum-network/WithdrawAndMintProposal", nil)
 }
 
 // RegisterInterfaces registers the module's interface types

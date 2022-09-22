@@ -12,7 +12,7 @@ var (
 	KeyMinDepositAmount = []byte("MinDepositAmount")
 )
 
-// ParamTable for gamm module.
+// ParamKeyTable for dfract module.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
