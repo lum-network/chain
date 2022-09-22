@@ -23,3 +23,9 @@ var (
 	amino     = codec.NewLegacyAmino()
 	ModuleCdc = codec.NewAminoCodec(amino)
 )
+
+func init() {
+	RegisterCodec(amino)
+	sdk.RegisterLegacyAminoCodec(amino)
+	amino.Seal()
+}
