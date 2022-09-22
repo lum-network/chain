@@ -37,6 +37,8 @@ func CmdDeposit() *cobra.Command {
 				return err
 			}
 
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
 			// Acquire the command arguments
 			argsAmount, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
@@ -50,7 +52,7 @@ func CmdDeposit() *cobra.Command {
 			}
 
 			// Generate the transaction
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
