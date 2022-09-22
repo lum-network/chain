@@ -14,7 +14,7 @@ import (
 
 func NewSubmitWithdrawAndMintProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "withdraw-and-mint [withdrawalAddress] [mintInfo] [flags]",
+		Use:   "withdraw-and-mint <withdrawalAddress> <mint_rate> [flags]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Submit a withdraw and mint proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -67,7 +67,7 @@ func NewSubmitWithdrawAndMintProposal() *cobra.Command {
 	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 
-	cmd.MarkFlagRequired(cli.FlagTitle)
-	cmd.MarkFlagRequired(cli.FlagDescription)
+	_ = cmd.MarkFlagRequired(cli.FlagTitle)
+	_ = cmd.MarkFlagRequired(cli.FlagDescription)
 	return cmd
 }
