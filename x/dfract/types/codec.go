@@ -17,8 +17,8 @@ var (
 
 // RegisterLegacyAminoCodec Register the codec for the message passing
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgDeposit{}, "lum-network/Deposit", nil)
-	cdc.RegisterConcrete(&WithdrawAndMintProposal{}, "lum-network/WithdrawAndMintProposal", nil)
+	cdc.RegisterConcrete(&MsgDeposit{}, "lum-network/MsgDeposit", nil)
+	cdc.RegisterConcrete(&WithdrawAndMintProposal{}, "lum-network/MsgWithdrawAndMintProposal", nil)
 }
 
 // RegisterInterfaces Register the implementations for the given codecs
