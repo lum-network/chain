@@ -44,7 +44,6 @@ func (suite *KeeperTestSuite) TestInvalidParams() {
 	panicF := func() {
 		app.DFractKeeper.SetParams(ctx, types.Params{
 			DepositDenom:     "",
-			MintDenom:        "",
 			MinDepositAmount: 0,
 		})
 	}
@@ -53,16 +52,6 @@ func (suite *KeeperTestSuite) TestInvalidParams() {
 	panicF = func() {
 		app.DFractKeeper.SetParams(ctx, types.Params{
 			DepositDenom:     "",
-			MintDenom:        "",
-			MinDepositAmount: 1,
-		})
-	}
-	require.Panics(suite.T(), panicF)
-
-	panicF = func() {
-		app.DFractKeeper.SetParams(ctx, types.Params{
-			DepositDenom:     "",
-			MintDenom:        "udfr",
 			MinDepositAmount: 1,
 		})
 	}
@@ -83,7 +72,6 @@ func (suite *KeeperTestSuite) TestInvalidParams() {
 func (suite *KeeperTestSuite) TestInvalidDenomDeposit() {
 	app := suite.app
 	ctx := suite.ctx
-	params := app.DFractKeeper.GetParams(ctx)
 
 	// Obtain the required accounts
 	depositor := suite.addrs[0]
@@ -91,7 +79,7 @@ func (suite *KeeperTestSuite) TestInvalidDenomDeposit() {
 	// Try to deposit 100000000 of the mint denom
 	err := app.DFractKeeper.CreateDeposit(ctx, types.MsgDeposit{
 		DepositorAddress: depositor.String(),
-		Amount:           sdk.NewCoin(params.MintDenom, sdk.NewInt(100000000)),
+		Amount:           sdk.NewCoin(types.MintDenom, sdk.NewInt(100000000)),
 	})
 	require.Error(suite.T(), err)
 	require.Equal(suite.T(), err, types.ErrUnauthorizedDepositDenom)
@@ -169,7 +157,7 @@ func (suite *KeeperTestSuite) TestValidDeposit() {
 	// We store the initial depositor balances
 	depositorAvailableBalance := app.BankKeeper.GetBalance(ctx, depositor, params.DepositDenom)
 	require.GreaterOrEqual(suite.T(), depositorAvailableBalance.Amount.Int64(), int64(300000000))
-	depositorMintedBalance := app.BankKeeper.GetBalance(ctx, depositor, params.MintDenom)
+	depositorMintedBalance := app.BankKeeper.GetBalance(ctx, depositor, types.MintDenom)
 	require.Equal(suite.T(), depositorMintedBalance.Amount.Int64(), int64(0))
 
 	// We try to deposit 100000000 of the deposit denom
@@ -212,7 +200,7 @@ func (suite *KeeperTestSuite) TestMintAccuracy() {
 	withdrawAddr := suite.addrs[0]
 
 	testAccuracy := func(depositor sdk.AccAddress, depositAmount int64, microMintRate int64, expectedMintedAmount int64) {
-		balanceBeforeMint := app.BankKeeper.GetBalance(ctx, depositor, params.MintDenom)
+		balanceBeforeMint := app.BankKeeper.GetBalance(ctx, depositor, types.MintDenom)
 		app.DFractKeeper.SetDepositPendingMint(ctx, depositor, types.Deposit{
 			DepositorAddress: depositor.String(),
 			Amount:           sdk.NewCoin(params.DepositDenom, sdk.NewInt(depositAmount)),
@@ -223,7 +211,7 @@ func (suite *KeeperTestSuite) TestMintAccuracy() {
 			WithdrawalAddress: withdrawAddr.String(),
 			MicroMintRate:     microMintRate,
 		})
-		balance := app.BankKeeper.GetBalance(ctx, depositor, params.MintDenom)
+		balance := app.BankKeeper.GetBalance(ctx, depositor, types.MintDenom)
 		require.Equal(suite.T(), expectedMintedAmount, balance.Amount.Int64()-balanceBeforeMint.Amount.Int64())
 	}
 
@@ -334,7 +322,7 @@ func (suite *KeeperTestSuite) TestChainedFullProcess() {
 			require.NoError(suite.T(), err)
 			res[addr] = []sdk.Coin{
 				app.BankKeeper.GetBalance(ctx, accAddr, params.DepositDenom),
-				app.BankKeeper.GetBalance(ctx, accAddr, params.MintDenom),
+				app.BankKeeper.GetBalance(ctx, accAddr, types.MintDenom),
 			}
 			deposit, found := app.DFractKeeper.GetDepositPendingWithdrawal(ctx, accAddr)
 			if found {
@@ -362,7 +350,7 @@ func (suite *KeeperTestSuite) TestChainedFullProcess() {
 	preRunStates := getAllStates()
 	preRunSupplies := []sdk.Coin{
 		app.BankKeeper.GetSupply(ctx, params.DepositDenom),
-		app.BankKeeper.GetSupply(ctx, params.MintDenom),
+		app.BankKeeper.GetSupply(ctx, types.MintDenom),
 	}
 
 	for i, stage := range stages {
@@ -370,7 +358,7 @@ func (suite *KeeperTestSuite) TestChainedFullProcess() {
 		initialStates := getAllStates()
 		initialSupplies := []sdk.Coin{
 			app.BankKeeper.GetSupply(ctx, params.DepositDenom),
-			app.BankKeeper.GetSupply(ctx, params.MintDenom),
+			app.BankKeeper.GetSupply(ctx, types.MintDenom),
 		}
 		require.Len(suite.T(), initialStates, len(depositorsAddrs)+2)
 
@@ -433,7 +421,7 @@ func (suite *KeeperTestSuite) TestChainedFullProcess() {
 		// Control supply (no change expected)
 		postDepositsSupplies := []sdk.Coin{
 			app.BankKeeper.GetSupply(ctx, params.DepositDenom),
-			app.BankKeeper.GetSupply(ctx, params.MintDenom),
+			app.BankKeeper.GetSupply(ctx, types.MintDenom),
 		}
 		require.True(suite.T(), postDepositsSupplies[0].Equal(initialSupplies[0]))
 		require.True(suite.T(), postDepositsSupplies[1].Equal(initialSupplies[1]))
@@ -486,7 +474,7 @@ func (suite *KeeperTestSuite) TestChainedFullProcess() {
 		// Control supply (mint should have increased by the minted amount)
 		postProposalSupplies := []sdk.Coin{
 			app.BankKeeper.GetSupply(ctx, params.DepositDenom),
-			app.BankKeeper.GetSupply(ctx, params.MintDenom),
+			app.BankKeeper.GetSupply(ctx, types.MintDenom),
 		}
 		require.True(suite.T(), postProposalSupplies[0].Equal(postDepositsSupplies[0]))
 		require.True(suite.T(), postProposalSupplies[1].Amount.Equal(postDepositsSupplies[1].Amount.Add(totalMintAmount.MulRaw(stage.microMintRate).QuoRaw(keeper.MicroPrecision))))
@@ -495,7 +483,7 @@ func (suite *KeeperTestSuite) TestChainedFullProcess() {
 	postRunStates := getAllStates()
 	postRunSupplies := []sdk.Coin{
 		app.BankKeeper.GetSupply(ctx, params.DepositDenom),
-		app.BankKeeper.GetSupply(ctx, params.MintDenom),
+		app.BankKeeper.GetSupply(ctx, types.MintDenom),
 	}
 	// We expect the module account balances to be completely empty
 	require.Equal(suite.T(), int64(0), postRunStates[moduleAddr][0].Amount.Int64())

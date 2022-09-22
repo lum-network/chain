@@ -21,8 +21,8 @@ const (
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_capability"
 
-	// ParamsKey defines the store key for claim module parameters
-	ParamsKey = "dfract_params"
+	// MintDenom defines the denom of the minted token
+	MintDenom = "udfr"
 )
 
 var (

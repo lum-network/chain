@@ -24,7 +24,7 @@ genesis:
         min_deposit: [{"amount": "1000000000", "denom": "ulum"}]
     dfract:
       params:
-        mint_denom: "udfr"
+        min_deposit_amount: "1"
         deposit_denom: "ulum"
 faucet:
   name: user1

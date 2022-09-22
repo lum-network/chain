@@ -102,7 +102,7 @@ func (k Keeper) GetModuleAccountBalanceForDenom(ctx sdk.Context, denom string) s
 	moduleAcc := k.GetModuleAccount(ctx)
 	params := k.GetParams(ctx)
 
-	if denom != params.DepositDenom && denom != params.MintDenom {
+	if denom != params.DepositDenom && denom != types.MintDenom {
 		return sdk.Coin{}
 	}
 
@@ -195,7 +195,7 @@ func (k Keeper) ProcessWithdrawAndMintProposal(ctx sdk.Context, proposal *types.
 			return sdkerrors.ErrInvalidAddress
 		}
 
-		toMint := sdk.NewCoin(params.MintDenom, deposit.GetAmount().Amount.MulRaw(proposal.GetMicroMintRate()).QuoRaw(MicroPrecision))
+		toMint := sdk.NewCoin(types.MintDenom, deposit.GetAmount().Amount.MulRaw(proposal.GetMicroMintRate()).QuoRaw(MicroPrecision))
 		if err := k.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(toMint)); err != nil {
 			return err
 		}

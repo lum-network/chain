@@ -11,7 +11,6 @@ import (
 // Parameter store keys.
 var (
 	KeyDepositDenom     = []byte("DepositDenom")
-	KeyMintDenom        = []byte("MintDenom")
 	KeyMinDepositAmount = []byte("MinDepositAmount")
 )
 
@@ -24,7 +23,6 @@ func ParamKeyTable() paramtypes.KeyTable {
 func DefaultParams() Params {
 	return Params{
 		DepositDenom:     "ibc/05554A9BFDD28894D7F18F4C707AA0930D778751A437A9FE1F4684A3E1199728", // USDC ibc denom from Osmosis to Lum Network mainnet
-		MintDenom:        "udfr",
 		MinDepositAmount: 1000000,
 	}
 }
@@ -37,34 +35,14 @@ func (p *Params) Validate() error {
 	if err := validateMinDepositAmount(p.MinDepositAmount); err != nil {
 		return err
 	}
-
-	if err := validateMintDenom(p.MintDenom); err != nil {
-		return err
-	}
-
 	return nil
 }
 
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyDepositDenom, &p.DepositDenom, validateDepositDenom),
-		paramtypes.NewParamSetPair(KeyMintDenom, &p.MintDenom, validateMintDenom),
 		paramtypes.NewParamSetPair(KeyMinDepositAmount, &p.MinDepositAmount, validateMinDepositAmount),
 	}
-}
-
-func validateMintDenom(i interface{}) error {
-	v, ok := i.(string)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	if strings.TrimSpace(v) == "" {
-		return ErrInvalidMintDenom
-	}
-	if err := sdktypes.ValidateDenom(v); err != nil {
-		return err
-	}
-	return nil
 }
 
 func validateDepositDenom(i interface{}) error {
