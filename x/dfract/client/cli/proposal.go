@@ -14,7 +14,7 @@ import (
 
 func NewSubmitWithdrawAndMintProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "withdraw-and-mint <withdrawalAddress> <mint_rate> [flags]",
+		Use:   "withdraw-and-mint [withdrawal-ddress] [micro-mint-rate] [flags]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Submit a withdraw and mint proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
