@@ -23,10 +23,7 @@ func (k Keeper) ModuleAccountBalance(c context.Context, _ *types.QueryModuleAcco
 
 func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	params, err := k.GetParams(ctx)
-	if err != nil {
-		return nil, err
-	}
+	params := k.GetParams(ctx)
 
 	return &types.QueryParamsResponse{Params: params}, nil
 }

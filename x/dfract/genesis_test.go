@@ -81,8 +81,7 @@ func TestInitGenesis(t *testing.T) {
 	balance := app.DFractKeeper.GetModuleAccountBalanceForDenom(ctx, sdk.DefaultBondDenom)
 	require.Equal(t, balance.Amount.Int64(), testGenesis.ModuleAccountBalance[0].Amount.Int64())
 
-	params, err := app.DFractKeeper.GetParams(ctx)
-	require.NoError(t, err)
+	params := app.DFractKeeper.GetParams(ctx)
 	require.Equal(t, params, testGenesis.Params)
 
 	mintedDeposits := app.DFractKeeper.ListDepositsMinted(ctx)

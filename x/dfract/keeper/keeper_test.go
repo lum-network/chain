@@ -31,10 +31,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = ctx
 
 	// Setup the module params
-	err := app.DFractKeeper.SetParams(ctx, types.DefaultParams())
-	suite.Require().NoError(err)
+	app.DFractKeeper.SetParams(ctx, types.DefaultParams())
 
-	params, _ := app.DFractKeeper.GetParams(ctx)
+	params := app.DFractKeeper.GetParams(ctx)
 	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 6, sdk.NewInt(300000000), params.DepositDenom)
 }
 
@@ -42,42 +41,40 @@ func (suite *KeeperTestSuite) TestInvalidParams() {
 	app := suite.app
 	ctx := suite.ctx
 
-	err := app.DFractKeeper.SetParams(ctx, types.Params{
-		DepositDenom:     "",
-		MintDenom:        "",
-		MinDepositAmount: 0,
-	})
-	require.Equal(suite.T(), err, types.ErrInvalidMinDepositAmount)
+	panicF := func() {
+		app.DFractKeeper.SetParams(ctx, types.Params{
+			DepositDenom:     "",
+			MintDenom:        "",
+			MinDepositAmount: 0,
+		})
+	}
+	require.Panics(suite.T(), panicF)
 
-	err = app.DFractKeeper.SetParams(ctx, types.Params{
-		DepositDenom:     "",
-		MintDenom:        "",
-		MinDepositAmount: 1,
-	})
-	require.Equal(suite.T(), err, types.ErrInvalidMintDenom)
+	panicF = func() {
+		app.DFractKeeper.SetParams(ctx, types.Params{
+			DepositDenom:     "",
+			MintDenom:        "",
+			MinDepositAmount: 1,
+		})
+	}
+	require.Panics(suite.T(), panicF)
 
-	err = app.DFractKeeper.SetParams(ctx, types.Params{
-		DepositDenom:     "",
-		MintDenom:        "udfr",
-		MinDepositAmount: 1,
-	})
-	require.Equal(suite.T(), err, types.ErrInvalidDepositDenom)
+	panicF = func() {
+		app.DFractKeeper.SetParams(ctx, types.Params{
+			DepositDenom:     "",
+			MintDenom:        "udfr",
+			MinDepositAmount: 1,
+		})
+	}
+	require.Panics(suite.T(), panicF)
 
-	err = app.DFractKeeper.SetParams(ctx, types.Params{
-		DepositDenom:     "ulum",
-		MintDenom:        app.StakingKeeper.BondDenom(ctx),
-		MinDepositAmount: 1,
-	})
-	require.Equal(suite.T(), err, types.ErrIllegalMintDenom)
-
-	err = app.DFractKeeper.SetParams(ctx, types.DefaultParams())
-	require.NoError(suite.T(), err)
+	app.DFractKeeper.SetParams(ctx, types.DefaultParams())
 }
 
 func (suite *KeeperTestSuite) TestInvalidDenomDeposit() {
 	app := suite.app
 	ctx := suite.ctx
-	params, _ := app.DFractKeeper.GetParams(ctx)
+	params := app.DFractKeeper.GetParams(ctx)
 
 	// Obtain the required accounts
 	depositor := suite.addrs[0]
@@ -102,7 +99,7 @@ func (suite *KeeperTestSuite) TestInvalidDenomDeposit() {
 func (suite *KeeperTestSuite) TestInvalidAmountDeposit() {
 	app := suite.app
 	ctx := suite.ctx
-	params, _ := app.DFractKeeper.GetParams(ctx)
+	params := app.DFractKeeper.GetParams(ctx)
 
 	// Obtain the required accounts
 	depositor := suite.addrs[0]
@@ -127,7 +124,7 @@ func (suite *KeeperTestSuite) TestInvalidAmountDeposit() {
 func (suite *KeeperTestSuite) TestDoubleDeposit() {
 	app := suite.app
 	ctx := suite.ctx
-	params, _ := app.DFractKeeper.GetParams(ctx)
+	params := app.DFractKeeper.GetParams(ctx)
 
 	// Obtain the required accounts
 	depositor := suite.addrs[0]
@@ -155,7 +152,7 @@ func (suite *KeeperTestSuite) TestDoubleDeposit() {
 func (suite *KeeperTestSuite) TestValidDeposit() {
 	app := suite.app
 	ctx := suite.ctx
-	params, _ := app.DFractKeeper.GetParams(ctx)
+	params := app.DFractKeeper.GetParams(ctx)
 
 	// Obtain the required accounts
 	depositor := suite.addrs[0]
@@ -200,7 +197,7 @@ func (suite *KeeperTestSuite) TestValidDeposit() {
 func (suite *KeeperTestSuite) TestMintAccuracy() {
 	app := suite.app
 	ctx := suite.ctx
-	params, _ := app.DFractKeeper.GetParams(ctx)
+	params := app.DFractKeeper.GetParams(ctx)
 
 	// Obtain the required accounts
 	withdrawAddr := suite.addrs[0]
@@ -244,7 +241,7 @@ func (suite *KeeperTestSuite) TestMintAccuracy() {
 func (suite *KeeperTestSuite) TestChainedFullProcess() {
 	app := suite.app
 	ctx := suite.ctx
-	params, _ := app.DFractKeeper.GetParams(ctx)
+	params := app.DFractKeeper.GetParams(ctx)
 	withdrawAddr := suite.addrs[0].String()
 	moduleAddr := app.DFractKeeper.GetModuleAccount(ctx).String()
 	depositorsAddrs := []string{suite.addrs[1].String(), suite.addrs[2].String(), suite.addrs[3].String(), suite.addrs[4].String(), suite.addrs[5].String()}

@@ -2,13 +2,13 @@ package types
 
 import (
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Parameter store keys.
 var (
 	KeyDepositDenom     = []byte("DepositDenom")
+	KeyMintDenom        = []byte("MintDenom")
 	KeyMinDepositAmount = []byte("MinDepositAmount")
 )
 
@@ -26,12 +26,16 @@ func DefaultParams() Params {
 	}
 }
 
-func (p Params) Validate() error {
+func (p *Params) Validate() error {
 	if err := validateDepositDenom(p.DepositDenom); err != nil {
 		return err
 	}
 
 	if err := validateMinDepositAmount(p.MinDepositAmount); err != nil {
+		return err
+	}
+
+	if err := validateMintDenom(p.MintDenom); err != nil {
 		return err
 	}
 
@@ -41,8 +45,21 @@ func (p Params) Validate() error {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyDepositDenom, &p.DepositDenom, validateDepositDenom),
+		paramtypes.NewParamSetPair(KeyMintDenom, &p.MintDenom, validateMintDenom),
 		paramtypes.NewParamSetPair(KeyMinDepositAmount, &p.MinDepositAmount, validateMinDepositAmount),
 	}
+}
+
+func validateMintDenom(i interface{}) error {
+	v, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == "" {
+		return ErrInvalidMintDenom
+	}
+	return nil
 }
 
 func validateDepositDenom(i interface{}) error {
@@ -52,19 +69,19 @@ func validateDepositDenom(i interface{}) error {
 	}
 
 	if v == "" {
-		return fmt.Errorf("invalid deposit denom: %+v", i)
+		return ErrInvalidDepositDenom
 	}
 	return nil
 }
 
 func validateMinDepositAmount(i interface{}) error {
-	v, ok := i.(sdk.Coins)
+	v, ok := i.(int64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.Validate() != nil {
-		return fmt.Errorf("invalid min deposit amount: %+v", i)
+	if v <= 0 {
+		return ErrInvalidMinDepositAmount
 	}
 	return nil
 }

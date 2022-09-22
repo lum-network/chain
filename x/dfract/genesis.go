@@ -11,9 +11,7 @@ import (
 // InitGenesis initializes the dfract module's state from a provided genesis state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) error {
 	k.CreateModuleAccount(ctx, genState.ModuleAccountBalance)
-	if err := k.SetParams(ctx, genState.Params); err != nil {
-		panic(err)
-	}
+	k.SetParams(ctx, genState.Params)
 
 	// Process the minted deposits
 	for _, deposit := range genState.DepositsMinted {
@@ -47,10 +45,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 // ExportGenesis returns the dfract module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	params, err := k.GetParams(ctx)
-	if err != nil {
-		panic(err)
-	}
+	params := k.GetParams(ctx)
 
 	return &types.GenesisState{
 		ModuleAccountBalance:      k.GetModuleAccountBalance(ctx),

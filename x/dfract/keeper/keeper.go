@@ -100,10 +100,7 @@ func (k Keeper) GetModuleAccountBalance(ctx sdk.Context) sdk.Coins {
 // GetModuleAccountBalanceForDenom Return the module account's balance
 func (k Keeper) GetModuleAccountBalanceForDenom(ctx sdk.Context, denom string) sdk.Coin {
 	moduleAcc := k.GetModuleAccount(ctx)
-	params, err := k.GetParams(ctx)
-	if err != nil {
-		panic(err)
-	}
+	params := k.GetParams(ctx)
 
 	if denom != params.DepositDenom && denom != params.MintDenom {
 		return sdk.Coin{}
@@ -115,10 +112,7 @@ func (k Keeper) GetModuleAccountBalanceForDenom(ctx sdk.Context, denom string) s
 // CreateDeposit Process the deposit message
 func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 	// Acquire the parameters to get the denoms
-	params, err := k.GetParams(ctx)
-	if err != nil {
-		return err
-	}
+	params := k.GetParams(ctx)
 
 	// Make sure the deposit is made of allowed denom
 	if params.DepositDenom != msg.GetAmount().Denom {
@@ -174,10 +168,7 @@ func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 
 func (k Keeper) ProcessWithdrawAndMintProposal(ctx sdk.Context, proposal *types.WithdrawAndMintProposal) error {
 	// Acquire the parameters to get the denoms
-	params, err := k.GetParams(ctx)
-	if err != nil {
-		return err
-	}
+	params := k.GetParams(ctx)
 
 	// Acquire the module account balance
 	balance := k.GetModuleAccountBalanceForDenom(ctx, params.GetDepositDenom())
