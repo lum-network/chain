@@ -11,6 +11,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -33,6 +34,7 @@ type (
 		cdc           codec.BinaryCodec
 		storeKey      sdk.StoreKey
 		memKey        sdk.StoreKey
+		paramSpace    paramtypes.Subspace
 		AuthKeeper    authkeeper.AccountKeeper
 		BankKeeper    bankkeeper.Keeper
 		GovKeeper     govkeeper.Keeper
@@ -41,7 +43,7 @@ type (
 )
 
 // NewKeeper Create a new keeper instance and return the pointer
-func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper, sk stakingkeeper.Keeper) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, paramSpace paramtypes.Subspace, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper, sk stakingkeeper.Keeper) *Keeper {
 	moduleAddr, perms := auth.GetModuleAddressAndPermissions(types.ModuleName)
 	if moduleAddr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -55,10 +57,16 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, auth authke
 		panic(fmt.Sprintf("%s module account should have the burner permission", types.ModuleName))
 	}
 
+	// Make sure we have the parameters table
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return &Keeper{
 		cdc:           cdc,
 		storeKey:      storeKey,
 		memKey:        memKey,
+		paramSpace:    paramSpace,
 		AuthKeeper:    auth,
 		BankKeeper:    bank,
 		StakingKeeper: sk,
