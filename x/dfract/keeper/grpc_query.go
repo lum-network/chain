@@ -41,9 +41,9 @@ func (k Keeper) GetDepositsForAddress(c context.Context, req *types.QueryGetDepo
 	minted, _ := k.GetDepositMinted(ctx, accAddr)
 
 	return &types.QueryGetDepositsForAddressResponse{
-		WaitingProposalDeposits: &waitingProposal,
-		WaitingMintDeposits:     &waitingMint,
-		MintedDeposits:          &minted,
+		DepositsPendingWithdrawal: &waitingProposal,
+		DepositsPendingMint:       &waitingMint,
+		DepositsMinted:            &minted,
 	}, nil
 }
 

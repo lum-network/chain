@@ -61,9 +61,9 @@ message QueryFetchDepositsRequest {
 }
 
 message QueryGetDepositsForAddressResponse {
-  Deposit waiting_proposal_deposits = 1;
-  Deposit waiting_mint_deposits = 2;
-  Deposit minted_deposits = 3;
+  Deposit deposits_pending_withdrawal = 1;
+  Deposit deposits_pending_mint = 2;
+  Deposit deposits_minted = 3;
 }
 
 message QueryFetchDepositsResponse {
