@@ -626,6 +626,7 @@ func (app *App) registerUpgradeHandlers() {
 		// Apply the initial parameters
 		app.DFractKeeper.SetParams(ctx, dfracttypes.DefaultParams())
 
+		app.Logger().Info("v1.2.1 upgrade applied. DFract module live")
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
 
