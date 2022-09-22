@@ -2,6 +2,9 @@ package types
 
 import (
 	"fmt"
+	"strings"
+
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -55,9 +58,11 @@ func validateMintDenom(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-
-	if v == "" {
+	if strings.TrimSpace(v) == "" {
 		return ErrInvalidMintDenom
+	}
+	if err := sdktypes.ValidateDenom(v); err != nil {
+		return err
 	}
 	return nil
 }
@@ -67,19 +72,20 @@ func validateDepositDenom(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-
-	if v == "" {
+	if strings.TrimSpace(v) == "" {
 		return ErrInvalidDepositDenom
+	}
+	if err := sdktypes.ValidateDenom(v); err != nil {
+		return err
 	}
 	return nil
 }
 
 func validateMinDepositAmount(i interface{}) error {
-	v, ok := i.(int64)
+	v, ok := i.(uint32)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-
 	if v <= 0 {
 		return ErrInvalidMinDepositAmount
 	}

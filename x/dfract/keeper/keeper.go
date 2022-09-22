@@ -125,7 +125,7 @@ func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 	}
 
 	// Make sure the deposit is sufficient
-	if msg.GetAmount().Amount.LT(sdk.NewInt(params.MinDepositAmount)) {
+	if msg.GetAmount().Amount.LT(sdk.NewInt(int64(params.MinDepositAmount))) {
 		return types.ErrInsufficientDepositAmount
 	}
 

@@ -68,6 +68,15 @@ func (suite *KeeperTestSuite) TestInvalidParams() {
 	}
 	require.Panics(suite.T(), panicF)
 
+	// panicF = func() {
+	// 	app.DFractKeeper.SetParams(ctx, types.Params{
+	// 		DepositDenom:     app.StakingKeeper.BondDenom(ctx),
+	// 		MintDenom:        app.StakingKeeper.BondDenom(ctx),
+	// 		MinDepositAmount: 1,
+	// 	})
+	// }
+	// require.Panics(suite.T(), panicF)
+
 	app.DFractKeeper.SetParams(ctx, types.DefaultParams())
 }
 
@@ -115,7 +124,7 @@ func (suite *KeeperTestSuite) TestInvalidAmountDeposit() {
 	// Try to deposit below the min deposit amount
 	err = app.DFractKeeper.CreateDeposit(ctx, types.MsgDeposit{
 		DepositorAddress: depositor.String(),
-		Amount:           sdk.NewCoin(params.DepositDenom, sdk.NewInt(params.MinDepositAmount-1)),
+		Amount:           sdk.NewCoin(params.DepositDenom, sdk.NewInt(int64(params.MinDepositAmount)-1)),
 	})
 	require.Error(suite.T(), err)
 	require.Equal(suite.T(), err, types.ErrInsufficientDepositAmount)
