@@ -14,6 +14,23 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
+func (k Keeper) ModuleAccountBalance(c context.Context, _ *types.QueryModuleAccountBalanceRequest) (*types.QueryModuleAccountBalanceResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	moduleAccBal := k.GetModuleAccountBalance(ctx)
+
+	return &types.QueryModuleAccountBalanceResponse{ModuleAccountBalance: moduleAccBal}, nil
+}
+
+func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	params, err := k.GetParams(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryParamsResponse{Params: params}, nil
+}
+
 func (k Keeper) GetDepositsForAddress(c context.Context, req *types.QueryGetDepositsForAddressRequest) (*types.QueryGetDepositsForAddressResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 

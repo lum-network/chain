@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
+import "dfract/params.proto";
 import "dfract/deposit.proto";
 
 option go_package = "github.com/lum-network/chain/x/dfract/types";
@@ -17,6 +18,14 @@ enum DepositsQueryType {
 }
 
 service Query {
+  rpc ModuleAccountBalance(QueryModuleAccountBalanceRequest) returns (QueryModuleAccountBalanceResponse) {
+    option (google.api.http).get = "/lum-network/dfract/module_account_balance";
+  }
+  
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/lum-network/dfract/params";
+  }
+
   rpc GetDepositsForAddress(QueryGetDepositsForAddressRequest) returns (QueryGetDepositsForAddressResponse) {
     option (google.api.http).get = "/lum-network/dfract/deposits/{address}";
   }
@@ -24,6 +33,22 @@ service Query {
   rpc FetchDeposits(QueryFetchDepositsRequest) returns (QueryFetchDepositsResponse) {
     option (google.api.http).get = "/lum-network/dfract/deposits";
   }
+}
+
+message QueryModuleAccountBalanceRequest {}
+
+message QueryModuleAccountBalanceResponse {
+  repeated cosmos.base.v1beta1.Coin moduleAccountBalance = 1 [
+    (gogoproto.moretags) = "yaml:\"coins\"",
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message QueryParamsRequest {}
+
+message QueryParamsResponse {
+  Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
 message QueryGetDepositsForAddressRequest {
