@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/spf13/cobra"
+	"strconv"
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -88,8 +89,9 @@ func GetCmdQueryParams() *cobra.Command {
 
 func CmdGetDepositsForAddress() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "deposits-for-address [address]",
+		Use:   "deposits-for-address <address>",
 		Short: "Fetch all the deposits for a given address",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Acquire the client instance
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -117,7 +119,7 @@ func CmdGetDepositsForAddress() *cobra.Command {
 
 func CmdFetchDeposits() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "fetch [type]",
+		Use:   "fetch <type>",
 		Short: "Fetch all the deposits for a given type",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -133,8 +135,15 @@ func CmdFetchDeposits() *cobra.Command {
 			// Acquire the query client from the context
 			queryClient := types.NewQueryClient(clientCtx)
 
+			// Acquire the type to fetch
+			depositType, err := strconv.ParseInt(args[0], 10, 32)
+			if err != nil {
+				return err
+			}
+
 			// Construct the params payload
 			params := &types.QueryFetchDepositsRequest{
+				Type:       types.DepositsQueryType(depositType),
 				Pagination: pageReq,
 			}
 
