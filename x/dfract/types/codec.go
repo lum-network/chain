@@ -12,7 +12,7 @@ import (
 
 var (
 	amino     = codec.NewLegacyAmino()
-	ModuleCdc = codec.NewProtoCodec(cdctypes.NewInterfaceRegistry())
+	ModuleCdc = codec.NewAminoCodec(amino)
 )
 
 // RegisterLegacyAminoCodec Register the codec for the message passing
