@@ -51,6 +51,9 @@ import (
 	airdroptypes "github.com/lum-network/chain/x/airdrop/types"
 	beamkeeper "github.com/lum-network/chain/x/beam/keeper"
 	beamtypes "github.com/lum-network/chain/x/beam/types"
+	"github.com/lum-network/chain/x/dfract"
+	dfractkeeper "github.com/lum-network/chain/x/dfract/keeper"
+	dfracttypes "github.com/lum-network/chain/x/dfract/types"
 )
 
 type AppKeepers struct {
@@ -83,6 +86,7 @@ type AppKeepers struct {
 	// Custom Keepers
 	AirdropKeeper *airdropkeeper.Keeper
 	BeamKeeper    *beamkeeper.Keeper
+	DFractKeeper  *dfractkeeper.Keeper
 }
 
 // InitSpecialKeepers Init the "special" keepers in the order of definition
@@ -228,22 +232,6 @@ func (app *App) InitNormalKeepers() {
 	feeGrantKeeper := feegrantkeeper.NewKeeper(appCodec, keys[feegrant.StoreKey], app.AccountKeeper)
 	app.FeeGrantKeeper = &feeGrantKeeper
 
-	// Initialize the governance router
-	govRouter := govtypes.NewRouter()
-	govRouter.AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(*app.ParamsKeeper)).
-		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(*app.DistrKeeper)).
-		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
-		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(*app.UpgradeKeeper)).
-		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper))
-
-	// Initialize the governance keeper
-	govKeeper := govkeeper.NewKeeper(
-		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
-		app.StakingKeeper, govRouter,
-	)
-	app.GovKeeper = &govKeeper
-
 	// Initialize our custom beam keeper
 	beamKeeper := *beamkeeper.NewKeeper(
 		appCodec, keys[beamtypes.StoreKey], keys[beamtypes.MemStoreKey],
@@ -254,6 +242,27 @@ func (app *App) InitNormalKeepers() {
 	// Initialize our custom airdrop keeper
 	airdropKeeper := airdropkeeper.NewKeeper(appCodec, keys[airdroptypes.StoreKey], keys[airdroptypes.MemStoreKey], *app.AccountKeeper, app.BankKeeper, *app.StakingKeeper, *app.DistrKeeper)
 	app.AirdropKeeper = airdropKeeper
+
+	// Initialize our custom dfract keeper
+	dfractKeeper := dfractkeeper.NewKeeper(appCodec, keys[dfracttypes.StoreKey], keys[dfracttypes.StoreKey], app.GetSubspace(dfracttypes.ModuleName), *app.AccountKeeper, app.BankKeeper, *app.StakingKeeper)
+	app.DFractKeeper = dfractKeeper
+
+	// Initialize the governance router
+	govRouter := govtypes.NewRouter()
+	govRouter.AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
+		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(*app.ParamsKeeper)).
+		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(*app.DistrKeeper)).
+		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
+		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(*app.UpgradeKeeper)).
+		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
+		AddRoute(dfracttypes.RouterKey, dfract.NewDFractProposalHandler(*app.DFractKeeper))
+
+	// Initialize the governance keeper
+	govKeeper := govkeeper.NewKeeper(
+		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
+		app.StakingKeeper, govRouter,
+	)
+	app.GovKeeper = &govKeeper
 }
 
 func (app *App) SetupHooks() {
@@ -285,6 +294,7 @@ func (app *App) InitParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.
 	paramsKeeper.Subspace(authz.ModuleName)
 
 	paramsKeeper.Subspace(beamtypes.ModuleName)
+	paramsKeeper.Subspace(dfracttypes.ModuleName)
 
 	return paramsKeeper
 }

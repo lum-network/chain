@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"encoding/hex"
+	"github.com/lum-network/chain/utils"
 	"github.com/stretchr/testify/require"
 	"testing"
 
@@ -54,16 +55,16 @@ func (suite *KeeperTestSuite) TestClaimOpenBeam() {
 	claimerFunds := app.BankKeeper.GetBalance(ctx, claimer, "stake")
 
 	// Create a random token as claim secret
-	claimSecret := types.GenerateSecureToken(4)
+	claimSecret := utils.GenerateSecureToken(4)
 
 	// Create a beam with 100 tokens
 	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
 	msg := types.NewMsgOpenBeam(
-		types.GenerateSecureToken(12),
+		utils.GenerateSecureToken(12),
 		creator.String(),
 		"",
 		&msgVal,
-		hex.EncodeToString(types.GenerateHashFromString(claimSecret)),
+		hex.EncodeToString(utils.GenerateHashFromString(claimSecret)),
 		types.BEAM_SCHEMA_REVIEW,
 		nil,
 		0,
@@ -120,16 +121,16 @@ func (suite *KeeperTestSuite) TestClaimClosedBeam() {
 	claimerFunds := app.BankKeeper.GetBalance(ctx, claimer, "stake")
 
 	// Create a random token as claim secret
-	claimSecret := types.GenerateSecureToken(4)
+	claimSecret := utils.GenerateSecureToken(4)
 
 	// Create a beam with 100 tokens
 	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
 	msg := types.NewMsgOpenBeam(
-		types.GenerateSecureToken(12),
+		utils.GenerateSecureToken(12),
 		creator.String(),
 		"",
 		&msgVal,
-		hex.EncodeToString(types.GenerateHashFromString(claimSecret)),
+		hex.EncodeToString(utils.GenerateHashFromString(claimSecret)),
 		types.BEAM_SCHEMA_REVIEW,
 		nil,
 		0,
@@ -197,7 +198,7 @@ func (suite *KeeperTestSuite) TestCancelBeam() {
 	require.NotEqual(suite.T(), creator.String(), claimer.String())
 
 	// Create a random token as claim secret
-	claimSecret := types.GenerateSecureToken(4)
+	claimSecret := utils.GenerateSecureToken(4)
 
 	// We store the initial claimer funds
 	creatorFunds := app.BankKeeper.GetBalance(ctx, creator, "stake")
@@ -205,11 +206,11 @@ func (suite *KeeperTestSuite) TestCancelBeam() {
 	// Create a beam with 100 tokens
 	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
 	msg := types.NewMsgOpenBeam(
-		types.GenerateSecureToken(12),
+		utils.GenerateSecureToken(12),
 		creator.String(),
 		"",
 		&msgVal,
-		hex.EncodeToString(types.GenerateHashFromString(claimSecret)),
+		hex.EncodeToString(utils.GenerateHashFromString(claimSecret)),
 		types.BEAM_SCHEMA_REVIEW,
 		nil,
 		0,
@@ -277,16 +278,16 @@ func (suite *KeeperTestSuite) TestOpenCloseIterators() {
 	require.NotEqual(suite.T(), creator.String(), claimer.String())
 
 	// Create a random token as claim secret
-	claimSecret := types.GenerateSecureToken(4)
+	claimSecret := utils.GenerateSecureToken(4)
 
 	// Create a beam with 100 tokens
 	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
 	msg := types.NewMsgOpenBeam(
-		types.GenerateSecureToken(12),
+		utils.GenerateSecureToken(12),
 		creator.String(),
 		"",
 		&msgVal,
-		hex.EncodeToString(types.GenerateHashFromString(claimSecret)),
+		hex.EncodeToString(utils.GenerateHashFromString(claimSecret)),
 		types.BEAM_SCHEMA_REVIEW,
 		nil,
 		0,
@@ -336,11 +337,11 @@ func (suite *KeeperTestSuite) TestOpenCloseIterators() {
 	// Create another beam
 	msgVal = sdk.NewCoin("stake", sdk.NewInt(100))
 	msg = types.NewMsgOpenBeam(
-		types.GenerateSecureToken(12),
+		utils.GenerateSecureToken(12),
 		creator.String(),
 		"",
 		&msgVal,
-		hex.EncodeToString(types.GenerateHashFromString(claimSecret)),
+		hex.EncodeToString(utils.GenerateHashFromString(claimSecret)),
 		types.BEAM_SCHEMA_REVIEW,
 		nil,
 		10,
@@ -382,11 +383,11 @@ func (suite *KeeperTestSuite) TestOpenNewBeam() {
 	// Create value and the linked message
 	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
 	msg := types.NewMsgOpenBeam(
-		types.GenerateSecureToken(12),
+		utils.GenerateSecureToken(12),
 		owner.String(),
 		owner.String(),
 		&msgVal,
-		types.GenerateSecureToken(4),
+		utils.GenerateSecureToken(4),
 		types.BEAM_SCHEMA_REVIEW,
 		nil,
 		120,
@@ -433,11 +434,11 @@ func (suite *KeeperTestSuite) TestFetchBeams() {
 	// Create value and the linked message
 	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
 	msg := types.NewMsgOpenBeam(
-		types.GenerateSecureToken(12),
+		utils.GenerateSecureToken(12),
 		owner.String(),
 		owner.String(),
 		&msgVal,
-		types.GenerateSecureToken(4),
+		utils.GenerateSecureToken(4),
 		types.BEAM_SCHEMA_REVIEW,
 		nil,
 		0,
@@ -474,7 +475,7 @@ func (suite *KeeperTestSuite) TestIncorrectBeamId() {
 		owner.String(),
 		owner.String(),
 		&msgVal,
-		types.GenerateSecureToken(4),
+		utils.GenerateSecureToken(4),
 		types.BEAM_SCHEMA_REVIEW,
 		nil,
 		120,

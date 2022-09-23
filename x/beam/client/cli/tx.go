@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/lum-network/chain/utils"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -56,7 +57,7 @@ func CmdOpenBeam() *cobra.Command {
 
 			var coin *sdk.Coin
 			if len(amount) > 0 {
-				coin, err = types.ExtractCoinPointerFromString(amount)
+				coin, err = utils.ExtractCoinPointerFromString(amount)
 				if err != nil {
 					return err
 				}
@@ -91,10 +92,10 @@ func CmdOpenBeam() *cobra.Command {
 			}
 
 			// Generate the random id
-			id := types.GenerateSecureToken(10)
+			id := utils.GenerateSecureToken(10)
 
 			// Encode the secret
-			hashedSecret := hex.EncodeToString(types.GenerateHashFromString(argsSecret))
+			hashedSecret := hex.EncodeToString(utils.GenerateHashFromString(argsSecret))
 
 			// Construct the message and validate
 			msg := types.NewMsgOpenBeam(id, clientCtx.GetFromAddress().String(), argsOwner, coin, hashedSecret, argsSchema, data, argsClosesAtBlock, argsClaimExpiresAtBlock)
@@ -131,7 +132,7 @@ func CmdUpdateBeam() *cobra.Command {
 
 			var coin *sdk.Coin
 			if len(amount) > 0 {
-				coin, err = types.ExtractCoinPointerFromString(amount)
+				coin, err = utils.ExtractCoinPointerFromString(amount)
 				if err != nil {
 					return err
 				}

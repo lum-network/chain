@@ -11,6 +11,7 @@ import (
 	account "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/lum-network/chain/utils"
 	"github.com/lum-network/chain/x/beam/keeper"
 	"github.com/lum-network/chain/x/beam/types"
 	"math/rand"
@@ -54,7 +55,7 @@ func operationSimulateMsgClaimBeam(k keeper.Keeper, ak account.AccountKeeper, bk
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 
 		if len(beamID) <= 0 {
-			beamID = types.GenerateSecureToken(8)
+			beamID = utils.GenerateSecureToken(8)
 		}
 
 		msg := types.NewMsgClaimBeam(simAccount.Address.String(), beamID, "")
@@ -98,9 +99,9 @@ func SimulateMsgClaimBeam(k keeper.Keeper, ak account.AccountKeeper, bk bank.Kee
 func SimulateMsgOpenBeam(k keeper.Keeper, ak account.AccountKeeper, bk bank.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		// Generate fields
-		msgId := types.GenerateSecureToken(8)
-		msgSecret := types.GenerateSecureToken(10)
-		msgSecretHashed := types.GenerateHashFromString(msgSecret)
+		msgId := utils.GenerateSecureToken(8)
+		msgSecret := utils.GenerateSecureToken(10)
+		msgSecretHashed := utils.GenerateHashFromString(msgSecret)
 		from, to, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
 
 		// If anything failed, just skip
@@ -123,7 +124,7 @@ func operationSimulateMsgUpdateBeam(k keeper.Keeper, ak account.AccountKeeper, b
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 
 		if len(beamID) <= 0 {
-			beamID = types.GenerateSecureToken(8)
+			beamID = utils.GenerateSecureToken(8)
 		}
 
 		_, _, coins, skip := randomSendFields(r, ctx, accs, bk, ak)

@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	apptypes "github.com/lum-network/chain/app"
+	"github.com/lum-network/chain/utils"
 	v110 "github.com/lum-network/chain/x/beam/migrations/v110"
 	"github.com/lum-network/chain/x/beam/types"
 	"github.com/stretchr/testify/require"
@@ -34,31 +35,31 @@ func (suite *StoreMigrationTestSuite) TestDisabledAutoCloseMigration() {
 	addr3 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
 	// Simulate legacy beam entries with auto close disabled (otherwise they would've been added automatically to the new queue)
-	beam1id := types.GenerateSecureToken(8)
+	beam1id := utils.GenerateSecureToken(8)
 	suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
 		Id:                  beam1id,
 		CreatorAddress:      addr1.String(),
-		Secret:              types.GenerateSecureToken(10),
+		Secret:              utils.GenerateSecureToken(10),
 		Schema:              "",
 		Data:                nil,
 		ClosesAtBlock:       0,
 		ClaimExpiresAtBlock: 0,
 	})
-	beam2id := types.GenerateSecureToken(8)
+	beam2id := utils.GenerateSecureToken(8)
 	suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
 		Id:                  beam2id,
 		CreatorAddress:      addr2.String(),
-		Secret:              types.GenerateSecureToken(10),
+		Secret:              utils.GenerateSecureToken(10),
 		Schema:              "",
 		Data:                nil,
 		ClosesAtBlock:       0,
 		ClaimExpiresAtBlock: 0,
 	})
-	beam3id := types.GenerateSecureToken(8)
+	beam3id := utils.GenerateSecureToken(8)
 	suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
 		Id:                  beam3id,
 		CreatorAddress:      addr3.String(),
-		Secret:              types.GenerateSecureToken(10),
+		Secret:              utils.GenerateSecureToken(10),
 		Schema:              "",
 		Data:                nil,
 		ClosesAtBlock:       0,
@@ -106,31 +107,31 @@ func (suite *StoreMigrationTestSuite) TestEnabledAutoCloseMigration() {
 	addr3 := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 
 	// Simulate legacy beam entries with auto close disabled (otherwise they would've been added automatically to the new queue)
-	beam1id := types.GenerateSecureToken(8)
+	beam1id := utils.GenerateSecureToken(8)
 	suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
 		Id:                  beam1id,
 		CreatorAddress:      addr1.String(),
-		Secret:              types.GenerateSecureToken(10),
+		Secret:              utils.GenerateSecureToken(10),
 		Schema:              "",
 		Data:                nil,
 		ClosesAtBlock:       10,
 		ClaimExpiresAtBlock: 10,
 	})
-	beam2id := types.GenerateSecureToken(8)
+	beam2id := utils.GenerateSecureToken(8)
 	suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
 		Id:                  beam2id,
 		CreatorAddress:      addr2.String(),
-		Secret:              types.GenerateSecureToken(10),
+		Secret:              utils.GenerateSecureToken(10),
 		Schema:              "",
 		Data:                nil,
 		ClosesAtBlock:       10,
 		ClaimExpiresAtBlock: 10,
 	})
-	beam3id := types.GenerateSecureToken(8)
+	beam3id := utils.GenerateSecureToken(8)
 	suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
 		Id:                  beam3id,
 		CreatorAddress:      addr3.String(),
-		Secret:              types.GenerateSecureToken(10),
+		Secret:              utils.GenerateSecureToken(10),
 		Schema:              "",
 		Data:                nil,
 		ClosesAtBlock:       10,

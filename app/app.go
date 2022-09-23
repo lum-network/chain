@@ -7,6 +7,8 @@ import (
 	icacontrollertypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
+	"github.com/lum-network/chain/x/dfract"
+	dfractclient "github.com/lum-network/chain/x/dfract/client"
 	"io"
 	"net/http"
 	"os"
@@ -78,6 +80,7 @@ import (
 	appparams "github.com/lum-network/chain/app/params"
 	"github.com/lum-network/chain/x/beam"
 	beamtypes "github.com/lum-network/chain/x/beam/types"
+	dfracttypes "github.com/lum-network/chain/x/dfract/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
 	"github.com/lum-network/chain/x/airdrop"
@@ -112,6 +115,7 @@ var (
 			upgradeclient.CancelProposalHandler,
 			ibcclientclient.UpdateClientProposalHandler,
 			ibcclientclient.UpgradeProposalHandler,
+			dfractclient.ProposalHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -126,6 +130,7 @@ var (
 		vesting.AppModuleBasic{},
 		beam.AppModuleBasic{},
 		airdrop.AppModuleBasic{},
+		dfract.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -140,6 +145,7 @@ var (
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		beamtypes.ModuleName:           nil,
 		airdroptypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
+		dfracttypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
 	}
 )
 
@@ -212,7 +218,7 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, icahosttypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey,
-		beamtypes.StoreKey, airdroptypes.StoreKey,
+		beamtypes.StoreKey, airdroptypes.StoreKey, dfracttypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -267,6 +273,7 @@ func New(
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		beam.NewAppModule(appCodec, *app.BeamKeeper),
 		airdrop.NewAppModule(appCodec, *app.AirdropKeeper),
+		dfract.NewAppModule(appCodec, *app.DFractKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -295,6 +302,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
+		dfracttypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -319,6 +327,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
+		dfracttypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -348,6 +357,7 @@ func New(
 		authz.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
+		dfracttypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
@@ -372,6 +382,7 @@ func New(
 		app.transferModule,
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		beam.NewAppModule(appCodec, *app.BeamKeeper),
+		dfract.NewAppModule(appCodec, *app.DFractKeeper),
 	)
 	app.sm.RegisterStoreDecoders()
 
@@ -608,6 +619,17 @@ func (app *App) registerUpgradeHandlers() {
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
 
+	app.UpgradeKeeper.SetUpgradeHandler("v1.2.1", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		// Set the DFract module consensus version so InitGenesis is not run
+		fromVM[dfracttypes.ModuleName] = app.mm.Modules[dfracttypes.ModuleName].ConsensusVersion()
+
+		// Apply the initial parameters
+		app.DFractKeeper.SetParams(ctx, dfracttypes.DefaultParams())
+
+		app.Logger().Info("v1.2.1 upgrade applied. DFract module live")
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	})
+
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
@@ -628,4 +650,11 @@ func (app *App) registerUpgradeHandlers() {
 
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
+	if upgradeInfo.Name == "v1.2.1" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := storetypes.StoreUpgrades{
+			Added: []string{dfracttypes.StoreKey},
+		}
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
+
 }

@@ -1,0 +1,11 @@
+syntax = "proto3";
+package lum.network.dfract;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/lum-network/chain/x/dfract/types";
+
+message Params {
+  string deposit_denom = 1;
+  uint32 min_deposit_amount = 2;
+}
