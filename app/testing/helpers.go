@@ -48,7 +48,7 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 		buffer.WriteString("A58856F0FD53BF058B4909A21AEC019107BA6") // base address string
 
 		buffer.WriteString(numString) // adding on final two digits to make addresses unique
-		res, _ := sdk.AccAddressFromHex(buffer.String())
+		res, _ := sdk.AccAddressFromHexUnsafe(buffer.String())
 		bech := res.String()
 		addr, _ := TestAddr(buffer.String(), bech)
 
@@ -75,7 +75,7 @@ func addTestAddrsWithDenom(app *app.App, ctx sdk.Context, accNum int, accAmt sdk
 	initCoins := sdk.NewCoins(sdk.NewCoin(denom, accAmt))
 
 	for _, addr := range testAddrs {
-		initAccountWithCoins(app, ctx, addr, initCoins)
+		InitAccountWithCoins(app, ctx, addr, initCoins)
 	}
 
 	return testAddrs
@@ -87,13 +87,13 @@ func addTestAddrs(app *app.App, ctx sdk.Context, accNum int, accAmt sdk.Int, str
 	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
 
 	for _, addr := range testAddrs {
-		initAccountWithCoins(app, ctx, addr, initCoins)
+		InitAccountWithCoins(app, ctx, addr, initCoins)
 	}
 
 	return testAddrs
 }
 
-func initAccountWithCoins(app *app.App, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
+func InitAccountWithCoins(app *app.App, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
 	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
 	if err != nil {
 		panic(err)
@@ -106,7 +106,7 @@ func initAccountWithCoins(app *app.App, ctx sdk.Context, addr sdk.AccAddress, co
 }
 
 func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
-	res, err := sdk.AccAddressFromHex(addr)
+	res, err := sdk.AccAddressFromHexUnsafe(addr)
 	if err != nil {
 		return nil, err
 	}

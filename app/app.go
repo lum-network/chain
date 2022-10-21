@@ -3,10 +3,13 @@ package app
 import (
 	"fmt"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
-	icacontrollertypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/types"
-	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
-	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
+	ica "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts"
+	icacontrollertypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/types"
+	icahosttypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	ibcfee "github.com/cosmos/ibc-go/v5/modules/apps/29-fee"
+	ibcfeetypes "github.com/cosmos/ibc-go/v5/modules/apps/29-fee/types"
 	"github.com/lum-network/chain/x/dfract"
 	dfractclient "github.com/lum-network/chain/x/dfract/client"
 	"io"
@@ -14,7 +17,7 @@ import (
 	"os"
 	"path/filepath"
 
-	ibcconnectiontypes "github.com/cosmos/ibc-go/v3/modules/core/03-connection/types"
+	ibcconnectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 
@@ -34,7 +37,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
@@ -43,7 +45,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
@@ -65,6 +66,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -86,11 +88,11 @@ import (
 	"github.com/lum-network/chain/x/airdrop"
 	airdroptypes "github.com/lum-network/chain/x/airdrop/types"
 
-	"github.com/cosmos/ibc-go/v3/modules/apps/transfer"
-	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v3/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v3/modules/core/02-client/client"
-	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
+	"github.com/cosmos/ibc-go/v5/modules/apps/transfer"
+	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v5/modules/core"
+	ibcclientclient "github.com/cosmos/ibc-go/v5/modules/core/02-client/client"
+	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 )
 
 var (
@@ -109,18 +111,21 @@ var (
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
-			paramsclient.ProposalHandler,
-			distrclient.ProposalHandler,
-			upgradeclient.ProposalHandler,
-			upgradeclient.CancelProposalHandler,
-			ibcclientclient.UpdateClientProposalHandler,
-			ibcclientclient.UpgradeProposalHandler,
-			dfractclient.ProposalHandler,
+			[]govclient.ProposalHandler{
+				paramsclient.ProposalHandler,
+				distrclient.ProposalHandler,
+				upgradeclient.LegacyProposalHandler,
+				upgradeclient.LegacyCancelProposalHandler,
+				ibcclientclient.UpdateClientProposalHandler,
+				ibcclientclient.UpgradeProposalHandler,
+				dfractclient.ProposalHandler,
+			},
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
 		ibc.AppModuleBasic{},
+		ibcfee.AppModuleBasic{},
 		ica.AppModuleBasic{},
 		feegrantmodule.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
@@ -143,6 +148,7 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		ibcfeetypes.ModuleName:         nil,
 		beamtypes.ModuleName:           nil,
 		airdroptypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
 		dfracttypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
@@ -180,9 +186,9 @@ type App struct {
 	invCheckPeriod uint
 
 	// keys to access the substores
-	keys    map[string]*sdk.KVStoreKey
-	tkeys   map[string]*sdk.TransientStoreKey
-	memKeys map[string]*sdk.MemoryStoreKey
+	keys    map[string]*storetypes.KVStoreKey
+	tkeys   map[string]*storetypes.TransientStoreKey
+	memKeys map[string]*storetypes.MemoryStoreKey
 
 	// IBC module
 	transferModule transfer.AppModule
@@ -217,7 +223,7 @@ func New(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, icahosttypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
-		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey,
+		evidencetypes.StoreKey, ibctransfertypes.StoreKey, ibcfeetypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey,
 		beamtypes.StoreKey, airdroptypes.StoreKey, dfracttypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -260,13 +266,14 @@ func New(
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, *app.FeeGrantKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, *app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper),
+		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, nil),
 		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(*app.UpgradeKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
+		ibcfee.NewAppModule(app.IBCFeeKeeper),
 		ica.NewAppModule(nil, app.ICAHostKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
 		app.transferModule,
@@ -277,7 +284,7 @@ func New(
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
-	// there is nothing left over in the validator fee pool, so as to keep the
+	// there is nothing left over in the validator fee pool, to keep the
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.mm.SetOrderBeginBlockers(
@@ -300,6 +307,7 @@ func New(
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		ibcfeetypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
@@ -325,6 +333,7 @@ func New(
 		ibchost.ModuleName,
 		icatypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		ibcfeetypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
@@ -350,6 +359,7 @@ func New(
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		ibcfeetypes.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
@@ -372,7 +382,7 @@ func New(
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, *app.FeeGrantKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, *app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper),
+		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, nil),
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
@@ -474,17 +484,17 @@ func (app *App) InterfaceRegistry() types.InterfaceRegistry {
 }
 
 // GetKey returns the KVStoreKey for the provided store key.
-func (app *App) GetKey(storeKey string) *sdk.KVStoreKey {
+func (app *App) GetKey(storeKey string) *storetypes.KVStoreKey {
 	return app.keys[storeKey]
 }
 
 // GetTKey returns the TransientStoreKey for the provided store key.
-func (app *App) GetTKey(storeKey string) *sdk.TransientStoreKey {
+func (app *App) GetTKey(storeKey string) *storetypes.TransientStoreKey {
 	return app.tkeys[storeKey]
 }
 
 // GetMemKey returns the MemStoreKey for the provided mem key.
-func (app *App) GetMemKey(storeKey string) *sdk.MemoryStoreKey {
+func (app *App) GetMemKey(storeKey string) *storetypes.MemoryStoreKey {
 	return app.memKeys[storeKey]
 }
 
@@ -502,14 +512,14 @@ func (app *App) GetSubspace(moduleName string) paramstypes.Subspace {
 // API server.
 func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
-	rpc.RegisterRoutes(clientCtx, apiSvr.Router)
-	// Register legacy tx routes.
-	authrest.RegisterTxRoutes(clientCtx, apiSvr.Router)
+
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
+	// Register new tendermint queries routes from grpc-gateway.
+	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
 	// Register legacy and grpc-gateway routes for all modules.
-	ModuleBasics.RegisterRESTRoutes(clientCtx, apiSvr.Router)
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register swagger API from root so that other applications can override easily
@@ -525,7 +535,7 @@ func (app *App) RegisterTxService(clientCtx client.Context) {
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
 func (app *App) RegisterTendermintService(clientCtx client.Context) {
-	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
+	tmservice.RegisterTendermintService(clientCtx, app.BaseApp.GRPCQueryRouter(), app.interfaceRegistry, app.Query)
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
@@ -598,7 +608,7 @@ func (app *App) registerUpgradeHandlers() {
 				sdk.MsgTypeURL(&distrtypes.MsgSetWithdrawAddress{}),
 				sdk.MsgTypeURL(&distrtypes.MsgWithdrawValidatorCommission{}),
 				sdk.MsgTypeURL(&distrtypes.MsgFundCommunityPool{}),
-				sdk.MsgTypeURL(&govtypes.MsgVote{}),
+				sdk.MsgTypeURL(&govtypesv1beta1.MsgVote{}),
 				sdk.MsgTypeURL(&authz.MsgExec{}),
 				sdk.MsgTypeURL(&authz.MsgGrant{}),
 				sdk.MsgTypeURL(&authz.MsgRevoke{}),

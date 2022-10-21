@@ -1,8 +1,8 @@
 package keeper_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/lum-network/chain/app"
+	testing2 "github.com/lum-network/chain/app/testing"
 	"testing"
 	"time"
 
@@ -20,7 +20,7 @@ import (
 )
 
 var now = time.Now().UTC()
-var defaultClaimDenom = sdk.DefaultBondDenom
+var defaultClaimDenom = app.CoinBondDenom
 var defaultClaimBalance = int64(1_000_000)
 
 type KeeperTestSuite struct {
@@ -294,8 +294,7 @@ func (suite *KeeperTestSuite) TestDelegationAutoWithdrawAndDelegateMore() {
 
 	validator, _ = validator.AddTokensFromDel(sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction))
 	delAmount := sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)
-	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addrs[1], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, delAmount)))
-	suite.Require().NoError(err)
+	testing2.InitAccountWithCoins(suite.app, suite.ctx, addrs[1], sdk.NewCoins(sdk.NewCoin(app.CoinBondDenom, delAmount)))
 	_, err = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[1], delAmount, stakingtypes.Unbonded, validator, true)
 	suite.Require().NoError(err)
 

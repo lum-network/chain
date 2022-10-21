@@ -40,7 +40,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			depCdc := clientCtx.JSONCodec
+			depCdc := clientCtx.Codec
 			cdc := depCdc.(codec.Codec)
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
@@ -57,7 +57,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 				}
 
 				// attempt to lookup address from Keybase if no address was provided
-				kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf)
+				kb, err := keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf, clientCtx.Codec)
 				if err != nil {
 					return err
 				}
@@ -67,7 +67,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 					return fmt.Errorf("failed to get address from Keybase: %w", err)
 				}
 
-				addr = info.GetAddress()
+				addr, err = info.GetAddress()
 			}
 
 			coins, err := sdk.ParseCoinsNormalized(args[1])

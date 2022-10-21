@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -22,8 +23,8 @@ import (
 type (
 	Keeper struct {
 		cdc           codec.BinaryCodec
-		storeKey      sdk.StoreKey
-		memKey        sdk.StoreKey
+		storeKey      storetypes.StoreKey
+		memKey        storetypes.StoreKey
 		AuthKeeper    authkeeper.AccountKeeper
 		BankKeeper    bankkeeper.Keeper
 		StakingKeeper stakingkeeper.Keeper
@@ -34,7 +35,7 @@ type (
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey,
-	memKey sdk.StoreKey,
+	memKey storetypes.StoreKey,
 	ak authkeeper.AccountKeeper,
 	bk bankkeeper.Keeper,
 	sk stakingkeeper.Keeper,
@@ -233,7 +234,7 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress
 
 	claimableCoins := sdk.Coins{}
 	for _, coin := range InitialClaimablePerAction {
-		claimableCoins = claimableCoins.Add(sdk.NewCoin(coin.Denom, coin.Amount.ToDec().Mul(claimablePercent).RoundInt()))
+		claimableCoins = claimableCoins.Add(sdk.NewCoin(coin.Denom, coin.Amount.Mul(claimablePercent.RoundInt())))
 	}
 
 	return claimableCoins[0], claimableCoins[1], nil
