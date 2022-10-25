@@ -43,6 +43,8 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 	},
 }
 
+var DefaultSupplyWeight int64 = 100000001000000
+
 func SetupForTesting(isCheckTx bool) *App {
 	// Create our mocked validator
 	privVal := mock.NewPV()

@@ -179,7 +179,7 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress
 		panic(err)
 	}
 
-	zeroCoin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0))
+	zeroCoin := sdk.NewCoin(types.DefaultClaimDenom, sdk.NewInt(0))
 	claimRecord, err := k.GetClaimRecord(ctx, addr)
 	if err != nil {
 		return zeroCoin, zeroCoin, err
