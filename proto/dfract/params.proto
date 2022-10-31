@@ -1,8 +1,6 @@
 syntax = "proto3";
 package lum.network.dfract;
 
-import "gogoproto/gogo.proto";
-
 option go_package = "github.com/lum-network/chain/x/dfract/types";
 
 message Params {
