@@ -4,9 +4,9 @@ accounts:
     coins: ["120000000000ulum"]
   - name: user2
     coins: ["100ulum"]
-validator:
-  name: user1
-  staked: "100000000ulum"
+validators:
+  - name: validator1
+    bonded: "100000000ulum"
 genesis:
   chain_id: "lumnetwork-testnet"
   app_state:
