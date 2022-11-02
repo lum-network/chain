@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"github.com/cosmos/cosmos-sdk/client/config"
 	"io"
 	"os"
 	"path/filepath"
@@ -35,12 +36,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	"github.com/lum-network/chain/app"
+
+	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
+	tmcfg "github.com/tendermint/tendermint/config"
 )
 
 var ChainID string
 
-// NewRootCmd creates a new root command for simd. It is called once in the
-// main function.
+// NewRootCmd creates a new root command for simd. It is called once in the main function.
 func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	encodingConfig := app.MakeEncodingConfig()
 	initClientCtx := client.Context{}.
@@ -58,11 +61,23 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		Use:   appName + "d",
 		Short: "Lum Network App",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
+			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
+			if err != nil {
 				return err
 			}
 
-			return server.InterceptConfigsPreRunHandler(cmd, "", "", nil)
+			initClientCtx, err = config.ReadFromClientConfig(initClientCtx)
+			if err != nil {
+				return err
+			}
+
+			if err = client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
+				return err
+			}
+
+			customTemplate, customGaiaConfig := initAppConfig()
+			customTMConfig := initTendermintConfig()
+			return server.InterceptConfigsPreRunHandler(cmd, customTemplate, customGaiaConfig, customTMConfig)
 		},
 	}
 
@@ -73,6 +88,20 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	})
 
 	return rootCmd, encodingConfig
+}
+
+func initTendermintConfig() *tmcfg.Config {
+	cfg := tmcfg.DefaultConfig()
+	// Note: You can set any Tendermint configuration options here
+	return cfg
+}
+
+func initAppConfig() (string, interface{}) {
+	srvCfg := serverconfig.DefaultConfig()
+	// Note: You can set any SDK application configuration options here
+	return params.CustomConfigTemplate(), params.CustomAppConfig{
+		Config: *srvCfg,
+	}
 }
 
 // Execute executes the root command.
