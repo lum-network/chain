@@ -4,7 +4,7 @@ package lum.network.beam;
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
-import "beam/beam.proto";
+import "lum-network/beam/beam.proto";
 
 option go_package = "github.com/lum-network/chain/x/beam/types";
 
@@ -18,18 +18,15 @@ service Query {
     option (google.api.http).get = "/lum-network/beams";
   }
 
-  rpc BeamsOpenQueue(QueryFetchBeamsOpenQueueRequest) returns (QueryFetchBeamsOpenQueueResponse) {
+  rpc BeamsOpenQueue(QueryFetchBeamsOpenQueueRequest)
+      returns (QueryFetchBeamsOpenQueueResponse) {
     option (google.api.http).get = "/lum-network/beams-open-queue";
   }
 }
 
-message QueryGetBeamRequest {
-  string id = 1;
-}
+message QueryGetBeamRequest { string id = 1; }
 
-message QueryGetBeamResponse {
-  Beam beam = 1;
-}
+message QueryGetBeamResponse { Beam beam = 1; }
 
 message QueryFetchBeamsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;

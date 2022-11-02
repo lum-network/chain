@@ -6,31 +6,35 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
-import "dfract/params.proto";
-import "dfract/deposit.proto";
+import "lum-network/dfract/params.proto";
+import "lum-network/dfract/deposit.proto";
 
 option go_package = "github.com/lum-network/chain/x/dfract/types";
 
 enum DepositsQueryType {
-  PENDING_WITHDRAWAL = 0 [(gogoproto.enumvalue_customname) = "TypePendingWithdrawal"];
-  PENDING_MINT = 1 [(gogoproto.enumvalue_customname) = "TypePendingMint"];
-  MINTED = 2 [(gogoproto.enumvalue_customname) = "TypeMinted"];
+  PENDING_WITHDRAWAL = 0
+      [ (gogoproto.enumvalue_customname) = "TypePendingWithdrawal" ];
+  PENDING_MINT = 1 [ (gogoproto.enumvalue_customname) = "TypePendingMint" ];
+  MINTED = 2 [ (gogoproto.enumvalue_customname) = "TypeMinted" ];
 }
 
 service Query {
-  rpc ModuleAccountBalance(QueryModuleAccountBalanceRequest) returns (QueryModuleAccountBalanceResponse) {
+  rpc ModuleAccountBalance(QueryModuleAccountBalanceRequest)
+      returns (QueryModuleAccountBalanceResponse) {
     option (google.api.http).get = "/lum-network/dfract/module_account_balance";
   }
-  
+
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/lum-network/dfract/params";
   }
 
-  rpc GetDepositsForAddress(QueryGetDepositsForAddressRequest) returns (QueryGetDepositsForAddressResponse) {
+  rpc GetDepositsForAddress(QueryGetDepositsForAddressRequest)
+      returns (QueryGetDepositsForAddressResponse) {
     option (google.api.http).get = "/lum-network/dfract/deposits/{address}";
   }
 
-  rpc FetchDeposits(QueryFetchDepositsRequest) returns (QueryFetchDepositsResponse) {
+  rpc FetchDeposits(QueryFetchDepositsRequest)
+      returns (QueryFetchDepositsResponse) {
     option (google.api.http).get = "/lum-network/dfract/deposits";
   }
 }
@@ -51,9 +55,7 @@ message QueryParamsResponse {
   Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
-message QueryGetDepositsForAddressRequest {
-  string address = 1;
-}
+message QueryGetDepositsForAddressRequest { string address = 1; }
 
 message QueryFetchDepositsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
@@ -67,6 +69,6 @@ message QueryGetDepositsForAddressResponse {
 }
 
 message QueryFetchDepositsResponse {
-  repeated Deposit deposits = 1 [(gogoproto.nullable) = false];
+  repeated Deposit deposits = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

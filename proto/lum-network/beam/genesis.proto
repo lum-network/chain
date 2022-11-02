@@ -3,18 +3,16 @@ package lum.network.beam;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "beam/beam.proto";
-
+import "lum-network/beam/beam.proto";
 
 option go_package = "github.com/lum-network/chain/x/beam/types";
 
 // GenesisState defines the capability module's genesis state.
 message GenesisState {
-    cosmos.base.v1beta1.Coin module_account_balance = 1 [
-        (gogoproto.moretags) = "yaml:\"module_account_balance\"",
-        (gogoproto.nullable) = false
-    ];
+  cosmos.base.v1beta1.Coin module_account_balance = 1 [
+    (gogoproto.moretags) = "yaml:\"module_account_balance\"",
+    (gogoproto.nullable) = false
+  ];
 
-    repeated Beam beams = 2;
+  repeated Beam beams = 2;
 }
-
