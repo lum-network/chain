@@ -129,3 +129,6 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.33.2
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.4
 
 replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
+
+// Fix Ledger Disconnection Issue on OSX
+replace github.com/cosmos/ledger-go => github.com/chillyvee/ledger-go v0.9.5
