@@ -62,7 +62,7 @@ func (suite *ABCITestSuite) TestTickBeamAutoClose() {
 	claimSecret := utils.GenerateSecureToken(4)
 
 	// Create a beam
-	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
+	msgVal := sdk.NewCoin(apptypes.CoinBondDenom, sdk.NewInt(100))
 	msg := types.NewMsgOpenBeam(
 		utils.GenerateSecureToken(12),
 		creator.String(),

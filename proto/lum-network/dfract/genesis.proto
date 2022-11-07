@@ -4,8 +4,8 @@ package lum.network.dfract;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-import "dfract/params.proto";
-import "dfract/deposit.proto";
+import "lum-network/dfract/params.proto";
+import "lum-network/dfract/deposit.proto";
 
 option go_package = "github.com/lum-network/chain/x/dfract/types";
 

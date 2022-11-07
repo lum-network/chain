@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
 	"github.com/lum-network/chain/x/dfract"
@@ -20,7 +20,7 @@ type HandlerTestSuite struct {
 	ctx   sdk.Context
 	addrs []sdk.AccAddress
 
-	handler govtypes.Handler
+	handler govtypesv1beta1.Handler
 }
 
 func (suite *HandlerTestSuite) SetupTest() {

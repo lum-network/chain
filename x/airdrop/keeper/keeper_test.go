@@ -1,8 +1,8 @@
 package keeper_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/lum-network/chain/app"
+	testing2 "github.com/lum-network/chain/app/testing"
 	"testing"
 	"time"
 
@@ -20,7 +20,7 @@ import (
 )
 
 var now = time.Now().UTC()
-var defaultClaimDenom = sdk.DefaultBondDenom
+var defaultClaimDenom = app.CoinBondDenom
 var defaultClaimBalance = int64(1_000_000)
 
 type KeeperTestSuite struct {
@@ -294,8 +294,7 @@ func (suite *KeeperTestSuite) TestDelegationAutoWithdrawAndDelegateMore() {
 
 	validator, _ = validator.AddTokensFromDel(sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction))
 	delAmount := sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)
-	err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addrs[1], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, delAmount)))
-	suite.Require().NoError(err)
+	testing2.InitAccountWithCoins(suite.app, suite.ctx, addrs[1], sdk.NewCoins(sdk.NewCoin(app.CoinBondDenom, delAmount)))
 	_, err = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[1], delAmount, stakingtypes.Unbonded, validator, true)
 	suite.Require().NoError(err)
 
@@ -535,20 +534,20 @@ func (suite *KeeperTestSuite) TestModuleBalance() {
 
 	// Initial balance should be in the supply
 	supply := suite.app.BankKeeper.GetSupply(suite.ctx, defaultClaimDenom)
-	suite.Equal(sdk.NewInt64Coin(defaultClaimDenom, defaultClaimBalance), supply)
+	suite.Equal(sdk.NewInt64Coin(defaultClaimDenom, defaultClaimBalance), supply.SubAmount(sdk.NewInt(apptypes.DefaultSupplyWeight)))
 	moduleBalance := suite.app.AirdropKeeper.GetAirdropAccountBalance(suite.ctx)
 	suite.Equal(sdk.NewInt64Coin(defaultClaimDenom, defaultClaimBalance), moduleBalance)
 
 	// Claim should debit the module account while leaving the supply intact
 	suite.app.AirdropKeeper.AfterProposalVote(suite.ctx, 12, addr1)
 	supply = suite.app.BankKeeper.GetSupply(suite.ctx, defaultClaimDenom)
-	suite.Equal(sdk.NewInt64Coin(defaultClaimDenom, defaultClaimBalance), supply)
+	suite.Equal(sdk.NewInt64Coin(defaultClaimDenom, defaultClaimBalance), supply.SubAmount(sdk.NewInt(apptypes.DefaultSupplyWeight)))
 	moduleBalance = suite.app.AirdropKeeper.GetAirdropAccountBalance(suite.ctx)
 	suite.Equal(sdk.NewInt64Coin(defaultClaimDenom, defaultClaimBalance-450_000), moduleBalance)
 
 	suite.app.AirdropKeeper.AfterDelegationModified(suite.ctx, addr1, sdk.ValAddress(addr1))
 	supply = suite.app.BankKeeper.GetSupply(suite.ctx, defaultClaimDenom)
-	suite.Equal(sdk.NewInt64Coin(defaultClaimDenom, defaultClaimBalance), supply)
+	suite.Equal(sdk.NewInt64Coin(defaultClaimDenom, defaultClaimBalance), supply.SubAmount(sdk.NewInt(apptypes.DefaultSupplyWeight)))
 	moduleBalance = suite.app.AirdropKeeper.GetAirdropAccountBalance(suite.ctx)
 	suite.Equal(sdk.NewInt64Coin(defaultClaimDenom, defaultClaimBalance-900_000), moduleBalance)
 

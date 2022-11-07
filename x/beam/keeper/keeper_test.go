@@ -52,13 +52,13 @@ func (suite *KeeperTestSuite) TestClaimOpenBeam() {
 	require.NotEqual(suite.T(), creator.String(), claimer.String())
 
 	// We store the initial claimer funds
-	claimerFunds := app.BankKeeper.GetBalance(ctx, claimer, "stake")
+	claimerFunds := app.BankKeeper.GetBalance(ctx, claimer, apptypes.CoinBondDenom)
 
 	// Create a random token as claim secret
 	claimSecret := utils.GenerateSecureToken(4)
 
 	// Create a beam with 100 tokens
-	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
+	msgVal := sdk.NewCoin(apptypes.CoinBondDenom, sdk.NewInt(100))
 	msg := types.NewMsgOpenBeam(
 		utils.GenerateSecureToken(12),
 		creator.String(),
@@ -97,7 +97,7 @@ func (suite *KeeperTestSuite) TestClaimOpenBeam() {
 		claimSecret,
 	))
 	require.NoError(suite.T(), err)
-	require.Equal(suite.T(), claimerFunds, app.BankKeeper.GetBalance(ctx, claimer, "stake"))
+	require.Equal(suite.T(), claimerFunds, app.BankKeeper.GetBalance(ctx, claimer, apptypes.CoinBondDenom))
 
 	// Acquire the beam and make sure props were updated
 	beam, err := app.BeamKeeper.GetBeam(ctx, msg.GetId())
@@ -118,13 +118,13 @@ func (suite *KeeperTestSuite) TestClaimClosedBeam() {
 	require.NotEqual(suite.T(), creator.String(), claimer.String())
 
 	// We store the initial claimer funds
-	claimerFunds := app.BankKeeper.GetBalance(ctx, claimer, "stake")
+	claimerFunds := app.BankKeeper.GetBalance(ctx, claimer, apptypes.CoinBondDenom)
 
 	// Create a random token as claim secret
 	claimSecret := utils.GenerateSecureToken(4)
 
 	// Create a beam with 100 tokens
-	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
+	msgVal := sdk.NewCoin(apptypes.CoinBondDenom, sdk.NewInt(100))
 	msg := types.NewMsgOpenBeam(
 		utils.GenerateSecureToken(12),
 		creator.String(),
@@ -184,7 +184,7 @@ func (suite *KeeperTestSuite) TestClaimClosedBeam() {
 	require.Error(suite.T(), err)
 
 	// Now the funds should've been transfered
-	require.Equal(suite.T(), claimerFunds.Add(beam.GetAmount()), app.BankKeeper.GetBalance(ctx, claimer, "stake"))
+	require.Equal(suite.T(), claimerFunds.Add(beam.GetAmount()), app.BankKeeper.GetBalance(ctx, claimer, apptypes.CoinBondDenom))
 }
 
 // Test to cancel a beam and make sure funds were returned to the sender
@@ -201,10 +201,10 @@ func (suite *KeeperTestSuite) TestCancelBeam() {
 	claimSecret := utils.GenerateSecureToken(4)
 
 	// We store the initial claimer funds
-	creatorFunds := app.BankKeeper.GetBalance(ctx, creator, "stake")
+	creatorFunds := app.BankKeeper.GetBalance(ctx, creator, apptypes.CoinBondDenom)
 
 	// Create a beam with 100 tokens
-	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
+	msgVal := sdk.NewCoin(apptypes.CoinBondDenom, sdk.NewInt(100))
 	msg := types.NewMsgOpenBeam(
 		utils.GenerateSecureToken(12),
 		creator.String(),
@@ -221,7 +221,7 @@ func (suite *KeeperTestSuite) TestCancelBeam() {
 	require.True(suite.T(), app.BeamKeeper.HasBeam(ctx, msg.GetId()))
 
 	// Make sure the creator was debited
-	require.Equal(suite.T(), creatorFunds.SubAmount(sdk.NewInt(100)), app.BankKeeper.GetBalance(ctx, creator, "stake"))
+	require.Equal(suite.T(), creatorFunds.SubAmount(sdk.NewInt(100)), app.BankKeeper.GetBalance(ctx, creator, apptypes.CoinBondDenom))
 
 	// Cancel the beam
 	msgCancel := types.NewMsgUpdateBeam(
@@ -243,7 +243,7 @@ func (suite *KeeperTestSuite) TestCancelBeam() {
 	require.Equal(suite.T(), beam.GetCancelReason(), msgCancel.GetCancelReason())
 
 	// Make sure the creator was credited back
-	require.Equal(suite.T(), creatorFunds, app.BankKeeper.GetBalance(ctx, creator, "stake"))
+	require.Equal(suite.T(), creatorFunds, app.BankKeeper.GetBalance(ctx, creator, apptypes.CoinBondDenom))
 
 	// Try to cancel again and make sure it cannot happen
 	msgCancel = types.NewMsgUpdateBeam(
@@ -281,7 +281,7 @@ func (suite *KeeperTestSuite) TestOpenCloseIterators() {
 	claimSecret := utils.GenerateSecureToken(4)
 
 	// Create a beam with 100 tokens
-	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
+	msgVal := sdk.NewCoin(apptypes.CoinBondDenom, sdk.NewInt(100))
 	msg := types.NewMsgOpenBeam(
 		utils.GenerateSecureToken(12),
 		creator.String(),
@@ -335,7 +335,7 @@ func (suite *KeeperTestSuite) TestOpenCloseIterators() {
 	closedIterator.Close()
 
 	// Create another beam
-	msgVal = sdk.NewCoin("stake", sdk.NewInt(100))
+	msgVal = sdk.NewCoin(apptypes.CoinBondDenom, sdk.NewInt(100))
 	msg = types.NewMsgOpenBeam(
 		utils.GenerateSecureToken(12),
 		creator.String(),
@@ -381,7 +381,7 @@ func (suite *KeeperTestSuite) TestOpenNewBeam() {
 	owner := suite.addrs[0]
 
 	// Create value and the linked message
-	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
+	msgVal := sdk.NewCoin(apptypes.CoinBondDenom, sdk.NewInt(100))
 	msg := types.NewMsgOpenBeam(
 		utils.GenerateSecureToken(12),
 		owner.String(),
@@ -432,7 +432,7 @@ func (suite *KeeperTestSuite) TestFetchBeams() {
 	owner := suite.addrs[0]
 
 	// Create value and the linked message
-	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
+	msgVal := sdk.NewCoin(apptypes.CoinBondDenom, sdk.NewInt(100))
 	msg := types.NewMsgOpenBeam(
 		utils.GenerateSecureToken(12),
 		owner.String(),
@@ -469,7 +469,7 @@ func (suite *KeeperTestSuite) TestIncorrectBeamId() {
 	owner := suite.addrs[0]
 
 	// Create value and the linked message
-	msgVal := sdk.NewCoin("stake", sdk.NewInt(100))
+	msgVal := sdk.NewCoin(apptypes.CoinBondDenom, sdk.NewInt(100))
 	msg := types.NewMsgOpenBeam(
 		"i-am-a-beam-id-with-a,comma",
 		owner.String(),

@@ -5,18 +5,17 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
 	ProposalTypeWithdrawAndMint = "WithdrawAndMint"
 )
 
-var _ govtypes.Content = &WithdrawAndMintProposal{}
+var _ govtypesv1beta1.Content = &WithdrawAndMintProposal{}
 
 func init() {
-	govtypes.RegisterProposalType(ProposalTypeWithdrawAndMint)
-	govtypes.RegisterProposalTypeCodec(&WithdrawAndMintProposal{}, "lum-network/WithdrawAndMintProposal")
+	govtypesv1beta1.RegisterProposalType(ProposalTypeWithdrawAndMint)
 }
 
 func NewWithdrawAndMintProposal(title string, description string, withdrawalAddress string, microMintRate int64) *WithdrawAndMintProposal {
@@ -53,7 +52,7 @@ func (prop *WithdrawAndMintProposal) ProposalType() string {
 }
 
 func (prop *WithdrawAndMintProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(prop)
+	err := govtypesv1beta1.ValidateAbstract(prop)
 	if err != nil {
 		return err
 	}

@@ -69,7 +69,8 @@ func operationSimulateMsgClaimBeam(k keeper.Keeper, ak account.AccountKeeper, bk
 		}
 
 		txGenerator := params.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
+			r,
 			txGenerator,
 			[]sdk.Msg{msg},
 			fees,
@@ -82,7 +83,7 @@ func operationSimulateMsgClaimBeam(k keeper.Keeper, ak account.AccountKeeper, bk
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.Deliver(txGenerator.TxEncoder(), tx)
+		_, _, err = app.SimDeliver(txGenerator.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
@@ -142,7 +143,8 @@ func operationSimulateMsgUpdateBeam(k keeper.Keeper, ak account.AccountKeeper, b
 		}
 
 		txGenerator := params.MakeTestEncodingConfig().TxConfig
-		tx, err := helpers.GenTx(
+		tx, err := helpers.GenSignedMockTx(
+			r,
 			txGenerator,
 			[]sdk.Msg{msg},
 			fees,
@@ -155,7 +157,7 @@ func operationSimulateMsgUpdateBeam(k keeper.Keeper, ak account.AccountKeeper, b
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
 
-		_, _, err = app.Deliver(txGenerator.TxEncoder(), tx)
+		_, _, err = app.SimDeliver(txGenerator.TxEncoder(), tx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
 		}
@@ -182,7 +184,7 @@ func sendMsgOpenBeam(r *rand.Rand, app *baseapp.BaseApp, bk bank.Keeper, ak acco
 	fromAccount := ak.GetAccount(ctx, from)
 	fromAccountSpendable := bk.SpendableCoins(ctx, fromAccount.GetAddress())
 
-	coins, hasNeg := fromAccountSpendable.SafeSub(sdk.NewCoins(*msg.GetAmount()))
+	coins, hasNeg := fromAccountSpendable.SafeSub(*msg.GetAmount())
 	if !hasNeg {
 		fees, err = simtypes.RandomFees(r, ctx, coins)
 		if err != nil {
@@ -191,12 +193,12 @@ func sendMsgOpenBeam(r *rand.Rand, app *baseapp.BaseApp, bk bank.Keeper, ak acco
 	}
 
 	txGenerator := params.MakeTestEncodingConfig().TxConfig
-	tx, err := helpers.GenTx(txGenerator, []sdk.Msg{msg}, fees, helpers.DefaultGenTxGas, chainID, []uint64{fromAccount.GetAccountNumber()}, []uint64{fromAccount.GetSequence()}, privkeys...)
+	tx, err := helpers.GenSignedMockTx(r, txGenerator, []sdk.Msg{msg}, fees, helpers.DefaultGenTxGas, chainID, []uint64{fromAccount.GetAccountNumber()}, []uint64{fromAccount.GetSequence()}, privkeys...)
 	if err != nil {
 		return err
 	}
 
-	_, _, err = app.Deliver(txGenerator.TxEncoder(), tx)
+	_, _, err = app.SimDeliver(txGenerator.TxEncoder(), tx)
 	if err != nil {
 		return err
 	}

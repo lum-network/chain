@@ -1,0 +1,45 @@
+syntax = "proto3";
+package lum.network.beam;
+
+option go_package = "github.com/lum-network/chain/x/beam/types";
+
+import "gogoproto/gogo.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+
+import "lum-network/beam/beam.proto";
+
+message MsgOpenBeam {
+  string id = 1;
+  string creator_address = 2;
+  string secret = 3;
+  cosmos.base.v1beta1.Coin amount = 4 [ (gogoproto.nullable) = true ];
+
+  string schema = 5;
+
+  BeamData data = 6 [ (gogoproto.nullable) = true ];
+  string claim_address = 7;
+  int32 claim_expires_at_block = 8;
+  int32 closes_at_block = 9;
+}
+
+message MsgUpdateBeam {
+  string id = 1;
+  string updater_address = 2;
+  cosmos.base.v1beta1.Coin amount = 3 [ (gogoproto.nullable) = true ];
+  BeamState status = 4;
+  string cancel_reason = 5;
+  bool hide_content = 6;
+
+  BeamData data = 7 [ (gogoproto.nullable) = true ];
+
+  string claim_address = 8;
+  int32 claim_expires_at_block = 9;
+  int32 closes_at_block = 10;
+}
+
+message MsgClaimBeam {
+  string id = 1;
+  string claimer_address = 2;
+  string secret = 3;
+}

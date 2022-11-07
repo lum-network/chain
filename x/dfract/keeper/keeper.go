@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -32,8 +33,8 @@ func permContains(perms []string, perm string) bool {
 type (
 	Keeper struct {
 		cdc           codec.BinaryCodec
-		storeKey      sdk.StoreKey
-		memKey        sdk.StoreKey
+		storeKey      storetypes.StoreKey
+		memKey        storetypes.StoreKey
 		paramSpace    paramtypes.Subspace
 		AuthKeeper    authkeeper.AccountKeeper
 		BankKeeper    bankkeeper.Keeper
@@ -43,7 +44,7 @@ type (
 )
 
 // NewKeeper Create a new keeper instance and return the pointer
-func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, paramSpace paramtypes.Subspace, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper, sk stakingkeeper.Keeper) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey storetypes.StoreKey, paramSpace paramtypes.Subspace, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper, sk stakingkeeper.Keeper) *Keeper {
 	moduleAddr, perms := auth.GetModuleAddressAndPermissions(types.ModuleName)
 	if moduleAddr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
