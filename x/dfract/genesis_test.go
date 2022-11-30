@@ -24,7 +24,7 @@ var testGenesis = types.GenesisState{
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 15_000),
 	},
 	Params: types.Params{
-		DepositDenom:     sdk.DefaultBondDenom,
+		DepositDenom:     []string{sdk.DefaultBondDenom},
 		MinDepositAmount: 1_000,
 	},
 	DepositsMinted: []*types.Deposit{

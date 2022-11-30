@@ -3,11 +3,12 @@ package testing
 import (
 	"bytes"
 	"fmt"
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/lum-network/chain/app"
-	"strconv"
 )
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
