@@ -35,8 +35,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	params := app.DFractKeeper.GetParams(ctx)
 
-	// Iterate over the array of deposits denom
-	for _, denom := range params.DepositDenom {
+	// Iterate over the array of deposit denoms
+	for _, denom := range params.DepositDenoms {
 		suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 6, sdk.NewInt(300000000), denom)
 	}
 
@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestInvalidParams() {
 
 	panicF := func() {
 		app.DFractKeeper.SetParams(ctx, types.Params{
-			DepositDenom:     []string{""},
+			DepositDenoms:    []string{""},
 			MinDepositAmount: 0,
 		})
 	}
@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) TestInvalidParams() {
 
 	panicF = func() {
 		app.DFractKeeper.SetParams(ctx, types.Params{
-			DepositDenom:     []string{""},
+			DepositDenoms:    []string{""},
 			MinDepositAmount: 1,
 		})
 	}
@@ -106,8 +106,8 @@ func (suite *KeeperTestSuite) TestInvalidAmountDeposit() {
 	// Obtain the required accounts
 	depositor := suite.addrs[0]
 
-	// Iterate over the array of deposits denom
-	for _, denom := range params.DepositDenom {
+	// Iterate over the array of deposit denoms
+	for _, denom := range params.DepositDenoms {
 		// Try to deposit 0 of the deposit denom
 		err := app.DFractKeeper.CreateDeposit(ctx, types.MsgDeposit{
 			DepositorAddress: depositor.String(),
@@ -135,8 +135,8 @@ func (suite *KeeperTestSuite) TestDoubleDeposit() {
 	// Obtain the required accounts
 	depositor := suite.addrs[0]
 
-	// Iterate over the array of deposits denom
-	for _, denom := range params.DepositDenom {
+	// Iterate over the array of deposit denoms
+	for _, denom := range params.DepositDenoms {
 		// Try to deposit 100000000 of the deposit denom
 		err := app.DFractKeeper.CreateDeposit(ctx, types.MsgDeposit{
 			DepositorAddress: depositor.String(),
@@ -167,8 +167,8 @@ func (suite *KeeperTestSuite) TestValidDeposit() {
 	// Obtain the required accounts
 	depositor := suite.addrs[0]
 
-	// Iterate over the array of deposits denom
-	for _, denom := range params.DepositDenom {
+	// Iterate over the array of deposit denoms
+	for _, denom := range params.DepositDenoms {
 		// We store the initial depositor balances
 		depositorAvailableBalance := app.BankKeeper.GetBalance(ctx, depositor, denom)
 		require.GreaterOrEqual(suite.T(), depositorAvailableBalance.Amount.Int64(), int64(300000000))
@@ -215,8 +215,8 @@ func (suite *KeeperTestSuite) TestMintAccuracy() {
 	// Obtain the required accounts
 	withdrawAddr := suite.addrs[0]
 
-	// Iterate over the array of deposits denom
-	for _, denom := range params.DepositDenom {
+	// Iterate over the array of deposit denoms
+	for _, denom := range params.DepositDenoms {
 		testAccuracy := func(depositor sdk.AccAddress, depositAmount int64, microMintRate int64, expectedMintedAmount int64) {
 			balanceBeforeMint := app.BankKeeper.GetBalance(ctx, depositor, types.MintDenom)
 			app.DFractKeeper.SetDepositPendingMint(ctx, depositor, types.Deposit{
@@ -333,8 +333,8 @@ func (suite *KeeperTestSuite) TestChainedFullProcess() {
 	// coin[3]: pending mint balance
 	// coin[4]: deposit minted
 
-	// Iterate over the array of deposits denom
-	for _, denom := range params.DepositDenom {
+	// Iterate over the array of deposit denoms
+	for _, denom := range params.DepositDenoms {
 		getAllStates := func() map[string][]sdk.Coin {
 			res := map[string][]sdk.Coin{}
 			addrs := append(depositorsAddrs, withdrawAddr, app.DFractKeeper.GetModuleAccount(ctx).String())

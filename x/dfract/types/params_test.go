@@ -6,7 +6,7 @@ import (
 
 func TestParamsValidate(t *testing.T) {
 	type fields struct {
-		DepositDenom     []string
+		DepositDenoms    []string
 		MinDepositAmount uint32
 	}
 	tests := []struct {
@@ -28,7 +28,7 @@ func TestParamsValidate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := &Params{
-				DepositDenom:     tt.fields.DepositDenom,
+				DepositDenoms:    tt.fields.DepositDenoms,
 				MinDepositAmount: tt.fields.MinDepositAmount,
 			}
 			if err := p.Validate(); (err != nil) != tt.wantErr {
