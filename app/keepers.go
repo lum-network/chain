@@ -152,7 +152,7 @@ func (app *App) InitNormalKeepers() {
 		keys[banktypes.StoreKey],
 		app.AccountKeeper,
 		app.GetSubspace(banktypes.ModuleName),
-		app.BlockedAddrs(),
+		app.BlockedModuleAccountAddrs(),
 	)
 	app.BankKeeper = &bankKeeper
 
