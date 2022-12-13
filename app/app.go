@@ -161,6 +161,13 @@ var (
 )
 
 func init() {
+	// Initialize the bech32 prefixes and coin type
+	SetConfig()
+
+	// Initialize the default denom regex
+	sdk.SetCoinDenomRegex(sdk.DefaultCoinDenomRegex)
+
+	// Acquire the homedir
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
@@ -345,6 +352,7 @@ func New(
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
 	app.mm.SetOrderInitGenesis(
+		upgradetypes.ModuleName,
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
@@ -362,7 +370,6 @@ func New(
 		ibcfeetypes.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
-		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		authz.ModuleName,
 		beamtypes.ModuleName,
@@ -463,9 +470,17 @@ func (app *App) ModuleAccountAddrs() map[string]bool {
 	return modAccAddrs
 }
 
-func (app *App) BlockedAddrs() map[string]bool {
-	blockedAddrs := make(map[string]bool)
-	return blockedAddrs
+// BlockedModuleAccountAddrs returns all the app's blocked module account addresses
+func (app *App) BlockedModuleAccountAddrs() map[string]bool {
+	// By default no one can receive funds
+	modAccAddrs := app.ModuleAccountAddrs()
+
+	// Remove module accounts that are ALLOWED to receive funds
+	delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	delete(modAccAddrs, authtypes.NewModuleAddress(beamtypes.ModuleName).String())
+	delete(modAccAddrs, authtypes.NewModuleAddress(dfracttypes.ModuleName).String())
+
+	return modAccAddrs
 }
 
 // LegacyAmino returns SimApp's amino codec.
@@ -548,15 +563,6 @@ func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
 	staticServer := http.FileServer(statikFS)
 	rtr.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticServer))
 	rtr.PathPrefix("/swagger/").Handler(staticServer)
-}
-
-// GetMaccPerms returns a copy of the module account permissions
-func GetMaccPerms() map[string][]string {
-	dupMaccPerms := make(map[string][]string)
-	for k, v := range maccPerms {
-		dupMaccPerms[k] = v
-	}
-	return dupMaccPerms
 }
 
 func (app *App) registerUpgradeHandlers() {
