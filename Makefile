@@ -44,7 +44,13 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=lum \
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 
-all: install
+check_version:
+ifneq ($(GO_MINOR_VERSION),18)
+	@echo "ERROR: Go version 1.18 is required for this version of Lum Network. Go 1.19 has changes that are believed to break consensus."
+	exit 1
+endif
+
+all: check_version install
 
 install: go.sum
 		@echo "--> Installing lumd"
