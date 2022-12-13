@@ -161,6 +161,13 @@ var (
 )
 
 func init() {
+	// Initialize the bech32 prefixes and coin type
+	SetConfig()
+
+	// Initialize the default denom regex
+	sdk.SetCoinDenomRegex(sdk.DefaultCoinDenomRegex)
+
+	// Acquire the homedir
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
