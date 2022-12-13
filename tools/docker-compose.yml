@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+  gaia-local-net:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.gaia
+    image: lum-gaia
+    ports:
+      - "26557:26657"
+      - "1307:1317"
+      - "9080:9090"
+    command:
+      - /bin/sh
+      - -c
+      - |
+        gaiad tendermint unsafe-reset-all
+        gaiad keys add genesis_key --keyring-backend test
+        gaiad init genesis_key --chain-id=gaia-devnet
+        gaiad add-genesis-account `gaiad keys show genesis_key -a --keyring-backend test` 1000000000000000uatom --keyring-backend test
+        gaiad gentx genesis_key 1000000uatom --chain-id=gaia-devnet --keyring-backend test
+        gaiad collect-gentxs
+        sed -i 's/"stake"/"uatom"/g' /home/gaia/.gaia/config/genesis.json
+        sed -i 's/minimum-gas-prices = ""/minimum-gas-prices = "0.001uatom"/g' /home/gaia/.gaia/config/app.toml
+        sed -i 's/timeout_propose = "3s"/timeout_propose = "1s"/g' /home/gaia/.gaia/config/config.toml
+        sed -i 's/timeout_propose_delta = "500ms"/timeout_propose_delta = "200ms"/g' /home/gaia/.gaia/config/config.toml
+        sed -i 's/timeout_prevote = "1s"/timeout_prevote = "300ms"/g' /home/gaia/.gaia/config/config.toml
+        sed -i 's/timeout_prevote_delta = "500ms"/timeout_prevote_delta = "200ms"/g' /home/gaia/.gaia/config/config.toml
+        sed -i 's/timeout_precommit = "1s"/timeout_precommit = "300ms"/g' /home/gaia/.gaia/config/config.toml
+        sed -i 's/timeout_precommit_delta = "500ms"/timeout_precommit_delta = "200ms"/g' /home/gaia/.gaia/config/config.toml
+        sed -i 's/timeout_commit = "5s"/timeout_commit = "2s"/g' /home/gaia/.gaia/config/config.toml
+        gaiad start --rpc.laddr tcp://0.0.0.0:26657
+
+  osmosis-local-net:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.osmosis
+    image: lum-osmosis
+    ports:
+      - "26457:26657"
+      - "1297:1317"
+      - "9070:9090"
+    command:
+      - /bin/sh
+      - -c
+      - |
+        osmosisd tendermint unsafe-reset-all
+        osmosisd keys add genesis_key --keyring-backend test
+        osmosisd init genesis_key --chain-id=osmosis-devnet
+        osmosisd add-genesis-account `osmosisd keys show genesis_key -a --keyring-backend test` 1000000000000000uosmo --keyring-backend test
+        osmosisd gentx genesis_key 1000000uosmo --chain-id=osmosis-devnet --keyring-backend test
+        osmosisd collect-gentxs
+        sed -i 's/"stake"/"uosmo"/g' /home/osmosis/.osmosisd/config/genesis.json
+        sed -i 's/minimum-gas-prices = ""/minimum-gas-prices = "0.001uosmo"/g' home/osmosis/.osmosisd/config/app.toml
+        sed -i 's/timeout_propose = "3s"/timeout_propose = "1s"/g' home/osmosis/.osmosisd/config/config.toml
+        sed -i 's/timeout_propose_delta = "500ms"/timeout_propose_delta = "200ms"/g' home/osmosis/.osmosisd/config/config.toml
+        sed -i 's/timeout_prevote = "1s"/timeout_prevote = "300ms"/g' home/osmosis/.osmosisd/config/config.toml
+        sed -i 's/timeout_prevote_delta = "500ms"/timeout_prevote_delta = "200ms"/g' home/osmosis/.osmosisd/config/config.toml
+        sed -i 's/timeout_precommit = "1s"/timeout_precommit = "300ms"/g' home/osmosis/.osmosisd/config/config.toml
+        sed -i 's/timeout_precommit_delta = "500ms"/timeout_precommit_delta = "200ms"/g' home/osmosis/.osmosisd/config/config.toml
+        sed -i 's/timeout_commit = "5s"/timeout_commit = "2s"/g' home/osmosis/.osmosisd/config/config.toml
+        osmosisd start --rpc.laddr tcp://0.0.0.0:26657
