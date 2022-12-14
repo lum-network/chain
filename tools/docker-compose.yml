@@ -131,6 +131,14 @@ services:
     image: lum-relayer
     env_file:
       - .env
+    ports:
+      - "12000:3000"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/version" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
     depends_on:
       juno-local-net:
         condition: service_healthy
