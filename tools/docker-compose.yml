@@ -16,6 +16,8 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
+    env_file:
+      - .env
     command:
       - /bin/sh
       - -c
@@ -23,8 +25,10 @@ services:
         junod tendermint unsafe-reset-all
         rm -rf /home/juno/.juno
         junod keys add genesis_key --keyring-backend test
+        echo $JUNO_MNEMONIC | junod keys add relayer_key --keyring-backend test --recover
         junod init genesis_key --chain-id=juno-devnet
         junod add-genesis-account `junod keys show genesis_key -a --keyring-backend test` 1000000000000000ujuno --keyring-backend test
+        junod add-genesis-account `junod keys show relayer_key -a --keyring-backend test` 1000000000000000ujuno --keyring-backend test
         junod gentx genesis_key 1000000ujuno --chain-id=juno-devnet --keyring-backend test
         junod collect-gentxs
         sed -i 's/"stake"/"ujuno"/g' /home/juno/.juno/config/genesis.json
@@ -53,6 +57,8 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
+    env_file:
+      - .env
     command:
       - /bin/sh
       - -c
@@ -60,8 +66,10 @@ services:
         gaiad tendermint unsafe-reset-all
         rm -rf /home/gaia/.gaia
         gaiad keys add genesis_key --keyring-backend test
+        echo $GAIA_MNEMONIC | gaiad keys add relayer_key --keyring-backend test --recover
         gaiad init genesis_key --chain-id=gaia-devnet
         gaiad add-genesis-account `gaiad keys show genesis_key -a --keyring-backend test` 1000000000000000uatom --keyring-backend test
+        gaiad add-genesis-account `gaiad keys show relayer_key -a --keyring-backend test` 1000000000000000uatom --keyring-backend test
         gaiad gentx genesis_key 1000000uatom --chain-id=gaia-devnet --keyring-backend test
         gaiad collect-gentxs
         sed -i 's/"stake"/"uatom"/g' /home/gaia/.gaia/config/genesis.json
@@ -90,6 +98,8 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
+    env_file:
+      - .env
     command:
       - /bin/sh
       - -c
@@ -97,8 +107,10 @@ services:
         osmosisd tendermint unsafe-reset-all
         rm -rf /home/osmosis/.osmosisd
         osmosisd keys add genesis_key --keyring-backend test
+        echo $OSMOSIS_MNEMONIC | osmosisd keys add relayer_key --keyring-backend test --recover
         osmosisd init genesis_key --chain-id=osmosis-devnet
         osmosisd add-genesis-account `osmosisd keys show genesis_key -a --keyring-backend test` 1000000000000000uosmo --keyring-backend test
+        osmosisd add-genesis-account `osmosisd keys show relayer_key -a --keyring-backend test` 1000000000000000uosmo --keyring-backend test
         osmosisd gentx genesis_key 1000000uosmo --chain-id=osmosis-devnet --keyring-backend test
         osmosisd collect-gentxs
         sed -i 's/"stake"/"uosmo"/g' /home/osmosis/.osmosisd/config/genesis.json
@@ -117,6 +129,8 @@ services:
       context: .
       dockerfile: dockerfiles/Dockerfile.hermes
     image: lum-relayer
+    env_file:
+      - .env
     depends_on:
       juno-local-net:
         condition: service_healthy
@@ -124,6 +138,9 @@ services:
         condition: service_healthy
       gaia-local-net:
         condition: service_healthy
+    volumes:
+      - ./config/hermes.toml:/home/hermes/.hermes/config.toml
+    restart: always
     command:
       - /bin/sh
       - -c
