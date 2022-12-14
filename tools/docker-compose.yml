@@ -139,10 +139,18 @@ services:
       gaia-local-net:
         condition: service_healthy
     volumes:
-      - ./config/hermes.toml:/home/hermes/.hermes/config.toml
+      - ./config/hermes.toml:/home/hermes/config.toml
     restart: always
     command:
       - /bin/sh
       - -c
       - |
+        mkdir -p /home/hermes/.hermes
+        cp /home/hermes/config.toml /home/hermes/.hermes/config.toml
+        echo $GAIA_MNEMONIC > gaia.txt
+        hermes keys add --key-name hrly1 --chain gaia-devnet --mnemonic-file gaia.txt --overwrite
+        echo $JUNO_MNEMONIC > juno.txt
+        hermes keys add --key-name hrly2 --chain juno-devnet --mnemonic-file juno.txt --overwrite
+        echo $OSMOSIS_MNEMONIC > osmosis.txt
+        hermes keys add --key-name hrly3 --chain osmosis-devnet --mnemonic-file osmosis.txt --overwrite
         hermes start

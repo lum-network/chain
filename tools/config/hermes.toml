@@ -26,13 +26,13 @@ host = '0.0.0.0'
 port = 3001
 
 [[chains]]
-id = 'GAIA'
+id = 'gaia-devnet'
 rpc_addr = 'http://gaia-local-net:26657'
 grpc_addr = 'http://gaia-local-net:9090'
 websocket_addr = 'ws://gaia-local-net:26657/websocket'
 rpc_timeout = '10s'
 account_prefix = 'cosmos'
-key_name = 'hrly2'
+key_name = 'hrly1'
 store_prefix = 'ibc'
 default_gas = 100000
 max_gas = 3000000
@@ -47,13 +47,13 @@ trust_threshold = { numerator = '1', denominator = '3' }
 address_type = { derivation = 'cosmos' }
 
 [[chains]]
-id = 'JUNO'
+id = 'juno-devnet'
 rpc_addr = 'http://juno-local-net:26657'
 grpc_addr = 'http://juno-local-net:9090'
 websocket_addr = 'ws://juno-local-net:26657/websocket'
 rpc_timeout = '10s'
 account_prefix = 'juno'
-key_name = 'hrly3'
+key_name = 'hrly2'
 store_prefix = 'ibc'
 default_gas = 100000
 max_gas = 3000000
@@ -68,13 +68,13 @@ trust_threshold = { numerator = '1', denominator = '3' }
 address_type = { derivation = 'cosmos' }
 
 [[chains]]
-id = 'OSMO'
+id = 'osmosis-devnet'
 rpc_addr = 'http://osmosis-local-net:26657'
 grpc_addr = 'http://osmosis-local-net:9090'
 websocket_addr = 'ws://osmosis-local-net:26657/websocket'
 rpc_timeout = '10s'
 account_prefix = 'osmo'
-key_name = 'hrly4'
+key_name = 'hrly3'
 store_prefix = 'ibc'
 default_gas = 100000
 max_gas = 3000000
