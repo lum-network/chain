@@ -10,6 +10,11 @@ services:
       - "26657:26657"
       - "1317:1317"
       - "9090:9090"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:26657" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     command:
       - /bin/sh
       - -c
@@ -41,6 +46,11 @@ services:
       - "26557:26657"
       - "1307:1317"
       - "9080:9090"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:26557" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     command:
       - /bin/sh
       - -c
@@ -72,6 +82,11 @@ services:
       - "26457:26657"
       - "1297:1317"
       - "9070:9090"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:26457" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     command:
       - /bin/sh
       - -c
