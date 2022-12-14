@@ -111,3 +111,21 @@ services:
         sed -i 's/timeout_precommit_delta = "500ms"/timeout_precommit_delta = "200ms"/g' /home/osmosis/.osmosisd/config/config.toml
         sed -i 's/timeout_commit = "5s"/timeout_commit = "2s"/g' /home/osmosis/.osmosisd/config/config.toml
         osmosisd start --rpc.laddr tcp://0.0.0.0:26657
+
+  relayer-local-net:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.hermes
+    image: lum-relayer
+    depends_on:
+      juno-local-net:
+        condition: service_healthy
+      osmosis-local-net:
+        condition: service_healthy
+      gaia-local-net:
+        condition: service_healthy
+    command:
+      - /bin/sh
+      - -c
+      - |
+        hermes start
