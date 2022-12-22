@@ -4,9 +4,17 @@ import (
 	"fmt"
 	"strings"
 
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
+
+// Default parameter constants
+const (
+	DefaultDenom            = "ibc/05554A9BFDD28894D7F18F4C707AA0930D778751A437A9FE1F4684A3E1199728" // USDC ibc denom from Osmosis to Lum Network mainnet
+	DefaultMinDepositAmount = 1000000
+)
+
+// Default denoms variable
+var DefaultDenoms = []string{DefaultDenom}
 
 // Parameter store keys.
 var (
@@ -22,13 +30,13 @@ func ParamKeyTable() paramtypes.KeyTable {
 // DefaultParams return the default dfract module params
 func DefaultParams() Params {
 	return Params{
-		DepositDenom:     "ibc/05554A9BFDD28894D7F18F4C707AA0930D778751A437A9FE1F4684A3E1199728", // USDC ibc denom from Osmosis to Lum Network mainnet
-		MinDepositAmount: 1000000,
+		DepositDenoms:    DefaultDenoms,
+		MinDepositAmount: DefaultMinDepositAmount,
 	}
 }
 
 func (p *Params) Validate() error {
-	if err := validateDepositDenom(p.DepositDenom); err != nil {
+	if err := validateDepositDenom(p.DepositDenoms); err != nil {
 		return err
 	}
 
@@ -40,25 +48,29 @@ func (p *Params) Validate() error {
 
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyDepositDenom, &p.DepositDenom, validateDepositDenom),
+		paramtypes.NewParamSetPair(KeyDepositDenom, &p.DepositDenoms, validateDepositDenom),
 		paramtypes.NewParamSetPair(KeyMinDepositAmount, &p.MinDepositAmount, validateMinDepositAmount),
 	}
 }
 
+// Function that ensures that the deposited denom is an array of string
 func validateDepositDenom(i interface{}) error {
-	v, ok := i.(string)
+	v, ok := i.([]string)
+
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	if strings.TrimSpace(v) == "" {
-		return ErrInvalidDepositDenom
+
+	for _, denom := range v {
+		if strings.TrimSpace(denom) == "" {
+			return ErrInvalidDepositDenom
+		}
 	}
-	if err := sdktypes.ValidateDenom(v); err != nil {
-		return err
-	}
+
 	return nil
 }
 
+// Function that ensures that the deposited amount is not inferior or equal to 0
 func validateMinDepositAmount(i interface{}) error {
 	v, ok := i.(uint32)
 	if !ok {
