@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"fmt"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"strconv"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -101,12 +102,6 @@ func (k Keeper) GetModuleAccountBalance(ctx sdk.Context) sdk.Coins {
 // GetModuleAccountBalanceForDenom Return the module account's balance
 func (k Keeper) GetModuleAccountBalanceForDenom(ctx sdk.Context, denom string) sdk.Coin {
 	moduleAcc := k.GetModuleAccount(ctx)
-	params := k.GetParams(ctx)
-
-	if denom != params.DepositDenom && denom != types.MintDenom {
-		return sdk.Coin{}
-	}
-
 	return k.BankKeeper.GetBalance(ctx, moduleAcc, denom)
 }
 
@@ -116,8 +111,10 @@ func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 	params := k.GetParams(ctx)
 
 	// Make sure the deposit is made of allowed denom
-	if params.DepositDenom != msg.GetAmount().Denom {
-		return types.ErrUnauthorizedDepositDenom
+	for _, denom := range params.DepositDenoms {
+		if denom != msg.GetAmount().Denom {
+			return types.ErrUnauthorizedDepositDenom
+		}
 	}
 
 	// Make sure we have an actual deposit to do
@@ -171,74 +168,77 @@ func (k Keeper) ProcessWithdrawAndMintProposal(ctx sdk.Context, proposal *types.
 	// Acquire the parameters to get the denoms
 	params := k.GetParams(ctx)
 
-	// Acquire the module account balance
-	balance := k.GetModuleAccountBalanceForDenom(ctx, params.GetDepositDenom())
+	// Iterate over the array of deposit denoms to get the module account balance for a particular denom
+	for _, denom := range params.DepositDenoms {
+		// Acquire the module account balance
+		balance := k.GetModuleAccountBalanceForDenom(ctx, denom)
 
-	// Acquire the list of deposits pending withdrawal and mint
-	depositsPendingWithdrawal := k.ListDepositsPendingWithdrawal(ctx)
-	depositsPendingMint := k.ListDepositsPendingMint(ctx)
+		// Acquire the list of deposits pending withdrawal and mint
+		depositsPendingWithdrawal := k.ListDepositsPendingWithdrawal(ctx)
+		depositsPendingMint := k.ListDepositsPendingMint(ctx)
 
-	// Withdrawal the coins from the pending withdrawal deposits using the module account
-	if balance.Amount.IsPositive() {
-		destinationAddress, err := sdk.AccAddressFromBech32(proposal.GetWithdrawalAddress())
-		if err != nil {
-			return sdkerrors.ErrInvalidAddress
-		}
-		if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destinationAddress, sdk.NewCoins(balance)); err != nil {
-			return err
-		}
-	}
-
-	// Mint the coins for all the pending mint deposits and add them to the the minted deposits
-	for _, deposit := range depositsPendingMint {
-		depositorAddress, err := sdk.AccAddressFromBech32(deposit.GetDepositorAddress())
-		if err != nil {
-			return sdkerrors.ErrInvalidAddress
+		// Withdrawal the coins from the pending withdrawal deposits using the module account
+		if balance.Amount.IsPositive() {
+			destinationAddress, err := sdk.AccAddressFromBech32(proposal.GetWithdrawalAddress())
+			if err != nil {
+				return sdkerrors.ErrInvalidAddress
+			}
+			if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destinationAddress, sdk.NewCoins(balance)); err != nil {
+				return err
+			}
 		}
 
-		toMint := sdk.NewCoin(types.MintDenom, deposit.GetAmount().Amount.MulRaw(proposal.GetMicroMintRate()).QuoRaw(MicroPrecision))
-		if err := k.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(toMint)); err != nil {
-			return err
+		// Mint the coins for all the pending mint deposits and add them to the the minted deposits
+		for _, deposit := range depositsPendingMint {
+			depositorAddress, err := sdk.AccAddressFromBech32(deposit.GetDepositorAddress())
+			if err != nil {
+				return sdkerrors.ErrInvalidAddress
+			}
+
+			toMint := sdk.NewCoin(types.MintDenom, deposit.GetAmount().Amount.MulRaw(proposal.GetMicroMintRate()).QuoRaw(MicroPrecision))
+			if err := k.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(toMint)); err != nil {
+				return err
+			}
+
+			if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositorAddress, sdk.NewCoins(toMint)); err != nil {
+				return err
+			}
+
+			k.RemoveDepositPendingMint(ctx, depositorAddress)
+			k.AddDepositMinted(ctx, depositorAddress, *deposit)
+			ctx.EventManager().Events().AppendEvents(sdk.Events{
+				sdk.NewEvent(
+					types.EventTypeMint,
+					sdk.NewAttribute(types.AttributeKeyDepositor, depositorAddress.String()),
+					sdk.NewAttribute(types.AttributeKeyAmount, deposit.GetAmount().String()),
+					sdk.NewAttribute(types.AttributeKeyMinted, toMint.String()),
+					sdk.NewAttribute(types.AttributeKeyMicroMintRate, fmt.Sprintf("%d", proposal.GetMicroMintRate())),
+				),
+			})
 		}
 
-		if err := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositorAddress, sdk.NewCoins(toMint)); err != nil {
-			return err
+		// Process the pending withdrawal deposits
+		for _, deposit := range depositsPendingWithdrawal {
+			depositorAddress, err := sdk.AccAddressFromBech32(deposit.GetDepositorAddress())
+			if err != nil {
+				return sdkerrors.ErrInvalidAddress
+			}
+			k.RemoveDepositPendingWithdrawal(ctx, depositorAddress)
+			k.SetDepositPendingMint(ctx, depositorAddress, *deposit)
+			ctx.EventManager().Events().AppendEvents(sdk.Events{
+				sdk.NewEvent(
+					types.EventTypeWithdraw,
+					sdk.NewAttribute(types.AttributeKeyDepositor, depositorAddress.String()),
+					sdk.NewAttribute(types.AttributeKeyAmount, deposit.GetAmount().String()),
+				),
+			})
 		}
 
-		k.RemoveDepositPendingMint(ctx, depositorAddress)
-		k.AddDepositMinted(ctx, depositorAddress, *deposit)
+		// Trigger the events
 		ctx.EventManager().Events().AppendEvents(sdk.Events{
-			sdk.NewEvent(
-				types.EventTypeMint,
-				sdk.NewAttribute(types.AttributeKeyDepositor, depositorAddress.String()),
-				sdk.NewAttribute(types.AttributeKeyAmount, deposit.GetAmount().String()),
-				sdk.NewAttribute(types.AttributeKeyMinted, toMint.String()),
-				sdk.NewAttribute(types.AttributeKeyMicroMintRate, fmt.Sprintf("%d", proposal.GetMicroMintRate())),
-			),
+			sdk.NewEvent(types.EventTypeMint, sdk.NewAttribute(types.AttributeKeyMintBlock, strconv.FormatInt(ctx.BlockHeight(), 10))),
 		})
 	}
-
-	// Process the pending withdrawal deposits
-	for _, deposit := range depositsPendingWithdrawal {
-		depositorAddress, err := sdk.AccAddressFromBech32(deposit.GetDepositorAddress())
-		if err != nil {
-			return sdkerrors.ErrInvalidAddress
-		}
-		k.RemoveDepositPendingWithdrawal(ctx, depositorAddress)
-		k.SetDepositPendingMint(ctx, depositorAddress, *deposit)
-		ctx.EventManager().Events().AppendEvents(sdk.Events{
-			sdk.NewEvent(
-				types.EventTypeWithdraw,
-				sdk.NewAttribute(types.AttributeKeyDepositor, depositorAddress.String()),
-				sdk.NewAttribute(types.AttributeKeyAmount, deposit.GetAmount().String()),
-			),
-		})
-	}
-
-	// Trigger the events
-	ctx.EventManager().Events().AppendEvents(sdk.Events{
-		sdk.NewEvent(types.EventTypeMint, sdk.NewAttribute(types.AttributeKeyMintBlock, strconv.FormatInt(ctx.BlockHeight(), 10))),
-	})
 
 	return nil
 }
