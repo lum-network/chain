@@ -29,6 +29,7 @@ var (
 	DepositsPendingWithdrawalPrefix = []byte{0x01}
 	DepositsPendingMintPrefix       = []byte{0x02}
 	DepositsMintedPrefix            = []byte{0x03}
+	StakedTokenPrefix               = []byte{0x04}
 )
 
 func GetDepositsPendingWithdrawalKey(depositorAddress sdk.AccAddress) []byte {
@@ -41,4 +42,8 @@ func GetDepositsPendingMintKey(depositorAddress sdk.AccAddress) []byte {
 
 func GetDepositsMintedKey(depositorAddress sdk.AccAddress) []byte {
 	return append(DepositsMintedPrefix, depositorAddress.Bytes()...)
+}
+
+func GetStakedTokenKey(senderAddress sdk.AccAddress) []byte {
+	return append(StakedTokenPrefix, senderAddress.Bytes()...)
 }

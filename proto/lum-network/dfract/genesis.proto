@@ -6,6 +6,7 @@ import "cosmos/base/v1beta1/coin.proto";
 
 import "lum-network/dfract/params.proto";
 import "lum-network/dfract/deposit.proto";
+import "lum-network/dfract/staking.proto";
 
 option go_package = "github.com/lum-network/chain/x/dfract/types";
 
@@ -14,13 +15,12 @@ message GenesisState {
     (gogoproto.moretags) = "yaml:\"module_account_balance\"",
     (gogoproto.nullable) = false
   ];
-
   Params params = 2 [
     (gogoproto.moretags) = "yaml:\"params\"",
     (gogoproto.nullable) = false
   ];
-
   repeated Deposit deposits_pending_withdrawal = 3;
   repeated Deposit deposits_pending_mint = 4;
   repeated Deposit deposits_minted = 5;
+  repeated Stake   token_bonded = 6;
 }

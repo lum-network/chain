@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -20,7 +21,7 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(CmdDeposit())
+	cmd.AddCommand(CmdDeposit(), CmdBond())
 
 	return cmd
 }
@@ -47,6 +48,42 @@ func CmdDeposit() *cobra.Command {
 
 			// Build the message
 			msg := types.NewMsgDeposit(clientCtx.GetFromAddress().String(), argsAmount)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			// Generate the transaction
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.MarkFlagRequired(flags.FlagFrom)
+	return cmd
+}
+
+func CmdBond() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "bond <amount>",
+		Short: "Bond dfr tokens",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Acquire the client context
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			// Acquire the command arguments
+			argsAmount, err := sdk.ParseCoinNormalized(args[0])
+			if err != nil {
+				return err
+			}
+
+			// Build the message
+			msg := types.NewMsgBond(clientCtx.GetFromAddress().String(), argsAmount)
+
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

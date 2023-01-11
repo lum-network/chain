@@ -19,12 +19,17 @@ var (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgDeposit{}, "lum-network/MsgDeposit", nil)
 	cdc.RegisterConcrete(&WithdrawAndMintProposal{}, "lum-network/MsgWithdrawAndMintProposal", nil)
+	cdc.RegisterConcrete(&MsgBond{}, "lum-network/MsgBond", nil)
+	cdc.RegisterConcrete(&MsgUnbond{}, "lum-network/MsgUnbond", nil)
+
 }
 
 // RegisterInterfaces Register the implementations for the given codecs
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgDeposit{})
 	registry.RegisterImplementations((*govtypesv1beta1.Content)(nil), &WithdrawAndMintProposal{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgBond{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgUnbond{})
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

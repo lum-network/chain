@@ -1,9 +1,10 @@
 package v104_test
 
 import (
-	apptypes "github.com/lum-network/chain/app"
 	"testing"
 	"time"
+
+	apptypes "github.com/lum-network/chain/app"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

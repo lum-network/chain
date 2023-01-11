@@ -40,6 +40,15 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetDepositPendingWithdrawal(ctx, depositorAddress, *deposit)
 	}
 
+	// Process the bonded token
+	for _, bond := range genState.TokenBonded {
+		senderAddress, err := sdk.AccAddressFromBech32(bond.GetDelegatorAddress())
+		if err != nil {
+			return sdkerrors.ErrInvalidAddress
+		}
+		k.SetStakedToken(ctx, senderAddress, *bond)
+	}
+
 	return nil
 }
 
@@ -53,5 +62,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		DepositsMinted:            k.ListDepositsMinted(ctx),
 		DepositsPendingMint:       k.ListDepositsPendingMint(ctx),
 		DepositsPendingWithdrawal: k.ListDepositsPendingWithdrawal(ctx),
+		TokenBonded:               k.ListStakedTokens(ctx),
 	}
 }

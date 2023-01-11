@@ -2,11 +2,17 @@ syntax = "proto3";
 package lum.network.dfract;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
+
+import "lum-network/dfract/staking.proto";
 
 option go_package = "github.com/lum-network/chain/x/dfract/types";
 
-service Msg { rpc Deposit(MsgDeposit) returns (MsgDepositResponse); }
+service Msg {
+  rpc Deposit(MsgDeposit) returns (MsgDepositResponse);
+  rpc Bond(MsgBond) returns (MsgBondResponse);
+ }
 
 message MsgDeposit {
   string depositor_address = 1;
@@ -14,3 +20,15 @@ message MsgDeposit {
 }
 
 message MsgDepositResponse {}
+message MsgBondResponse {}
+
+// MsgBond allow to bond token
+message MsgBond {
+    string delegator_address = 1;
+    cosmos.base.v1beta1.Coin staking_token = 2 [ (gogoproto.nullable) = false ];
+}
+
+// MsgUnbond allow to unbond token
+message MsgUnbond {
+    string delegator_address = 1;
+}

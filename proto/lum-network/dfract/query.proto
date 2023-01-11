@@ -8,6 +8,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 
 import "lum-network/dfract/params.proto";
 import "lum-network/dfract/deposit.proto";
+import "lum-network/dfract/staking.proto";
 
 option go_package = "github.com/lum-network/chain/x/dfract/types";
 
@@ -36,6 +37,11 @@ service Query {
   rpc FetchDeposits(QueryFetchDepositsRequest)
       returns (QueryFetchDepositsResponse) {
     option (google.api.http).get = "/lum-network/dfract/deposits";
+  }
+
+  rpc GetStakedTokensForAddress(QueryGetStakedTokensForAddressRequest)
+      returns (QueryGetStakedTokensResponse) {
+    option (google.api.http).get = "/lum-network/dfract/staked/{address}";
   }
 }
 
@@ -71,4 +77,10 @@ message QueryGetDepositsForAddressResponse {
 message QueryFetchDepositsResponse {
   repeated Deposit deposits = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetStakedTokensForAddressRequest {string address = 1; }
+
+message QueryGetStakedTokensResponse {
+  Stake staked_token = 1 [ (gogoproto.nullable) = false ];
 }

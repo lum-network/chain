@@ -159,3 +159,58 @@ func (k Keeper) ListDepositsMinted(ctx sdk.Context) (deposits []*types.Deposit) 
 	})
 	return deposits
 }
+
+/* ------------------ Staking ------------------ */
+
+func (k Keeper) GetStakedToken(ctx sdk.Context, delegatorAddress sdk.AccAddress) (bond types.Stake, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	if store.Has(types.GetStakedTokenKey(delegatorAddress)) {
+		err := k.cdc.Unmarshal(store.Get(types.GetStakedTokenKey(delegatorAddress)), &bond)
+		if err != nil {
+			return bond, false
+		}
+		return bond, true
+	}
+	return bond, false
+}
+
+func (k Keeper) SetStakedToken(ctx sdk.Context, delegatorAddress sdk.AccAddress, bondedToken types.Stake) {
+	store := ctx.KVStore(k.storeKey)
+	encodedbond := k.cdc.MustMarshal(&bondedToken)
+	store.Set(types.GetStakedTokenKey(delegatorAddress), encodedbond)
+}
+
+func (k Keeper) AddStakedToken(ctx sdk.Context, delegatorAddress sdk.AccAddress, bond types.Stake) {
+	previousBond, found := k.GetStakedToken(ctx, delegatorAddress)
+	if !found {
+		k.SetStakedToken(ctx, delegatorAddress, bond)
+	} else {
+		bond.StakingToken.Amount = bond.StakingToken.Amount.Add(previousBond.StakingToken.Amount)
+		k.SetStakedToken(ctx, delegatorAddress, bond)
+	}
+}
+
+func (k Keeper) IterateListStakedTokens(ctx sdk.Context, cb func(bond types.Stake) bool) {
+	store := ctx.KVStore(k.storeKey)
+
+	iterator := sdk.KVStorePrefixIterator(store, types.StakedTokenPrefix)
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var bond types.Stake
+		k.cdc.MustUnmarshal(iterator.Value(), &bond)
+
+		if cb(bond) {
+			break
+		}
+	}
+}
+
+func (k Keeper) ListStakedTokens(ctx sdk.Context) (bondedTokens []*types.Stake) {
+	k.IterateListStakedTokens(ctx, func(bond types.Stake) bool {
+		bondedTokens = append(bondedTokens, &bond)
+		return false
+	})
+	return bondedTokens
+}

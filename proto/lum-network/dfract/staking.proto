@@ -1,0 +1,30 @@
+syntax = "proto3";
+package lum.network.dfract;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/lum-network/chain/x/dfract/types";
+
+enum StakingState {
+  BONDED = 0 [ (gogoproto.enumvalue_customname) = "StateBonded" ];
+  UNBONDING = 1 [ (gogoproto.enumvalue_customname) = "StateUnbonding" ];
+}
+
+message Stake {
+    string delegator_address = 1;
+    cosmos.base.v1beta1.Coin staking_token = 2 [ (gogoproto.nullable) = false ];
+    StakingState status = 3;
+    google.protobuf.Duration unbonding_time = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "unbonding_time,omitempty",
+    (gogoproto.moretags) = "yaml:\"unbonding_time\""
+    ];
+    google.protobuf.Timestamp unbonded_at = 5
+      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];    
+    google.protobuf.Timestamp created_at = 6
+      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+}

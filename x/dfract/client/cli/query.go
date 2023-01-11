@@ -3,11 +3,12 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/spf13/cobra"
-	"strconv"
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -26,6 +27,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdQueryParams(),
 		CmdGetDepositsForAddress(),
 		CmdFetchDeposits(),
+		CmdGetStakedTokensForAddress(),
 	)
 
 	return cmd
@@ -158,5 +160,35 @@ func CmdFetchDeposits() *cobra.Command {
 	}
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "all beams")
+	return cmd
+}
+
+func CmdGetStakedTokensForAddress() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "bonded-tokens-for-address <address>",
+		Short: "Fetch all bonded tokens for a given address",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Acquire the client instance
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			// Acquire the query client from the context
+			queryClient := types.NewQueryClient(clientCtx)
+
+			// Construct the params payload
+			params := &types.QueryGetStakedTokensForAddressRequest{
+				Address: args[0],
+			}
+
+			// Construct the query
+			res, err := queryClient.GetStakedTokensForAddress(cmd.Context(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }

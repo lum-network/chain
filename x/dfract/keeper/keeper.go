@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
@@ -240,5 +241,84 @@ func (k Keeper) ProcessWithdrawAndMintProposal(ctx sdk.Context, proposal *types.
 		})
 	}
 
+	return nil
+}
+
+// Bond staking
+func (k Keeper) Bond(ctx sdk.Context, msg types.MsgBond) error {
+	params := k.GetParams(ctx)
+
+	delegatorAddr, err := sdk.AccAddressFromBech32(msg.GetDelegatorAddress())
+	if err != nil {
+		return sdkerrors.ErrInvalidAddress
+	}
+
+	delegatorBalance := k.BankKeeper.GetBalance(ctx, delegatorAddr, params.BondDenom)
+
+	coin := sdk.NewCoin(msg.StakingToken.Denom, msg.StakingToken.Amount)
+
+	// Check if the staking denom of the bonded amount is equal to the one set in the params file
+	if msg.StakingToken.Denom != params.BondDenom {
+		return sdkerrors.ErrInvalidCoins
+	}
+
+	// Check if the user has enough balance to bond the tokens
+	if !delegatorBalance.IsGTE(coin) {
+		return sdkerrors.ErrInsufficientFunds
+	}
+
+	bond := types.Stake{
+		DelegatorAddress: msg.GetDelegatorAddress(),
+		StakingToken:     msg.GetStakingToken(),
+		Status:           types.StakingState_StateBonded,
+		CreatedAt:        ctx.BlockTime(),
+	}
+
+	// Move the tokens
+	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, delegatorAddr, types.ModuleName, sdk.NewCoins(msg.GetStakingToken())); err != nil {
+		return err
+	}
+
+	// Add the token to the staking store
+	// Update the status
+	k.AddStakedToken(ctx, delegatorAddr, bond)
+
+	// Emit event
+	ctx.EventManager().Events().AppendEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeBond,
+			sdk.NewAttribute(types.AttributeKeyBondDelegator, msg.GetDelegatorAddress()),
+		),
+	})
+	return nil
+}
+
+func (k Keeper) Unbond(ctx sdk.Context, msg types.MsgUnbond) error {
+	params := k.GetParams(ctx)
+
+	delegatorAddrr, err := sdk.AccAddressFromBech32(msg.GetDelegatorAddress())
+	if err != nil {
+		return sdkerrors.ErrInvalidAddress
+	}
+	bonded, found := k.GetStakedToken(ctx, delegatorAddrr)
+	if !found {
+		return sdkerrors.Wrapf(types.ErrInvalidWithdrawalDelegatorAddress, "Token is already unbonded for delegator: %s", msg.DelegatorAddress)
+	}
+	// Update the staking state
+	// Set the unbonding time
+	if bonded.Status == types.StakingState_StateBonded {
+		bonded.UnbondingTime = params.UnbondingTime
+		bonded.UnbondedAt = ctx.BlockHeader().Time.Add(time.Duration(bonded.UnbondingTime) * time.Second)
+		bonded.Status = types.StakingState_StateUnbonding
+		// Save the updated bonded token in the store
+		k.SetStakedToken(ctx, delegatorAddrr, bonded)
+		// Emit event
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeUnbonding,
+				sdk.NewAttribute(types.AttributeKeyUnbondingDelegator, msg.GetDelegatorAddress()),
+			),
+		)
+	}
 	return nil
 }

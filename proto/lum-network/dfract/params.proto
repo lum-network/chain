@@ -1,9 +1,13 @@
 syntax = "proto3";
 package lum.network.dfract;
 
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
 option go_package = "github.com/lum-network/chain/x/dfract/types";
 
 message Params {
   repeated string deposit_denoms = 1;
   uint32 min_deposit_amount = 2;
+  string bond_denom = 3;
+  google.protobuf.Duration unbonding_time = 4 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
 }

@@ -77,3 +77,16 @@ func (k Keeper) FetchDeposits(c context.Context, req *types.QueryFetchDepositsRe
 
 	return &types.QueryFetchDepositsResponse{Deposits: deposits, Pagination: pageRes}, nil
 }
+
+func (k Keeper) GetStakedTokensForAddress(c context.Context, req *types.QueryGetStakedTokensForAddressRequest) (*types.QueryGetStakedTokensResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	accAddr, err := sdk.AccAddressFromBech32(req.Address)
+	if req.Address == "" || err != nil {
+		return nil, sdkerrors.ErrInvalidAddress
+	}
+
+	bonded, _ := k.GetStakedToken(ctx, accAddr)
+
+	return &types.QueryGetStakedTokensResponse{StakedToken: bonded}, nil
+}
