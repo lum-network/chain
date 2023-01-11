@@ -656,9 +656,6 @@ func (app *App) registerUpgradeHandlers() {
 	})
 
 	app.UpgradeKeeper.SetUpgradeHandler("v1.3.1", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		// Set the FeeIBC module consensus version so InitGenesis is not run
-		fromVM[ibcfeetypes.ModuleName] = 1
-
 		// Apply the new dfract params map
 		app.DFractKeeper.SetParams(ctx, dfracttypes.DefaultParams())
 		app.Logger().Info("v1.3.1 upgrade applied")
@@ -703,6 +700,11 @@ func (app *App) registerUpgradeHandlers() {
 
 	if upgradeInfo.Name == "v1.3.1" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
+			Deleted: []string{ibcfeetypes.ModuleName},
+		}
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+
+		storeUpgrades = storetypes.StoreUpgrades{
 			Added: []string{ibcfeetypes.ModuleName},
 		}
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
