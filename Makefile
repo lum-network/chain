@@ -42,6 +42,12 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=lum \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 	-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
 
+ifeq ($(LINK_STATICALLY),true)
+  ldflags += -linkmode=external -extldflags "-Wl,-z,muldefs -static"
+endif
+ldflags += $(LDFLAGS)
+ldflags := $(strip $(ldflags))
+
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 
 check_version:
@@ -55,6 +61,10 @@ all: check_version install
 install: go.sum
 		@echo "--> Installing lumd"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/lumd
+
+build: go.sum
+		@echo "--> Building lumd"
+		@go build -mod=readonly $(BUILD_FLAGS) ./cmd/lumd
 
 go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"
