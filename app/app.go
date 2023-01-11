@@ -704,7 +704,6 @@ func (app *App) registerUpgradeHandlers() {
 	if upgradeInfo.Name == "v1.3.1" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
 			Deleted: []string{ibcfeetypes.ModuleName},
-			Added:   []string{ibcfeetypes.ModuleName},
 		}
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
