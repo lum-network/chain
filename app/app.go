@@ -658,14 +658,6 @@ func (app *App) registerUpgradeHandlers() {
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
 
-	app.UpgradeKeeper.SetUpgradeHandler("v1.3.2", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		// Set the IBCFee module consensus version so InitGenesis is not run
-		fromVM[ibcfeetypes.ModuleName] = app.mm.Modules[ibcfeetypes.ModuleName].ConsensusVersion()
-
-		app.Logger().Info("v1.3.2 upgrade applied")
-		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
-	})
-
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
@@ -705,17 +697,6 @@ func (app *App) registerUpgradeHandlers() {
 	if upgradeInfo.Name == "v1.3.1" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
 			Deleted: []string{ibcfeetypes.ModuleName},
-		}
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
-	}
-
-	if upgradeInfo.Name == "v1.3.2" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		// NOT FINALIZED UPGRADE - FOR LATER
-		// TODO: add the storekey to store init line 229
-		// TODO: add the IBCFee NewAppModule declaration
-		// TODO: add the IBCFee declaration in BeginBlockers, EndBlockers and InitGenesis
-		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{ibcfeetypes.ModuleName},
 		}
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
