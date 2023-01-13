@@ -707,4 +707,12 @@ func (app *App) registerUpgradeHandlers() {
 		}
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
+
+	if upgradeInfo.Name == "v1.3.2" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		// NOT FINALIZED UPGRADE - FOR LATER
+		storeUpgrades := storetypes.StoreUpgrades{
+			Added: []string{ibcfeetypes.ModuleName},
+		}
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
 }
