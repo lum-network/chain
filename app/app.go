@@ -716,7 +716,7 @@ func (app *App) registerUpgradeHandlers() {
 			Added: []string{ibcfeetypes.ModuleName},
 		}
 		app.SetStoreLoader(func(ms sdk.CommitMultiStore) error {
-			return ms.LoadVersionAndUpgrade(1, &storeUpgrades)
+			return ms.LoadVersionAndUpgrade(0, &storeUpgrades)
 		})
 	}
 }
