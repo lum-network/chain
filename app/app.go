@@ -656,12 +656,16 @@ func (app *App) registerUpgradeHandlers() {
 	})
 
 	app.UpgradeKeeper.SetUpgradeHandler("v1.3.1", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		// Set the IBCFee module consensus version so InitGenesis is not run
-		fromVM[ibcfeetypes.ModuleName] = app.mm.Modules[ibcfeetypes.ModuleName].ConsensusVersion()
-
 		// Apply the new dfract params map
 		app.DFractKeeper.SetParams(ctx, dfracttypes.DefaultParams())
 		app.Logger().Info("v1.3.1 upgrade applied")
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	})
+
+	app.UpgradeKeeper.SetUpgradeHandler("v1.3.2", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		// Set the IBCFee module consensus version so InitGenesis is not run
+		fromVM[ibcfeetypes.ModuleName] = app.mm.Modules[ibcfeetypes.ModuleName].ConsensusVersion()
+		app.Logger().Info("v1.3.2 upgrade applied")
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
 
