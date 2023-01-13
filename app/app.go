@@ -663,10 +663,6 @@ func (app *App) registerUpgradeHandlers() {
 	})
 
 	app.UpgradeKeeper.SetUpgradeHandler("v1.3.2", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{ibcfeetypes.ModuleName},
-		}
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(plan.Height, &storeUpgrades))
 		app.Logger().Info("v1.3.2 upgrade applied")
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
@@ -716,5 +712,11 @@ func (app *App) registerUpgradeHandlers() {
 
 	if upgradeInfo.Name == "v1.3.2" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		// NOT FINALIZED UPGRADE - FOR LATER
+		storeUpgrades := storetypes.StoreUpgrades{
+			Added: []string{ibcfeetypes.ModuleName},
+		}
+		app.SetStoreLoader(func(ms sdk.CommitMultiStore) error {
+			return ms.LoadVersionAndUpgrade(1, &storeUpgrades)
+		})
 	}
 }
