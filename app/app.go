@@ -716,7 +716,10 @@ func (app *App) registerUpgradeHandlers() {
 			Added: []string{ibcfeetypes.ModuleName},
 		}
 		app.SetStoreLoader(func(ms sdk.CommitMultiStore) error {
-			return ms.LoadVersionAndUpgrade(0, &storeUpgrades)
+			if err := ms.SetInitialVersion(upgradeInfo.Height); err != nil {
+				panic(err)
+			}
+			return ms.LoadLatestVersionAndUpgrade(&storeUpgrades)
 		})
 	}
 }
