@@ -280,7 +280,6 @@ func New(
 		upgrade.NewAppModule(*app.UpgradeKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
-		ibcfee.NewAppModule(app.IBCFeeKeeper),
 		ica.NewAppModule(nil, app.ICAHostKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
 		app.transferModule,
@@ -314,7 +313,6 @@ func New(
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		ibcfeetypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
@@ -340,7 +338,6 @@ func New(
 		ibchost.ModuleName,
 		icatypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		ibcfeetypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
@@ -367,7 +364,6 @@ func New(
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		ibcfeetypes.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
@@ -716,6 +712,8 @@ func (app *App) registerUpgradeHandlers() {
 	if upgradeInfo.Name == "v1.3.2" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		// NOT FINALIZED UPGRADE - FOR LATER
 		// TODO: add the storekey to store init line 229
+		// TODO: add the IBCFee NewAppModule declaration
+		// TODO: add the IBCFee declaration in BeginBlockers, EndBlockers and InitGenesis
 		storeUpgrades := storetypes.StoreUpgrades{
 			Added: []string{ibcfeetypes.ModuleName},
 		}
