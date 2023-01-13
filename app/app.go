@@ -230,7 +230,7 @@ func New(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, icahosttypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
-		evidencetypes.StoreKey, ibctransfertypes.StoreKey, ibcfeetypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey,
+		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey,
 		beamtypes.StoreKey, airdroptypes.StoreKey, dfracttypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -712,14 +712,10 @@ func (app *App) registerUpgradeHandlers() {
 
 	if upgradeInfo.Name == "v1.3.2" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		// NOT FINALIZED UPGRADE - FOR LATER
+		// TODO: add the storekey to store init line 229
 		storeUpgrades := storetypes.StoreUpgrades{
 			Added: []string{ibcfeetypes.ModuleName},
 		}
-		app.SetStoreLoader(func(ms sdk.CommitMultiStore) error {
-			if err := ms.SetInitialVersion(upgradeInfo.Height); err != nil {
-				panic(err)
-			}
-			return ms.LoadLatestVersionAndUpgrade(&storeUpgrades)
-		})
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
 }
