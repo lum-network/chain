@@ -230,7 +230,7 @@ func New(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, icahosttypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
-		evidencetypes.StoreKey, ibctransfertypes.StoreKey, ibcfeetypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey,
+		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey,
 		beamtypes.StoreKey, airdroptypes.StoreKey, dfracttypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -280,7 +280,6 @@ func New(
 		upgrade.NewAppModule(*app.UpgradeKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
-		ibcfee.NewAppModule(app.IBCFeeKeeper),
 		ica.NewAppModule(nil, app.ICAHostKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
 		app.transferModule,
@@ -314,7 +313,6 @@ func New(
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		ibcfeetypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
@@ -340,7 +338,6 @@ func New(
 		ibchost.ModuleName,
 		icatypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		ibcfeetypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
@@ -367,7 +364,6 @@ func New(
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		ibcfeetypes.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
@@ -655,6 +651,13 @@ func (app *App) registerUpgradeHandlers() {
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
 
+	app.UpgradeKeeper.SetUpgradeHandler("v1.3.1", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		// Apply the new dfract params map
+		app.DFractKeeper.SetParams(ctx, dfracttypes.DefaultParams())
+		app.Logger().Info("v1.3.1 upgrade applied")
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	})
+
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
@@ -688,6 +691,13 @@ func (app *App) registerUpgradeHandlers() {
 
 	if upgradeInfo.Name == "v1.3.0" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{}
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
+
+	if upgradeInfo.Name == "v1.3.1" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := storetypes.StoreUpgrades{
+			Deleted: []string{ibcfeetypes.ModuleName},
+		}
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
 }
