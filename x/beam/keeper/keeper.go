@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
+
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -10,7 +12,6 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/lum-network/chain/utils"
 	"github.com/tendermint/tendermint/libs/log"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,12 +25,12 @@ type (
 		memKey        storetypes.StoreKey
 		AuthKeeper    authkeeper.AccountKeeper
 		BankKeeper    bankkeeper.Keeper
-		StakingKeeper stakingkeeper.Keeper
+		StakingKeeper *stakingkeeper.Keeper
 	}
 )
 
 // NewKeeper Create a new keeper instance and return the pointer
-func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey storetypes.StoreKey, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper, sk stakingkeeper.Keeper) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey storetypes.StoreKey, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper, sk *stakingkeeper.Keeper) *Keeper {
 	return &Keeper{
 		cdc:           cdc,
 		storeKey:      storeKey,

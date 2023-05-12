@@ -3,16 +3,19 @@ package testing
 import (
 	"bytes"
 	"fmt"
+	"strconv"
+
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/lum-network/chain/app"
-	"strconv"
 )
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
-func AddTestAddrsIncremental(app *app.App, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
+func AddTestAddrsIncremental(app *app.App, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
 	return addTestAddrs(app, ctx, accNum, accAmt, createIncrementalAccounts)
 }
 
@@ -59,17 +62,22 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 	return addresses
 }
 
+func AddTestModuleAccount(app *app.App, ctx sdk.Context, addr sdk.AccAddress) {
+	acc := app.AccountKeeper.NewAccount(ctx, authtypes.NewModuleAccount(authtypes.NewBaseAccountWithAddress(addr), addr.String()))
+	app.AccountKeeper.SetAccount(ctx, acc)
+}
+
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
-func AddTestAddrs(app *app.App, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
+func AddTestAddrs(app *app.App, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
 	return addTestAddrs(app, ctx, accNum, accAmt, createRandomAccounts)
 }
 
-func AddTestAddrsWithDenom(app *app.App, ctx sdk.Context, accNum int, accAmt sdk.Int, denom string) []sdk.AccAddress {
+func AddTestAddrsWithDenom(app *app.App, ctx sdk.Context, accNum int, accAmt math.Int, denom string) []sdk.AccAddress {
 	return addTestAddrsWithDenom(app, ctx, accNum, accAmt, denom, createRandomAccounts)
 }
 
-func addTestAddrsWithDenom(app *app.App, ctx sdk.Context, accNum int, accAmt sdk.Int, denom string, strategy GenerateAccountStrategy) []sdk.AccAddress {
+func addTestAddrsWithDenom(app *app.App, ctx sdk.Context, accNum int, accAmt math.Int, denom string, strategy GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(denom, accAmt))
@@ -81,7 +89,7 @@ func addTestAddrsWithDenom(app *app.App, ctx sdk.Context, accNum int, accAmt sdk
 	return testAddrs
 }
 
-func addTestAddrs(app *app.App, ctx sdk.Context, accNum int, accAmt sdk.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
+func addTestAddrs(app *app.App, ctx sdk.Context, accNum int, accAmt math.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
 
 	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))

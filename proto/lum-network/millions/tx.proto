@@ -1,0 +1,137 @@
+syntax = "proto3";
+package lum.network.millions;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+
+import "lum-network/millions/draw_schedule.proto";
+import "lum-network/millions/pool.proto";
+import "lum-network/millions/prize_strategy.proto";
+
+option go_package = "github.com/lum-network/chain/x/millions/types";
+
+service Msg {
+  rpc Deposit(MsgDeposit) returns (MsgDepositResponse);
+  rpc DepositRetry(MsgDepositRetry) returns (MsgDepositRetryResponse);
+  rpc ClaimPrize(MsgClaimPrize) returns (MsgClaimPrizeResponse);
+  rpc WithdrawDeposit(MsgWithdrawDeposit) returns (MsgWithdrawDepositResponse);
+  rpc WithdrawDepositRetry(MsgWithdrawDepositRetry) returns (MsgWithdrawDepositRetryResponse);
+  rpc DrawRetry(MsgDrawRetry) returns (MsgDrawRetryResponse);
+  rpc RestoreInterchainAccounts(MsgRestoreInterchainAccounts) returns (MsgRestoreInterchainAccountsResponse);
+}
+
+message MsgUpdateParams {
+  string min_deposit_amount = 1 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = true ];
+  string max_prize_strategy_batches = 2 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = true ];
+  string max_prize_batch_quantity = 3 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = true ];
+  google.protobuf.Duration min_draw_schedule_delta = 4 [ (gogoproto.stdduration) = true, (gogoproto.nullable) = true ];
+  google.protobuf.Duration max_draw_schedule_delta = 5 [ (gogoproto.stdduration) = true, (gogoproto.nullable) = true ];
+  google.protobuf.Duration prize_expiration_delta = 6 [ (gogoproto.stdduration) = true, (gogoproto.nullable) = true ];
+  string fees_stakers = 7 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true ];
+  google.protobuf.Duration min_deposit_draw_delta = 8 [ (gogoproto.stdduration) = true, (gogoproto.nullable) = true ];
+  string updater_address = 9 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+message MsgUpdateParamsResponse {
+}
+
+message MsgRegisterPool {
+  string chain_id = 1;
+  string denom = 2;
+  string native_denom = 3;
+  string connection_id = 4;
+  repeated string validators = 5;
+  string min_deposit_amount = 6 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false ];
+  DrawSchedule draw_schedule = 7 [ (gogoproto.nullable) = false ];
+  PrizeStrategy prize_strategy = 8 [ (gogoproto.nullable) = false ];
+  string bech32_prefix_acc_addr = 9;
+  string bech32_prefix_val_addr = 10;
+  string creator_address = 11 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+message MsgRegisterPoolResponse {
+  uint64 pool_id = 1;
+}
+
+message MsgUpdatePool {
+  uint64 pool_id = 1;
+  repeated string validators = 2 [ (gogoproto.nullable) = true ];
+  string min_deposit_amount = 3 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = true ];
+  DrawSchedule draw_schedule = 4 [ (gogoproto.nullable) = true ];
+  PrizeStrategy prize_strategy = 5 [ (gogoproto.nullable) = true ];
+  string updater_address = 6 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+message MsgUpdatePoolResponse {
+}
+
+
+message MsgDeposit {
+  uint64 pool_id = 1;
+  cosmos.base.v1beta1.Coin amount = 2 [ (gogoproto.nullable) = false ];
+  string depositor_address = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string winner_address = 4 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  bool is_sponsor = 5;
+}
+
+message MsgDepositResponse {
+  uint64 deposit_id = 1;
+}
+
+message MsgDepositRetry {
+  uint64 pool_id = 1;
+  uint64 deposit_id = 2;
+  string depositor_address = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+message MsgDepositRetryResponse {
+}
+
+message MsgClaimPrize {
+  uint64 pool_id = 1;
+  uint64 draw_id = 2;
+  uint64 prize_id = 3;
+  string winner_address = 4 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+message MsgClaimPrizeResponse {
+}
+
+message MsgWithdrawDeposit {
+  uint64 pool_id = 1;
+  uint64 deposit_id = 2;
+  string depositor_address = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string to_address = 4 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+message MsgWithdrawDepositResponse {
+  uint64 withdrawal_id = 1;
+}
+
+message MsgWithdrawDepositRetry {
+  uint64 pool_id = 1;
+  uint64 withdrawal_id = 2;
+  string depositor_address = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+message MsgWithdrawDepositRetryResponse {
+}
+
+message MsgDrawRetry {
+  uint64 pool_id = 1;
+  uint64 draw_id = 2;
+  string draw_retry_address = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+message MsgDrawRetryResponse {
+}
+
+message MsgRestoreInterchainAccounts {
+  uint64 pool_id = 1;
+  string restorer_address = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+message MsgRestoreInterchainAccountsResponse {}

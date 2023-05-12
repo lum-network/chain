@@ -1,8 +1,6 @@
 # Chain - Lum Network Implementation
 The first implementation of the Lum Network protocol, built on top of the Cosmos SDK.
 
-Lum Network is a customer reward protocol and introduces mutable data channel in immutable ledgers.
-
 [![codecov](https://codecov.io/gh/lum-network/chain/branch/master/graph/badge.svg)](https://codecov.io/gh/lum-network/chain)
 [![Go Report Card](https://goreportcard.com/badge/github.com/lum-network/chain)](https://goreportcard.com/report/github.com/lum-network/chain)
 [![license](https://img.shields.io/github/license/lum-network/chain.svg)](https://github.com/lum-network/chain/blob/main/LICENSE)

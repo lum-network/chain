@@ -1,0 +1,52 @@
+syntax = "proto3";
+package lum.network.millions;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+
+import "lum-network/millions/prize_ref.proto";
+
+option go_package = "github.com/lum-network/chain/x/millions/types";
+
+enum DrawState {
+  option (gogoproto.goproto_enum_prefix) = true;
+
+  DRAW_STATE_UNSPECIFIED = 0 [ (gogoproto.enumvalue_customname) = "Unspecified" ];
+  DRAW_STATE_ICA_WITHDRAWREWARDS = 1 [ (gogoproto.enumvalue_customname) = "IcaWithdrawRewards" ];
+  DRAW_STATE_QUERY_BALANCE = 2 [ (gogoproto.enumvalue_customname) = "IcqBalance" ];
+  DRAW_STATE_IBC_TRANSFER = 3 [ (gogoproto.enumvalue_customname) = "IbcTransfer" ];
+  DRAW_STATE_DRAWING = 4 [ (gogoproto.enumvalue_customname) = "Drawing" ];
+  DRAW_STATE_SUCCESS = 5 [ (gogoproto.enumvalue_customname) = "Success" ];
+  DRAW_STATE_FAILURE = 6 [ (gogoproto.enumvalue_customname) = "Failure" ];
+}
+
+message Draw {
+  // Draw IDs
+  uint64 pool_id = 1;
+  uint64 draw_id = 2;
+
+  // Draw states
+  // error_state is only set in case of failure
+  DrawState state = 3;
+  DrawState error_state = 4;
+
+  // Draw state done data
+  int64 rand_seed = 5;
+  cosmos.base.v1beta1.Coin prize_pool = 6 [ (gogoproto.nullable) = false ];
+  string prize_pool_fresh_amount = 7 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false ];
+  string prize_pool_remains_amount = 8 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false ];
+  reserved 9;
+  reserved 10;
+
+  repeated PrizeRef prizes_refs = 11 [ (gogoproto.nullable) = false ];
+  uint64 total_win_count = 12;
+  string total_win_amount = 13 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false ];
+  reserved 14;
+
+  // Draw creation and updates
+  int64 created_at_height = 15;
+  int64 updated_at_height = 16;
+  google.protobuf.Timestamp created_at = 17 [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+  google.protobuf.Timestamp updated_at = 18 [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+}

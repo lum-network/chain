@@ -6,7 +6,7 @@ RUN set -eux; apk add --no-cache ca-certificates build-base git;
 
 RUN git clone https://github.com/CosmosContracts/juno.git \
     && cd juno \
-    && git checkout v11.0.0
+    && git checkout v13.0.0
 
 WORKDIR /opt/juno
 

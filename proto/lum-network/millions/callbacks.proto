@@ -1,0 +1,57 @@
+syntax = "proto3";
+package lum.network.millions;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/lum-network/chain/x/millions/types";
+
+enum TransferType {
+  option (gogoproto.goproto_enum_prefix) = true;
+
+  TRANSFER_TYPE_UNSPECIFIED = 0 [ (gogoproto.enumvalue_customname) = "Unspecified" ];
+  TRANSFER_TYPE_CLAIM = 1 [ (gogoproto.enumvalue_customname) = "Claim" ];
+  TRANSFER_TYPE_WITHDRAW = 2 [ (gogoproto.enumvalue_customname) = "Withdraw" ];
+}
+
+message SplitDelegation {
+  string validator_address = 1;
+  string amount = 2 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false ];
+}
+
+message DelegateCallback {
+  uint64 pool_id = 1;
+  uint64 deposit_id = 2;
+  repeated SplitDelegation split_delegations = 3;
+}
+
+message UndelegateCallback {
+  uint64 pool_id = 1;
+  uint64 withdrawal_id = 2;
+  repeated SplitDelegation split_delegations = 3;
+}
+
+message RedelegateCallback {
+  uint64 pool_id = 1;
+  SplitDelegation split_delegation = 2;
+}
+
+message ClaimRewardsCallback {
+  uint64 pool_id = 1;
+  uint64 draw_id = 2;
+}
+
+message TransferToNativeCallback {
+  uint64 pool_id = 1;
+  uint64 deposit_id = 2;
+}
+
+message TransferFromNativeCallback {
+  TransferType type = 1;
+  uint64 pool_id = 2;
+  uint64 draw_id = 3;
+  uint64 withdrawal_id = 4;
+}
+
+message SetWithdrawAddressCallback {
+  uint64 pool_id = 1;
+}

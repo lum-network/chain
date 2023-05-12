@@ -5,17 +5,19 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/Dockerfile.juno
-    image: juno-gaia
+    image: lum-juno
     ports:
-      - "26657:26657"
-      - "1317:1317"
-      - "9090:9090"
+      - "26757:26657"
+      - "1417:1317"
+      - "9190:9090"
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:26657" ]
       interval: 10s
       timeout: 10s
       retries: 5
       start_period: 20s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     env_file:
       - .env
     command:
@@ -40,7 +42,8 @@ services:
         sed -i 's/timeout_precommit = "1s"/timeout_precommit = "300ms"/g' /home/juno/.juno/config/config.toml
         sed -i 's/timeout_precommit_delta = "500ms"/timeout_precommit_delta = "200ms"/g' /home/juno/.juno/config/config.toml
         sed -i 's/timeout_commit = "5s"/timeout_commit = "2s"/g' /home/juno/.juno/config/config.toml
-        junod start --rpc.laddr tcp://0.0.0.0:26657
+        sed -i 's/\("allow_messages": \)\[[^]]*\]/\1["\/cosmos.bank.v1beta1.MsgSend", "\/cosmos.bank.v1beta1.MsgMultiSend", "\/cosmos.staking.v1beta1.MsgDelegate", "\/cosmos.staking.v1beta1.MsgUndelegate", "\/cosmos.staking.v1beta1.MsgBeginRedelegate", "\/cosmos.staking.v1beta1.MsgRedeemTokensforShares", "\/cosmos.staking.v1beta1.MsgTokenizeShares", "\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward", "\/cosmos.distribution.v1beta1.MsgSetWithdrawAddress", "\/ibc.applications.transfer.v1.MsgTransfer"]/' /home/juno/.juno/config/genesis.json
+        junod start --rpc.laddr tcp://0.0.0.0:26657 --pruning nothing
 
   gaia-local-net:
     build:
@@ -57,6 +60,8 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     env_file:
       - .env
     command:
@@ -81,7 +86,8 @@ services:
         sed -i 's/timeout_precommit = "1s"/timeout_precommit = "300ms"/g' /home/gaia/.gaia/config/config.toml
         sed -i 's/timeout_precommit_delta = "500ms"/timeout_precommit_delta = "200ms"/g' /home/gaia/.gaia/config/config.toml
         sed -i 's/timeout_commit = "5s"/timeout_commit = "2s"/g' /home/gaia/.gaia/config/config.toml
-        gaiad start --rpc.laddr tcp://0.0.0.0:26657
+        sed -i 's/\("allow_messages": \)\[[^]]*\]/\1["\/cosmos.bank.v1beta1.MsgSend", "\/cosmos.bank.v1beta1.MsgMultiSend", "\/cosmos.staking.v1beta1.MsgDelegate", "\/cosmos.staking.v1beta1.MsgUndelegate", "\/cosmos.staking.v1beta1.MsgBeginRedelegate", "\/cosmos.staking.v1beta1.MsgRedeemTokensforShares", "\/cosmos.staking.v1beta1.MsgTokenizeShares", "\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward", "\/cosmos.distribution.v1beta1.MsgSetWithdrawAddress", "\/ibc.applications.transfer.v1.MsgTransfer"]/' /home/gaia/.gaia/config/genesis.json
+        gaiad start --rpc.laddr tcp://0.0.0.0:26657 --pruning nothing
 
   osmosis-local-net:
     build:
@@ -98,6 +104,8 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     env_file:
       - .env
     command:
@@ -122,7 +130,8 @@ services:
         sed -i 's/timeout_precommit = "1s"/timeout_precommit = "300ms"/g' /home/osmosis/.osmosisd/config/config.toml
         sed -i 's/timeout_precommit_delta = "500ms"/timeout_precommit_delta = "200ms"/g' /home/osmosis/.osmosisd/config/config.toml
         sed -i 's/timeout_commit = "5s"/timeout_commit = "2s"/g' /home/osmosis/.osmosisd/config/config.toml
-        osmosisd start --rpc.laddr tcp://0.0.0.0:26657
+        sed -i 's/\("allow_messages": \)\[[^]]*\]/\1["\/cosmos.bank.v1beta1.MsgSend", "\/cosmos.bank.v1beta1.MsgMultiSend", "\/cosmos.staking.v1beta1.MsgDelegate", "\/cosmos.staking.v1beta1.MsgUndelegate", "\/cosmos.staking.v1beta1.MsgBeginRedelegate", "\/cosmos.staking.v1beta1.MsgRedeemTokensforShares", "\/cosmos.staking.v1beta1.MsgTokenizeShares", "\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward", "\/cosmos.distribution.v1beta1.MsgSetWithdrawAddress", "\/ibc.applications.transfer.v1.MsgTransfer"]/' /home/osmosis/.osmosisd/config/genesis.json
+        osmosisd start --rpc.laddr tcp://0.0.0.0:26657 --pruning nothing
 
   relayer-local-net:
     build:
@@ -133,12 +142,15 @@ services:
       - .env
     ports:
       - "12000:3000"
+      - "13000:3001"
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:3000/version" ]
       interval: 10s
       timeout: 10s
       retries: 5
       start_period: 20s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       juno-local-net:
         condition: service_healthy
@@ -161,4 +173,6 @@ services:
         hermes keys add --key-name hrly2 --chain juno-devnet --mnemonic-file juno.txt --overwrite
         echo $OSMOSIS_MNEMONIC > osmosis.txt
         hermes keys add --key-name hrly3 --chain osmosis-devnet --mnemonic-file osmosis.txt --overwrite
+        echo $LUM_MNEMONIC > lum.txt
+        hermes keys add --key-name hrly4 --chain lumnetwork-testnet --mnemonic-file lum.txt --overwrite --hd-path "m/44'/880'/0'/0/0"
         hermes start

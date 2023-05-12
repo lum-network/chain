@@ -1,0 +1,12 @@
+syntax = "proto3";
+package lum.network.millions;
+
+import "gogoproto/gogo.proto";
+
+import "lum-network/millions/prize_batch.proto";
+
+option go_package = "github.com/lum-network/chain/x/millions/types";
+
+message PrizeStrategy {
+  repeated PrizeBatch prize_batches = 1 [ (gogoproto.nullable) = false ];
+}

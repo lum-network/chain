@@ -40,12 +40,12 @@ type (
 		AuthKeeper    authkeeper.AccountKeeper
 		BankKeeper    bankkeeper.Keeper
 		GovKeeper     govkeeper.Keeper
-		StakingKeeper stakingkeeper.Keeper
+		StakingKeeper *stakingkeeper.Keeper
 	}
 )
 
 // NewKeeper Create a new keeper instance and return the pointer
-func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey storetypes.StoreKey, paramSpace paramtypes.Subspace, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper, sk stakingkeeper.Keeper) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey storetypes.StoreKey, paramSpace paramtypes.Subspace, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper, sk *stakingkeeper.Keeper) *Keeper {
 	moduleAddr, perms := auth.GetModuleAddressAndPermissions(types.ModuleName)
 	if moduleAddr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))

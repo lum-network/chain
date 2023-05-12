@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
-	"github.com/lum-network/chain/app"
-	testing2 "github.com/lum-network/chain/app/testing"
 	"testing"
 	"time"
+
+	"github.com/lum-network/chain/app"
+	testing2 "github.com/lum-network/chain/app/testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -174,7 +175,8 @@ func (suite *KeeperTestSuite) TestHookAfterAirdropEnd() {
 	suite.Require().NoError(err)
 	suite.ctx = suite.ctx.WithBlockTime(params.AirdropStartTime.Add(params.DurationUntilDecay).Add(params.DurationOfDecay))
 
-	suite.app.AirdropKeeper.EndAirdrop(suite.ctx)
+	err = suite.app.AirdropKeeper.EndAirdrop(suite.ctx)
+	suite.Require().NoError(err)
 
 	suite.Require().NotPanics(func() {
 		suite.app.AirdropKeeper.AfterProposalVote(suite.ctx, 12, addr1)
@@ -290,7 +292,8 @@ func (suite *KeeperTestSuite) TestDelegationAutoWithdrawAndDelegateMore() {
 	validator, err := stakingtypes.NewValidator(sdk.ValAddress(addrs[0]), pub1, stakingtypes.Description{})
 	suite.Require().NoError(err)
 	validator = stakingkeeper.TestingUpdateValidator(*suite.app.StakingKeeper, suite.ctx, validator, true)
-	suite.app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator.GetOperator())
+	err = suite.app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator.GetOperator())
+	suite.Require().NoError(err)
 
 	validator, _ = validator.AddTokensFromDel(sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction))
 	delAmount := sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)

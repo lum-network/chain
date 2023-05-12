@@ -1,12 +1,17 @@
 version: 1
 accounts:
   - name: user1
-    coins: ["120000000000ulum"]
+    coins: ["120000000000ulum", 100000000000uatom]
   - name: user2
     coins: ["100ulum"]
+  - name: relayer
+    coins: ["100000000ulum"]
+    mnemonic: "poem accuse sport census donor curious panther mean debris swap wire skin impose gym pretty dinosaur forget output dad steel venture farm gym pill"
 validators:
   - name: user1
     bonded: "100000000ulum"
+    app:
+      pruning: "nothing"
 genesis:
   chain_id: "lumnetwork-testnet"
   app_state:
@@ -21,11 +26,24 @@ genesis:
         bond_denom: "ulum"
     gov:
       deposit_params:
-        min_deposit: [{"amount": "1000000000", "denom": "ulum"}]
+        min_deposit: [{ "amount": "10000", "denom": "ulum" }]
+        max_deposit_period: "180s"
+      voting_params:
+        voting_period: "180s"
     dfract:
       params:
         min_deposit_amount: "1"
-        deposit_denom: "ulum"
+        deposit_denoms: ["ulum"]
+    millions:
+      params:
+        min_deposit_amount: "1000"
+        max_prize_strategy_batches: 100
+        max_prize_batch_quantity: 1000
+        min_draw_schedule_delta: "1h"
+        max_draw_schedule_delta: "8784h" # 366days
+        prize_expiration_delta: "720h" # 30days
+        fees_stakers: "0.10"
+        min_deposit_draw_delta: "60s"
 faucet:
   name: user1
   coins: ["10ulum"]

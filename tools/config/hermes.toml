@@ -14,6 +14,7 @@ enabled = true
 enabled = true
 clear_interval = 100
 clear_on_start = true
+tx_confirmation = true
 
 [rest]
 enabled = true
@@ -35,14 +36,14 @@ account_prefix = 'cosmos'
 key_name = 'hrly1'
 store_prefix = 'ibc'
 default_gas = 100000
-max_gas = 3000000
-gas_price = { price = 0.000, denom = 'uatom' }
+max_gas = 5000000
+gas_price = { price = 0.001, denom = 'uatom' }
 gas_multiplier = 1.1
 max_msg_num = 30
 max_tx_size = 2097152
 clock_drift = '5s'
 max_block_time = '10s'
-trusting_period = '119s'
+trusting_period = '14d'
 trust_threshold = { numerator = '1', denominator = '3' }
 address_type = { derivation = 'cosmos' }
 
@@ -56,14 +57,14 @@ account_prefix = 'juno'
 key_name = 'hrly2'
 store_prefix = 'ibc'
 default_gas = 100000
-max_gas = 3000000
-gas_price = { price = 0.000, denom = 'ujuno' }
+max_gas = 5000000
+gas_price = { price = 0.001, denom = 'ujuno' }
 gas_multiplier = 1.1
 max_msg_num = 30
 max_tx_size = 2097152
 clock_drift = '5s'
 max_block_time = '10s'
-trusting_period = '119s'
+trusting_period = '14d'
 trust_threshold = { numerator = '1', denominator = '3' }
 address_type = { derivation = 'cosmos' }
 
@@ -77,13 +78,34 @@ account_prefix = 'osmo'
 key_name = 'hrly3'
 store_prefix = 'ibc'
 default_gas = 100000
-max_gas = 3000000
-gas_price = { price = 0.000, denom = 'uosmo' }
+max_gas = 5000000
+gas_price = { price = 0.001, denom = 'uosmo' }
 gas_multiplier = 1.1
 max_msg_num = 30
 max_tx_size = 2097152
 clock_drift = '5s'
 max_block_time = '10s'
-trusting_period = '119s'
+trusting_period = '14d'
+trust_threshold = { numerator = '1', denominator = '3' }
+address_type = { derivation = 'cosmos' }
+
+[[chains]]
+id = 'lumnetwork-testnet'
+rpc_addr = 'http://host.docker.internal:26657'
+grpc_addr = 'http://host.docker.internal:9090'
+websocket_addr = 'ws://host.docker.internal:26657/websocket'
+rpc_timeout = '10s'
+account_prefix = 'lum'
+key_name = 'hrly4'
+store_prefix = 'ibc'
+default_gas = 100000
+max_gas = 5000000
+gas_price = { price = 0.001, denom = 'ulum' }
+gas_multiplier = 1.1
+max_msg_num = 30
+max_tx_size = 2097152
+clock_drift = '5s'
+max_block_time = '10s'
+trusting_period = '14d'
 trust_threshold = { numerator = '1', denominator = '3' }
 address_type = { derivation = 'cosmos' }

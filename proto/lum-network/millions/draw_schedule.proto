@@ -1,0 +1,13 @@
+syntax = "proto3";
+package lum.network.millions;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/lum-network/chain/x/millions/types";
+
+message DrawSchedule {
+  google.protobuf.Timestamp initial_draw_at = 1 [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+  google.protobuf.Duration draw_delta = 2 [ (gogoproto.stdduration) = true, (gogoproto.nullable) = false ];
+}

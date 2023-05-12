@@ -2,19 +2,33 @@ package app
 
 import (
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+
+	"github.com/lum-network/chain/x/icqueries"
+	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
+
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	ica "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts"
 	icacontrollertypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	ibcfee "github.com/cosmos/ibc-go/v5/modules/apps/29-fee"
 	ibcfeetypes "github.com/cosmos/ibc-go/v5/modules/apps/29-fee/types"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
+	ibctestingtypes "github.com/cosmos/ibc-go/v5/testing/types"
 	"github.com/lum-network/chain/x/dfract"
 	dfractclient "github.com/lum-network/chain/x/dfract/client"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
+	millionsclient "github.com/lum-network/chain/x/millions/client"
+
+	"github.com/lum-network/chain/x/icacallbacks"
+	"github.com/lum-network/chain/x/millions"
+	millionstypes "github.com/lum-network/chain/x/millions/types"
 
 	ibcconnectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
 	"github.com/gorilla/mux"
@@ -92,6 +106,8 @@ import (
 	ibc "github.com/cosmos/ibc-go/v5/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v5/modules/core/02-client/client"
 	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
+
+	icacallbackstypes "github.com/lum-network/chain/x/icacallbacks/types"
 )
 
 var (
@@ -118,12 +134,16 @@ var (
 				ibcclientclient.UpdateClientProposalHandler,
 				ibcclientclient.UpgradeProposalHandler,
 				dfractclient.ProposalHandler,
+				millionsclient.RegisterPoolProposalHandler,
+				millionsclient.UpdatePoolProposalHandler,
+				millionsclient.UpdateParamsProposalHandler,
 			},
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
 		ibc.AppModuleBasic{},
+		ibcfee.AppModuleBasic{},
 		ica.AppModuleBasic{},
 		feegrantmodule.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
@@ -131,9 +151,12 @@ var (
 		transfer.AppModuleBasic{},
 		authzmodule.AppModuleBasic{},
 		vesting.AppModuleBasic{},
+		icacallbacks.AppModuleBasic{},
+		icqueries.AppModuleBasic{},
 		beam.AppModuleBasic{},
 		airdrop.AppModuleBasic{},
 		dfract.AppModuleBasic{},
+		millions.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -146,9 +169,12 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		ibcfeetypes.ModuleName:         nil,
 		beamtypes.ModuleName:           nil,
+		icqueriestypes.ModuleName:      nil,
 		airdroptypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
 		dfracttypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
+		millionstypes.ModuleName:       {authtypes.Minter, authtypes.Burner, authtypes.Staking},
 	}
 )
 
@@ -226,9 +252,10 @@ func New(
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, icahosttypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
-		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey,
-		beamtypes.StoreKey, airdroptypes.StoreKey, dfracttypes.StoreKey,
+		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, icacontrollertypes.StoreKey, icahosttypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
+		evidencetypes.StoreKey, ibctransfertypes.StoreKey, ibcfeetypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey,
+		icacallbackstypes.StoreKey, icqueriestypes.StoreKey,
+		beamtypes.StoreKey, airdroptypes.StoreKey, dfracttypes.StoreKey, millionstypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -277,13 +304,18 @@ func New(
 		upgrade.NewAppModule(*app.UpgradeKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
+		ibcfee.NewAppModule(*app.IBCFeeKeeper),
 		ica.NewAppModule(nil, app.ICAHostKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
 		app.transferModule,
+		ica.NewAppModule(app.ICAControllerKeeper, app.ICAHostKeeper),
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		beam.NewAppModule(appCodec, *app.BeamKeeper),
 		airdrop.NewAppModule(appCodec, *app.AirdropKeeper),
 		dfract.NewAppModule(appCodec, *app.DFractKeeper),
+		millions.NewAppModule(appCodec, *app.MillionsKeeper),
+		icacallbacks.NewAppModule(appCodec, *app.ICACallbacksKeeper, app.AccountKeeper, app.BankKeeper),
+		icqueries.NewAppModule(appCodec, *app.ICQueriesKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -310,9 +342,13 @@ func New(
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		ibcfeetypes.ModuleName,
+		icqueriestypes.ModuleName,
+		icacallbackstypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
+		millionstypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -335,9 +371,13 @@ func New(
 		ibchost.ModuleName,
 		icatypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		ibcfeetypes.ModuleName,
+		icqueriestypes.ModuleName,
+		icacallbackstypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
+		millionstypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -361,13 +401,17 @@ func New(
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		ibcfeetypes.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
 		authz.ModuleName,
+		icqueriestypes.ModuleName,
+		icacallbackstypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
+		millionstypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
@@ -393,6 +437,7 @@ func New(
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		beam.NewAppModule(appCodec, *app.BeamKeeper),
 		dfract.NewAppModule(appCodec, *app.DFractKeeper),
+		millions.NewAppModule(appCodec, *app.MillionsKeeper),
 	)
 	app.sm.RegisterStoreDecoders()
 
@@ -427,6 +472,35 @@ func New(
 
 // Name returns the name of the App
 func (app *App) Name() string { return app.BaseApp.Name() }
+
+// GetBaseApp returns the base app of the application
+func (app *App) GetBaseApp() *baseapp.BaseApp { return app.BaseApp }
+
+// GetStakingKeeper implements the TestingApp interface.
+func (app *App) GetStakingKeeper() ibctestingtypes.StakingKeeper {
+	return *app.StakingKeeper
+}
+
+// GetTransferKeeper implements the TestingApp interface.
+func (app *App) GetTransferKeeper() *ibctransferkeeper.Keeper {
+	return app.TransferKeeper
+}
+
+// GetIBCKeeper implements the TestingApp interface.
+func (app *App) GetIBCKeeper() *ibckeeper.Keeper {
+	return app.IBCKeeper
+}
+
+// GetScopedIBCKeeper implements the TestingApp interface.
+func (app *App) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
+	return app.ScopedIBCKeeper
+}
+
+// GetTxConfig implements the TestingApp interface.
+func (app *App) GetTxConfig() client.TxConfig {
+	cfg := MakeEncodingConfig()
+	return cfg.TxConfig
+}
 
 // BeginBlocker application updates every begin block
 func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
@@ -465,14 +539,7 @@ func (app *App) ModuleAccountAddrs() map[string]bool {
 
 // BlockedModuleAccountAddrs returns all the app's blocked module account addresses
 func (app *App) BlockedModuleAccountAddrs() map[string]bool {
-	// By default no one can receive funds
-	modAccAddrs := app.ModuleAccountAddrs()
-
-	// Remove module accounts that are ALLOWED to receive funds
-	delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	delete(modAccAddrs, authtypes.NewModuleAddress(beamtypes.ModuleName).String())
-	delete(modAccAddrs, authtypes.NewModuleAddress(dfracttypes.ModuleName).String())
-
+	modAccAddrs := make(map[string]bool)
 	return modAccAddrs
 }
 
@@ -648,10 +715,43 @@ func (app *App) registerUpgradeHandlers() {
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
 
-	app.UpgradeKeeper.SetUpgradeHandler("v1.3.1", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		// Apply the new dfract params map
-		app.DFractKeeper.SetParams(ctx, dfracttypes.DefaultParams())
-		app.Logger().Info("v1.3.1 upgrade applied")
+	app.UpgradeKeeper.SetUpgradeHandler("v1.4.0", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		// Get the actual params
+		icaHostParams := app.ICAHostKeeper.GetParams(ctx)
+
+		// Patch the parameters - Enable the controller and patch the allowed messages for host
+		icaControllerParams := icacontrollertypes.Params{
+			ControllerEnabled: true,
+		}
+		icaHostParams.AllowMessages = append(icaHostParams.AllowMessages,
+			// Change: added dfract and millions messages
+			sdk.MsgTypeURL(&dfracttypes.MsgDeposit{}),
+			sdk.MsgTypeURL(&millionstypes.MsgDeposit{}),
+			sdk.MsgTypeURL(&millionstypes.MsgDepositRetry{}),
+			sdk.MsgTypeURL(&millionstypes.MsgClaimPrize{}),
+			sdk.MsgTypeURL(&millionstypes.MsgWithdrawDeposit{}),
+			sdk.MsgTypeURL(&millionstypes.MsgWithdrawDepositRetry{}),
+			sdk.MsgTypeURL(&millionstypes.MsgDrawRetry{}),
+		)
+
+		// Apply patched parameters
+		app.ICAHostKeeper.SetParams(ctx, icaHostParams)
+		app.ICAControllerKeeper.SetParams(ctx, icaControllerParams)
+
+		// Set the ICA Callbacks, ICQueries and Millions modules versions so InitGenesis is not run
+		fromVM[icacallbackstypes.ModuleName] = app.mm.Modules[icacallbackstypes.ModuleName].ConsensusVersion()
+		fromVM[icqueriestypes.ModuleName] = app.mm.Modules[icqueriestypes.ModuleName].ConsensusVersion()
+		fromVM[millionstypes.ModuleName] = app.mm.Modules[millionstypes.ModuleName].ConsensusVersion()
+
+		// Apply initial millions state
+		genState := millionstypes.DefaultGenesisState()
+		app.MillionsKeeper.SetParams(ctx, genState.Params)
+		app.MillionsKeeper.SetNextPoolID(ctx, genState.NextPoolId)
+		app.MillionsKeeper.SetNextDepositID(ctx, genState.NextDepositId)
+		app.MillionsKeeper.SetNextPrizeID(ctx, genState.NextPrizeId)
+		app.MillionsKeeper.SetNextWithdrawalID(ctx, genState.NextWithdrawalId)
+
+		app.Logger().Info("v1.4.0 upgrade applied: Millions module enabled and ICA configuration updated.")
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
 
@@ -691,9 +791,10 @@ func (app *App) registerUpgradeHandlers() {
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
 
-	if upgradeInfo.Name == "v1.3.1" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	if upgradeInfo.Name == "v1.4.0" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		// We create 3 new modules: ICA Callbacks, ICQueries, Millions
 		storeUpgrades := storetypes.StoreUpgrades{
-			Deleted: []string{ibcfeetypes.ModuleName},
+			Added: []string{icacallbackstypes.StoreKey, icqueriestypes.StoreKey, millionstypes.StoreKey},
 		}
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
