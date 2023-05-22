@@ -1,0 +1,48 @@
+syntax = "proto3";
+package lum.network.millions;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/lum-network/chain/x/millions/types";
+
+enum WithdrawalState {
+  option (gogoproto.goproto_enum_prefix) = true;
+
+  WITHDRAWAL_STATE_UNSPECIFIED = 0 [ (gogoproto.enumvalue_customname) = "Unspecified" ];
+  WITHDRAWAL_STATE_ICA_UNDELEGATE = 1 [ (gogoproto.enumvalue_customname) = "IcaUndelegate" ];
+  WITHDRAWAL_STATE_ICA_UNBONDING = 2 [ (gogoproto.enumvalue_customname) = "IcaUnbonding" ];
+  WITHDRAWAL_STATE_IBC_TRANSFER = 3 [ (gogoproto.enumvalue_customname) = "IbcTransfer" ];
+  WITHDRAWAL_STATE_FAILURE = 4 [ (gogoproto.enumvalue_customname) = "Failure" ];
+}
+
+message Withdrawal {
+  uint64 pool_id = 1;
+  uint64 deposit_id = 2;
+  uint64 withdrawal_id = 3;
+
+  WithdrawalState state = 4;
+  WithdrawalState error_state = 5;
+
+  string depositor_address = 6 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string to_address = 7 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  cosmos.base.v1beta1.Coin amount = 8 [ (gogoproto.nullable) = false ];
+
+  int64 created_at_height = 9;
+  int64 updated_at_height = 10;
+  google.protobuf.Timestamp unbonding_ends_at = 11 [ (gogoproto.stdtime) = true, (gogoproto.nullable) = true ];
+  google.protobuf.Timestamp created_at = 12 [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+  google.protobuf.Timestamp updated_at = 13 [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+}
+
+message WithdrawalIDs {
+  uint64 pool_id = 1;
+  uint64 withdrawal_id = 2;
+}
+
+message WithdrawalIDsCollection {
+  repeated WithdrawalIDs withdrawals_ids = 1 [ (gogoproto.nullable) = false ];
+}

@@ -42,29 +42,19 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=lum \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 	-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
 
-ifeq ($(LINK_STATICALLY),true)
-  ldflags += -linkmode=external -extldflags "-Wl,-z,muldefs -static"
-endif
-ldflags += $(LDFLAGS)
-ldflags := $(strip $(ldflags))
-
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 
-check_version:
-ifneq ($(GO_MINOR_VERSION),18)
-	@echo "ERROR: Go version 1.18 is required for this version of Lum Network. Go 1.19 has changes that are believed to break consensus."
-	exit 1
-endif
+all: install
 
-all: check_version install
+format:
+	@gofmt -w .
+
+lint:
+	@golangci-lint run --skip-dirs='(x/beam|x/dfract)'
 
 install: go.sum
 		@echo "--> Installing lumd"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/lumd
-
-build: go.sum
-		@echo "--> Building lumd"
-		@go build -mod=readonly $(BUILD_FLAGS) ./cmd/lumd
 
 go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"

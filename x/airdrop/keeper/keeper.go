@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -27,8 +28,8 @@ type (
 		memKey        storetypes.StoreKey
 		AuthKeeper    authkeeper.AccountKeeper
 		BankKeeper    bankkeeper.Keeper
-		StakingKeeper stakingkeeper.Keeper
-		DistrKeeper   distrkeeper.Keeper
+		StakingKeeper *stakingkeeper.Keeper
+		DistrKeeper   *distrkeeper.Keeper
 	}
 )
 
@@ -38,8 +39,8 @@ func NewKeeper(
 	memKey storetypes.StoreKey,
 	ak authkeeper.AccountKeeper,
 	bk bankkeeper.Keeper,
-	sk stakingkeeper.Keeper,
-	dk distrkeeper.Keeper,
+	sk *stakingkeeper.Keeper,
+	dk *distrkeeper.Keeper,
 
 ) *Keeper {
 	return &Keeper{

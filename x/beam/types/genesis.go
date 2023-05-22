@@ -9,7 +9,7 @@ import (
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		Beams: []*Beam{},
+		Beams:                []*Beam{},
 		ModuleAccountBalance: sdk.NewCoin(DefaultBeamDenom, sdk.ZeroInt()),
 	}
 }

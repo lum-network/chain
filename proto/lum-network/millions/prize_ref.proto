@@ -1,0 +1,14 @@
+syntax = "proto3";
+package lum.network.millions;
+
+import "gogoproto/gogo.proto";
+
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/lum-network/chain/x/millions/types";
+
+message PrizeRef {
+  string amount = 1 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false ];
+  uint64 prize_id = 2 [ (gogoproto.nullable) = true ];
+  string winner_address = 3 [ (gogoproto.nullable) = true, (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}

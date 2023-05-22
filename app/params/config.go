@@ -1,8 +1,9 @@
 package params
 
 import (
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	"strings"
+
+	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 )
 
 func CustomConfigTemplate() string {

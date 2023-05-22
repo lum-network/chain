@@ -1,0 +1,26 @@
+syntax = "proto3";
+package lum.network.millions;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/lum-network/chain/x/millions/types";
+
+message Params {
+  // min_deposit_amount the minimum deposit amount accepted by pool configurations
+  string min_deposit_amount = 1 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false ];
+  // max_prize_strategy_batches the maximum prize strategy batches accepted by pool configurations
+  uint64 max_prize_strategy_batches = 2;
+  // max_prize_batch_quantity the maximum prize batch quantity accepted by pool configurations
+  uint64 max_prize_batch_quantity = 3;
+  // min_draw_schedule_delta the minimum delta between draws accepted by pool configurations
+  google.protobuf.Duration min_draw_schedule_delta = 4 [ (gogoproto.stdduration) = true, (gogoproto.nullable) = false ];
+  // max_draw_schedule_delta the maximum delta between draws accepted by pool configurations
+  google.protobuf.Duration max_draw_schedule_delta = 5 [ (gogoproto.stdduration) = true, (gogoproto.nullable) = false ];
+  // prize_expiration_delta the prize clawback expiration delta (common to all pools)
+  google.protobuf.Duration prize_expiration_delta = 6 [ (gogoproto.stdduration) = true, (gogoproto.nullable) = false ];
+  // fees_stakers the fees distributed by stakers over prize won (common to all pools)
+  string fees_stakers = 7 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false ];
+  // min_deposit_draw_delta the minimum delta before a draw for a deposit to be accepted during the time weighted balance computation for a draw
+  google.protobuf.Duration min_deposit_draw_delta = 8 [ (gogoproto.stdduration) = true, (gogoproto.nullable) = false ];
+}

@@ -1,0 +1,40 @@
+syntax = "proto3";
+package lum.network.millions;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/lum-network/chain/x/millions/types";
+
+enum DepositState {
+  option (gogoproto.goproto_enum_prefix) = true;
+
+  DEPOSIT_STATE_UNSPECIFIED = 0 [ (gogoproto.enumvalue_customname) = "Unspecified" ];
+  DEPOSIT_STATE_IBC_TRANSFER = 1 [ (gogoproto.enumvalue_customname) = "IbcTransfer" ];
+  DEPOSIT_STATE_ICA_DELEGATE = 2 [ (gogoproto.enumvalue_customname) = "IcaDelegate" ];
+  DEPOSIT_STATE_SUCCESS = 3 [ (gogoproto.enumvalue_customname) = "Success" ];
+  DEPOSIT_STATE_FAILURE = 4 [ (gogoproto.enumvalue_customname) = "Failure" ];
+}
+
+message Deposit {
+  uint64 pool_id = 1;
+  uint64 deposit_id = 2;
+
+  DepositState state = 3;
+  DepositState error_state = 4;
+
+  string depositor_address = 5 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  cosmos.base.v1beta1.Coin amount = 6 [ (gogoproto.nullable) = false ];
+
+  string winner_address = 7 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  bool is_sponsor = 8;
+  reserved 9;
+
+  int64 created_at_height = 10;
+  int64 updated_at_height = 11;
+  google.protobuf.Timestamp created_at = 12 [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+  google.protobuf.Timestamp updated_at = 13 [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+}

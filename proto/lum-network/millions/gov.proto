@@ -1,0 +1,61 @@
+syntax = "proto3";
+package lum.network.millions;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+import "lum-network/millions/draw_schedule.proto";
+import "lum-network/millions/prize_strategy.proto";
+
+option go_package = "github.com/lum-network/chain/x/millions/types";
+
+message ProposalRegisterPool {
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+
+  string chain_id = 3;
+  string denom = 4;
+  string native_denom = 5;
+  string connection_id = 6;
+  repeated string validators = 7;
+  string min_deposit_amount = 8 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false ];
+  DrawSchedule draw_schedule = 9 [ (gogoproto.nullable) = false ];
+  PrizeStrategy prize_strategy = 10 [ (gogoproto.nullable) = false ];
+  string bech32_prefix_acc_addr = 11;
+  string bech32_prefix_val_addr = 12;
+  string transfer_channel_id = 13;
+}
+
+message ProposalUpdatePool {
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+
+  uint64 pool_id = 3;
+  repeated string validators = 4 [ (gogoproto.nullable) = true ];
+  string min_deposit_amount = 5 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = true ];
+  DrawSchedule draw_schedule = 6 [ (gogoproto.nullable) = true ];
+  PrizeStrategy prize_strategy = 7 [ (gogoproto.nullable) = true ];
+}
+
+message ProposalUpdateParams {
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+
+  string min_deposit_amount = 3 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = true ];
+  string max_prize_strategy_batches = 4 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = true ];
+  string max_prize_batch_quantity = 5 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = true ];
+  google.protobuf.Duration min_draw_schedule_delta = 6 [ (gogoproto.stdduration) = true, (gogoproto.nullable) = true ];
+  google.protobuf.Duration max_draw_schedule_delta = 7 [ (gogoproto.stdduration) = true, (gogoproto.nullable) = true ];
+  google.protobuf.Duration prize_expiration_delta = 8 [ (gogoproto.stdduration) = true, (gogoproto.nullable) = true ];
+  string fees_stakers = 9 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true ];
+  google.protobuf.Duration min_deposit_draw_delta = 10 [ (gogoproto.stdduration) = true, (gogoproto.nullable) = true ];
+}

@@ -1,0 +1,286 @@
+syntax = "proto3";
+package lum.network.millions;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+import "lum-network/millions/deposit.proto";
+import "lum-network/millions/draw.proto";
+import "lum-network/millions/params.proto";
+import "lum-network/millions/pool.proto";
+import "lum-network/millions/prize.proto";
+import "lum-network/millions/withdrawal.proto";
+
+option go_package = "github.com/lum-network/chain/x/millions/types";
+
+service Query {
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/lum-network/millions/params";
+  }
+
+  rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {
+    option (google.api.http).get = "/lum-network/millions/pools";
+  }
+
+  rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
+    option (google.api.http).get = "/lum-network/millions/pools/{pool_id}";
+  }
+
+  rpc Deposits(QueryDepositsRequest) returns (QueryDepositsResponse) {
+    option (google.api.http).get = "/lum-network/millions/deposits";
+  }
+
+  rpc PoolDeposits(QueryPoolDepositsRequest) returns (QueryDepositsResponse) {
+    option (google.api.http).get = "/lum-network/millions/deposits/{pool_id}";
+  }
+
+  rpc PoolDeposit(QueryPoolDepositRequest) returns (QueryDepositResponse) {
+    option (google.api.http).get = "/lum-network/millions/deposits/{pool_id}/{deposit_id}";
+  }
+
+  rpc AccountDeposits(QueryAccountDepositsRequest) returns (QueryDepositsResponse) {
+    option (google.api.http).get = "/lum-network/millions/account/{depositor_address}/deposits";
+  }
+
+  rpc AccountPoolDeposits(QueryAccountPoolDepositsRequest) returns (QueryDepositsResponse) {
+    option (google.api.http).get = "/lum-network/millions/account/{depositor_address}/deposits/{pool_id}";
+  }
+
+  rpc Draws(QueryDrawsRequest) returns (QueryDrawsResponse) {
+    option (google.api.http).get = "/lum-network/millions/draws";
+  }
+
+  rpc PoolDraws(QueryPoolDrawsRequest) returns (QueryDrawsResponse) {
+    option (google.api.http).get = "/lum-network/millions/draws/{pool_id}";
+  }
+
+  rpc PoolDraw(QueryPoolDrawRequest) returns (QueryDrawResponse) {
+    option (google.api.http).get = "/lum-network/millions/draws/{pool_id}/{draw_id}";
+  }
+
+  rpc Prizes(QueryPrizesRequest) returns (QueryPrizesResponse) {
+    option (google.api.http).get = "/lum-network/millions/prizes";
+  }
+
+  rpc PoolPrizes(QueryPoolPrizesRequest) returns (QueryPrizesResponse) {
+    option (google.api.http).get = "/lum-network/millions/prizes/{pool_id}";
+  }
+
+  rpc PoolDrawPrizes(QueryPoolDrawPrizesRequest) returns (QueryPrizesResponse) {
+    option (google.api.http).get = "/lum-network/millions/prizes/{pool_id}/{draw_id}";
+  }
+
+  rpc PoolDrawPrize(QueryPoolDrawPrizeRequest) returns (QueryPrizeResponse) {
+    option (google.api.http).get = "/lum-network/millions/prizes/{pool_id}/{draw_id}/{prize_id}";
+  }
+
+  rpc AccountPrizes(QueryAccountPrizesRequest) returns (QueryPrizesResponse) {
+    option (google.api.http).get = "/lum-network/millions/account/{winner_address}/prizes";
+  }
+
+  rpc AccountPoolPrizes(QueryAccountPoolPrizesRequest) returns (QueryPrizesResponse) {
+    option (google.api.http).get = "/lum-network/millions/account/{winner_address}/prizes/{pool_id}";
+  }
+
+  rpc AccountPoolDrawPrizes(QueryAccountPoolDrawPrizesRequest) returns (QueryPrizesResponse) {
+    option (google.api.http).get = "/lum-network/millions/account/{winner_address}/prizes/{pool_id}/{draw_id}";
+  }
+
+  rpc Withdrawals(QueryWithdrawalsRequest) returns (QueryWithdrawalsResponse) {
+    option (google.api.http).get = "/lum-network/millions/withdrawals";
+  }
+
+  rpc PoolWithdrawals(QueryPoolWithdrawalsRequest) returns (QueryWithdrawalsResponse) {
+    option (google.api.http).get = "/lum-network/millions/withdrawals/{pool_id}";
+  }
+
+  rpc PoolWithdrawal(QueryPoolWithdrawalRequest) returns (QueryWithdrawalResponse) {
+    option (google.api.http).get = "/lum-network/millions/withdrawals/{pool_id}/{withdrawal_id}";
+  }
+
+  rpc AccountWithdrawals(QueryAccountWithdrawalsRequest) returns (QueryWithdrawalsResponse) {
+    option (google.api.http).get = "/lum-network/millions/account/{depositor_address}/withdrawals";
+  }
+
+  rpc AccountPoolWithdrawals(QueryAccountPoolWithdrawalsRequest) returns (QueryWithdrawalsResponse) {
+    option (google.api.http).get = "/lum-network/millions/account/{depositor_address}/withdrawals/{pool_id}";
+  }
+}
+
+// Params
+
+message QueryParamsResponse {
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryParamsRequest {
+}
+
+// Pools
+
+message QueryPoolResponse {
+  Pool pool = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryPoolsResponse {
+  repeated Pool pools = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPoolRequest {
+  uint64 pool_id = 1;
+}
+
+message QueryPoolsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// Deposits
+
+message QueryDepositResponse {
+  Deposit deposit = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryDepositsResponse {
+  repeated Deposit deposits = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryDepositsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryPoolDepositRequest {
+  uint64 pool_id = 1;
+  uint64 deposit_id = 2;
+}
+
+message QueryPoolDepositsRequest {
+  uint64 pool_id = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryAccountDepositsRequest {
+  string depositor_address = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryAccountPoolDepositsRequest {
+  string depositor_address = 1;
+  uint64 pool_id = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+
+// Draws
+
+message QueryDrawResponse {
+  Draw draw = 1;
+}
+
+message QueryDrawsResponse {
+  repeated Draw draws = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryDrawsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryPoolDrawsRequest {
+  uint64 pool_id = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryPoolDrawRequest {
+  uint64 pool_id = 1;
+  uint64 draw_id = 2;
+}
+
+// Prizes
+
+message QueryPrizeResponse {
+  Prize prize = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryPrizesResponse {
+  repeated Prize prizes = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPoolDrawPrizeRequest {
+  uint64 pool_id = 1;
+  uint64 draw_id = 2;
+  uint64 prize_id = 3;
+}
+
+message QueryPrizesRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryPoolPrizesRequest {
+  uint64 pool_id = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryPoolDrawPrizesRequest {
+  uint64 pool_id = 1;
+  uint64 draw_id = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryAccountPrizesRequest {
+  string winner_address = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryAccountPoolPrizesRequest {
+  string winner_address = 1;
+  uint64 pool_id = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryAccountPoolDrawPrizesRequest {
+  string winner_address = 1;
+  uint64 pool_id = 2;
+  uint64 draw_id = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 4;
+}
+
+// Withdrawals 
+
+message QueryWithdrawalResponse {
+  Withdrawal withdrawal = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryWithdrawalsResponse {
+  repeated Withdrawal withdrawals = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPoolWithdrawalRequest {
+  uint64 pool_id = 1;
+  uint64 withdrawal_id = 2;
+}
+
+message QueryWithdrawalsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryPoolWithdrawalsRequest {
+  uint64 pool_id = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryAccountWithdrawalsRequest {
+  string depositor_address = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryAccountPoolWithdrawalsRequest {
+  string depositor_address = 1;
+  uint64 pool_id = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}

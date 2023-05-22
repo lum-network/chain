@@ -1,0 +1,12 @@
+syntax = "proto3";
+package lum.network.millions;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/lum-network/chain/x/millions/types";
+
+message PrizeBatch {
+  uint64 pool_percent = 1;
+  uint64 quantity = 2;
+  string draw_probability = 3 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false ];
+}

@@ -134,6 +134,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 	// Register migration
 	mig := keeper.NewMigrator(am.keeper)
+	//nolint:errcheck
 	cfg.RegisterMigration(types.ModuleName, 2, mig.Migrate2to3)
 }
 
