@@ -249,7 +249,7 @@ func New(
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, icacontrollertypes.StoreKey, icahosttypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
+		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, ICAControllerCustomStoreKey, icahosttypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey,
 		icacallbackstypes.StoreKey, icqueriestypes.StoreKey,
 		beamtypes.StoreKey, airdroptypes.StoreKey, dfracttypes.StoreKey, millionstypes.StoreKey,
@@ -748,6 +748,11 @@ func (app *App) registerUpgradeHandlers() {
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
 
+	app.UpgradeKeeper.SetUpgradeHandler("v1.4.1", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		app.Logger().Info("v1.4.1 upgrade applied")
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	})
+
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
@@ -795,6 +800,14 @@ func (app *App) registerUpgradeHandlers() {
 		// We create 3 new modules: ICA Callbacks, ICQueries, Millions
 		storeUpgrades := storetypes.StoreUpgrades{
 			Added: []string{icacallbackstypes.StoreKey, icqueriestypes.StoreKey, millionstypes.StoreKey},
+		}
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
+
+	if upgradeInfo.Name == "v1.4.1" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := storetypes.StoreUpgrades{
+			Deleted: []string{icacontrollertypes.StoreKey},
+			Added:   []string{ICAControllerCustomStoreKey},
 		}
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
