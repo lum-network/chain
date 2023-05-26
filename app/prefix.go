@@ -10,6 +10,10 @@ const (
 	CoinType             = 880
 )
 
+const (
+	ICAControllerCustomStoreKey = "lum-icacontroller"
+)
+
 var (
 	AccountPubKeyPrefix    = AccountAddressPrefix + "pub"
 	ValidatorAddressPrefix = AccountAddressPrefix + "valoper"
