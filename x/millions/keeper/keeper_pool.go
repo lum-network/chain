@@ -362,6 +362,7 @@ func (k Keeper) UpdatePool(
 	minDepositAmount *math.Int,
 	drawSchedule *types.DrawSchedule,
 	prizeStrategy *types.PrizeStrategy,
+	state types.PoolState,
 ) error {
 	// Acquire and deserialize our pool entity
 	pool, err := k.GetPool(ctx, poolID)
@@ -400,6 +401,16 @@ func (k Keeper) UpdatePool(
 	}
 	if prizeStrategy != nil {
 		pool.PrizeStrategy = *prizeStrategy
+	}
+
+	// Update pool state only if current pool state is in paused and incoming state ready
+	// else if current pool state is in ready and incoming state paused
+	if state == types.PoolState_Paused && pool.State == types.PoolState_Ready {
+		pool.State = state
+	} else if state == types.PoolState_Ready && pool.State == types.PoolState_Paused {
+		pool.State = state
+	} else if state != types.PoolState_Unspecified {
+		return types.ErrPoolStateChangeNotAllowed
 	}
 
 	// Validate pool configuration
@@ -548,8 +559,8 @@ func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint
 		return nil, nil, err
 	}
 
-	// Pool must be ready to process those kind of operations
-	if pool.GetState() != types.PoolState_Ready {
+	// We always want our pool to have passed the created state and not be unspecified
+	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
 		return nil, nil, types.ErrPoolNotReady
 	}
 
@@ -636,7 +647,7 @@ func (k Keeper) QueryBalance(ctx sdk.Context, poolID uint64, drawID uint64) (*ty
 	}
 
 	// Pool must be ready to process those kind of operations
-	if pool.GetState() != types.PoolState_Ready {
+	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
 		return nil, types.ErrPoolNotReady
 	}
 

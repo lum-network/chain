@@ -355,6 +355,36 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit() {
 	suite.Require().Equal(sdk.NewInt(8_000_000), pool.TvlAmount)
 	suite.Require().Equal(uint64(2), pool.DepositorsCount)
 	suite.Require().Equal(sdk.NewInt(int64(5_000_000)), pool.SponsorshipAmount)
+
+	// Test deposit for a pool that is not in ready state
+	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
+		PoolId: 4,
+		PrizeStrategy: millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
+			},
+		},
+		DrawSchedule: millionstypes.DrawSchedule{
+			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
+			DrawDelta:     drawDelta1,
+		},
+		AvailablePrizePool: sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
+		State:              millionstypes.PoolState_Paused,
+	}))
+
+	pool, err = app.MillionsKeeper.GetPool(ctx, 4)
+	suite.Require().NoError(err)
+
+	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
+		PoolId:           pool.PoolId,
+		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(int64(1_000_000))),
+		DepositorAddress: suite.addrs[0].String(),
+	})
+	// Deposit should be allowed for paused pools
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 4)
+	suite.Require().NoError(err)
+	suite.Require().Equal(int64(1_000_000), pool.TvlAmount.Int64())
 }
 
 // TestMsgServer_DepositRetry tests the retry of a failed deposit
