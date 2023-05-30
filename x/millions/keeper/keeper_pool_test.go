@@ -56,6 +56,57 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsBasics() {
 	suite.Require().NoError(pool.ValidateBasic(params))
 }
 
+func (suite *KeeperTestSuite) TestPool_Helpers() {
+	poolLocal := millionstypes.Pool{Bech32PrefixAccAddr: sdk.GetConfig().GetBech32AccountAddrPrefix()}
+	cases := []struct {
+		address        string
+		isLocalAddress bool
+		expectError    bool
+	}{
+		{address: "", isLocalAddress: false, expectError: true},
+		{address: "not-an-address", isLocalAddress: false, expectError: true},
+		{address: cosmosIcaDepositAddress, isLocalAddress: true, expectError: true},
+		{address: suite.valAddrs[0].String(), isLocalAddress: false, expectError: true},
+		{address: suite.addrs[0].String(), isLocalAddress: true, expectError: false},
+		{address: suite.moduleAddrs[0].String(), isLocalAddress: true, expectError: false},
+	}
+	for i, c := range cases {
+		isLocalAddress, addr, err := poolLocal.AccAddressFromBech32(c.address)
+		if c.expectError {
+			suite.Require().Error(err, "case %d", i)
+			suite.Require().Nil(addr, "case %d", i)
+		} else {
+			suite.Require().Equal(c.isLocalAddress, isLocalAddress, "case %d", i)
+			suite.Require().NotNil(addr, "case %d", i)
+		}
+	}
+
+	poolRemote := millionstypes.Pool{Bech32PrefixAccAddr: "cosmos"}
+	cases = []struct {
+		address        string
+		isLocalAddress bool
+		expectError    bool
+	}{
+		{address: "", isLocalAddress: false, expectError: true},
+		{address: "not-an-address", isLocalAddress: false, expectError: true},
+		{address: suite.valAddrs[0].String(), isLocalAddress: false, expectError: true},
+		{address: "osmo1clpqr4nrk4khgkxj78fcwwh6dl3uw4epasmvnj", isLocalAddress: false, expectError: true},
+		{address: cosmosIcaDepositAddress, isLocalAddress: false, expectError: false},
+		{address: suite.addrs[0].String(), isLocalAddress: true, expectError: false},
+		{address: suite.moduleAddrs[0].String(), isLocalAddress: true, expectError: false},
+	}
+	for i, c := range cases {
+		isLocalAddress, addr, err := poolRemote.AccAddressFromBech32(c.address)
+		if c.expectError {
+			suite.Require().Error(err, "case %d", i)
+			suite.Require().Nil(addr, "case %d", i)
+		} else {
+			suite.Require().Equal(c.isLocalAddress, isLocalAddress, "case %d", i)
+			suite.Require().NotNil(addr, "case %d", i)
+		}
+	}
+}
+
 // TestPool_DrawSchedule validates draw schedule configuration and implementation
 func (suite *KeeperTestSuite) TestPool_DrawScheduleBasics() {
 	ctx := suite.ctx

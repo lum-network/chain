@@ -55,3 +55,8 @@ message TransferFromNativeCallback {
 message SetWithdrawAddressCallback {
   uint64 pool_id = 1;
 }
+
+message BankSendCallback {
+  uint64 pool_id = 1;
+  uint64 withdrawal_id = 2;
+}
