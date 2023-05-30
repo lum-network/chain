@@ -16,6 +16,7 @@ option go_package = "github.com/lum-network/chain/x/millions/types";
 service Msg {
   rpc Deposit(MsgDeposit) returns (MsgDepositResponse);
   rpc DepositRetry(MsgDepositRetry) returns (MsgDepositRetryResponse);
+  rpc DepositEdit(MsgDepositEdit) returns (MsgDepositEditResponse);
   rpc ClaimPrize(MsgClaimPrize) returns (MsgClaimPrizeResponse);
   rpc WithdrawDeposit(MsgWithdrawDeposit) returns (MsgWithdrawDepositResponse);
   rpc WithdrawDepositRetry(MsgWithdrawDepositRetry) returns (MsgWithdrawDepositRetryResponse);
@@ -88,6 +89,21 @@ message MsgDepositRetry {
 }
 
 message MsgDepositRetryResponse {
+}
+
+message BoolWrapper {
+  bool value = 1;
+}
+
+message MsgDepositEdit {
+  uint64 pool_id = 1;
+  uint64 deposit_id = 2;
+  string winner_address = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  BoolWrapper is_sponsor = 4 [ (gogoproto.nullable) = true ];
+  string depositor_address = 5 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+message MsgDepositEditResponse {
 }
 
 message MsgClaimPrize {
