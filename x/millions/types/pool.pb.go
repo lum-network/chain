@@ -7,11 +7,11 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
-	_ "google.golang.org/protobuf/types/known/timestamppb"
+	types1 "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	_ "github.com/cosmos/gogoproto/types"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_gogo_protobuf_types "github.com/cosmos/gogoproto/types"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -96,7 +96,7 @@ type Pool struct {
 	SponsorshipAmount   github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,25,opt,name=sponsorship_amount,json=sponsorshipAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"sponsorship_amount"`
 	LastDrawCreatedAt   *time.Time                             `protobuf:"bytes,27,opt,name=last_draw_created_at,json=lastDrawCreatedAt,proto3,stdtime" json:"last_draw_created_at,omitempty"`
 	LastDrawState       DrawState                              `protobuf:"varint,28,opt,name=last_draw_state,json=lastDrawState,proto3,enum=lum.network.millions.DrawState" json:"last_draw_state,omitempty"`
-	AvailablePrizePool  types.Coin                             `protobuf:"bytes,29,opt,name=available_prize_pool,json=availablePrizePool,proto3" json:"available_prize_pool"`
+	AvailablePrizePool  types1.Coin                            `protobuf:"bytes,29,opt,name=available_prize_pool,json=availablePrizePool,proto3" json:"available_prize_pool"`
 	State               PoolState                              `protobuf:"varint,32,opt,name=state,proto3,enum=lum.network.millions.PoolState" json:"state,omitempty"`
 	CreatedAtHeight     int64                                  `protobuf:"varint,33,opt,name=created_at_height,json=createdAtHeight,proto3" json:"created_at_height,omitempty"`
 	UpdatedAtHeight     int64                                  `protobuf:"varint,34,opt,name=updated_at_height,json=updatedAtHeight,proto3" json:"updated_at_height,omitempty"`
@@ -277,11 +277,11 @@ func (m *Pool) GetLastDrawState() DrawState {
 	return DrawState_Unspecified
 }
 
-func (m *Pool) GetAvailablePrizePool() types.Coin {
+func (m *Pool) GetAvailablePrizePool() types1.Coin {
 	if m != nil {
 		return m.AvailablePrizePool
 	}
-	return types.Coin{}
+	return types1.Coin{}
 }
 
 func (m *Pool) GetState() PoolState {

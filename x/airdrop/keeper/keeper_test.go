@@ -7,6 +7,7 @@ import (
 	"github.com/lum-network/chain/app"
 	testing2 "github.com/lum-network/chain/app/testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,7 +18,6 @@ import (
 	apptypes "github.com/lum-network/chain/app"
 	"github.com/lum-network/chain/x/airdrop/types"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 var now = time.Now().UTC()

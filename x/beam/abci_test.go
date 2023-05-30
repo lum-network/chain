@@ -2,6 +2,8 @@ package beam_test
 
 import (
 	"encoding/hex"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	apptypes "github.com/lum-network/chain/app"
@@ -11,8 +13,6 @@ import (
 	"github.com/lum-network/chain/x/beam/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"testing"
 )
 

@@ -2,21 +2,25 @@ package keeper
 
 import (
 	"context"
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	commitmenttypes "github.com/cosmos/ibc-go/v5/modules/core/23-commitment/types"
-	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
-	"github.com/lum-network/chain/x/icqueries/types"
-	"github.com/spf13/cast"
 	"net/url"
 	"sort"
 	"strings"
+
+	errorsmod "cosmossdk.io/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	commitmenttypes "github.com/cosmos/ibc-go/v7/modules/core/23-commitment/types"
+	"github.com/cosmos/ibc-go/v7/modules/core/exported"
+	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+	ics23 "github.com/cosmos/ics23/go"
+	"github.com/spf13/cast"
+
+	"github.com/lum-network/chain/x/icqueries/types"
 )
 
-// VerifyKeyProof check if the query requires proving; if it does, verify it!
-func (k *Keeper) VerifyKeyProof(ctx sdk.Context, msg *types.MsgSubmitQueryResponse, query types.Query) error {
+// check if the query requires proving; if it does, verify it!
+func (k Keeper) VerifyKeyProof(ctx sdk.Context, msg *types.MsgSubmitQueryResponse, query types.Query) error {
 	pathParts := strings.Split(query.QueryType, "/")
 
 	// the query does NOT have an associated proof, so no need to verify it.
@@ -49,10 +53,20 @@ func (k *Keeper) VerifyKeyProof(ctx sdk.Context, msg *types.MsgSubmitQueryRespon
 	if !found {
 		return errorsmod.Wrapf(types.ErrInvalidICQProof, "Unable to fetch client state for client %s", connection.ClientId)
 	}
-	tmClientState, ok := clientState.(*tmclienttypes.ClientState)
+
+	// Cast the client and consensus state to tendermint type
+	tendermintConsensusState, ok := consensusState.(*tendermint.ConsensusState)
 	if !ok {
-		return errorsmod.Wrapf(types.ErrInvalidICQProof, "Client state is not tendermint")
+		return errorsmod.Wrapf(types.ErrInvalidICQProof,
+			"Only tendermint consensus state is supported (%s provided)", consensusState.ClientType())
 	}
+	tendermintClientState, ok := clientState.(*tendermint.ClientState)
+	if !ok {
+		return errorsmod.Wrapf(types.ErrInvalidICQProof,
+			"Only tendermint client state is supported (%s provided)", clientState.ClientType())
+	}
+	var stateRoot exported.Root = tendermintConsensusState.Root
+	var clientStateProof []*ics23.ProofSpec = tendermintClientState.ProofSpecs
 
 	// Get the merkle path and merkle proof
 	path := commitmenttypes.NewMerklePath([]string{pathParts[1], url.PathEscape(string(query.Request))}...)
@@ -63,13 +77,12 @@ func (k *Keeper) VerifyKeyProof(ctx sdk.Context, msg *types.MsgSubmitQueryRespon
 
 	// If we got a non-nil response, verify inclusion proof
 	if len(msg.Result) != 0 {
-		if err := merkleProof.VerifyMembership(tmClientState.ProofSpecs, consensusState.GetRoot(), path, msg.Result); err != nil {
+		if err := merkleProof.VerifyMembership(clientStateProof, stateRoot, path, msg.Result); err != nil {
 			return errorsmod.Wrapf(types.ErrInvalidICQProof, "Unable to verify membership proof: %s", err.Error())
 		}
-
 	} else {
 		// if we got a nil query response, verify non inclusion proof.
-		if err := merkleProof.VerifyNonMembership(tmClientState.ProofSpecs, consensusState.GetRoot(), path); err != nil {
+		if err := merkleProof.VerifyNonMembership(clientStateProof, stateRoot, path); err != nil {
 			return errorsmod.Wrapf(types.ErrInvalidICQProof, "Unable to verify non-membership proof: %s", err.Error())
 		}
 	}
@@ -77,9 +90,10 @@ func (k *Keeper) VerifyKeyProof(ctx sdk.Context, msg *types.MsgSubmitQueryRespon
 	return nil
 }
 
-// InvokeCallback call the query's associated callback function
-func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryResponse, query types.Query, status types.QueryResponseStatus) error {
-	// get all the callback handlers and sort them for determinism (each module has their own callback handler)
+// call the query's associated callback function
+func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryResponse, query types.Query) error {
+	// get all the callback handlers and sort them for determinism
+	// (each module has their own callback handler)
 	moduleNames := []string{}
 	for moduleName := range k.callbacks {
 		moduleNames = append(moduleNames, moduleName)
@@ -92,7 +106,7 @@ func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryRespons
 
 		// Once the callback is found, invoke the function
 		if moduleCallbackHandler.HasICQCallback(query.CallbackId) {
-			return moduleCallbackHandler.CallICQCallback(ctx, query.CallbackId, msg.Result, query, status)
+			return moduleCallbackHandler.CallICQCallback(ctx, query.CallbackId, msg.Result, query)
 		}
 	}
 
@@ -100,11 +114,11 @@ func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryRespons
 	return types.ErrICQCallbackNotFound
 }
 
-// SubmitQueryResponse Handle ICQ query responses by validating the proof, and calling the query's corresponding callback
+// Handle ICQ query responses by validating the proof, and calling the query's corresponding callback
 func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubmitQueryResponse) (*types.MsgSubmitQueryResponseResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// check if the response has an associated query stored on Lum
+	// check if the response has an associated query stored on stride
 	query, found := k.GetQuery(ctx, msg.QueryId)
 	if !found {
 		k.Logger(ctx).Info("ICQ RESPONSE  | Ignoring non-existent query response (note: duplicate responses are nonexistent)")

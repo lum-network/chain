@@ -206,9 +206,9 @@ func RegisterQueryServiceHandlerClient(ctx context.Context, mux *runtime.ServeMu
 }
 
 var (
-	pattern_QueryService_Queries_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"lum-network", "icqueries", "queries"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_QueryService_Queries_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"lum-network", "icqueries", "queries"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_QueryService_PendingQueries_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"lum-network", "icqueries", "pending_queries"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_QueryService_PendingQueries_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"lum-network", "icqueries", "pending_queries"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

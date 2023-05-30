@@ -1,13 +1,13 @@
 package icacallbacks_test
 
 import (
-	apptypes "github.com/lum-network/chain/app"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"testing"
+
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	apptypes "github.com/lum-network/chain/app"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/Stride-Labs/stride/v6/testutil/nullify"
 	"github.com/lum-network/chain/x/icacallbacks"
 	"github.com/lum-network/chain/x/icacallbacks/types"
 )
@@ -33,8 +33,9 @@ func TestGenesis(t *testing.T) {
 	got := icacallbacks.ExportGenesis(ctx, *app.ICACallbacksKeeper)
 	require.NotNil(t, got)
 
-	nullify.Fill(&genesisState)
-	nullify.Fill(got)
+	// TODO: upgrade fix
+	// nullify.Fill(&genesisState)
+	// nullify.Fill(got)
 
 	require.Equal(t, genesisState.PortId, got.PortId)
 

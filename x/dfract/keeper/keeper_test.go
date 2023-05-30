@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
@@ -11,7 +12,6 @@ import (
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type KeeperTestSuite struct {

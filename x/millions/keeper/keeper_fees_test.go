@@ -2,9 +2,9 @@ package keeper_test
 
 import (
 	"cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/lum-network/chain/x/millions/types"
 )

@@ -3,6 +3,7 @@ package dfract_test
 import (
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/lum-network/chain/app"
@@ -10,7 +11,6 @@ import (
 	"github.com/lum-network/chain/x/dfract"
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type HandlerTestSuite struct {

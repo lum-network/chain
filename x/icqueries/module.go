@@ -3,6 +3,7 @@ package icqueries
 import (
 	"context"
 	"encoding/json"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -14,7 +15,6 @@ import (
 	"github.com/lum-network/chain/x/icqueries/keeper"
 	"github.com/lum-network/chain/x/icqueries/types"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (

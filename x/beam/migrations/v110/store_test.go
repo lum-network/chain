@@ -1,6 +1,7 @@
 package v110_test
 
 import (
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	apptypes "github.com/lum-network/chain/app"
@@ -9,7 +10,6 @@ import (
 	"github.com/lum-network/chain/x/beam/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"testing"
 )
 

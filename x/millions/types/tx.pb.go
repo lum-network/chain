@@ -8,15 +8,15 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/types"
-	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
+	types1 "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	_ "github.com/cosmos/gogoproto/types"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_gogo_protobuf_types "github.com/cosmos/gogoproto/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	_ "google.golang.org/protobuf/types/known/durationpb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -426,11 +426,11 @@ func (m *MsgUpdatePoolResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgUpdatePoolResponse proto.InternalMessageInfo
 
 type MsgDeposit struct {
-	PoolId           uint64     `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
-	Amount           types.Coin `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount"`
-	DepositorAddress string     `protobuf:"bytes,3,opt,name=depositor_address,json=depositorAddress,proto3" json:"depositor_address,omitempty"`
-	WinnerAddress    string     `protobuf:"bytes,4,opt,name=winner_address,json=winnerAddress,proto3" json:"winner_address,omitempty"`
-	IsSponsor        bool       `protobuf:"varint,5,opt,name=is_sponsor,json=isSponsor,proto3" json:"is_sponsor,omitempty"`
+	PoolId           uint64      `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
+	Amount           types1.Coin `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount"`
+	DepositorAddress string      `protobuf:"bytes,3,opt,name=depositor_address,json=depositorAddress,proto3" json:"depositor_address,omitempty"`
+	WinnerAddress    string      `protobuf:"bytes,4,opt,name=winner_address,json=winnerAddress,proto3" json:"winner_address,omitempty"`
+	IsSponsor        bool        `protobuf:"varint,5,opt,name=is_sponsor,json=isSponsor,proto3" json:"is_sponsor,omitempty"`
 }
 
 func (m *MsgDeposit) Reset()         { *m = MsgDeposit{} }
@@ -473,11 +473,11 @@ func (m *MsgDeposit) GetPoolId() uint64 {
 	return 0
 }
 
-func (m *MsgDeposit) GetAmount() types.Coin {
+func (m *MsgDeposit) GetAmount() types1.Coin {
 	if m != nil {
 		return m.Amount
 	}
-	return types.Coin{}
+	return types1.Coin{}
 }
 
 func (m *MsgDeposit) GetDepositorAddress() string {

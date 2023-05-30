@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	apptypes "github.com/lum-network/chain/app"
 	"github.com/lum-network/chain/x/millions"

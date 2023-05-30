@@ -4,12 +4,12 @@ import (
 	"testing"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	apptypes "github.com/lum-network/chain/app"
 	"github.com/lum-network/chain/x/dfract"
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 var now = time.Now().UTC()
