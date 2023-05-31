@@ -12,6 +12,7 @@ import (
 	distribtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
 
+	"github.com/cosmos/gogoproto/proto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	errorsmod "cosmossdk.io/errors"
@@ -556,7 +557,16 @@ func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint
 	// Timeout is now plus 5 minutes in nanoseconds
 	// We use the standard transfer port ID and not the one opened for ICA
 	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano() + 5*time.Minute.Nanoseconds())
-	msg := ibctypes.NewMsgTransfer(ibctypes.PortID, pool.GetTransferChannelId(), amount, pool.GetLocalAddress(), pool.GetIcaDepositAddress(), clienttypes.Height{}, timeoutTimestamp)
+	msg := ibctypes.NewMsgTransfer(
+		ibctypes.PortID,
+		pool.GetTransferChannelId(),
+		amount,
+		pool.GetLocalAddress(),
+		pool.GetIcaDepositAddress(),
+		clienttypes.Height{},
+		timeoutTimestamp,
+		"Cosmos Millions",
+	)
 
 	// Broadcast the transfer
 	msgResponse, err := k.IBCTransferKeeper.Transfer(ctx, msg)
@@ -593,7 +603,11 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType
 	}
 
 	// Serialize the data and construct the packet to send
-	data, err := icatypes.SerializeCosmosTx(k.cdc, msgs)
+	var protoMsgs []proto.Message
+	for _, msg := range msgs {
+		protoMsgs = append(protoMsgs, msg)
+	}
+	data, err := icatypes.SerializeCosmosTx(k.cdc, protoMsgs)
 	if err != nil {
 		return 0, err
 	}

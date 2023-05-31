@@ -217,6 +217,7 @@ func (k Keeper) TransferWithdrawalToLocalChain(ctx sdk.Context, poolID uint64, w
 		withdrawal.GetToAddress(),
 		clienttypes.Height{},
 		timeoutTimestamp,
+		"Cosmos Millions",
 	))
 
 	// Dispatch our message with a timeout of 30 minutes in nanos

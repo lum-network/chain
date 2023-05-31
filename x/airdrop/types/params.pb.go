@@ -6,8 +6,8 @@ package types
 import (
 	fmt "fmt"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	_ "github.com/cosmos/gogoproto/types"
 	proto "github.com/cosmos/gogoproto/proto"
+	_ "github.com/cosmos/gogoproto/types"
 	github_com_gogo_protobuf_types "github.com/cosmos/gogoproto/types"
 	io "io"
 	math "math"

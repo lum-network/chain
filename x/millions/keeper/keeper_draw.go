@@ -316,6 +316,7 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 		pool.GetLocalAddress(),
 		clienttypes.Height{},
 		timeoutTimestamp,
+		"Cosmos Millions",
 	))
 
 	// Construct our callback data

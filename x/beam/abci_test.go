@@ -2,18 +2,23 @@ package beam_test
 
 import (
 	"encoding/hex"
-	abci "github.com/cometbft/cometbft/abci/types"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	apptypes "github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
+
 	"github.com/lum-network/chain/utils"
 	"github.com/lum-network/chain/x/beam"
+	"github.com/lum-network/chain/x/beam/keeper"
 	"github.com/lum-network/chain/x/beam/types"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type ABCITestSuite struct {
@@ -31,7 +36,7 @@ func (suite *ABCITestSuite) SetupTest() {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.BeamKeeper)
+	types.RegisterQueryServer(queryHelper, keeper.NewQueryServerImpl(*app.BeamKeeper))
 	queryClient := types.NewQueryClient(queryHelper)
 
 	suite.app = app

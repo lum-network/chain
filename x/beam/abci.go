@@ -2,11 +2,13 @@ package beam
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/lum-network/chain/x/beam/keeper"
 	"github.com/lum-network/chain/x/beam/types"
-	"time"
 )
 
 // EndBlocker Called every block, process the beam expiration and auto close

@@ -112,7 +112,7 @@ func (suite *KeeperTestSuite) TestFees_FeeCollector() {
 			SignedLastBlock: true,
 		},
 	}
-	app.DistrKeeper.AllocateTokens(ctx, 100, 100, consAddr0, votes)
+	app.DistrKeeper.AllocateTokens(ctx, 100, votes)
 	comTax := app.DistrKeeper.GetCommunityTax(ctx)
 	suite.Require().Equal(sdk.NewDec(1).MulInt(collectedAmount).Sub(comTax.MulInt(collectedAmount)), app.DistrKeeper.GetTotalRewards(ctx).AmountOf(denom))
 	suite.Require().Equal(comTax.MulInt(collectedAmount), app.DistrKeeper.GetFeePoolCommunityCoins(ctx).AmountOf(denom))

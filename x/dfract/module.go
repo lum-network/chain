@@ -4,22 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/lum-network/chain/x/dfract/client/cli"
 	"github.com/lum-network/chain/x/dfract/client/rest"
 	"github.com/lum-network/chain/x/dfract/keeper"
-	"github.com/lum-network/chain/x/dfract/simulation"
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/spf13/cobra"
-	"math/rand"
 )
 
 var (
@@ -117,16 +115,8 @@ func (a AppModule) ExportGenesis(context sdk.Context, jsonCodec codec.JSONCodec)
 
 func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {}
 
-func (a AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(a.keeper))
-}
-
 func (a AppModule) QuerierRoute() string {
 	return types.QuerierRoute
-}
-
-func (a AppModule) LegacyQuerierHandler(amino *codec.LegacyAmino) sdk.Querier {
-	return nil
 }
 
 func (a AppModule) RegisterServices(cfg module.Configurator) {
@@ -145,22 +135,4 @@ func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Vali
 
 func (a AppModule) ConsensusVersion() uint64 {
 	return types.ModuleVersion
-}
-
-func (a AppModule) GenerateGenesisState(input *module.SimulationState) {}
-
-func (a AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
-
-func (a AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return nil
-}
-
-func (a AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
-	registry[types.StoreKey] = simulation.NewDecodeStore(a.cdc)
-}
-
-func (a AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return nil
 }

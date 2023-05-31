@@ -19,8 +19,8 @@ import (
 	"github.com/lum-network/chain/x/icqueries/types"
 )
 
-// check if the query requires proving; if it does, verify it!
-func (k Keeper) VerifyKeyProof(ctx sdk.Context, msg *types.MsgSubmitQueryResponse, query types.Query) error {
+// VerifyKeyProof check if the query requires proving; if it does, verify it!
+func (k *Keeper) VerifyKeyProof(ctx sdk.Context, msg *types.MsgSubmitQueryResponse, query types.Query) error {
 	pathParts := strings.Split(query.QueryType, "/")
 
 	// the query does NOT have an associated proof, so no need to verify it.
@@ -80,6 +80,7 @@ func (k Keeper) VerifyKeyProof(ctx sdk.Context, msg *types.MsgSubmitQueryRespons
 		if err := merkleProof.VerifyMembership(clientStateProof, stateRoot, path, msg.Result); err != nil {
 			return errorsmod.Wrapf(types.ErrInvalidICQProof, "Unable to verify membership proof: %s", err.Error())
 		}
+
 	} else {
 		// if we got a nil query response, verify non inclusion proof.
 		if err := merkleProof.VerifyNonMembership(clientStateProof, stateRoot, path); err != nil {
@@ -91,9 +92,8 @@ func (k Keeper) VerifyKeyProof(ctx sdk.Context, msg *types.MsgSubmitQueryRespons
 }
 
 // call the query's associated callback function
-func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryResponse, query types.Query) error {
-	// get all the callback handlers and sort them for determinism
-	// (each module has their own callback handler)
+func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryResponse, query types.Query, status types.QueryResponseStatus) error {
+	// get all the callback handlers and sort them for determinism (each module has their own callback handler)
 	moduleNames := []string{}
 	for moduleName := range k.callbacks {
 		moduleNames = append(moduleNames, moduleName)
@@ -106,7 +106,7 @@ func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryRespons
 
 		// Once the callback is found, invoke the function
 		if moduleCallbackHandler.HasICQCallback(query.CallbackId) {
-			return moduleCallbackHandler.CallICQCallback(ctx, query.CallbackId, msg.Result, query)
+			return moduleCallbackHandler.CallICQCallback(ctx, query.CallbackId, msg.Result, query, status)
 		}
 	}
 
@@ -114,11 +114,11 @@ func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryRespons
 	return types.ErrICQCallbackNotFound
 }
 
-// Handle ICQ query responses by validating the proof, and calling the query's corresponding callback
+// SubmitQueryResponse Handle ICQ query responses by validating the proof, and calling the query's corresponding callback
 func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubmitQueryResponse) (*types.MsgSubmitQueryResponseResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// check if the response has an associated query stored on stride
+	// check if the response has an associated query stored on Lum
 	query, found := k.GetQuery(ctx, msg.QueryId)
 	if !found {
 		k.Logger(ctx).Info("ICQ RESPONSE  | Ignoring non-existent query response (note: duplicate responses are nonexistent)")
