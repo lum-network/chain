@@ -509,7 +509,7 @@ func (k Keeper) Redelegate(ctx sdk.Context, operatorAddress string, poolID uint6
 	// Construct our callback data
 	callbackData := types.RedelegateCallback{
 		PoolId:           poolID,
-		OperatorAddress:  validator.String(),
+		OperatorAddress:  validator.GetOperatorAddress(),
 		SplitDelegations: splits,
 	}
 	marshalledCallbackData, err := k.MarshalRedelegateCallbackArgs(ctx, callbackData)
@@ -522,7 +522,7 @@ func (k Keeper) Redelegate(ctx sdk.Context, operatorAddress string, poolID uint6
 	for _, split := range splits {
 		msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{
 			DelegatorAddress:    pool.GetIcaDepositAddress(),
-			ValidatorSrcAddress: validator.String(),
+			ValidatorSrcAddress: validator.GetOperatorAddress(),
 			ValidatorDstAddress: split.ValidatorAddress,
 			Amount:              sdk.NewCoin(pool.NativeDenom, split.Amount),
 		})
@@ -594,14 +594,14 @@ func (k Keeper) UpdateRedelegateStatus(ctx sdk.Context, poolID uint64, status ty
 		return err
 	}
 
-	validator, found := pool.Validators[operatorAddress]
-	if !found {
-		return types.ErrValidatorNotFound
-	}
-
 	// Make sure pool is ready
 	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
 		return types.ErrPoolNotReady
+	}
+
+	validator, found := pool.Validators[operatorAddress]
+	if !found {
+		return types.ErrValidatorNotFound
 	}
 
 	if isError {

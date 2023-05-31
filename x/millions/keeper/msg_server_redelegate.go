@@ -24,11 +24,11 @@ func (k msgServer) RedelegateRetry(goCtx context.Context, msg *types.MsgRedelega
 
 	validator, found := pool.Validators[msg.GetOperatetorAddress()]
 	if !found {
-		return &types.MsgRedelegateRetryResponse{}, errorsmod.Wrapf(types.ErrValidatorNotFound, "%s", validator.String())
+		return nil, errorsmod.Wrapf(types.ErrValidatorNotFound, "%s", validator.String())
 	}
 
 	if !validator.Redelegate.IsGovPropRedelegated {
-		return &types.MsgRedelegateRetryResponse{}, types.ErrValidatorNotRedelegated
+		return nil, types.ErrValidatorNotRedelegated
 	}
 
 	// State should be set to failure in order to retry something
