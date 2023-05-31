@@ -1,6 +1,6 @@
 version: v1
 deps:
-  - buf.build/cosmos/cosmos-sdk:v0.47.2
+  - buf.build/cosmos/cosmos-sdk:v0.47.0
   - buf.build/cosmos/cosmos-proto
   - buf.build/cosmos/gogo-proto
   - buf.build/googleapis/googleapis
@@ -22,3 +22,4 @@ lint:
     - RPC_RESPONSE_STANDARD_NAME
     - ENUM_ZERO_VALUE_SUFFIX
     - ENUM_VALUE_PREFIX
+    - RPC_REQUEST_RESPONSE_UNIQUE
