@@ -25,11 +25,13 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgWithdrawDeposit{}, "lum-network/millions/MsgWithdrawDeposit", nil)
 	cdc.RegisterConcrete(&MsgWithdrawDepositRetry{}, "lum-network/millions/MsgWithdrawDepositRetry", nil)
 	cdc.RegisterConcrete(&MsgRestoreInterchainAccounts{}, "lum-network/millions/MsgRestoreInterchainAccounts", nil)
+	cdc.RegisterConcrete(&MsgRedelegateRetry{}, "lum-network/millions/MsgRedelegateRetry", nil)
 
 	// Proposals
 	cdc.RegisterConcrete(&ProposalUpdateParams{}, "lum-network/millions/ProposalUpdateParams", nil)
 	cdc.RegisterConcrete(&ProposalRegisterPool{}, "lum-network/millions/ProposalRegisterPool", nil)
 	cdc.RegisterConcrete(&ProposalUpdatePool{}, "lum-network/millions/ProposalUpdatePool", nil)
+	cdc.RegisterConcrete(&ProposalDisableValidator{}, "lum-network/millions/ProposalDisableValidator", nil)
 }
 
 // RegisterInterfaces Register the implementations for the given codecs
@@ -42,11 +44,13 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgWithdrawDeposit{})
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgWithdrawDepositRetry{})
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgRestoreInterchainAccounts{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgRedelegateRetry{})
 
 	// Proposals
 	registry.RegisterImplementations((*govtypes.Content)(nil), &ProposalUpdateParams{})
 	registry.RegisterImplementations((*govtypes.Content)(nil), &ProposalRegisterPool{})
 	registry.RegisterImplementations((*govtypes.Content)(nil), &ProposalUpdatePool{})
+	registry.RegisterImplementations((*govtypes.Content)(nil), &ProposalDisableValidator{})
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

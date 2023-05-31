@@ -4,7 +4,10 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
@@ -925,4 +928,100 @@ func (suite *KeeperTestSuite) TestMsgServer_ClaimPrize() {
 	// There should be no more prizes
 	prizes = app.MillionsKeeper.ListPrizes(ctx)
 	suite.Require().Len(prizes, 0)
+}
+
+func (suite *KeeperTestSuite) TestMsgServer_RedelegateRetry() {
+	app := suite.app
+	ctx := suite.ctx
+	goCtx := sdk.WrapSDKContext(ctx)
+	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
+
+	pub1 := secp256k1.GenPrivKey().PubKey()
+	pub2 := secp256k1.GenPrivKey().PubKey()
+	addrs2 := []sdk.AccAddress{sdk.AccAddress(pub1.Address()), sdk.AccAddress(pub2.Address())}
+
+	validator2, err := stakingtypes.NewValidator(sdk.ValAddress(addrs2[0]), pub1, stakingtypes.Description{})
+	suite.Require().NoError(err)
+	validator2 = stakingkeeper.TestingUpdateValidator(*suite.app.StakingKeeper, suite.ctx, validator2, true)
+	err = app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator2.GetOperator())
+	suite.Require().NoError(err)
+
+	// create local pool with local valAddresses
+	valAddrs := []string{
+		suite.valAddrs[0].String(),
+		validator2.OperatorAddress,
+	}
+
+	valSet := map[string]*millionstypes.PoolValidator{
+		valAddrs[0]: {
+			OperatorAddress: valAddrs[0],
+			BondedAmount:    sdk.NewInt(0),
+			IsEnabled:       true,
+			Redelegate: &millionstypes.Redelegate{
+				IsGovPropRedelegated: false,
+				ErrorState:           millionstypes.RedelegateState_Unspecified,
+				State:                millionstypes.RedelegateState_Unspecified,
+			},
+		},
+		valAddrs[1]: {
+			OperatorAddress: valAddrs[1],
+			BondedAmount:    sdk.NewInt(0),
+			IsEnabled:       true,
+			Redelegate: &millionstypes.Redelegate{
+				IsGovPropRedelegated: true,
+				ErrorState:           millionstypes.RedelegateState_IcaRedelegate,
+				State:                millionstypes.RedelegateState_Failure,
+			},
+		},
+	}
+
+	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
+		PoolId:     1,
+		Validators: valSet,
+	}))
+
+	pool, err := app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+
+	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
+		DepositorAddress: suite.addrs[0].String(),
+		PoolId:           pool.PoolId,
+		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(2_000_000)),
+	})
+	suite.Require().NoError(err)
+
+	deposit, err := app.MillionsKeeper.GetPoolDeposit(ctx, uint64(1), uint64(1))
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.DepositState_Success, deposit.State)
+
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+
+	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[suite.valAddrs[0].String()].BondedAmount)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[validator2.OperatorAddress].BondedAmount)
+
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+
+	_, err = msgServer.RedelegateRetry(goCtx, &millionstypes.MsgRedelegateRetry{
+		PoolId:                 1,
+		OperatetorAddress:      "cosmosvaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4epsluffn",
+		RedelegateRetryAddress: suite.addrs[0].String(),
+	})
+	suite.Require().ErrorIs(err, millionstypes.ErrValidatorNotFound)
+
+	_, err = msgServer.RedelegateRetry(goCtx, &millionstypes.MsgRedelegateRetry{
+		PoolId:                 1,
+		OperatetorAddress:      valAddrs[1],
+		RedelegateRetryAddress: suite.addrs[0].String(),
+	})
+	suite.Require().NoError(err)
+
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+
+	suite.Require().Equal(sdk.NewInt(2_000_000), pool.Validators[suite.valAddrs[0].String()].BondedAmount)
+	suite.Require().Equal(sdk.NewInt(0), pool.Validators[validator2.OperatorAddress].BondedAmount)
+	suite.Require().Equal(millionstypes.RedelegateState_IcaRedelegateUnbonding, pool.Validators[validator2.OperatorAddress].Redelegate.State)
+	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[validator2.OperatorAddress].Redelegate.ErrorState)
 }

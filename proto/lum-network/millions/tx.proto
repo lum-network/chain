@@ -21,6 +21,7 @@ service Msg {
   rpc WithdrawDepositRetry(MsgWithdrawDepositRetry) returns (MsgWithdrawDepositRetryResponse);
   rpc DrawRetry(MsgDrawRetry) returns (MsgDrawRetryResponse);
   rpc RestoreInterchainAccounts(MsgRestoreInterchainAccounts) returns (MsgRestoreInterchainAccountsResponse);
+  rpc RedelegateRetry(MsgRedelegateRetry) returns (MsgRedelegateRetryResponse);
 }
 
 message MsgUpdateParams {
@@ -135,3 +136,11 @@ message MsgRestoreInterchainAccounts {
 }
 
 message MsgRestoreInterchainAccountsResponse {}
+
+message MsgRedelegateRetry {
+  uint64 pool_id = 1;
+  string operatetor_address = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string redelegate_retry_address = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+message MsgRedelegateRetryResponse {}

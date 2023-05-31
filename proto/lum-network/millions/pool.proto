@@ -10,6 +10,7 @@ import "cosmos_proto/cosmos.proto";
 import "lum-network/millions/draw.proto";
 import "lum-network/millions/draw_schedule.proto";
 import "lum-network/millions/prize_strategy.proto";
+import "lum-network/millions/redelegate.proto";
 
 option go_package = "github.com/lum-network/chain/x/millions/types";
 
@@ -81,4 +82,5 @@ message PoolValidator {
   string operator_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   bool is_enabled = 2;
   string bonded_amount = 3 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false ];
+  Redelegate redelegate = 4 [ (gogoproto.nullable) = true ];
 }

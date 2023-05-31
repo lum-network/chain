@@ -59,3 +59,13 @@ message ProposalUpdateParams {
   string fees_stakers = 9 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = true ];
   google.protobuf.Duration min_deposit_draw_delta = 10 [ (gogoproto.stdduration) = true, (gogoproto.nullable) = true ];
 }
+
+message ProposalDisableValidator {
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+
+  string operator_address = 3;
+  uint64 pool_id = 4;
+}

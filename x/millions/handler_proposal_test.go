@@ -7,11 +7,15 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
 	"github.com/lum-network/chain/x/millions"
+	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
@@ -19,10 +23,12 @@ import (
 type HandlerTestSuite struct {
 	suite.Suite
 
-	app   *app.App
-	ctx   sdk.Context
-	addrs []sdk.AccAddress
-	pool  millionstypes.Pool
+	app         *app.App
+	ctx         sdk.Context
+	addrs       []sdk.AccAddress
+	valAddrs    []sdk.ValAddress
+	moduleAddrs []sdk.AccAddress
+	pool        millionstypes.Pool
 
 	handler govtypesv1beta1.Handler
 }
@@ -30,11 +36,74 @@ type HandlerTestSuite struct {
 func (suite *HandlerTestSuite) SetupTest() {
 	app := app.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "lum-network-devnet"})
+	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
+	goCtx := sdk.WrapSDKContext(ctx)
 
 	suite.app = app
 	suite.ctx = ctx
 	suite.handler = millions.NewMillionsProposalHandler(*app.MillionsKeeper)
 	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 2, sdk.NewInt(300000000), "ulum")
+
+	// Initialize module accounts for IcaDeposits
+	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 3, sdk.NewInt(1_000_0000_000), app.StakingKeeper.BondDenom(ctx))
+	for i := 0; i < 3; i++ {
+		poolAddress := millionstypes.NewPoolAddress(uint64(i+1), "unused-in-test")
+		apptesting.AddTestModuleAccount(app, ctx, poolAddress)
+		suite.moduleAddrs = append(suite.moduleAddrs, poolAddress)
+	}
+
+	// Initialize validators
+	pub1 := secp256k1.GenPrivKey().PubKey()
+	pub2 := secp256k1.GenPrivKey().PubKey()
+	addrs := []sdk.AccAddress{sdk.AccAddress(pub1.Address()), sdk.AccAddress(pub2.Address())}
+
+	validator2, err := stakingtypes.NewValidator(sdk.ValAddress(addrs[0]), pub1, stakingtypes.Description{})
+	suite.Require().NoError(err)
+	validator2.Status = 2
+	validator2 = stakingkeeper.TestingUpdateValidator(*suite.app.StakingKeeper, suite.ctx, validator2, true)
+	err = app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator2.GetOperator())
+	suite.Require().NoError(err)
+
+	validator2, _ = validator2.AddTokensFromDel(sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction))
+	delAmount := sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)
+	apptesting.InitAccountWithCoins(suite.app, suite.ctx, addrs[1], sdk.NewCoins(sdk.NewCoin("ulum", delAmount)))
+	_, err = suite.app.StakingKeeper.Delegate(suite.ctx, addrs[1], delAmount, stakingtypes.Unbonded, validator2, true)
+	suite.Require().NoError(err)
+
+	vals := app.StakingKeeper.GetAllValidators(ctx)
+	suite.valAddrs = []sdk.ValAddress{}
+	for _, v := range vals {
+		addr, err := sdk.ValAddressFromBech32(v.OperatorAddress)
+		suite.Require().NoError(err)
+		suite.valAddrs = append(suite.valAddrs, addr)
+	}
+	suite.Require().Len(vals, 2)
+
+	valAddrs := []string{
+		suite.valAddrs[0].String(),
+		suite.valAddrs[1].String(),
+	}
+
+	valSet := map[string]*millionstypes.PoolValidator{
+		valAddrs[0]: {
+			OperatorAddress: valAddrs[0],
+			BondedAmount:    sdk.NewInt(0),
+			IsEnabled:       true,
+			Redelegate: &millionstypes.Redelegate{
+				IsGovPropRedelegated: false,
+				ErrorState:           millionstypes.RedelegateState_Unspecified,
+			},
+		},
+		valAddrs[1]: {
+			OperatorAddress: valAddrs[1],
+			BondedAmount:    sdk.NewInt(0),
+			IsEnabled:       true,
+			Redelegate: &millionstypes.Redelegate{
+				IsGovPropRedelegated: false,
+				ErrorState:           millionstypes.RedelegateState_Unspecified,
+			},
+		},
+	}
 
 	// Initialize dummy pool
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
@@ -45,12 +114,11 @@ func (suite *HandlerTestSuite) SetupTest() {
 		ChainId:             "lum-network-devnet",
 		Bech32PrefixValAddr: "lumvaloper",
 		Bech32PrefixAccAddr: "lum",
-		Validators: map[string]*millionstypes.PoolValidator{
-			"lumvaloper16rlynj5wvzwts5lqep0je5q4m3eaepn5cqj38s": {IsEnabled: true, BondedAmount: sdk.NewInt(10), OperatorAddress: "lumvaloper16rlynj5wvzwts5lqep0je5q4m3eaepn5cqj38s"},
-		},
-		MinDepositAmount: sdk.NewInt(1000000),
-		State:            millionstypes.PoolState_Ready,
-		PoolId:           poolID,
+		IcaDepositAddress:   suite.moduleAddrs[0].String(),
+		Validators:          valSet,
+		MinDepositAmount:    sdk.NewInt(1000000),
+		State:               millionstypes.PoolState_Ready,
+		PoolId:              poolID,
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
 				{PoolPercent: 100, Quantity: 1, DrawProbability: sdk.NewDecWithPrec(int64(0.00*1_000_000), 6)},
@@ -62,7 +130,15 @@ func (suite *HandlerTestSuite) SetupTest() {
 		},
 		AvailablePrizePool: sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), math.NewInt(1000)),
 	})
-	suite.pool, _ = app.MillionsKeeper.GetPool(suite.ctx, poolID)
+	suite.pool, _ = app.MillionsKeeper.GetPool(ctx, poolID)
+
+	// Initialize a deposit for redelegation to validators
+	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
+		DepositorAddress: suite.addrs[0].String(),
+		PoolId:           suite.pool.PoolId,
+		Amount:           sdk.NewCoin("ulum", sdk.NewInt(8000000)),
+	})
+	suite.Require().NoError(err)
 }
 
 func (suite *HandlerTestSuite) TestProposal_RegisterPool() {
@@ -343,6 +419,40 @@ func (suite *HandlerTestSuite) TestProposal_UpdateParams() {
 		{
 			"Partial update should be fine",
 			millionstypes.NewUpdateParamsProposal("Test", "Test", nil, nil, nil, nil, nil, nil, nil, nil),
+			false,
+			false,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		suite.Run(tc.name, func() {
+			preError := tc.proposal.ValidateBasic()
+			if tc.expectPreError {
+				suite.Require().Error(preError)
+			} else {
+				suite.Require().NoError(preError)
+			}
+			err := suite.handler(suite.ctx, tc.proposal)
+			if tc.expectPostError {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+			}
+		})
+	}
+}
+
+func (suite *HandlerTestSuite) TestProposal_DisableValidator() {
+	cases := []struct {
+		name            string
+		proposal        govtypesv1beta1.Content
+		expectPreError  bool
+		expectPostError bool
+	}{
+		{
+			"Disable validator with valid params",
+			millionstypes.NewDisableValidatorProposal("Test title", "test description", suite.valAddrs[0].String(), suite.pool.GetPoolId()),
 			false,
 			false,
 		},

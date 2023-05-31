@@ -68,6 +68,10 @@ func NewMillionsProposalHandler(k keeper.Keeper) govtypes.Handler {
 				k.SetParams(ctx, params)
 				return nil
 			}
+		case *types.ProposalDisableValidator:
+			{
+				return k.Redelegate(ctx, c.OperatorAddress, c.PoolId)
+			}
 		default:
 			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized millions proposal content type: %T", c)
 		}

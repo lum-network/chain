@@ -32,6 +32,7 @@ func GetTxCmd() *cobra.Command {
 		CmdTxWithdrawDeposit(),
 		CmdTxWithdrawDepositRetry(),
 		CmdTxRestoreInterchainAccounts(),
+		CmdTxRedelegateRetry(),
 	)
 	return cmd
 }
@@ -363,6 +364,49 @@ func CmdTxRestoreInterchainAccounts() *cobra.Command {
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
+
+			// Generate the transaction
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.MarkFlagRequired(flags.FlagFrom)
+	return cmd
+}
+
+func CmdTxRedelegateRetry() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "redelegate-retry <pool_id> <operatetor_address>",
+		Short: "Retry a failed redelegate",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Retry a redelegate stuck in a faulty state (ex: interchain tx issues).
+
+Example:
+$ %s tx %s redelegate-retry <pool_id> <operator_address>`,
+				version.AppName, types.ModuleName),
+		),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Acquire the client context
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			// Acquire the command arguments
+			poolID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			operatorAddress, err := cmd.Flags().GetString("operator_address")
+			if err != nil {
+				return err
+			}
+
+			// Build the message
+			msg := types.NewMsgRedelegateRetry(clientCtx.GetFromAddress().String(), poolID, operatorAddress)
 
 			// Generate the transaction
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)

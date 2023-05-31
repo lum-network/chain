@@ -361,3 +361,162 @@ func (suite *KeeperTestSuite) TestBlockers_WithdrawalUpdates() {
 	suite.Require().Equal(0, sc)
 	suite.Require().Equal(0, ec)
 }
+
+func (suite *KeeperTestSuite) TestBlockers_RedelegateUpdates() {
+	app := suite.app
+	ctx := suite.ctx.WithBlockHeight(0).WithBlockTime(time.Now().UTC())
+	var now = time.Now().UTC()
+
+	valAddrsRemote := []string{
+		"cosmosvaloper196ax4vc0lwpxndu9dyhvca7jhxp70rmcvrj90c",
+		"cosmosvaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4epsluffn",
+		"cosmosvaloper1fsg635n5vgc7jazz9sx5725wnc3xqgr7awxaag",
+		"cosmosvaloper1gpx52r9h3zeul45amvcy2pysgvcwddxrgx6cnv",
+		"cosmosvaloper1vvwtk805lxehwle9l4yudmq6mn0g32px9xtkhc",
+	}
+
+	valSetRemote := map[string]*millionstypes.PoolValidator{
+		valAddrsRemote[0]: {
+			OperatorAddress: valAddrsRemote[0],
+			BondedAmount:    sdk.NewInt(0),
+			IsEnabled:       true,
+			Redelegate: &millionstypes.Redelegate{
+				IsGovPropRedelegated: true,
+				ErrorState:           millionstypes.RedelegateState_Unspecified,
+				State:                millionstypes.RedelegateState_IcaRedelegate,
+			},
+		},
+		valAddrsRemote[1]: {
+			OperatorAddress: valAddrsRemote[1],
+			BondedAmount:    sdk.NewInt(0),
+			IsEnabled:       true,
+			Redelegate: &millionstypes.Redelegate{
+				IsGovPropRedelegated: true,
+				ErrorState:           millionstypes.RedelegateState_Unspecified,
+				State:                millionstypes.RedelegateState_IcaRedelegate,
+			},
+		},
+		valAddrsRemote[2]: {
+			OperatorAddress: valAddrsRemote[2],
+			BondedAmount:    sdk.NewInt(0),
+			IsEnabled:       true,
+			Redelegate: &millionstypes.Redelegate{
+				IsGovPropRedelegated: true,
+				ErrorState:           millionstypes.RedelegateState_Unspecified,
+				State:                millionstypes.RedelegateState_IcaRedelegate,
+			},
+		},
+		valAddrsRemote[3]: {
+			OperatorAddress: valAddrsRemote[3],
+			BondedAmount:    sdk.NewInt(0),
+			IsEnabled:       true,
+			Redelegate: &millionstypes.Redelegate{
+				IsGovPropRedelegated: true,
+				ErrorState:           millionstypes.RedelegateState_Unspecified,
+				State:                millionstypes.RedelegateState_IcaRedelegate,
+			},
+		},
+		valAddrsRemote[4]: {
+			OperatorAddress: valAddrsRemote[4],
+			BondedAmount:    sdk.NewInt(0),
+			IsEnabled:       true,
+			Redelegate: &millionstypes.Redelegate{
+				IsGovPropRedelegated: true,
+				ErrorState:           millionstypes.RedelegateState_Unspecified,
+				State:                millionstypes.RedelegateState_IcaRedelegate,
+			},
+		},
+	}
+
+	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
+		PoolId:              1,
+		Bech32PrefixValAddr: "cosmosvaloper",
+		ChainId:             "cosmos",
+		Denom:               "uatom",
+		NativeDenom:         "uatom",
+		ConnectionId:        "connection-id",
+		TransferChannelId:   "transferChannel-id",
+		Validators:          valSetRemote,
+		IcaDepositAddress:   cosmosIcaDepositAddress,
+		IcaPrizepoolAddress: cosmosIcaPrizePoolAddress,
+		State:               millionstypes.PoolState_Ready,
+	}))
+
+	pool, err := app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+
+	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
+		DepositId:        1,
+		PoolId:           1,
+		State:            millionstypes.DepositState_IcaDelegate,
+		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(5_000_000)),
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[0].String(),
+	})
+
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+
+	deposit, err := app.MillionsKeeper.GetPoolDeposit(ctx, uint64(1), uint64(1))
+	suite.Require().NoError(err)
+
+	splits := pool.ComputeSplitDelegations(ctx, deposit.Amount.Amount)
+	suite.Require().Len(splits, 5)
+
+	// Simulate successful delegation
+	err = app.MillionsKeeper.OnDelegateDepositOnNativeChainCompleted(ctx, pool.PoolId, deposit.DepositId, splits, false)
+	suite.Require().NoError(err)
+
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+
+	// simulate that the pool got updated with disabled validator
+	bondedDisabledAmount := pool.Validators[valAddrsRemote[0]].BondedAmount
+	// Disable the target validator
+	pool.Validators[valAddrsRemote[0]].Redelegate.IsGovPropRedelegated = true
+	pool.Validators[valAddrsRemote[0]].IsEnabled = false
+
+	splits = pool.ComputeSplitDelegations(ctx, bondedDisabledAmount)
+	suite.Require().Len(splits, 4)
+
+	// 3 validators should be added to the queue
+	redelegationEndsAt := ctx.BlockTime().Add(-1 * time.Second)
+	err = app.MillionsKeeper.OnRedelegateOnNativeChainCompleted(ctx, 1, valAddrsRemote[0], splits, &redelegationEndsAt, false)
+	suite.Require().NoError(err)
+	err = app.MillionsKeeper.OnRedelegateOnNativeChainCompleted(ctx, 1, valAddrsRemote[1], splits, &redelegationEndsAt, false)
+	suite.Require().NoError(err)
+	err = app.MillionsKeeper.OnRedelegateOnNativeChainCompleted(ctx, 1, valAddrsRemote[2], splits, &redelegationEndsAt, false)
+	suite.Require().NoError(err)
+
+	ctx = ctx.WithBlockTime(now.Add(time.Second))
+	sc, ec := app.MillionsKeeper.BlockRedelegateUpdates(ctx)
+	suite.Require().Equal(3, sc)
+	suite.Require().Equal(0, ec)
+
+	// 4th validator added and the 5th will not be considered as failed
+	redelegationEndsAt = ctx.BlockTime().Add(2 * time.Second)
+	ctx = ctx.WithBlockTime(now.Add(time.Second))
+	err = app.MillionsKeeper.OnRedelegateOnNativeChainCompleted(ctx, 1, valAddrsRemote[3], splits, &redelegationEndsAt, false)
+	suite.Require().NoError(err)
+	err = app.MillionsKeeper.OnRedelegateOnNativeChainCompleted(ctx, 1, valAddrsRemote[4], splits, &redelegationEndsAt, true)
+	suite.Require().NoError(err)
+
+	ctx = ctx.WithBlockTime(now.Add(4 * time.Second))
+	sc, ec = app.MillionsKeeper.BlockRedelegateUpdates(ctx)
+	suite.Require().Equal(1, sc)
+	suite.Require().Equal(0, ec)
+
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+
+	suite.Require().Equal(millionstypes.RedelegateState_Success, pool.Validators[valAddrsRemote[0]].Redelegate.State)
+	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[valAddrsRemote[0]].Redelegate.ErrorState)
+	suite.Require().Equal(millionstypes.RedelegateState_Success, pool.Validators[valAddrsRemote[1]].Redelegate.State)
+	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[valAddrsRemote[1]].Redelegate.ErrorState)
+	suite.Require().Equal(millionstypes.RedelegateState_Success, pool.Validators[valAddrsRemote[2]].Redelegate.State)
+	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[valAddrsRemote[2]].Redelegate.ErrorState)
+	suite.Require().Equal(millionstypes.RedelegateState_Success, pool.Validators[valAddrsRemote[3]].Redelegate.State)
+	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[valAddrsRemote[3]].Redelegate.ErrorState)
+	suite.Require().Equal(millionstypes.RedelegateState_Failure, pool.Validators[valAddrsRemote[4]].Redelegate.State)
+	suite.Require().Equal(millionstypes.RedelegateState_IcaRedelegate, pool.Validators[valAddrsRemote[4]].Redelegate.ErrorState)
+}

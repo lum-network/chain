@@ -22,8 +22,8 @@ func (suite *KeeperTestSuite) TestCallbacks_Redelegates() {
 
 	// Construct our callback data
 	callbackData := millionstypes.RedelegateCallback{
-		PoolId:          pool.GetPoolId(),
-		SplitDelegation: splits[0],
+		PoolId:           pool.GetPoolId(),
+		SplitDelegations: splits,
 	}
 
 	// Serialize our callback
@@ -51,6 +51,6 @@ func (suite *KeeperTestSuite) TestCallbacks_Redelegates() {
 
 	// Make sure it matches
 	suite.Require().Equal(callbackData.PoolId, unmarshalledCallbackData.PoolId)
-	suite.Require().Equal(callbackData.SplitDelegation.ValidatorAddress, unmarshalledCallbackData.SplitDelegation.ValidatorAddress)
-	suite.Require().Equal(callbackData.SplitDelegation.Amount.Int64(), unmarshalledCallbackData.SplitDelegation.Amount.Int64())
+	suite.Require().Equal(callbackData.SplitDelegations[0].ValidatorAddress, unmarshalledCallbackData.SplitDelegations[0].ValidatorAddress)
+	suite.Require().Equal(callbackData.SplitDelegations[0].Amount.Int64(), unmarshalledCallbackData.SplitDelegations[0].Amount.Int64())
 }

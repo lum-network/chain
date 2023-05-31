@@ -2,9 +2,11 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	icacallbackstypes "github.com/lum-network/chain/x/icacallbacks/types"
 
@@ -31,6 +33,29 @@ func (k Keeper) UnmarshalRedelegateCallbackArgs(ctx sdk.Context, redelegateCallb
 	return &unmarshalledRedelegateCallback, nil
 }
 
+// Get the latest completion time across each MsgBeginRedelegate in the ICA transaction
+func (k Keeper) GetLatestRedelegationCompletionTime(ctx sdk.Context, msgResponses [][]byte) (*time.Time, error) {
+	// Update the completion time using the latest completion time across each message within the transaction
+	latestCompletionTime := time.Time{}
+
+	for _, msgResponse := range msgResponses {
+		// unmarshall the ack response into a MsgBeginRedelegateResponse and grab the completion time
+		var beginRedelegateResponse stakingtypes.MsgBeginRedelegateResponse
+		err := k.cdc.Unmarshal(msgResponse, &beginRedelegateResponse)
+		if err != nil {
+			return nil, errorsmod.Wrapf(types.ErrUnmarshalFailure, "Unable to unmarshal redelegation tx response: %s", err.Error())
+		}
+		if beginRedelegateResponse.CompletionTime.After(latestCompletionTime) {
+			latestCompletionTime = beginRedelegateResponse.CompletionTime
+		}
+	}
+
+	if latestCompletionTime.IsZero() {
+		return nil, errorsmod.Wrapf(types.ErrInvalidPacketCompletionTime, "Invalid completion time (%s) from txMsg", latestCompletionTime.String())
+	}
+	return &latestCompletionTime, nil
+}
+
 func RedelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
 	// Deserialize the callback args
 	redelegateCallback, err := k.UnmarshalRedelegateCallbackArgs(ctx, args)
@@ -50,8 +75,14 @@ func RedelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, a
 		k.Logger(ctx).Debug("Received timeout for a redelegate packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
 		k.Logger(ctx).Debug("Received failure for a redelegate packet")
+		return k.OnRedelegateOnNativeChainCompleted(ctx, redelegateCallback.GetPoolId(), redelegateCallback.GetOperatorAddress(), redelegateCallback.GetSplitDelegations(), nil, true)
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
 		k.Logger(ctx).Debug("Received success for a redelegate packet")
+		redelegationEndsAt, err := k.GetLatestRedelegationCompletionTime(ctx, ackResponse.MsgResponses)
+		if err != nil {
+			return err
+		}
+		return k.OnRedelegateOnNativeChainCompleted(ctx, redelegateCallback.GetPoolId(), redelegateCallback.GetOperatorAddress(), redelegateCallback.GetSplitDelegations(), redelegationEndsAt, false)
 	}
 	return nil
 }

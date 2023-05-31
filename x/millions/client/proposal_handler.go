@@ -6,7 +6,8 @@ import (
 )
 
 var (
-	RegisterPoolProposalHandler = govclient.NewProposalHandler(cli.CmdProposalRegisterPool)
-	UpdatePoolProposalHandler   = govclient.NewProposalHandler(cli.CmdProposalUpdatePool)
-	UpdateParamsProposalHandler = govclient.NewProposalHandler(cli.CmdProposalUpdateParams)
+	RegisterPoolProposalHandler     = govclient.NewProposalHandler(cli.CmdProposalRegisterPool)
+	UpdatePoolProposalHandler       = govclient.NewProposalHandler(cli.CmdProposalUpdatePool)
+	UpdateParamsProposalHandler     = govclient.NewProposalHandler(cli.CmdProposalUpdateParams)
+	DisableValidatorProposalHandler = govclient.NewProposalHandler(cli.CmdProposalDisableValidator)
 )

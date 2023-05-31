@@ -218,3 +218,16 @@ func (p *Pool) ApplySplitUndelegate(ctx sdk.Context, splits []*SplitDelegation) 
 		}
 	}
 }
+
+func (p *Pool) ApplySplitRedelegate(ctx sdk.Context, splits []*SplitDelegation, operatorAddress string) {
+	for _, split := range splits {
+		// Add the split amount to the active validator's bonded amount
+		p.Validators[split.ValidatorAddress].BondedAmount = p.Validators[split.ValidatorAddress].BondedAmount.Add(split.Amount)
+
+		// Substract from the disabled validator
+		p.Validators[operatorAddress].BondedAmount = p.Validators[operatorAddress].BondedAmount.Sub(split.Amount)
+		if p.Validators[operatorAddress].BondedAmount.LT(sdk.ZeroInt()) {
+			panic(ErrPoolInvalidSplit)
+		}
+	}
+}
