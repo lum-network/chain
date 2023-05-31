@@ -102,19 +102,19 @@ func TestAirdropExportGenesis(t *testing.T) {
 		ActionCompleted: []bool{false, false},
 	})
 
-	claimableFreeAmount, claimableVestedAmount, err := app.AirdropKeeper.GetClaimableAmountForAction(ctx, acc1, types.ActionVote)
+	claimableFreeAmount, claimableVestedAmount, err := app.AirdropKeeper.GetClaimableAmountForAction(ctx, acc1, types.ACTION_VOTE)
 	require.NoError(t, err)
 	require.Equal(t, claimableFreeAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 500))
 	require.Equal(t, claimableVestedAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 2_500))
 
 	app.AirdropKeeper.AfterProposalVote(ctx, 12, acc1)
 
-	claimableFreeAmount, claimableVestedAmount, err = app.AirdropKeeper.GetClaimableAmountForAction(ctx, acc1, types.ActionVote)
+	claimableFreeAmount, claimableVestedAmount, err = app.AirdropKeeper.GetClaimableAmountForAction(ctx, acc1, types.ACTION_VOTE)
 	require.NoError(t, err)
 	require.Equal(t, claimableFreeAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 0))
 	require.Equal(t, claimableVestedAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 0))
 
-	claimableFreeAmount, claimableVestedAmount, err = app.AirdropKeeper.GetClaimableAmountForAction(ctx, acc1, types.ActionDelegateStake)
+	claimableFreeAmount, claimableVestedAmount, err = app.AirdropKeeper.GetClaimableAmountForAction(ctx, acc1, types.ACTION_DELEGATE_STAKE)
 	require.NoError(t, err)
 	require.Equal(t, claimableFreeAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 500))
 	require.Equal(t, claimableVestedAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 2_500))

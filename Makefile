@@ -3,8 +3,11 @@ PACKAGES=$(shell go list ./... | grep -v '/simulation')
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 
-LEDGER_ENABLED ?= true
+BUILDDIR ?= $(CURDIR)/build
+DOCKER := $(shell which docker)
+DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf:1.7.0
 
+LEDGER_ENABLED ?= true
 ifeq ($(LEDGER_ENABLED),true)
   ifeq ($(OS),Windows_NT)
     GCCEXE = $(shell where gcc.exe 2> NUL)
@@ -44,21 +47,66 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=lum \
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 
-all: install
+### Base commands
+
+.PHONY: build
+
+build:
+	@echo "--> Building lumd"
+	@mkdir -p $(BUILDDIR)/
+	@go build -mod=readonly $(BUILD_FLAGS) -trimpath -o $(BUILDDIR) ./...;
+
+install: go.sum
+	@echo "--> Installing lumd"
+	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/lumd
+
+clean:
+	@echo "--> Cleaning ${BUILDDIR}"
+	@rm -rf $(BUILDDIR)/*
+
+### Dev commends
 
 format:
 	@gofmt -w .
 
+### CI commands
+
+sec:
+	@gosec -severity=high ./...
+
 lint:
 	@golangci-lint run --skip-dirs='(x/beam|x/dfract)'
 
-install: go.sum
-		@echo "--> Installing lumd"
-		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/lumd
+test:
+	@go test -mod=readonly ./x/... ./app/...
+
+### Proto commands
+
+containerProtoVer=0.13.0
+containerProtoImage=ghcr.io/cosmos/proto-builder:$(containerProtoVer)
+
+proto-all: proto-format proto-lint proto-gen
+
+proto-gen:
+	@echo "--> Generating Protobuf files"
+	@$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
+		sh ./scripts/protocgen.sh; 
+
+proto-format:
+	@echo "--> Formatting Protobuf files"
+	@$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
+		find ./proto -name "*.proto" -exec clang-format -i {} \;  
+
+proto-lint:
+	@echo "--> Linting Protobuf files"
+	@$(DOCKER_BUF) lint --error-format=text
+
+proto-check-breaking:
+	@echo "$(HTTPS_GIT)"
+	@$(DOCKER_BUF) breaking --against "https://github.com/lum-network/chain.git#branch=master"
+
+### Other commands
 
 go.sum: go.mod
-		@echo "--> Ensure dependencies have not been modified"
-		GO111MODULE=on go mod verify
-
-test:
-	@go test -mod=readonly $(PACKAGES)
+	@echo "--> Ensure dependencies have not been modified"
+	GO111MODULE=on go mod verify

@@ -117,7 +117,7 @@ func (suite *KeeperTestSuite) TestHookBeforeAirdropStart() {
 	suite.True(cfc.IsZero())
 	suite.True(cvc.IsZero())
 
-	cfc, cvc, err = suite.app.AirdropKeeper.GetClaimableAmountForAction(suite.ctx, addr1, types.ActionVote)
+	cfc, cvc, err = suite.app.AirdropKeeper.GetClaimableAmountForAction(suite.ctx, addr1, types.ACTION_VOTE)
 	suite.NoError(err)
 	// Now, it is before starting air drop, so this value should return the empty coins
 	suite.True(cfc.IsZero())
@@ -129,7 +129,7 @@ func (suite *KeeperTestSuite) TestHookBeforeAirdropStart() {
 	suite.True(balances.Empty())
 
 	// After the airdrop
-	cfc, cvc, err = suite.app.AirdropKeeper.GetClaimableAmountForAction(suite.ctx.WithBlockTime(airdropStartTime), addr1, types.ActionVote)
+	cfc, cvc, err = suite.app.AirdropKeeper.GetClaimableAmountForAction(suite.ctx.WithBlockTime(airdropStartTime), addr1, types.ACTION_VOTE)
 	suite.NoError(err)
 	suite.Equal(claimRecords[0].InitialClaimableAmount[0].Amount.QuoRaw(int64(len(claimRecords[0].ActionCompleted))), cfc.Amount)
 	suite.Equal(claimRecords[0].InitialClaimableAmount[1].Amount.QuoRaw(int64(len(claimRecords[0].ActionCompleted))), cvc.Amount)
@@ -222,7 +222,7 @@ func (suite *KeeperTestSuite) TestDuplicatedAction() {
 	suite.app.AirdropKeeper.AfterProposalVote(suite.ctx, 12, addr1)
 	claim, err := suite.app.AirdropKeeper.GetClaimRecord(suite.ctx, addr1)
 	suite.NoError(err)
-	suite.True(claim.ActionCompleted[types.ActionVote])
+	suite.True(claim.ActionCompleted[types.ACTION_VOTE])
 	claimedCoins := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
 	suite.Equal(claimedCoins.AmountOf(defaultClaimDenom), claimRecords[0].InitialClaimableAmount[0].Amount.QuoRaw(int64(len(claimRecords[0].ActionCompleted))).Add(claimRecords[0].InitialClaimableAmount[1].Amount.QuoRaw(int64(len(claimRecords[0].ActionCompleted)))))
 	acc := suite.app.AccountKeeper.GetAccount(suite.ctx, addr1)
@@ -234,7 +234,7 @@ func (suite *KeeperTestSuite) TestDuplicatedAction() {
 	suite.app.AirdropKeeper.AfterProposalVote(suite.ctx, 12, addr1)
 	claim, err = suite.app.AirdropKeeper.GetClaimRecord(suite.ctx, addr1)
 	suite.NoError(err)
-	suite.True(claim.ActionCompleted[types.ActionVote])
+	suite.True(claim.ActionCompleted[types.ACTION_VOTE])
 	claimedCoins = suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
 	suite.Equal(claimedCoins.AmountOf(defaultClaimDenom), claimRecords[0].InitialClaimableAmount[0].Amount.QuoRaw(int64(len(claimRecords[0].ActionCompleted))).Add(claimRecords[0].InitialClaimableAmount[1].Amount.QuoRaw(int64(len(claimRecords[0].ActionCompleted)))))
 	acc = suite.app.AccountKeeper.GetAccount(suite.ctx, addr1)
@@ -378,7 +378,7 @@ func (suite *KeeperTestSuite) TestAirdropFlow() {
 	suite.Require().True(cvc.IsZero())
 
 	// get rewards amount per action
-	cfc, cvc, err = suite.app.AirdropKeeper.GetClaimableAmountForAction(suite.ctx, addr1, types.ActionDelegateStake)
+	cfc, cvc, err = suite.app.AirdropKeeper.GetClaimableAmountForAction(suite.ctx, addr1, types.ACTION_DELEGATE_STAKE)
 	suite.Require().NoError(err)
 	suite.Require().Equal(cfc.Amount, claimRecords[0].InitialClaimableAmount[0].Amount.Quo(sdk.NewInt(int64(len(claimRecords[0].ActionCompleted)))), cfc.String())
 	suite.Require().Equal(cvc.Amount, claimRecords[0].InitialClaimableAmount[1].Amount.Quo(sdk.NewInt(int64(len(claimRecords[0].ActionCompleted)))), cfc.String())
@@ -398,10 +398,10 @@ func (suite *KeeperTestSuite) TestAirdropFlow() {
 	// check that half are completed
 	claimRecord, err = suite.app.AirdropKeeper.GetClaimRecord(suite.ctx, addr1)
 	suite.Require().NoError(err)
-	suite.Require().True(claimRecord.ActionCompleted[types.ActionVote])
+	suite.Require().True(claimRecord.ActionCompleted[types.ACTION_VOTE])
 	claimRecord, err = suite.app.AirdropKeeper.GetClaimRecord(suite.ctx, addr2)
 	suite.Require().NoError(err)
-	suite.Require().True(claimRecord.ActionCompleted[types.ActionDelegateStake])
+	suite.Require().True(claimRecord.ActionCompleted[types.ACTION_DELEGATE_STAKE])
 	claimRecord, err = suite.app.AirdropKeeper.GetClaimRecord(suite.ctx, addr3)
 	suite.Require().NoError(err)
 	suite.Require().Empty(claimRecord.ActionCompleted)
@@ -432,15 +432,15 @@ func (suite *KeeperTestSuite) TestAirdropFlow() {
 	suite.Equal(sdk.Coins{}.String(), vestingAcc3.OriginalVesting.String())
 
 	// check that claimable for completed activity is 0
-	cfc, cvc, err = suite.app.AirdropKeeper.GetClaimableAmountForAction(suite.ctx, addr1, types.ActionVote)
+	cfc, cvc, err = suite.app.AirdropKeeper.GetClaimableAmountForAction(suite.ctx, addr1, types.ACTION_VOTE)
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewInt64Coin(defaultClaimDenom, 0).String(), cfc.String())
 	suite.Require().Equal(sdk.NewInt64Coin(defaultClaimDenom, 0).String(), cvc.String())
-	cfc, cvc, err = suite.app.AirdropKeeper.GetClaimableAmountForAction(suite.ctx, addr2, types.ActionDelegateStake)
+	cfc, cvc, err = suite.app.AirdropKeeper.GetClaimableAmountForAction(suite.ctx, addr2, types.ACTION_DELEGATE_STAKE)
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewInt64Coin(defaultClaimDenom, 0).String(), cfc.String())
 	suite.Require().Equal(sdk.NewInt64Coin(defaultClaimDenom, 0).String(), cvc.String())
-	cfc, cvc, err = suite.app.AirdropKeeper.GetClaimableAmountForAction(suite.ctx, addr3, types.ActionDelegateStake)
+	cfc, cvc, err = suite.app.AirdropKeeper.GetClaimableAmountForAction(suite.ctx, addr3, types.ACTION_DELEGATE_STAKE)
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewInt64Coin(defaultClaimDenom, 0).String(), cfc.String())
 	suite.Require().Equal(sdk.NewInt64Coin(defaultClaimDenom, 0).String(), cvc.String())
