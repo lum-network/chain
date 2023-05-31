@@ -81,7 +81,6 @@ func SetupForTesting(isCheckTx bool) *App {
 
 		app.InitChain(
 			abci.RequestInitChain{
-				ChainId:         "lum-network-devnet",
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: simtestutil.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
