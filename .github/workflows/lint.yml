@@ -19,8 +19,3 @@ jobs:
         with:
           version: latest
           args: --timeout 10m --skip-dirs='(x/beam|x/dfract)'
-
-      - name: Run make lint
-        run: |
-          bash ./scripts/install_tools.sh
-          make lint
