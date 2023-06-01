@@ -6,6 +6,7 @@ COMMIT := $(shell git log -1 --format='%H')
 BUILDDIR ?= $(CURDIR)/build
 DOCKER := $(shell which docker)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf:1.7.0
+HTTPS_GIT := https://github.com/lum-network/chain.git#branch=master
 
 LEDGER_ENABLED ?= true
 ifeq ($(LEDGER_ENABLED),true)
@@ -67,6 +68,8 @@ clean:
 ### Dev commends
 
 format:
+	@echo "--> Formating code and ordering imports"
+	@goimports -local github.com/lum-network -w .
 	@gofmt -w .
 
 ### CI commands
@@ -77,6 +80,26 @@ sec:
 lint:
 	@golangci-lint run --skip-dirs='(x/beam|x/dfract)'
 
+format-check:
+	@echo "--> Checking formatting issues"
+	@output=$$(gofmt -l .); \
+	if [ -z "$$output" ]; then \
+		echo "No formatting issues found"; \
+	else \
+		echo "Formatting issues found in files:"; \
+		echo "$$output"; \
+		exit 1; \
+	fi
+	@echo "--> Checking import ordering issues"
+	@output=$$(goimports -local github.com/lum-network -l .); \
+	if [ -z "$$output" ]; then \
+		echo "No import ordering issues found"; \
+	else \
+		echo "Import ordering issues found in file:"; \
+		echo "$$output"; \
+		exit 1; \
+	fi
+
 test:
 	@go test -mod=readonly ./x/... ./app/...
 
@@ -85,17 +108,17 @@ test:
 containerProtoVer=0.13.0
 containerProtoImage=ghcr.io/cosmos/proto-builder:$(containerProtoVer)
 
-proto-all: proto-format proto-lint proto-gen
+proto-all: proto-format proto-lint proto-gen format
 
 proto-gen:
 	@echo "--> Generating Protobuf files"
 	@$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
-		sh ./scripts/protocgen.sh; 
+		sh ./scripts/protocgen.sh;
 
 proto-format:
 	@echo "--> Formatting Protobuf files"
 	@$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
-		find ./proto -name "*.proto" -exec clang-format -i {} \;  
+		find ./proto -name "*.proto" -exec clang-format -i {} \;
 
 proto-lint:
 	@echo "--> Linting Protobuf files"
@@ -103,7 +126,7 @@ proto-lint:
 
 proto-check-breaking:
 	@echo "$(HTTPS_GIT)"
-	@$(DOCKER_BUF) breaking --against "https://github.com/lum-network/chain.git#branch=master"
+	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)
 
 ### Other commands
 
