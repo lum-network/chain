@@ -1,16 +1,14 @@
 package keeper
 
 import (
-	"fmt"
-	"strconv"
-	"time"
-
 	"cosmossdk.io/math"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distribtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
+	"strconv"
 
 	gogotypes "github.com/gogo/protobuf/types"
 
@@ -553,9 +551,9 @@ func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint
 		return nil, nil, types.ErrPoolNotReady
 	}
 
-	// Timeout is now plus 5 minutes in nanoseconds
+	// Timeout is now plus 30 minutes in nanoseconds
 	// We use the standard transfer port ID and not the one opened for ICA
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano() + 5*time.Minute.Nanoseconds())
+	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
 	msg := ibctypes.NewMsgTransfer(ibctypes.PortID, pool.GetTransferChannelId(), amount, pool.GetLocalAddress(), pool.GetIcaDepositAddress(), clienttypes.Height{}, timeoutTimestamp)
 
 	// Broadcast the transfer
@@ -658,9 +656,9 @@ func (k Keeper) QueryBalance(ctx sdk.Context, poolID uint64, drawID uint64) (*ty
 		panic(err)
 	}
 
-	// Construct the query data and timeout timestamp (now + 5 minutes)
+	// Construct the query data and timeout timestamp (now + 30 minutes)
 	queryData := append(banktypes.CreateAccountBalancesPrefix(icaAddressBz), []byte(pool.GetNativeDenom())...)
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano() + 5*time.Minute.Nanoseconds())
+	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
 
 	// Submit the ICQ
 	extraId := types.CombineStringKeys(strconv.FormatUint(poolID, 10), strconv.FormatUint(drawID, 10))
