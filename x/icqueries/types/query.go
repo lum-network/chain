@@ -1,8 +1,9 @@
 package types
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"strings"
+
+	errorsmod "cosmossdk.io/errors"
 )
 
 func (query *Query) ValidateBasic() error {

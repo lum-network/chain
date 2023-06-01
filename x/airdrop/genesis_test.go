@@ -9,11 +9,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+
 	apptypes "github.com/lum-network/chain/app"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/lum-network/chain/x/airdrop"
 	"github.com/lum-network/chain/x/airdrop/types"
-	"github.com/stretchr/testify/require"
 )
 
 var now = time.Now().UTC()

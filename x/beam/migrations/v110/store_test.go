@@ -1,16 +1,18 @@
 package v110_test
 
 import (
+	"testing"
+
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	apptypes "github.com/lum-network/chain/app"
 	"github.com/lum-network/chain/utils"
 	v110 "github.com/lum-network/chain/x/beam/migrations/v110"
 	"github.com/lum-network/chain/x/beam/types"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type StoreMigrationTestSuite struct {

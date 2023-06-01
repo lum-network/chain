@@ -8,8 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/spf13/cobra"
+
+	"github.com/lum-network/chain/x/dfract/types"
 )
 
 func NewSubmitWithdrawAndMintProposal() *cobra.Command {

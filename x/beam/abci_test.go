@@ -12,6 +12,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	apptypes "github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
 

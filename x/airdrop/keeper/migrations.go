@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	v104 "github.com/lum-network/chain/x/airdrop/migrations/v104"
 )
 

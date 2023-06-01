@@ -6,10 +6,11 @@ import (
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
+
 	apptypes "github.com/lum-network/chain/app"
 	"github.com/lum-network/chain/x/dfract"
 	"github.com/lum-network/chain/x/dfract/types"
-	"github.com/stretchr/testify/require"
 )
 
 var now = time.Now().UTC()

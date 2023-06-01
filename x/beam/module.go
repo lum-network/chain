@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
+
 	"github.com/lum-network/chain/x/beam/client/cli"
 	"github.com/lum-network/chain/x/beam/keeper"
 	"github.com/lum-network/chain/x/beam/migrations"

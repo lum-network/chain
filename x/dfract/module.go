@@ -13,11 +13,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+
 	"github.com/lum-network/chain/x/dfract/client/cli"
 	"github.com/lum-network/chain/x/dfract/client/rest"
 	"github.com/lum-network/chain/x/dfract/keeper"
 	"github.com/lum-network/chain/x/dfract/types"
-	"github.com/spf13/cobra"
 )
 
 var (

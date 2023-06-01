@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	apptypes "github.com/lum-network/chain/app"
 
 	"github.com/stretchr/testify/require"
