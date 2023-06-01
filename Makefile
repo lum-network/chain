@@ -109,7 +109,7 @@ test:
 containerProtoVer=0.13.0
 containerProtoImage=ghcr.io/cosmos/proto-builder:$(containerProtoVer)
 
-proto-all: proto-format proto-lint proto-gen format
+proto-all: proto-format proto-lint proto-gen proto-format-gencode
 
 proto-gen:
 	@echo "--> Generating Protobuf files"
@@ -120,6 +120,11 @@ proto-format:
 	@echo "--> Formatting Protobuf files"
 	@$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
 		find ./proto -name "*.proto" -exec clang-format -i {} \;
+
+proto-format-gencode:
+	@echo "--> Formatting Proto generated files"
+	@goimports -local github.com/lum-network -w $$(find . -type f \( -iname \*.pb.go -o -iname \*.gw.go \))
+	@gofmt -w $$(find . -type f \( -iname \*.pb.go -o -iname \*.gw.go \))
 
 proto-lint:
 	@echo "--> Linting Protobuf files"
