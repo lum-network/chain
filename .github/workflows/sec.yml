@@ -1,12 +1,12 @@
-name: Check linting
+name: Check security
 
 on:
   pull_request:
   workflow_dispatch:
 
 jobs:
-  lintcheck:
-    name: Run linter check
+  seccheck:
+    name: Run security check
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -22,7 +22,7 @@ jobs:
         with:
           fetch-depth: '0'
 
-      - name: Run make lint
+      - name: Run make sec
         run: |
           bash ./scripts/install_tools.sh
-          make lint
+          make sec
