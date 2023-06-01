@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	"time"
 
 	gogotypes "github.com/gogo/protobuf/types"
@@ -204,6 +205,13 @@ func (k Keeper) TransferWithdrawalToLocalChain(ctx sdk.Context, poolID uint64, w
 		return err
 	}
 
+	// We start by acquiring the counterparty channel id
+	transferChannel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, ibctypes.PortID, pool.GetTransferChannelId())
+	if !found {
+		return errorsmod.Wrapf(channeltypes.ErrChannelNotFound, "transfer channel %s not found", pool.GetTransferChannelId())
+	}
+	counterpartyChannelId := transferChannel.Counterparty.ChannelId
+
 	// Converts the local ibc Denom into the native chain Denom
 	amount := sdk.NewCoin(pool.NativeDenom, withdrawal.Amount.Amount)
 	// Build transfer tx
@@ -211,7 +219,7 @@ func (k Keeper) TransferWithdrawalToLocalChain(ctx sdk.Context, poolID uint64, w
 	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
 	msgs = append(msgs, ibctypes.NewMsgTransfer(
 		ibctypes.PortID,
-		pool.GetTransferChannelId(),
+		counterpartyChannelId,
 		amount,
 		pool.GetIcaDepositAddress(),
 		withdrawal.GetToAddress(),
