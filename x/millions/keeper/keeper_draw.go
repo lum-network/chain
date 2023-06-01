@@ -319,7 +319,7 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 	// Build our array of messages
 	var msgs []sdk.Msg
 	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
-	// From Remote to Local - use counterparty transfer  channel ID
+	// From Remote to Local - use counterparty transfer channel ID
 	msgs = append(msgs, ibctransfertypes.NewMsgTransfer(
 		ibctransfertypes.PortID,
 		counterpartyChannelId,
