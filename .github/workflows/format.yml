@@ -1,12 +1,12 @@
-name: Run unit tests
+name: Check formatting and import ordering
 
 on:
   pull_request:
   workflow_dispatch:
 
 jobs:
-  test:
-    name: Run unit tests
+  formatcheck:
+    name: Run format check
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -22,6 +22,7 @@ jobs:
         with:
           fetch-depth: '0'
 
-      - name: Run the test suite
+      - name: Run make format-check
         run: |
-          make test
+          bash ./scripts/install_tools.sh
+          make format-check

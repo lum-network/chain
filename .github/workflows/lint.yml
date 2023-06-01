@@ -1,4 +1,4 @@
-name: Lint
+name: Check linting
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   golangci:
-    name: golangci-lint
+    name: Run golangci lint
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

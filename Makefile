@@ -82,23 +82,24 @@ lint:
 
 format-check:
 	@echo "--> Checking formatting issues"
-	@output=$$(gofmt -l .); \
-	if [ -z "$$output" ]; then \
+	@format_output=$$(gofmt -l .); \
+	if [ -z "$$format_output" ]; then \
 		echo "No formatting issues found"; \
 	else \
 		echo "Formatting issues found in files:"; \
-		echo "$$output"; \
-		exit 1; \
-	fi
-	@echo "--> Checking import ordering issues"
-	@output=$$(goimports -local github.com/lum-network -l .); \
-	if [ -z "$$output" ]; then \
+		echo "$$format_output"; \
+		exit_code=1; \
+	fi; \
+	echo "--> Checking import ordering issues"; \
+	import_output=$$(goimports -local github.com/lum-network -l .); \
+	if [ -z "$$import_output" ]; then \
 		echo "No import ordering issues found"; \
 	else \
-		echo "Import ordering issues found in file:"; \
-		echo "$$output"; \
-		exit 1; \
-	fi
+		echo "Import ordering issues found in files:"; \
+		echo "$$import_output"; \
+		exit_code=1; \
+	fi; \
+	exit $$exit_code
 
 test:
 	@go test -mod=readonly ./x/... ./app/...
