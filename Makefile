@@ -75,7 +75,7 @@ format:
 ### CI commands
 
 sec:
-	@gosec -severity=high -exclude=G404 ./...
+	@gosec -severity=high ./...
 
 lint:
 	@golangci-lint run --skip-dirs='(x/beam|x/dfract)'
