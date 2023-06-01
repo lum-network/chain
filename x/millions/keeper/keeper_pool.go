@@ -1,14 +1,15 @@
 package keeper
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
+	"strconv"
+
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distribtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
-	"strconv"
 
 	gogotypes "github.com/gogo/protobuf/types"
 
@@ -554,7 +555,16 @@ func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint
 	// Timeout is now plus 30 minutes in nanoseconds
 	// We use the standard transfer port ID and not the one opened for ICA
 	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
-	msg := ibctypes.NewMsgTransfer(ibctypes.PortID, pool.GetTransferChannelId(), amount, pool.GetLocalAddress(), pool.GetIcaDepositAddress(), clienttypes.Height{}, timeoutTimestamp)
+	// From Local to Remote - use transfer channel ID
+	msg := ibctypes.NewMsgTransfer(
+		ibctypes.PortID,
+		pool.GetTransferChannelId(),
+		amount,
+		pool.GetLocalAddress(),
+		pool.GetIcaDepositAddress(),
+		clienttypes.Height{},
+		timeoutTimestamp,
+	)
 
 	// Broadcast the transfer
 	msgResponse, err := k.IBCTransferKeeper.Transfer(ctx, msg)

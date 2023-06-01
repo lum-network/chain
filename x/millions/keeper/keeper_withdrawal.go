@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	"time"
 
 	gogotypes "github.com/gogo/protobuf/types"
@@ -12,6 +11,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 
 	"github.com/lum-network/chain/x/millions/types"
 )
@@ -217,6 +217,7 @@ func (k Keeper) TransferWithdrawalToLocalChain(ctx sdk.Context, poolID uint64, w
 	// Build transfer tx
 	var msgs []sdk.Msg
 	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
+	// From Remote to Local - use counterparty transfer  channel ID
 	msgs = append(msgs, ibctypes.NewMsgTransfer(
 		ibctypes.PortID,
 		counterpartyChannelId,

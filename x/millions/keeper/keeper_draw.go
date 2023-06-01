@@ -3,7 +3,6 @@ package keeper
 import (
 	"crypto/sha256"
 	"fmt"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	"math"
 	"math/rand"
 	"sort"
@@ -16,6 +15,7 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	ibctypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 
 	"github.com/lum-network/chain/x/millions/types"
 )
@@ -319,6 +319,7 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 	// Build our array of messages
 	var msgs []sdk.Msg
 	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
+	// From Remote to Local - use counterparty transfer  channel ID
 	msgs = append(msgs, ibctypes.NewMsgTransfer(
 		ibctypes.PortID,
 		counterpartyChannelId,
