@@ -3,6 +3,7 @@ package keeper
 import (
 	"crypto/sha256"
 	"fmt"
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	"math"
 	"math/rand"
 	"sort"
@@ -288,6 +289,7 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 	// Converts the local ibc Denom into the native chain Denom
 	amount := sdk.NewCoin(pool.NativeDenom, draw.PrizePoolFreshAmount)
 
+	// If pool is local zone, we can synchronously process and return
 	if pool.IsLocalZone(ctx) {
 		// Move coins locally to keep a proper funds segregation
 		if err := k.BankKeeper.SendCoins(
@@ -306,11 +308,20 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 		return k.OnTransferRewardsToLocalChainCompleted(ctx, poolID, drawID, false)
 	}
 
+	// Otherwise, we broadcast an ICA message
+	// We start by acquiring the counterparty channel id
+	transferChannel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, ibctypes.PortID, pool.GetTransferChannelId())
+	if !found {
+		return &draw, errorsmod.Wrapf(channeltypes.ErrChannelNotFound, "transfer channel %s not found", pool.GetTransferChannelId())
+	}
+	counterpartyChannelId := transferChannel.Counterparty.ChannelId
+
+	// Build our array of messages
 	var msgs []sdk.Msg
 	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
 	msgs = append(msgs, ibctypes.NewMsgTransfer(
 		ibctypes.PortID,
-		pool.GetTransferChannelId(),
+		counterpartyChannelId,
 		amount,
 		pool.GetIcaPrizepoolAddress(),
 		pool.GetLocalAddress(),
