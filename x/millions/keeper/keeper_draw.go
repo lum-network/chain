@@ -13,7 +13,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	ibctypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 
@@ -310,7 +310,7 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 
 	// Otherwise, we broadcast an ICA message
 	// We start by acquiring the counterparty channel id
-	transferChannel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, ibctypes.PortID, pool.GetTransferChannelId())
+	transferChannel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, ibctransfertypes.PortID, pool.GetTransferChannelId())
 	if !found {
 		return &draw, errorsmod.Wrapf(channeltypes.ErrChannelNotFound, "transfer channel %s not found", pool.GetTransferChannelId())
 	}
@@ -320,8 +320,8 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 	var msgs []sdk.Msg
 	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
 	// From Remote to Local - use counterparty transfer  channel ID
-	msgs = append(msgs, ibctypes.NewMsgTransfer(
-		ibctypes.PortID,
+	msgs = append(msgs, ibctransfertypes.NewMsgTransfer(
+		ibctransfertypes.PortID,
 		counterpartyChannelId,
 		amount,
 		pool.GetIcaPrizepoolAddress(),

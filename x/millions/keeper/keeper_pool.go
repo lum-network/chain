@@ -17,7 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	ibctypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
@@ -540,7 +540,7 @@ func (k Keeper) ListPoolsToDraw(ctx sdk.Context) (pools []types.Pool) {
 
 // TransferAmountFromPoolToNativeChain Transfer a given amount to the native chain ICA account from the local module account
 // amount denom must be based on pool.Denom
-func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint64, amount sdk.Coin) (*ibctypes.MsgTransfer, *ibctypes.MsgTransferResponse, error) {
+func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint64, amount sdk.Coin) (*ibctransfertypes.MsgTransfer, *ibctransfertypes.MsgTransferResponse, error) {
 	// Acquire our pool instance
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
@@ -556,8 +556,8 @@ func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint
 	// We use the standard transfer port ID and not the one opened for ICA
 	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
 	// From Local to Remote - use transfer channel ID
-	msg := ibctypes.NewMsgTransfer(
-		ibctypes.PortID,
+	msg := ibctransfertypes.NewMsgTransfer(
+		ibctransfertypes.PortID,
 		pool.GetTransferChannelId(),
 		amount,
 		pool.GetLocalAddress(),
