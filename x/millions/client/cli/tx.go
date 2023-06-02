@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
+
 	"github.com/lum-network/chain/x/millions/types"
 )
 
