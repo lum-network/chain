@@ -22,6 +22,11 @@ func (k msgServer) RedelegateRetry(goCtx context.Context, msg *types.MsgRedelega
 		return nil, types.ErrPoolNotFound
 	}
 
+	_, err = sdk.AccAddressFromBech32(msg.RedelegateRetryAddress)
+	if err != nil {
+		return nil, types.ErrInvalidRedelegateRetryAddress
+	}
+
 	validator, found := pool.Validators[msg.GetOperatetorAddress()]
 	if !found {
 		return nil, errorsmod.Wrapf(types.ErrValidatorNotFound, "%s", validator.String())

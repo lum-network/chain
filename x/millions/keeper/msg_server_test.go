@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -936,8 +936,8 @@ func (suite *KeeperTestSuite) TestMsgServer_RedelegateRetry() {
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 
-	pub1 := secp256k1.GenPrivKey().PubKey()
-	pub2 := secp256k1.GenPrivKey().PubKey()
+	pub1 := ed25519.GenPrivKey().PubKey()
+	pub2 := ed25519.GenPrivKey().PubKey()
 	addrs2 := []sdk.AccAddress{sdk.AccAddress(pub1.Address()), sdk.AccAddress(pub2.Address())}
 
 	validator2, err := stakingtypes.NewValidator(sdk.ValAddress(addrs2[0]), pub1, stakingtypes.Description{})
@@ -1009,6 +1009,13 @@ func (suite *KeeperTestSuite) TestMsgServer_RedelegateRetry() {
 		RedelegateRetryAddress: suite.addrs[0].String(),
 	})
 	suite.Require().ErrorIs(err, millionstypes.ErrValidatorNotFound)
+
+	_, err = msgServer.RedelegateRetry(goCtx, &millionstypes.MsgRedelegateRetry{
+		PoolId:                 1,
+		OperatetorAddress:      valAddrs[1],
+		RedelegateRetryAddress: "",
+	})
+	suite.Require().ErrorIs(err, millionstypes.ErrInvalidRedelegateRetryAddress)
 
 	_, err = msgServer.RedelegateRetry(goCtx, &millionstypes.MsgRedelegateRetry{
 		PoolId:                 1,
