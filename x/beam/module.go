@@ -117,7 +117,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 	// Register the migrations
 	migrator := migrations.NewMigrator(am.keeper)
-	cfg.RegisterMigration(types.ModuleName, 1, migrator.Migrate1To2)
+	err := cfg.RegisterMigration(types.ModuleName, 1, migrator.Migrate1To2)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // RegisterInvariants registers the capability module's invariants.

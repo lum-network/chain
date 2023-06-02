@@ -5,7 +5,11 @@ import (
 	"strings"
 
 	"github.com/cometbft/cometbft/libs/log"
+
+	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -13,9 +17,6 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
 	"github.com/lum-network/chain/utils"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/lum-network/chain/x/beam/types"
 )
@@ -187,7 +188,7 @@ func (k Keeper) GetBeam(ctx sdk.Context, key string) (types.Beam, error) {
 	// Acquire the data stream
 	bz := store.Get(types.GetBeamKey(key))
 	if bz == nil {
-		return types.Beam{}, sdkerrors.Wrapf(types.ErrBeamNotFound, "beam not found: %s", key)
+		return types.Beam{}, errorsmod.Wrapf(types.ErrBeamNotFound, "beam not found: %s", key)
 	}
 
 	// Acquire the beam instance and return
@@ -345,7 +346,7 @@ func (k Keeper) UpdateBeamStatus(ctx sdk.Context, beamID string, newStatus types
 		beam.ClosedAt = ctx.BlockTime()
 
 		// Transfer funds only if the beam has been claimed already
-		if beam.GetClaimed() && beam.GetFundsWithdrawn() == false {
+		if beam.GetClaimed() && !beam.GetFundsWithdrawn() {
 			claimerAddress, err := sdk.AccAddressFromBech32(beam.GetClaimAddress())
 			if err != nil {
 				return sdkerrors.ErrInvalidAddress
@@ -362,7 +363,6 @@ func (k Keeper) UpdateBeamStatus(ctx sdk.Context, beamID string, newStatus types
 			k.RemoveFromOpenBeamByBlockQueue(ctx, int(beam.GetClosesAtBlock()), beam.GetId())
 		}
 		k.InsertClosedBeamQueue(ctx, beam.GetId())
-		break
 
 	case types.BeamState_StateCanceled:
 		beam.Status = types.BeamState_StateCanceled
@@ -371,7 +371,7 @@ func (k Keeper) UpdateBeamStatus(ctx sdk.Context, beamID string, newStatus types
 		// Refund every cent
 		creatorAddress, err := sdk.AccAddressFromBech32(beam.GetCreatorAddress())
 		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Cannot acquire creator address")
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Cannot acquire creator address")
 		}
 
 		if err = k.moveCoinsToAccount(ctx, creatorAddress, beam.GetAmount()); err != nil {
@@ -383,7 +383,6 @@ func (k Keeper) UpdateBeamStatus(ctx sdk.Context, beamID string, newStatus types
 			k.RemoveFromOpenBeamByBlockQueue(ctx, int(beam.GetClosesAtBlock()), beam.GetId())
 		}
 		k.InsertClosedBeamQueue(ctx, beam.GetId())
-		break
 	}
 
 	k.SetBeam(ctx, beam.GetId(), &beam)
@@ -406,7 +405,7 @@ func (k Keeper) UpdateBeam(ctx sdk.Context, msg types.MsgUpdateBeam) error {
 
 	// Is the beam still updatable
 	if beam.GetStatus() != types.BeamState_StateOpen {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "Beam is closed and thus cannot be updated")
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "Beam is closed and thus cannot be updated")
 	}
 
 	// Make sure transaction signer is authorized
@@ -488,11 +487,11 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 
 	// If beam is already claimed, we should not be able to
 	if beam.GetClaimed() {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Beam is already claimed")
+		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "Beam is already claimed")
 	}
 
 	// Make sure transaction signer is authorized
-	if utils.CompareHashAndString(beam.Secret, msg.Secret) == false {
+	if !utils.CompareHashAndString(beam.Secret, msg.Secret) {
 		return types.ErrBeamInvalidSecret
 	}
 
@@ -503,7 +502,7 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 	}
 
 	// Transfer funds only if beam is already closed
-	if beam.GetStatus() == types.BeamState_StateClosed && beam.GetFundsWithdrawn() == false {
+	if beam.GetStatus() == types.BeamState_StateClosed && !beam.GetFundsWithdrawn() {
 		if beam.GetAmount().IsPositive() {
 			if err = k.moveCoinsToAccount(ctx, claimerAddress, beam.GetAmount()); err != nil {
 				return err

@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -56,13 +55,13 @@ func (suite *ABCITestSuite) TestTickBeamAutoClose() {
 
 	// Make sure the open beam queue is empty
 	openQueue := app.BeamKeeper.OpenBeamsQueueIterator(ctx)
-	require.False(suite.T(), openQueue.Valid())
+	suite.Require().False(openQueue.Valid())
 	openQueue.Close()
 
 	// Create the required accounts
 	creator := suite.addrs[0]
 	claimer := suite.addrs[1]
-	require.NotEqual(suite.T(), creator.String(), claimer.String())
+	suite.Require().NotEqual(creator.String(), claimer.String())
 
 	// Create a random token as claim secret
 	claimSecret := utils.GenerateSecureToken(4)
@@ -81,12 +80,12 @@ func (suite *ABCITestSuite) TestTickBeamAutoClose() {
 		0,
 	)
 	err := app.BeamKeeper.OpenBeam(ctx, *msg)
-	require.NoError(suite.T(), err)
-	require.True(suite.T(), app.BeamKeeper.HasBeam(ctx, msg.GetId()))
+	suite.Require().NoError(err)
+	suite.Require().True(app.BeamKeeper.HasBeam(ctx, msg.GetId()))
 
 	// Make sure the open beam queue is now valid
 	openQueue = app.BeamKeeper.OpenBeamsByBlockQueueIterator(ctx)
-	require.True(suite.T(), openQueue.Valid())
+	suite.Require().True(openQueue.Valid())
 	openQueue.Close()
 
 	// Simulate a call with a faked block header at a height of 10
@@ -96,7 +95,7 @@ func (suite *ABCITestSuite) TestTickBeamAutoClose() {
 
 	// Make sure the closed beams queue is invalid
 	closedQueue := app.BeamKeeper.ClosedBeamsQueueIterator(ctx)
-	require.False(suite.T(), closedQueue.Valid())
+	suite.Require().False(closedQueue.Valid())
 	closedQueue.Close()
 
 	// Call the end blocker function to trigger beam expiration
@@ -104,11 +103,11 @@ func (suite *ABCITestSuite) TestTickBeamAutoClose() {
 
 	// Make sure the open beam queue is now invalid
 	openQueue = app.BeamKeeper.OpenBeamsQueueIterator(ctx)
-	require.False(suite.T(), openQueue.Valid())
+	suite.Require().False(openQueue.Valid())
 	openQueue.Close()
 
 	closedQueue = app.BeamKeeper.ClosedBeamsQueueIterator(ctx)
-	require.True(suite.T(), closedQueue.Valid())
+	suite.Require().True(closedQueue.Valid())
 	closedQueue.Close()
 }
 

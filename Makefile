@@ -78,7 +78,7 @@ sec:
 	@gosec -severity=high -exclude=G404 ./...
 
 lint:
-	@golangci-lint run --skip-dirs='(x/beam|x/dfract)'
+	@golangci-lint run
 
 format-check:
 	@echo "--> Checking formatting issues"
