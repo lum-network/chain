@@ -67,7 +67,7 @@ func (k Keeper) OnTransferDepositToRemoteZoneCompleted(ctx sdk.Context, poolID u
 	return k.DelegateDepositOnRemoteZone(ctx, poolID, depositID)
 }
 
-// DelegateDepositOnRemoteZone Delegates a deposit to the remote zone (put it to work)
+// DelegateDepositOnRemoteZone Delegates a deposit on the remote zone (put it to work)
 // - wait for the ICA callback to move to OnDelegateDepositOnRemoteZoneCompleted
 // - or go to OnDelegateDepositOnRemoteZoneCompleted directly if local zone
 func (k Keeper) DelegateDepositOnRemoteZone(ctx sdk.Context, poolID uint64, depositID uint64) error {
@@ -101,7 +101,7 @@ func (k Keeper) DelegateDepositOnRemoteZone(ctx sdk.Context, poolID uint64, depo
 	return nil
 }
 
-// OnDelegateDepositOnRemoteZoneCompleted Acknowledge the ICA operation to delegate a deposit to the remote zone (deposit has been put to work)
+// OnDelegateDepositOnRemoteZoneCompleted Acknowledge the ICA operation to delegate a deposit on the remote zone (deposit has been put to work)
 func (k Keeper) OnDelegateDepositOnRemoteZoneCompleted(ctx sdk.Context, poolID uint64, depositID uint64, splits []*types.SplitDelegation, isError bool) error {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
