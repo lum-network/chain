@@ -29,7 +29,7 @@ func NewSubmitWithdrawAndMintProposal() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			description, err := cmd.Flags().GetString(cli.FlagDescription)
+			description, err := cmd.Flags().GetString(cli.FlagDescription) //nolint:staticcheck
 			if err != nil {
 				return err
 			}
@@ -65,10 +65,10 @@ func NewSubmitWithdrawAndMintProposal() *cobra.Command {
 		},
 	}
 	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(cli.FlagDescription, "", "description of proposal") //nolint:staticcheck
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 
 	_ = cmd.MarkFlagRequired(cli.FlagTitle)
-	_ = cmd.MarkFlagRequired(cli.FlagDescription)
+	_ = cmd.MarkFlagRequired(cli.FlagDescription) //nolint:staticcheck
 	return cmd
 }

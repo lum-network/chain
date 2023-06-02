@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
@@ -53,7 +53,7 @@ func (suite *KeeperTestSuite) TestInvalidParams() {
 			MinDepositAmount: 0,
 		})
 	}
-	require.Panics(suite.T(), panicF)
+	suite.Require().Panics(panicF)
 
 	panicF = func() {
 		app.DFractKeeper.SetParams(ctx, types.Params{
@@ -61,7 +61,7 @@ func (suite *KeeperTestSuite) TestInvalidParams() {
 			MinDepositAmount: 1,
 		})
 	}
-	require.Panics(suite.T(), panicF)
+	suite.Require().Panics(panicF)
 
 	// panicF = func() {
 	// 	app.DFractKeeper.SetParams(ctx, types.Params{
@@ -70,7 +70,7 @@ func (suite *KeeperTestSuite) TestInvalidParams() {
 	// 		MinDepositAmount: 1,
 	// 	})
 	// }
-	// require.Panics(suite.T(), panicF)
+	// suite.Require().Panics(panicF)
 
 	app.DFractKeeper.SetParams(ctx, types.DefaultParams())
 }
@@ -87,16 +87,16 @@ func (suite *KeeperTestSuite) TestInvalidDenomDeposit() {
 		DepositorAddress: depositor.String(),
 		Amount:           sdk.NewCoin(types.MintDenom, sdk.NewInt(100000000)),
 	})
-	require.Error(suite.T(), err)
-	require.Equal(suite.T(), err, types.ErrUnauthorizedDepositDenom)
+	suite.Require().Error(err)
+	suite.Require().Equal(err, types.ErrUnauthorizedDepositDenom)
 
 	// Try to deposit 100000000 of another denom != from the mintDenom
 	err = app.DFractKeeper.CreateDeposit(ctx, types.MsgDeposit{
 		DepositorAddress: depositor.String(),
 		Amount:           sdk.NewCoin("uatom", sdk.NewInt(100000000)),
 	})
-	require.Error(suite.T(), err)
-	require.Equal(suite.T(), err, types.ErrUnauthorizedDepositDenom)
+	suite.Require().Error(err)
+	suite.Require().Equal(err, types.ErrUnauthorizedDepositDenom)
 }
 
 func (suite *KeeperTestSuite) TestInvalidAmountDeposit() {
@@ -114,16 +114,16 @@ func (suite *KeeperTestSuite) TestInvalidAmountDeposit() {
 			DepositorAddress: depositor.String(),
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(0)),
 		})
-		require.Error(suite.T(), err)
-		require.Equal(suite.T(), err, types.ErrEmptyDepositAmount)
+		suite.Require().Error(err)
+		suite.Require().Equal(err, types.ErrEmptyDepositAmount)
 
 		// Try to deposit below the min deposit amount
 		err = app.DFractKeeper.CreateDeposit(ctx, types.MsgDeposit{
 			DepositorAddress: depositor.String(),
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(int64(params.MinDepositAmount)-1)),
 		})
-		require.Error(suite.T(), err)
-		require.Equal(suite.T(), err, types.ErrInsufficientDepositAmount)
+		suite.Require().Error(err)
+		suite.Require().Equal(err, types.ErrInsufficientDepositAmount)
 	}
 
 }
@@ -143,19 +143,19 @@ func (suite *KeeperTestSuite) TestDoubleDeposit() {
 			DepositorAddress: depositor.String(),
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(100000000)),
 		})
-		require.NoError(suite.T(), err)
+		suite.Require().NoError(err)
 
 		// Try to deposit 100000000 of the deposit denom
 		err = app.DFractKeeper.CreateDeposit(ctx, types.MsgDeposit{
 			DepositorAddress: depositor.String(),
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(100000000)),
 		})
-		require.NoError(suite.T(), err)
+		suite.Require().NoError(err)
 
 		// The total final deposit should reflect the two deposits done
 		deposit, found := app.DFractKeeper.GetDepositPendingWithdrawal(ctx, depositor)
-		require.True(suite.T(), found)
-		require.Equal(suite.T(), deposit.Amount, sdk.NewCoin(denom, sdk.NewInt(200000000)))
+		suite.Require().True(found)
+		suite.Require().Equal(deposit.Amount, sdk.NewCoin(denom, sdk.NewInt(200000000)))
 	}
 
 }
@@ -172,39 +172,39 @@ func (suite *KeeperTestSuite) TestValidDeposit() {
 	for _, denom := range params.DepositDenoms {
 		// We store the initial depositor balances
 		depositorAvailableBalance := app.BankKeeper.GetBalance(ctx, depositor, denom)
-		require.GreaterOrEqual(suite.T(), depositorAvailableBalance.Amount.Int64(), int64(300000000))
+		suite.Require().GreaterOrEqual(depositorAvailableBalance.Amount.Int64(), int64(300000000))
 		depositorMintedBalance := app.BankKeeper.GetBalance(ctx, depositor, types.MintDenom)
-		require.Equal(suite.T(), depositorMintedBalance.Amount.Int64(), int64(0))
+		suite.Require().Equal(depositorMintedBalance.Amount.Int64(), int64(0))
 
 		// We try to deposit 100000000 of the deposit denom
 		err := app.DFractKeeper.CreateDeposit(ctx, types.MsgDeposit{
 			DepositorAddress: depositor.String(),
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(100000000)),
 		})
-		require.NoError(suite.T(), err)
+		suite.Require().NoError(err)
 
 		// Depositor balance should reflect this transfer
 		depositorAvailableBalance = app.BankKeeper.GetBalance(ctx, depositor, denom)
-		require.Equal(suite.T(), depositorAvailableBalance.Amount.Int64(), int64(200000000))
+		suite.Require().Equal(depositorAvailableBalance.Amount.Int64(), int64(200000000))
 
 		// Depositor should have its deposit available in the pending withdrawal queue
 		deposit, found := app.DFractKeeper.GetDepositPendingWithdrawal(ctx, depositor)
-		require.True(suite.T(), found)
-		require.Equal(suite.T(), depositor.String(), deposit.DepositorAddress)
-		require.Equal(suite.T(), deposit.Amount, sdk.NewCoin(denom, sdk.NewInt(100000000)))
+		suite.Require().True(found)
+		suite.Require().Equal(depositor.String(), deposit.DepositorAddress)
+		suite.Require().Equal(deposit.Amount, sdk.NewCoin(denom, sdk.NewInt(100000000)))
 
 		// Making another deposit should have the same effect
 		err = app.DFractKeeper.CreateDeposit(ctx, types.MsgDeposit{
 			DepositorAddress: depositor.String(),
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(100000000)),
 		})
-		require.NoError(suite.T(), err)
+		suite.Require().NoError(err)
 		depositorAvailableBalance = app.BankKeeper.GetBalance(ctx, depositor, denom)
-		require.Equal(suite.T(), depositorAvailableBalance.Amount.Int64(), int64(100000000))
+		suite.Require().Equal(depositorAvailableBalance.Amount.Int64(), int64(100000000))
 		deposit, found = app.DFractKeeper.GetDepositPendingWithdrawal(ctx, depositor)
-		require.True(suite.T(), found)
-		require.Equal(suite.T(), depositor.String(), deposit.DepositorAddress)
-		require.Equal(suite.T(), deposit.Amount, sdk.NewCoin(denom, sdk.NewInt(200000000)))
+		suite.Require().True(found)
+		suite.Require().Equal(depositor.String(), deposit.DepositorAddress)
+		suite.Require().Equal(deposit.Amount, sdk.NewCoin(denom, sdk.NewInt(200000000)))
 	}
 }
 
@@ -224,14 +224,15 @@ func (suite *KeeperTestSuite) TestMintAccuracy() {
 				DepositorAddress: depositor.String(),
 				Amount:           sdk.NewCoin(denom, sdk.NewInt(depositAmount)),
 			})
-			app.DFractKeeper.ProcessWithdrawAndMintProposal(ctx, &types.WithdrawAndMintProposal{
+			err := app.DFractKeeper.ProcessWithdrawAndMintProposal(ctx, &types.WithdrawAndMintProposal{
 				Title:             "test",
 				Description:       "test",
 				WithdrawalAddress: withdrawAddr.String(),
 				MicroMintRate:     microMintRate,
 			})
+			suite.Require().NoError(err)
 			balance := app.BankKeeper.GetBalance(ctx, depositor, types.MintDenom)
-			require.Equal(suite.T(), expectedMintedAmount, balance.Amount.Int64()-balanceBeforeMint.Amount.Int64())
+			suite.Require().Equal(expectedMintedAmount, balance.Amount.Int64()-balanceBeforeMint.Amount.Int64())
 		}
 
 		// Test micro minting
@@ -263,7 +264,7 @@ func (suite *KeeperTestSuite) TestChainedFullProcess() {
 	moduleAddr := app.DFractKeeper.GetModuleAccount(ctx).String()
 	depositorsAddrs := []string{suite.addrs[1].String(), suite.addrs[2].String(), suite.addrs[3].String(), suite.addrs[4].String(), suite.addrs[5].String()}
 
-	require.Equal(suite.T(), 5, len(depositorsAddrs))
+	suite.Require().Equal(5, len(depositorsAddrs))
 
 	type stageDef struct {
 		depositorsAddrs   []string
@@ -342,7 +343,7 @@ func (suite *KeeperTestSuite) TestChainedFullProcess() {
 
 			for _, addr := range addrs {
 				accAddr, err := sdk.AccAddressFromBech32(addr)
-				require.NoError(suite.T(), err)
+				suite.Require().NoError(err)
 				res[addr] = []sdk.Coin{
 					app.BankKeeper.GetBalance(ctx, accAddr, denom),
 					app.BankKeeper.GetBalance(ctx, accAddr, types.MintDenom),
@@ -383,7 +384,7 @@ func (suite *KeeperTestSuite) TestChainedFullProcess() {
 				app.BankKeeper.GetSupply(ctx, denom),
 				app.BankKeeper.GetSupply(ctx, types.MintDenom),
 			}
-			require.Len(suite.T(), initialStates, len(depositorsAddrs)+2)
+			suite.Require().Len(initialStates, len(depositorsAddrs)+2)
 
 			// Make deposits
 			var totalDepositedAmount int64
@@ -393,61 +394,61 @@ func (suite *KeeperTestSuite) TestChainedFullProcess() {
 					DepositorAddress: depositor,
 					Amount:           sdk.NewCoin(denom, sdk.NewInt(stage.depositorsAmounts[d])),
 				})
-				require.NoError(suite.T(), err, fmt.Sprintf("stage %d", i))
+				suite.Require().NoError(err, fmt.Sprintf("stage %d", i))
 				depositedAmounts[depositor] += stage.depositorsAmounts[d]
 				totalDepositedAmount += stage.depositorsAmounts[d]
 			}
 
 			// Control new account states
 			postDepositStates := getAllStates()
-			require.Len(suite.T(), postDepositStates, len(depositorsAddrs)+2)
+			suite.Require().Len(postDepositStates, len(depositorsAddrs)+2)
 			// Check depositors and non depositors balances changes
 			for _, depositor := range depositorsAddrs {
 				initialState := initialStates[depositor]
 				postDepositState := postDepositStates[depositor]
 				if depositedAmounts[depositor] > 0 {
 					// Deposited amount(s) should have been removed from deposit balance
-					require.True(suite.T(), postDepositState[0].Amount.Equal(initialState[0].Amount.Sub(sdk.NewInt(depositedAmounts[depositor]))), fmt.Sprintf("stage %d", i))
+					suite.Require().True(postDepositState[0].Amount.Equal(initialState[0].Amount.Sub(sdk.NewInt(depositedAmounts[depositor]))), fmt.Sprintf("stage %d", i))
 					// Minted balance should not have changed
-					require.True(suite.T(), postDepositState[1].Amount.Equal(initialState[1].Amount), fmt.Sprintf("stage %d", i))
+					suite.Require().True(postDepositState[1].Amount.Equal(initialState[1].Amount), fmt.Sprintf("stage %d", i))
 					// Pending withdrawal balance should have inrease by the deposited amount
-					require.True(suite.T(), postDepositState[2].Amount.Equal(initialState[2].Amount.Add(sdk.NewInt(depositedAmounts[depositor]))), fmt.Sprintf("stage %d", i))
+					suite.Require().True(postDepositState[2].Amount.Equal(initialState[2].Amount.Add(sdk.NewInt(depositedAmounts[depositor]))), fmt.Sprintf("stage %d", i))
 					// Pending mint balance should not have changed
-					require.True(suite.T(), postDepositState[3].Amount.Equal(initialState[3].Amount), fmt.Sprintf("stage %d", i))
+					suite.Require().True(postDepositState[3].Amount.Equal(initialState[3].Amount), fmt.Sprintf("stage %d", i))
 					// Minted balance should not have changed
-					require.True(suite.T(), postDepositState[4].Amount.Equal(initialState[4].Amount), fmt.Sprintf("stage %d", i))
+					suite.Require().True(postDepositState[4].Amount.Equal(initialState[4].Amount), fmt.Sprintf("stage %d", i))
 				} else {
 					// Non depositor should have no change
-					require.True(suite.T(), postDepositState[0].Amount.Equal(initialState[0].Amount), fmt.Sprintf("stage %d", i))
-					require.True(suite.T(), postDepositState[1].Amount.Equal(initialState[1].Amount), fmt.Sprintf("stage %d", i))
-					require.True(suite.T(), postDepositState[2].Amount.Equal(initialState[2].Amount), fmt.Sprintf("stage %d", i))
-					require.True(suite.T(), postDepositState[3].Amount.Equal(initialState[3].Amount), fmt.Sprintf("stage %d", i))
-					require.True(suite.T(), postDepositState[4].Amount.Equal(initialState[4].Amount), fmt.Sprintf("stage %d", i))
+					suite.Require().True(postDepositState[0].Amount.Equal(initialState[0].Amount), fmt.Sprintf("stage %d", i))
+					suite.Require().True(postDepositState[1].Amount.Equal(initialState[1].Amount), fmt.Sprintf("stage %d", i))
+					suite.Require().True(postDepositState[2].Amount.Equal(initialState[2].Amount), fmt.Sprintf("stage %d", i))
+					suite.Require().True(postDepositState[3].Amount.Equal(initialState[3].Amount), fmt.Sprintf("stage %d", i))
+					suite.Require().True(postDepositState[4].Amount.Equal(initialState[4].Amount), fmt.Sprintf("stage %d", i))
 				}
 			}
 			// Module account should have received the new deposits
 			initialState := initialStates[moduleAddr]
 			postDepositState := postDepositStates[moduleAddr]
-			require.True(suite.T(), postDepositState[0].Amount.Equal(initialState[0].Amount.Add(sdk.NewInt(totalDepositedAmount))), fmt.Sprintf("stage %d", i))
-			require.True(suite.T(), postDepositState[1].Amount.Equal(initialState[1].Amount), fmt.Sprintf("stage %d", i))
-			require.True(suite.T(), postDepositState[2].Amount.Equal(initialState[2].Amount), fmt.Sprintf("stage %d", i))
-			require.True(suite.T(), postDepositState[3].Amount.Equal(initialState[3].Amount), fmt.Sprintf("stage %d", i))
-			require.True(suite.T(), postDepositState[4].Amount.Equal(initialState[4].Amount), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postDepositState[0].Amount.Equal(initialState[0].Amount.Add(sdk.NewInt(totalDepositedAmount))), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postDepositState[1].Amount.Equal(initialState[1].Amount), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postDepositState[2].Amount.Equal(initialState[2].Amount), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postDepositState[3].Amount.Equal(initialState[3].Amount), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postDepositState[4].Amount.Equal(initialState[4].Amount), fmt.Sprintf("stage %d", i))
 			// Destination address should not have changed
 			initialState = initialStates[withdrawAddr]
 			postDepositState = postDepositStates[withdrawAddr]
-			require.True(suite.T(), postDepositState[0].Amount.Equal(initialState[0].Amount), fmt.Sprintf("stage %d", i))
-			require.True(suite.T(), postDepositState[1].Amount.Equal(initialState[1].Amount), fmt.Sprintf("stage %d", i))
-			require.True(suite.T(), postDepositState[2].Amount.Equal(initialState[2].Amount), fmt.Sprintf("stage %d", i))
-			require.True(suite.T(), postDepositState[3].Amount.Equal(initialState[3].Amount), fmt.Sprintf("stage %d", i))
-			require.True(suite.T(), postDepositState[4].Amount.Equal(initialState[4].Amount), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postDepositState[0].Amount.Equal(initialState[0].Amount), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postDepositState[1].Amount.Equal(initialState[1].Amount), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postDepositState[2].Amount.Equal(initialState[2].Amount), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postDepositState[3].Amount.Equal(initialState[3].Amount), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postDepositState[4].Amount.Equal(initialState[4].Amount), fmt.Sprintf("stage %d", i))
 			// Control supply (no change expected)
 			postDepositsSupplies := []sdk.Coin{
 				app.BankKeeper.GetSupply(ctx, denom),
 				app.BankKeeper.GetSupply(ctx, types.MintDenom),
 			}
-			require.True(suite.T(), postDepositsSupplies[0].Equal(initialSupplies[0]))
-			require.True(suite.T(), postDepositsSupplies[1].Equal(initialSupplies[1]))
+			suite.Require().True(postDepositsSupplies[0].Equal(initialSupplies[0]))
+			suite.Require().True(postDepositsSupplies[1].Equal(initialSupplies[1]))
 
 			// Run proposal
 			err := app.DFractKeeper.ProcessWithdrawAndMintProposal(ctx, &types.WithdrawAndMintProposal{
@@ -456,51 +457,51 @@ func (suite *KeeperTestSuite) TestChainedFullProcess() {
 				Description:       "test",
 				WithdrawalAddress: withdrawAddr,
 			})
-			require.NoError(suite.T(), err)
+			suite.Require().NoError(err)
 
 			// Control new account states
 			postProposalStates := getAllStates()
-			require.Len(suite.T(), postProposalStates, len(depositorsAddrs)+2)
+			suite.Require().Len(postProposalStates, len(depositorsAddrs)+2)
 			totalMintAmount := sdk.NewInt(0)
 			// Check depositors and non depositors balances changes
 			for _, depositor := range depositorsAddrs {
 				postDepositState := postDepositStates[depositor]
 				postProposalState := postProposalStates[depositor]
 				// Deposit balance should not have change since the deposit
-				require.True(suite.T(), postProposalState[0].Amount.Equal(postDepositState[0].Amount), fmt.Sprintf("stage %d", i))
+				suite.Require().True(postProposalState[0].Amount.Equal(postDepositState[0].Amount), fmt.Sprintf("stage %d", i))
 				// Minted balance should have received the amount available in the waiting mint * microMintRate
-				require.True(suite.T(), postProposalState[1].Amount.Equal(postDepositState[1].Amount.Add(postDepositState[3].Amount.MulRaw(stage.microMintRate).QuoRaw(keeper.MicroPrecision))), fmt.Sprintf("stage %d", i))
+				suite.Require().True(postProposalState[1].Amount.Equal(postDepositState[1].Amount.Add(postDepositState[3].Amount.MulRaw(stage.microMintRate).QuoRaw(keeper.MicroPrecision))), fmt.Sprintf("stage %d", i))
 				// Pending withdrawal balance should be empty
-				require.True(suite.T(), postProposalState[2].Amount.Equal(sdk.NewInt(0)), fmt.Sprintf("stage %d", i))
+				suite.Require().True(postProposalState[2].Amount.Equal(sdk.NewInt(0)), fmt.Sprintf("stage %d", i))
 				// Pending mint balance should have received the amount in the pending withdrawal balance
-				require.True(suite.T(), postProposalState[3].Amount.Equal(postDepositState[2].Amount), fmt.Sprintf("stage %d", i))
+				suite.Require().True(postProposalState[3].Amount.Equal(postDepositState[2].Amount), fmt.Sprintf("stage %d", i))
 				// Minted balance should have increased by the amount in the pending mint balance
-				require.True(suite.T(), postProposalState[4].Amount.Equal(postDepositState[4].Amount.Add(postDepositState[3].Amount)), fmt.Sprintf("stage %d", i))
+				suite.Require().True(postProposalState[4].Amount.Equal(postDepositState[4].Amount.Add(postDepositState[3].Amount)), fmt.Sprintf("stage %d", i))
 				totalMintAmount = totalMintAmount.Add(postDepositState[3].Amount)
 			}
 			// Module account should have sent the new deposits to the withdrawAddr (empty balance)
 			postDepositState = postDepositStates[moduleAddr]
 			postProposalState := postProposalStates[moduleAddr]
-			require.True(suite.T(), postProposalState[0].Amount.Equal(sdk.NewInt(0)), fmt.Sprintf("stage %d", i))
-			require.True(suite.T(), postProposalState[1].Amount.Equal(postDepositState[1].Amount), fmt.Sprintf("stage %d", i))
-			require.True(suite.T(), postProposalState[2].Amount.Equal(postDepositState[2].Amount), fmt.Sprintf("stage %d", i))
-			require.True(suite.T(), postProposalState[3].Amount.Equal(postDepositState[3].Amount), fmt.Sprintf("stage %d", i))
-			require.True(suite.T(), postProposalState[4].Amount.Equal(postDepositState[4].Amount), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postProposalState[0].Amount.Equal(sdk.NewInt(0)), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postProposalState[1].Amount.Equal(postDepositState[1].Amount), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postProposalState[2].Amount.Equal(postDepositState[2].Amount), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postProposalState[3].Amount.Equal(postDepositState[3].Amount), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postProposalState[4].Amount.Equal(postDepositState[4].Amount), fmt.Sprintf("stage %d", i))
 			// Withdrawal address should have received the deposits
 			postDepositState = postDepositStates[withdrawAddr]
 			postProposalState = postProposalStates[withdrawAddr]
-			require.True(suite.T(), postProposalState[0].Amount.Equal(postDepositState[0].Amount.Add(sdk.NewInt(totalDepositedAmount))), fmt.Sprintf("stage %d", i))
-			require.True(suite.T(), postProposalState[1].Amount.Equal(postDepositState[1].Amount), fmt.Sprintf("stage %d", i))
-			require.True(suite.T(), postProposalState[2].Amount.Equal(postDepositState[2].Amount), fmt.Sprintf("stage %d", i))
-			require.True(suite.T(), postProposalState[3].Amount.Equal(postDepositState[3].Amount), fmt.Sprintf("stage %d", i))
-			require.True(suite.T(), postProposalState[4].Amount.Equal(postDepositState[4].Amount), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postProposalState[0].Amount.Equal(postDepositState[0].Amount.Add(sdk.NewInt(totalDepositedAmount))), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postProposalState[1].Amount.Equal(postDepositState[1].Amount), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postProposalState[2].Amount.Equal(postDepositState[2].Amount), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postProposalState[3].Amount.Equal(postDepositState[3].Amount), fmt.Sprintf("stage %d", i))
+			suite.Require().True(postProposalState[4].Amount.Equal(postDepositState[4].Amount), fmt.Sprintf("stage %d", i))
 			// Control supply (mint should have increased by the minted amount)
 			postProposalSupplies := []sdk.Coin{
 				app.BankKeeper.GetSupply(ctx, denom),
 				app.BankKeeper.GetSupply(ctx, types.MintDenom),
 			}
-			require.True(suite.T(), postProposalSupplies[0].Equal(postDepositsSupplies[0]))
-			require.True(suite.T(), postProposalSupplies[1].Amount.Equal(postDepositsSupplies[1].Amount.Add(totalMintAmount.MulRaw(stage.microMintRate).QuoRaw(keeper.MicroPrecision))))
+			suite.Require().True(postProposalSupplies[0].Equal(postDepositsSupplies[0]))
+			suite.Require().True(postProposalSupplies[1].Amount.Equal(postDepositsSupplies[1].Amount.Add(totalMintAmount.MulRaw(stage.microMintRate).QuoRaw(keeper.MicroPrecision))))
 		}
 
 		postRunStates := getAllStates()
@@ -509,10 +510,10 @@ func (suite *KeeperTestSuite) TestChainedFullProcess() {
 			app.BankKeeper.GetSupply(ctx, types.MintDenom),
 		}
 		// We expect the module account balances to be completely empty
-		require.Equal(suite.T(), int64(0), postRunStates[moduleAddr][0].Amount.Int64())
-		require.Equal(suite.T(), int64(0), postRunStates[moduleAddr][0].Amount.Int64())
-		require.Equal(suite.T(), int64(0), postRunStates[moduleAddr][0].Amount.Int64())
-		require.Equal(suite.T(), int64(0), postRunStates[moduleAddr][0].Amount.Int64())
+		suite.Require().Equal(int64(0), postRunStates[moduleAddr][0].Amount.Int64())
+		suite.Require().Equal(int64(0), postRunStates[moduleAddr][0].Amount.Int64())
+		suite.Require().Equal(int64(0), postRunStates[moduleAddr][0].Amount.Int64())
+		suite.Require().Equal(int64(0), postRunStates[moduleAddr][0].Amount.Int64())
 
 		// Check final state compared to our stage set
 		// Simulate deposits and proposals to the preRun states
@@ -536,11 +537,11 @@ func (suite *KeeperTestSuite) TestChainedFullProcess() {
 		// Compare simulation to actual results
 		for addr := range postRunStates {
 			for i := range postRunStates[addr] {
-				require.True(suite.T(), postRunStates[addr][i].Equal(preRunStates[addr][i]), fmt.Sprintf("Compare %s balance for state coin[%d]", addr, i))
+				suite.Require().True(postRunStates[addr][i].Equal(preRunStates[addr][i]), fmt.Sprintf("Compare %s balance for state coin[%d]", addr, i))
 			}
 		}
-		require.True(suite.T(), postRunSupplies[0].Equal(preRunSupplies[0]))
-		require.True(suite.T(), postRunSupplies[0].Equal(preRunSupplies[0]))
+		suite.Require().True(postRunSupplies[0].Equal(preRunSupplies[0]))
+		suite.Require().True(postRunSupplies[0].Equal(preRunSupplies[0]))
 	}
 }
 
