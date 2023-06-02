@@ -237,6 +237,7 @@ func (suite *KeeperTestSuite) TestPool_DepositorsCountAndTVL() {
 
 	denom := app.StakingKeeper.BondDenom(ctx)
 	poolID, err := app.MillionsKeeper.RegisterPool(ctx,
+		millionstypes.PoolType_Staking,
 		"ulum",
 		"ulum",
 		testChainID,
@@ -774,11 +775,11 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	suite.Require().Equal(sdk.ZeroInt(), pool.Validators[valAddr].BondedAmount)
 
 	// Simulate coin transfer for d1 and d2 + failure on d3
-	err = app.MillionsKeeper.OnTransferDepositToNativeChainCompleted(ctx, poolID, d1.DepositId, false)
+	err = app.MillionsKeeper.OnTransferDepositToRemoteZoneCompleted(ctx, poolID, d1.DepositId, false)
 	suite.Require().NoError(err)
-	err = app.MillionsKeeper.OnTransferDepositToNativeChainCompleted(ctx, poolID, d2.DepositId, false)
+	err = app.MillionsKeeper.OnTransferDepositToRemoteZoneCompleted(ctx, poolID, d2.DepositId, false)
 	suite.Require().NoError(err)
-	err = app.MillionsKeeper.OnTransferDepositToNativeChainCompleted(ctx, poolID, d3.DepositId, true)
+	err = app.MillionsKeeper.OnTransferDepositToRemoteZoneCompleted(ctx, poolID, d3.DepositId, true)
 	suite.Require().NoError(err)
 
 	// Force fix deposits statuses since they will fail due to missing remote chain
@@ -794,11 +795,11 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	// Simulate delegate success for d1 + failure on d2
 	sd := pool.ComputeSplitDelegations(ctx, d1.Amount.Amount)
 	suite.Require().Len(sd, 1)
-	err = app.MillionsKeeper.OnDelegateDepositOnNativeChainCompleted(ctx, poolID, d1.DepositId, sd, false)
+	err = app.MillionsKeeper.OnDelegateDepositOnRemoteZoneCompleted(ctx, poolID, d1.DepositId, sd, false)
 	suite.Require().NoError(err)
 	sd = pool.ComputeSplitDelegations(ctx, d2.Amount.Amount)
 	suite.Require().Len(sd, 1)
-	err = app.MillionsKeeper.OnDelegateDepositOnNativeChainCompleted(ctx, poolID, d2.DepositId, sd, true)
+	err = app.MillionsKeeper.OnDelegateDepositOnRemoteZoneCompleted(ctx, poolID, d2.DepositId, sd, true)
 	suite.Require().NoError(err)
 
 	// Validators bounded amount should be d1 amount now
@@ -810,7 +811,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	sd = pool.ComputeSplitDelegations(ctx, d2.Amount.Amount)
 	suite.Require().Len(sd, 1)
 	app.MillionsKeeper.UpdateDepositStatus(ctx, poolID, d2.DepositId, millionstypes.DepositState_IcaDelegate, false)
-	err = app.MillionsKeeper.OnDelegateDepositOnNativeChainCompleted(ctx, poolID, d2.DepositId, sd, false)
+	err = app.MillionsKeeper.OnDelegateDepositOnRemoteZoneCompleted(ctx, poolID, d2.DepositId, sd, false)
 	suite.Require().NoError(err)
 
 	// Validators bounded amount should be d1+d2 amount now

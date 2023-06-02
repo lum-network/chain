@@ -258,6 +258,7 @@ func (k Keeper) AddPool(ctx sdk.Context, pool *types.Pool) {
 // RegisterPool Register a given pool from the transaction message
 func (k Keeper) RegisterPool(
 	ctx sdk.Context,
+	poolType types.PoolType,
 	denom, nativeDenom, chainId, connectionId, transferChannelId string,
 	vals []string,
 	bech32Acc, bech32Val string,
@@ -286,6 +287,7 @@ func (k Keeper) RegisterPool(
 	// Prepare new pool
 	var pool = types.Pool{
 		PoolId:              poolID,
+		PoolType:            poolType,
 		Denom:               denom,
 		NativeDenom:         nativeDenom,
 		ChainId:             chainId,
@@ -537,18 +539,12 @@ func (k Keeper) ListPoolsToDraw(ctx sdk.Context) (pools []types.Pool) {
 	return pools
 }
 
-// TransferAmountFromPoolToNativeChain Transfer a given amount to the native chain ICA account from the local module account
+// BroadcastIBCTransfer transfers a given amount to the native chain ICA account from the local module account
 // amount denom must be based on pool.Denom
-func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint64, amount sdk.Coin) (*ibctypes.MsgTransfer, *ibctypes.MsgTransferResponse, error) {
-	// Acquire our pool instance
-	pool, err := k.GetPool(ctx, poolID)
-	if err != nil {
-		return nil, nil, err
-	}
-
+func (k Keeper) BroadcastIBCTransfer(ctx sdk.Context, pool types.Pool, amount sdk.Coin, timeoutNanos uint64, callbackId string, callbackArgs []byte) (uint64, error) {
 	// Pool must be ready to process those kind of operations
 	if pool.GetState() != types.PoolState_Ready {
-		return nil, nil, types.ErrPoolNotReady
+		return 0, types.ErrPoolNotReady
 	}
 
 	// Timeout is now plus 5 minutes in nanoseconds
@@ -566,12 +562,25 @@ func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint
 	)
 
 	// Broadcast the transfer
-	msgResponse, err := k.IBCTransferKeeper.Transfer(ctx, msg)
+	res, err := k.IBCTransferKeeper.Transfer(ctx, msg)
 	if err != nil {
-		return nil, nil, err
+		return 0, err
 	}
 
-	return msg, msgResponse, nil
+	if callbackId != "" && callbackArgs != nil {
+		callback := icacallbackstypes.CallbackData{
+			CallbackKey:  icacallbackstypes.PacketID(msg.SourcePort, msg.SourceChannel, res.Sequence),
+			PortId:       msg.SourcePort,
+			ChannelId:    msg.SourceChannel,
+			Sequence:     res.Sequence,
+			CallbackId:   callbackId,
+			CallbackArgs: callbackArgs,
+		}
+		k.ICACallbacksKeeper.SetCallbackData(ctx, callback)
+	}
+
+	k.Logger(ctx).Debug(fmt.Sprintf("Broadcasted IBC transfer with sequence %d", res.Sequence))
+	return res.Sequence, nil
 }
 
 func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType string, msgs []sdk.Msg, timeoutNanos uint64, callbackId string, callbackArgs []byte) (uint64, error) {

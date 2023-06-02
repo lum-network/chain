@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	apptesting "github.com/lum-network/chain/app/testing"
+	"github.com/lum-network/chain/x/millions/types"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 
 	"github.com/lum-network/chain/app"
@@ -90,6 +91,9 @@ func floatToDec(v float64) sdk.Dec {
 func newValidPool(suite *KeeperTestSuite, pool millionstypes.Pool) *millionstypes.Pool {
 	params := suite.app.MillionsKeeper.GetParams(suite.ctx)
 
+	if pool.PoolType == types.PoolType_Unspecified {
+		pool.PoolType = types.PoolType_Staking
+	}
 	if pool.Denom == "" {
 		pool.Denom = suite.app.StakingKeeper.BondDenom(suite.ctx)
 	}

@@ -59,6 +59,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_AddWithdrawal() {
 
 	// Initialize the pool
 	poolID, err := app.MillionsKeeper.RegisterPool(ctx,
+		millionstypes.PoolType_Staking,
 		"ulum",
 		"ulum",
 		testChainID,
@@ -585,7 +586,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawal() {
 
 	// Simulate a delegation on native chain for remote pool
 	splits := []*millionstypes.SplitDelegation{{ValidatorAddress: cosmosPoolValidator, Amount: sdk.NewInt(int64(1_000_000))}}
-	err = app.MillionsKeeper.OnDelegateDepositOnNativeChainCompleted(ctx, deposit.PoolId, deposit.DepositId, splits, false)
+	err = app.MillionsKeeper.OnDelegateDepositOnRemoteZoneCompleted(ctx, deposit.PoolId, deposit.DepositId, splits, false)
 	suite.Require().NoError(err)
 
 	deposits = app.MillionsKeeper.ListAccountDeposits(ctx, uatomAddresses[0])
@@ -697,7 +698,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawal() {
 	suite.Require().NoError(err)
 
 	// Simulate the transfer to native chain
-	err = app.MillionsKeeper.TransferDepositToNativeChain(ctx, deposit.PoolId, deposit.DepositId)
+	err = app.MillionsKeeper.TransferDepositToRemoteZone(ctx, deposit.PoolId, deposit.DepositId)
 	suite.Require().NoError(err)
 
 	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, deposits[0].PoolId, deposits[0].DepositId)
@@ -1200,7 +1201,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_FullWithdrawalProcess() {
 	deposits := app.MillionsKeeper.ListAccountDeposits(ctx, suite.addrs[0])
 	deposit, err := app.MillionsKeeper.GetPoolDeposit(ctx, deposits[0].PoolId, deposits[0].DepositId)
 	suite.Require().NoError(err)
-	err = app.MillionsKeeper.TransferDepositToNativeChain(ctx, deposit.PoolId, deposit.DepositId)
+	err = app.MillionsKeeper.TransferDepositToRemoteZone(ctx, deposit.PoolId, deposit.DepositId)
 	suite.Require().Error(err)
 
 	// Create deposit
@@ -1218,7 +1219,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_FullWithdrawalProcess() {
 	deposits = app.MillionsKeeper.ListAccountDeposits(ctx, suite.addrs[0])
 	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, deposits[0].PoolId, deposits[0].DepositId)
 	suite.Require().NoError(err)
-	err = app.MillionsKeeper.TransferDepositToNativeChain(ctx, deposit.PoolId, deposit.DepositId)
+	err = app.MillionsKeeper.TransferDepositToRemoteZone(ctx, deposit.PoolId, deposit.DepositId)
 	suite.Require().Error(err)
 
 	for i, deposit := range deposits {

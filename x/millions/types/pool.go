@@ -15,6 +15,9 @@ func (pool *Pool) ValidateBasic(params Params) error {
 	if pool.PoolId == UnknownID {
 		return ErrInvalidID
 	}
+	if pool.PoolType == PoolType_Unspecified {
+		return errorsmod.Wrapf(ErrInvalidPoolType, "%s not allowed", pool.PoolType.String())
+	}
 	if pool.State == PoolState_Unspecified {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "no state specified")
 	}

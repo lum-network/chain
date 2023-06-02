@@ -4,6 +4,7 @@ package lum.network.millions;
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 
+import "lum/network/millions/pool.proto";
 import "lum/network/millions/draw_schedule.proto";
 import "lum/network/millions/prize_strategy.proto";
 
@@ -29,6 +30,7 @@ message ProposalRegisterPool {
   string bech32_prefix_acc_addr = 11;
   string bech32_prefix_val_addr = 12;
   string transfer_channel_id = 13;
+  PoolType pool_type = 14;
 }
 
 message ProposalUpdatePool {

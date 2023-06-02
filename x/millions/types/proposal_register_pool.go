@@ -23,10 +23,11 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeRegisterPool)
 }
 
-func NewRegisterPoolProposal(title, description, chainID string, denom string, nativeDenom string, connectionId string, bech32PrefixAccAddr string, bech32PrefixValAddr string, validators []string, minDepositAmount math.Int, prizeStrategy PrizeStrategy, drawSchedule DrawSchedule) govtypes.Content {
+func NewRegisterPoolProposal(title, description string, poolType PoolType, chainID string, denom string, nativeDenom string, connectionId string, bech32PrefixAccAddr string, bech32PrefixValAddr string, validators []string, minDepositAmount math.Int, prizeStrategy PrizeStrategy, drawSchedule DrawSchedule) govtypes.Content {
 	return &ProposalRegisterPool{
 		Title:               title,
 		Description:         description,
+		PoolType:            poolType,
 		ChainId:             chainID,
 		Denom:               denom,
 		NativeDenom:         nativeDenom,
@@ -53,6 +54,9 @@ func (p *ProposalRegisterPool) ValidateBasic() error {
 		return err
 	}
 
+	if p.PoolType == PoolType_Unspecified {
+		return errorsmod.Wrapf(ErrInvalidPoolType, "%s not allowed", p.PoolType.String())
+	}
 	// Validate payload
 	if len(strings.TrimSpace(p.ChainId)) <= 0 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "Chain ID is required")
