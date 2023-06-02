@@ -168,8 +168,7 @@ func (k Keeper) SetupPoolWithdrawalAddress(ctx sdk.Context, poolID uint64) (*typ
 		DelegatorAddress: pool.GetIcaDepositAddress(),
 		WithdrawAddress:  pool.GetIcaPrizepoolAddress(),
 	}}
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
-	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, timeoutTimestamp, ICACallbackID_SetWithdrawAddress, marshalledCallbackData)
+	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_SetWithdrawAddress, marshalledCallbackData)
 	if err != nil {
 		logger.Error(
 			fmt.Sprintf("failed to dispatch ICA set withdraw address: %v", err),
@@ -575,7 +574,7 @@ func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint
 	return msg, msgResponse, nil
 }
 
-func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType string, msgs []sdk.Msg, timeoutTimestamp uint64, callbackId string, callbackArgs []byte) (uint64, error) {
+func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType string, msgs []sdk.Msg, timeoutNanos uint64, callbackId string, callbackArgs []byte) (uint64, error) {
 	// Acquire our pool instance
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
@@ -612,7 +611,7 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType
 	}
 
 	// Broadcast the messages
-	msg := icacontrollertypes.NewMsgSendTx(portID, pool.GetConnectionId(), timeoutTimestamp, packetData)
+	msg := icacontrollertypes.NewMsgSendTx(portID, pool.GetConnectionId(), timeoutNanos, packetData)
 	msgServer := icacontrollerkeeper.NewMsgServerImpl(&k.ICAControllerKeeper)
 	res, err := msgServer.SendTx(ctx, msg)
 	if err != nil {

@@ -24,7 +24,7 @@ const (
 )
 
 const (
-	IBCTransferTimeoutNanos = 1_800_000_000_000
+	IBCTimeoutNanos = 1_800_000_000_000 // 30 minutes
 )
 
 const (

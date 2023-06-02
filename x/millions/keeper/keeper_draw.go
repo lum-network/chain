@@ -136,8 +136,7 @@ func (k Keeper) ClaimRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID
 		}
 
 		// Dispatch our message with a timeout of 30 minutes in nanos
-		timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
-		sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, timeoutTimestamp, ICACallbackID_Claim, marshalledCallbackData)
+		sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Claim, marshalledCallbackData)
 		if err != nil {
 			// Return with error here since it is the first operation and nothing needs to be saved to state
 			logger.Error(
@@ -307,7 +306,6 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 	}
 
 	var msgs []sdk.Msg
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
 	msgs = append(msgs, ibctypes.NewMsgTransfer(
 		ibctypes.PortID,
 		pool.GetTransferChannelId(),
@@ -315,7 +313,7 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 		pool.GetIcaPrizepoolAddress(),
 		pool.GetLocalAddress(),
 		clienttypes.Height{},
-		timeoutTimestamp,
+		uint64(ctx.BlockTime().UnixNano())+types.IBCTimeoutNanos,
 		"Cosmos Millions",
 	))
 
@@ -331,7 +329,7 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 	}
 
 	// Dispatch our message with a timeout of 30 minutes in nanos
-	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypePrizePool, msgs, timeoutTimestamp, ICACallbackID_TransferFromNative, marshalledCallbackData)
+	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypePrizePool, msgs, types.IBCTimeoutNanos, ICACallbackID_TransferFromNative, marshalledCallbackData)
 	if err != nil {
 		// Save error state since we cannot simply recover from a failure at this stage
 		// A subsequent call to DrawRetry will be made possible by setting an error state and not returning an error here

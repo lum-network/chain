@@ -103,8 +103,7 @@ func (k Keeper) UndelegateWithdrawalOnNativeChain(ctx sdk.Context, poolID uint64
 	k.updatePool(ctx, &pool)
 
 	// Dispatch our message with a timeout of 30 minutes in nanos
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
-	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, timeoutTimestamp, ICACallbackID_Undelegate, marshalledCallbackData)
+	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Undelegate, marshalledCallbackData)
 	if err != nil {
 		// Return with error here since it is the first operation and nothing needs to be saved to state
 		logger.Error(
@@ -208,7 +207,6 @@ func (k Keeper) TransferWithdrawalToLocalChain(ctx sdk.Context, poolID uint64, w
 	amount := sdk.NewCoin(pool.NativeDenom, withdrawal.Amount.Amount)
 	// Build transfer tx
 	var msgs []sdk.Msg
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
 	msgs = append(msgs, ibctypes.NewMsgTransfer(
 		ibctypes.PortID,
 		pool.GetTransferChannelId(),
@@ -216,12 +214,12 @@ func (k Keeper) TransferWithdrawalToLocalChain(ctx sdk.Context, poolID uint64, w
 		pool.GetIcaDepositAddress(),
 		withdrawal.GetToAddress(),
 		clienttypes.Height{},
-		timeoutTimestamp,
+		uint64(ctx.BlockTime().UnixNano())+types.IBCTimeoutNanos,
 		"Cosmos Millions",
 	))
 
 	// Dispatch our message with a timeout of 30 minutes in nanos
-	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, timeoutTimestamp, ICACallbackID_TransferFromNative, marshalledCallbackData)
+	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_TransferFromNative, marshalledCallbackData)
 	if err != nil {
 		// Return with error here and let the caller manage the state changes if needed
 		logger.Error(
