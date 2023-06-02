@@ -372,6 +372,39 @@ func (k Keeper) UpdateDepositStatus(ctx sdk.Context, poolID uint64, depositID ui
 	k.setPoolDeposit(ctx, &deposit)
 }
 
+// EditDeposit edits a deposit winnerAddr and sponsor mode
+func (k Keeper) EditDeposit(ctx sdk.Context, poolID uint64, depositID uint64, winnerAddr sdk.AccAddress, isSponsor bool) error {
+	deposit, err := k.GetPoolDeposit(ctx, poolID, depositID)
+	if err != nil {
+		return err
+	}
+
+	// Get pool to grab SponsorshipAmount
+	pool, err := k.GetPool(ctx, deposit.PoolId)
+	if err != nil {
+		return err
+	}
+
+	// Check incoming sponsor mode against the deposit sponsor
+	if isSponsor != deposit.IsSponsor {
+		if isSponsor {
+			pool.SponsorshipAmount = pool.SponsorshipAmount.Add(deposit.GetAmount().Amount)
+			k.updatePool(ctx, &pool)
+		} else {
+			pool.SponsorshipAmount = pool.SponsorshipAmount.Sub(deposit.GetAmount().Amount)
+			k.updatePool(ctx, &pool)
+		}
+	}
+
+	deposit.WinnerAddress = winnerAddr.String()
+	deposit.IsSponsor = isSponsor
+
+	k.setAccountDeposit(ctx, &deposit)
+	k.setPoolDeposit(ctx, &deposit)
+
+	return nil
+}
+
 // setPoolDeposit sets a deposit to the pool deposit key
 func (k Keeper) setPoolDeposit(ctx sdk.Context, deposit *types.Deposit) {
 	store := ctx.KVStore(k.storeKey)

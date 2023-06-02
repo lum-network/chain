@@ -5,7 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	gogotypes "github.com/cosmos/gogoproto/types"
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
@@ -508,6 +508,203 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 		DepositorAddress: suite.addrs[0].String(),
 	})
 	suite.Require().ErrorIs(err, millionstypes.ErrInvalidDepositState)
+}
+
+// TestMsgServer_DepositEdit tests the edition of a winnerAddr and sponsor
+func (suite *KeeperTestSuite) TestMsgServer_DepositEdit() {
+	// Set the app context
+	app := suite.app
+	ctx := suite.ctx
+	goCtx := sdk.WrapSDKContext(ctx)
+	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
+
+	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
+	drawDelta1 := 1 * time.Hour
+	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
+		PoolId: poolID,
+		PrizeStrategy: millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
+			},
+		},
+		DrawSchedule: millionstypes.DrawSchedule{
+			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
+			DrawDelta:     drawDelta1,
+		},
+		AvailablePrizePool: sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
+	}))
+
+	// Retrieve the pool from the state
+	pools := app.MillionsKeeper.ListPools(ctx)
+
+	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
+		PoolId:           pools[0].PoolId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[0].String(),
+		State:            millionstypes.DepositState_Success,
+		ErrorState:       millionstypes.DepositState_Unspecified,
+		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+	})
+	err := app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[0].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
+	suite.Require().NoError(err)
+
+	deposit, err := app.MillionsKeeper.GetPoolDeposit(ctx, 1, 1)
+	suite.Require().NoError(err)
+	// - Test GetPoolDraw with wrong poolID
+	_, err = app.MillionsKeeper.GetPoolDeposit(ctx, uint64(0), deposit.DepositId)
+	suite.Require().ErrorIs(err, millionstypes.ErrDepositNotFound)
+	// - Test GetPoolDraw with wrong drawID
+	_, err = app.MillionsKeeper.GetPoolDeposit(ctx, deposit.PoolId, uint64(0))
+	suite.Require().ErrorIs(err, millionstypes.ErrDepositNotFound)
+
+	// Test validate Basics
+	// - Test unknown poolID
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           uint64(0),
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[0].String(),
+		IsSponsor: &gogotypes.BoolValue{
+			Value: false,
+		},
+	})
+	suite.Require().ErrorIs(err, millionstypes.ErrInvalidID)
+	// - Test unknown depositID
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        uint64(0),
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[0].String(),
+		IsSponsor: &gogotypes.BoolValue{
+			Value: false,
+		},
+	})
+	suite.Require().ErrorIs(err, millionstypes.ErrInvalidID)
+
+	// Should throw error if depositor Addr msg is different than entity msg
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: "different-address",
+		WinnerAddress:    suite.addrs[0].String(),
+		IsSponsor: &gogotypes.BoolValue{
+			Value: false,
+		},
+	})
+	suite.Require().ErrorIs(err, millionstypes.ErrInvalidDepositorAddress)
+
+	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, 1, 1)
+	suite.Require().NoError(err)
+
+	// Should throw error for an invalid winner address
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    "fake-address",
+		IsSponsor: &gogotypes.BoolValue{
+			Value: false,
+		},
+	})
+	suite.Require().Error(err)
+
+	// Should update winnerAddress valid param
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[1].String(),
+		IsSponsor: &gogotypes.BoolValue{
+			Value: false,
+		},
+	})
+	suite.Require().NoError(err)
+	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, 1, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(suite.addrs[1].String(), deposit.WinnerAddress)
+
+	pool, err := app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	// Sponsor can be nil and default to initial deposit isSponsor
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[1].String(),
+		IsSponsor:        nil,
+	})
+	suite.Require().NoError(err)
+	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, 1, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(false, deposit.IsSponsor)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(int64(0), pool.SponsorshipAmount.Int64())
+
+	// Should update sponsor for deposit and pool SponsorshipAmount for valid sponsor param
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[0].String(),
+		IsSponsor: &gogotypes.BoolValue{
+			Value: true,
+		},
+	})
+	suite.Require().NoError(err)
+	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, 1, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(true, deposit.IsSponsor)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(int64(1_000_000), pool.SponsorshipAmount.Int64())
+
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+
+	// A sponsor cannot designate another winner address
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[1].String(),
+		IsSponsor:        nil,
+	})
+	suite.Require().ErrorIs(err, millionstypes.ErrInvalidSponsorWinnerCombo)
+
+	// Sponsor can be nil and default to initial deposit isSponsor -> In this case true
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[0].String(),
+		IsSponsor:        nil,
+	})
+	suite.Require().NoError(err)
+	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, 1, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(true, deposit.IsSponsor)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(int64(1_000_000), pool.SponsorshipAmount.Int64())
+
+	// Should sub sponsor amount if user is not willing to sponsor anymore
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[1].String(),
+		IsSponsor: &gogotypes.BoolValue{
+			Value: false,
+		},
+	})
+	suite.Require().NoError(err)
+	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, 1, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(false, deposit.IsSponsor)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(int64(0), pool.SponsorshipAmount.Int64())
 }
 
 // TestMsgServer_WithdrawDeposit runs withdrawal deposit related tests
