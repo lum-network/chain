@@ -28,7 +28,6 @@ func SetConfig() {
 	config.SetBech32PrefixForValidator(ValidatorAddressPrefix, ValidatorPubKeyPrefix)
 	config.SetBech32PrefixForConsensusNode(ConsNodeAddressPrefix, ConsNodePubKeyPrefix)
 	config.SetCoinType(CoinType)
-	//nolint:staticcheck
-	config.SetFullFundraiserPath("m/44'/880'/0'/0/0")
+	config.SetFullFundraiserPath("m/44'/880'/0'/0/0") //nolint:staticcheck
 	config.Seal()
 }
