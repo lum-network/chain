@@ -624,8 +624,6 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositEdit() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(suite.addrs[1].String(), deposit.WinnerAddress)
 
-	pool, err := app.MillionsKeeper.GetPool(ctx, 1)
-	suite.Require().NoError(err)
 	// Sponsor can be nil and default to initial deposit isSponsor
 	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
 		PoolId:           deposit.PoolId,
@@ -638,7 +636,7 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositEdit() {
 	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, 1, 1)
 	suite.Require().NoError(err)
 	suite.Require().Equal(false, deposit.IsSponsor)
-	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	pool, err := app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
 	suite.Require().Equal(int64(0), pool.SponsorshipAmount.Int64())
 

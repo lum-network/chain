@@ -595,7 +595,8 @@ func (suite *KeeperTestSuite) TestDeposit_EditDeposit() {
 	// Retrieve the pool from the state
 	pools := app.MillionsKeeper.ListPools(ctx)
 	for i, pool := range pools {
-		app.MillionsKeeper.EditDeposit(ctx, pool.PoolId, deposits[i].DepositId, suite.addrs[1], true)
+		err = app.MillionsKeeper.EditDeposit(ctx, pool.PoolId, deposits[i].DepositId, suite.addrs[1], true)
+		suite.Require().NoError(err)
 		deposit, err := app.MillionsKeeper.GetPoolDeposit(ctx, pool.PoolId, deposits[i].DepositId)
 		suite.Require().NoError(err)
 		pool, err := app.MillionsKeeper.GetPool(ctx, deposit.PoolId)
@@ -609,7 +610,8 @@ func (suite *KeeperTestSuite) TestDeposit_EditDeposit() {
 	// pool SponsorshipAmount should be sub in case user does not want to sponsor anymore
 	pool, err := app.MillionsKeeper.GetPool(ctx, deposits[0].PoolId)
 	suite.Require().NoError(err)
-	app.MillionsKeeper.EditDeposit(ctx, pool.PoolId, deposits[0].DepositId, suite.addrs[1], false)
+	err = app.MillionsKeeper.EditDeposit(ctx, pool.PoolId, deposits[0].DepositId, suite.addrs[1], false)
+	suite.Require().NoError(err)
 	pool, err = app.MillionsKeeper.GetPool(ctx, deposits[0].PoolId)
 	suite.Require().NoError(err)
 	suite.Require().Equal(int64(0), pool.SponsorshipAmount.Int64())
