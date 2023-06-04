@@ -269,7 +269,7 @@ func (app *App) InitNormalKeepers() {
 
 	// Initialize the ICA controller keeper
 	icaControllerKeeper := icacontrollerkeeper.NewKeeper(
-		appCodec, keys[ICAControllerCustomStoreKey],
+		appCodec, keys[icacontrollertypes.StoreKey],
 		app.GetSubspace(icacontrollertypes.SubModuleName),
 		app.IBCFeeKeeper,
 		app.IBCKeeper.ChannelKeeper,
