@@ -73,7 +73,7 @@ func (p *Pool) ShouldDraw(ctx sdk.Context) bool {
 	return false
 }
 
-// GetValidatorsMapIndex maps validators operator address to their index in the Pool.Validators arraray
+// GetValidatorsMapIndex maps validators operator address to their index in the Pool.Validators array
 // utility function to facilitate access to Validators
 func (p *Pool) GetValidatorsMapIndex() map[string]int {
 	valIdx := make(map[string]int)
