@@ -76,6 +76,8 @@ func (k Keeper) SetupPoolICA(ctx sdk.Context, poolID uint64) (*types.Pool, error
 // then moves to SetupPoolWithdrawalAddress once all ICA accounts have been created
 // TODO: error management based on the callback response
 func (k Keeper) OnSetupPoolICACompleted(ctx sdk.Context, poolID uint64, icaType string, icaAddress string) (*types.Pool, error) {
+	logger := k.Logger(ctx).With("ctx", "pool_on_setup_ica_completed")
+
 	// Grab our local pool instance
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
@@ -97,19 +99,23 @@ func (k Keeper) OnSetupPoolICACompleted(ctx sdk.Context, poolID uint64, icaType 
 		// Assign the ICA deposit address
 		pool.IcaDepositAddress = icaAddress
 
-		// Trigger the registration of the ICA prize pool address
-		appVersion, err := k.getPoolAppVersion(ctx, pool)
-		if err != nil {
-			return &pool, errorsmod.Wrapf(types.ErrFailedToRegisterPool, err.Error())
+		if pool.IcaPrizepoolPortId == "" {
+			// First time registering ICA Deposit
+			// Initialize ICA PrizePool
+			appVersion, err := k.getPoolAppVersion(ctx, pool)
+			if err != nil {
+				return &pool, errorsmod.Wrapf(types.ErrFailedToRegisterPool, err.Error())
+			}
+			icaPrizePoolPortName := string(types.NewPoolName(pool.GetPoolId(), types.ICATypePrizePool))
+			pool.IcaPrizepoolPortId, err = icatypes.NewControllerPortID(icaPrizePoolPortName)
+			if err != nil {
+				return &pool, errorsmod.Wrapf(types.ErrFailedToRegisterPool, fmt.Sprintf("Unable to create prizepool account port id, err: %s", err.Error()))
+			}
+			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, pool.GetConnectionId(), icaPrizePoolPortName, appVersion); err != nil {
+				logger.Error("Unable to trigger prizepool account registration, err: %s", err.Error())
+			}
 		}
-		icaPrizePoolPortName := string(types.NewPoolName(pool.GetPoolId(), types.ICATypePrizePool))
-		pool.IcaPrizepoolPortId, err = icatypes.NewControllerPortID(icaPrizePoolPortName)
-		if err != nil {
-			return &pool, errorsmod.Wrapf(types.ErrFailedToRegisterPool, fmt.Sprintf("Unable to create prizepool account port id, err: %s", err.Error()))
-		}
-		if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, pool.GetConnectionId(), icaPrizePoolPortName, appVersion); err != nil {
-			return &pool, errorsmod.Wrapf(types.ErrFailedToRegisterPool, fmt.Sprintf("Unable to trigger prizepool account registration, err: %s", err.Error()))
-		}
+
 		// Save pool state
 		k.updatePool(ctx, &pool)
 	} else if pool.IcaPrizepoolAddress == "" && icaType == types.ICATypePrizePool && len(icaAddress) > 0 {
