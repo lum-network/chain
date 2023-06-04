@@ -249,7 +249,7 @@ func New(
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, icacontrollertypes.StoreKey, icahosttypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
+		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, ICAControllerCustomStoreKey, icahosttypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey,
 		icacallbackstypes.StoreKey, icqueriestypes.StoreKey,
 		beamtypes.StoreKey, airdroptypes.StoreKey, dfracttypes.StoreKey, millionstypes.StoreKey,
@@ -807,7 +807,7 @@ func (app *App) registerUpgradeHandlers() {
 	if upgradeInfo.Name == "v1.4.1" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
 			Deleted: []string{icacontrollertypes.StoreKey},
-			// Added:   []string{ICAControllerCustomStoreKey}, // Rolled back to icacontrollertypes.StoreKey after hardfork (chain halt) at block #7799476
+			Added:   []string{ICAControllerCustomStoreKey},
 		}
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
