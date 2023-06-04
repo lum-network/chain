@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"context"
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/lum-network/chain/x/millions/types"
 )
@@ -40,6 +41,10 @@ func (k msgServer) RestoreInterchainAccounts(goCtx context.Context, msg *types.M
 		if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, pool.GetConnectionId(), icaDepositPortName, appVersion); err != nil {
 			return nil, errorsmod.Wrapf(types.ErrFailedToRestorePool, fmt.Sprintf("Unable to trigger deposit account registration, err: %s", err.Error()))
 		}
+		// Exit to prevent a double channel registration which might create unpredictable behaviours
+		// The registration of the ICA PrizePool will either be automatically triggered once the ICA Deposit gets ACK (see keeper.OnSetupPoolICACompleted)
+		// or can be restored by calling this method again
+		return &types.MsgRestoreInterchainAccountsResponse{}, nil
 	}
 
 	// Regenerate our prizepool port only if required (open active channel not found)
