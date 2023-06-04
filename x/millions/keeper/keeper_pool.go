@@ -271,12 +271,13 @@ func (k Keeper) RegisterPool(
 	poolID := k.GetNextPoolIDAndIncrement(ctx)
 
 	// Initialize validators
-	validators := make(map[string]*types.PoolValidator)
+	var validators []types.PoolValidator
 	for _, addr := range vals {
-		validators[addr] = &types.PoolValidator{
+		validators = append(validators, types.PoolValidator{
 			OperatorAddress: addr,
 			IsEnabled:       true,
-		}
+			BondedAmount:    sdk.ZeroInt(),
+		})
 	}
 
 	// Initialize our local deposit address
@@ -370,17 +371,20 @@ func (k Keeper) UpdatePool(
 
 	// Update enabled validators
 	if len(vals) > 0 {
-		for addr := range pool.Validators {
-			pool.Validators[addr].IsEnabled = false
+		for i := range pool.Validators {
+			pool.Validators[i].IsEnabled = false
 		}
+		valIdx := pool.GetValidatorsMapIndex()
 		for _, addr := range vals {
-			if _, exists := pool.Validators[addr]; exists {
-				pool.Validators[addr].IsEnabled = true
+			if _, exists := valIdx[addr]; exists {
+				pool.Validators[valIdx[addr]].IsEnabled = true
 			} else {
-				pool.Validators[addr] = &types.PoolValidator{
+				pool.Validators = append(pool.Validators, types.PoolValidator{
 					OperatorAddress: addr,
 					IsEnabled:       true,
-				}
+					BondedAmount:    sdk.ZeroInt(),
+				})
+				valIdx[addr] = len(pool.Validators) - 1
 			}
 		}
 	}

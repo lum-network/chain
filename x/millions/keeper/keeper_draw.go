@@ -662,7 +662,7 @@ func (k Keeper) RunDrawPrizes(ctx sdk.Context, prizePool sdk.Coin, prizeStrat ty
 			PrizeIdx:  i,
 		})
 	}
-	sort.Slice(draws, func(i, j int) bool {
+	sort.SliceStable(draws, func(i, j int) bool {
 		return draws[i].DrawValue.LT(draws[j].DrawValue)
 	})
 

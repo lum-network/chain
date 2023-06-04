@@ -26,12 +26,10 @@ var (
 		"lum10dtsxdl0uj0pw58yvlmsuy8p5mvzvewga5dgl8",
 		"lum17p728nwzmkg5038pepfzeavxfu063aej0shwc8",
 	}
-	defaultValidators = map[string]*millionstypes.PoolValidator{
-		"lumvaloper1qx2dts3tglxcu0jh47k7ghstsn4nactufgmmlk": {
-			OperatorAddress: "lumvaloper1qx2dts3tglxcu0jh47k7ghstsn4nactufgmmlk",
-			BondedAmount:    sdk.ZeroInt(),
-		},
-	}
+	defaultValidators = []millionstypes.PoolValidator{{
+		OperatorAddress: "lumvaloper1qx2dts3tglxcu0jh47k7ghstsn4nactufgmmlk",
+		BondedAmount:    sdk.ZeroInt(),
+	}}
 	defaultSchedule   = millionstypes.DrawSchedule{DrawDelta: 404 * time.Hour, InitialDrawAt: now}
 	defaultPrizeStrat = millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 1, DrawProbability: sdk.NewDec(1)}}}
 )
@@ -173,7 +171,7 @@ func TestInitGenesis(t *testing.T) {
 	// Deposits should all have been imported
 	deposits := app.MillionsKeeper.ListDeposits(ctx)
 	require.Len(t, deposits, len(testGenesis.Deposits))
-	sort.Slice(deposits, func(i, j int) bool {
+	sort.SliceStable(deposits, func(i, j int) bool {
 		return deposits[i].DepositId < deposits[j].DepositId
 	})
 	for i, d := range deposits {
@@ -337,7 +335,7 @@ func TestExportGenesis(t *testing.T) {
 
 	// Test deposits export
 	require.Len(t, exportGenesis.Deposits, len(testGenesis.Deposits))
-	sort.Slice(exportGenesis.Deposits, func(i, j int) bool {
+	sort.SliceStable(exportGenesis.Deposits, func(i, j int) bool {
 		return exportGenesis.Deposits[i].DepositId < exportGenesis.Deposits[j].DepositId
 	})
 	for i, d := range testGenesis.Deposits {
