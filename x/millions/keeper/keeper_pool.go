@@ -665,6 +665,8 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, pool types.Pool, accountTy
 	return res.Sequence, nil
 }
 
+// BroadcastICQuery broadcasts an ICQ query
+// Also registeres the requested callback
 func (k Keeper) BroadcastICQuery(ctx sdk.Context, pool types.Pool, callbackID string, extraID string, queryType string, queryData []byte, timeoutNanos uint64) error {
 	// Pool must be ready to process those kind of operations
 	if pool.GetState() != types.PoolState_Ready {

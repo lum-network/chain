@@ -206,6 +206,9 @@ func (k Keeper) OnClaimRewardsOnNativeChainCompleted(ctx sdk.Context, poolID uin
 	return k.QueryRewardsOnNativeChain(ctx, poolID, drawID)
 }
 
+// QueryRewardsOnNativeChain query the available rewards on the remote zone
+// - wait for the ICQ callback to move to OnQueryRewardsOnNativeChainCompleted
+// - or go to OnQueryRewardsOnNativeChainCompleted directly upon query rewards success if local zone
 func (k Keeper) QueryRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
 	logger := k.Logger(ctx).With("func", "draw_query_rewards")
 
@@ -268,6 +271,7 @@ func (k Keeper) QueryRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID
 	return &draw, err
 }
 
+// OnQueryRewardsOnNativeChainCompleted Acknowledge the ICQ query rewards from the remote zone and moves to next step
 func (k Keeper) OnQueryRewardsOnNativeChainCompleted(ctx sdk.Context, poolID uint64, drawID uint64, coins sdk.Coins, isError bool) (*types.Draw, error) {
 	// Acquire pool config
 	pool, err := k.GetPool(ctx, poolID)
