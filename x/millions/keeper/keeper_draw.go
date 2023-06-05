@@ -12,11 +12,14 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
+	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
 	"github.com/lum-network/chain/x/millions/types"
 )
 
@@ -137,7 +140,7 @@ func (k Keeper) ClaimRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID
 		}
 
 		// Dispatch our message with a timeout of 30 minutes in nanos
-		sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Claim, marshalledCallbackData)
+		sequence, err := k.BroadcastICAMessages(ctx, pool, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Claim, marshalledCallbackData)
 		if err != nil {
 			// Return with error here since it is the first operation and nothing needs to be saved to state
 			logger.Error(
@@ -200,7 +203,69 @@ func (k Keeper) OnClaimRewardsOnNativeChainCompleted(ctx sdk.Context, poolID uin
 	k.updatePool(ctx, &pool)
 
 	// Trigger the balance query
-	return k.QueryBalance(ctx, poolID, drawID)
+	return k.QueryRewardsOnNativeChain(ctx, poolID, drawID)
+}
+
+func (k Keeper) QueryRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
+	logger := k.Logger(ctx).With("func", "draw_query_rewards")
+
+	// Acquire pool config
+	pool, err := k.GetPool(ctx, poolID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Acquire Draw
+	draw, err := k.GetPoolDraw(ctx, poolID, drawID)
+	if err != nil {
+		return nil, err
+	}
+	if draw.State != types.DrawState_IcqBalance {
+		return &draw, errorsmod.Wrapf(types.ErrIllegalStateOperation, "state should be %s but is %s", types.DrawState_IcqBalance.String(), draw.State.String())
+	}
+
+	// If it's a local pool, proceed with local balance fetch and synchronously return
+	if pool.IsLocalZone(ctx) {
+		moduleAccAddress := sdk.MustAccAddressFromBech32(pool.GetIcaPrizepoolAddress())
+		balance := k.BankKeeper.GetBalance(ctx, moduleAccAddress, pool.GetNativeDenom())
+		return k.OnQueryRewardsOnNativeChainCompleted(ctx, poolID, drawID, sdk.NewCoins(balance), false)
+	}
+
+	// Encode the ica address for query
+	_, icaAddressBz, err := bech32.DecodeAndConvert(pool.GetIcaPrizepoolAddress())
+	if err != nil {
+		panic(err)
+	}
+
+	// Construct the query data and timeout timestamp (now + 30 minutes)
+	extraID := types.CombineStringKeys(strconv.FormatUint(poolID, 10), strconv.FormatUint(drawID, 10))
+	queryData := append(banktypes.CreateAccountBalancesPrefix(icaAddressBz), []byte(pool.GetNativeDenom())...)
+
+	err = k.BroadcastICQuery(
+		ctx,
+		pool,
+		ICQCallbackID_Balance,
+		extraID,
+		icqueriestypes.BANK_STORE_QUERY_WITH_PROOF,
+		queryData,
+		types.IBCTimeoutNanos,
+	)
+	if err != nil {
+		logger.Error(
+			fmt.Sprintf("failed to dispatch ICQ query balance: %v", err),
+			"pool_id", poolID,
+			"draw_id", drawID,
+			"chain_id", pool.GetChainId(),
+		)
+		return k.OnQueryRewardsOnNativeChainCompleted(ctx, poolID, drawID, nil, true)
+	}
+	logger.Debug(
+		"ICQ query balance dispatched",
+		"pool_id", poolID,
+		"draw_id", drawID,
+		"chain_id", pool.GetChainId(),
+	)
+	return &draw, err
 }
 
 func (k Keeper) OnQueryRewardsOnNativeChainCompleted(ctx sdk.Context, poolID uint64, drawID uint64, coins sdk.Coins, isError bool) (*types.Draw, error) {
@@ -341,7 +406,7 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 	}
 
 	// Dispatch our message with a timeout of 30 minutes in nanos
-	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypePrizePool, msgs, types.IBCTimeoutNanos, ICACallbackID_TransferFromNative, marshalledCallbackData)
+	sequence, err := k.BroadcastICAMessages(ctx, pool, types.ICATypePrizePool, msgs, types.IBCTimeoutNanos, ICACallbackID_TransferFromNative, marshalledCallbackData)
 	if err != nil {
 		// Save error state since we cannot simply recover from a failure at this stage
 		// A subsequent call to DrawRetry will be made possible by setting an error state and not returning an error here

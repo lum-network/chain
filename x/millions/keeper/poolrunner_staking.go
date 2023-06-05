@@ -75,7 +75,7 @@ func (runner *PoolRunnerStaking) DelegateDepositOnRemoteZone(ctx sdk.Context, po
 	}
 
 	// Dispatch our message with a timeout of 30 minutes in nanos
-	sequence, err := runner.keeper.BroadcastICAMessages(ctx, pool.PoolId, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Delegate, marshalledCallbackData)
+	sequence, err := runner.keeper.BroadcastICAMessages(ctx, pool, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Delegate, marshalledCallbackData)
 	if err != nil {
 		// Save error state since we cannot simply recover from a failure at this stage
 		// A subsequent call to DepositRetry will be made possible by setting an error state and not returning an error here

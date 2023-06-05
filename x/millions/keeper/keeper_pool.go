@@ -10,9 +10,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distribtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
@@ -21,7 +19,6 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 
 	icacallbackstypes "github.com/lum-network/chain/x/icacallbacks/types"
-	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
 	"github.com/lum-network/chain/x/millions/types"
 )
 
@@ -173,7 +170,7 @@ func (k Keeper) SetupPoolWithdrawalAddress(ctx sdk.Context, poolID uint64) (*typ
 		DelegatorAddress: pool.GetIcaDepositAddress(),
 		WithdrawAddress:  pool.GetIcaPrizepoolAddress(),
 	}}
-	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_SetWithdrawAddress, marshalledCallbackData)
+	sequence, err := k.BroadcastICAMessages(ctx, pool, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_SetWithdrawAddress, marshalledCallbackData)
 	if err != nil {
 		logger.Error(
 			fmt.Sprintf("failed to dispatch ICA set withdraw address: %v", err),
@@ -548,9 +545,12 @@ func (k Keeper) ListPoolsToDraw(ctx sdk.Context) (pools []types.Pool) {
 	return pools
 }
 
-// BroadcastIBCTransfer transfers a given amount to the native chain ICA account from the local module account
-// amount denom must be based on pool.Denom
-func (k Keeper) BroadcastIBCTransfer(ctx sdk.Context, pool types.Pool, amount sdk.Coin, timeoutNanos uint64, callbackId string, callbackArgs []byte) (uint64, error) {
+// BroadcastIBCTransfer broadcasts and IBC transfer for the a given amount to the Pool remote zone ICA Deposit account from the Pool Local address
+// Amount denom must be based on pool.Denom
+// Also registers the requested callback
+func (k Keeper) BroadcastIBCTransfer(ctx sdk.Context, pool types.Pool, amount sdk.Coin, timeoutNanos uint64, callbackID string, callbackArgs []byte) (uint64, error) {
+	logger := k.Logger(ctx).With("ctx", "pool_broadcast_ibc")
+
 	// Pool must be ready to process those kind of operations
 	if pool.GetState() != types.PoolState_Ready {
 		return 0, types.ErrPoolNotReady
@@ -558,7 +558,7 @@ func (k Keeper) BroadcastIBCTransfer(ctx sdk.Context, pool types.Pool, amount sd
 
 	// Timeout is now plus 30 minutes in nanoseconds
 	// We use the standard transfer port ID and not the one opened for ICA
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTimeoutNanos
+	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + timeoutNanos
 	// From Local to Remote - use transfer channel ID
 	msg := ibctransfertypes.NewMsgTransfer(
 		ibctransfertypes.PortID,
@@ -577,35 +577,43 @@ func (k Keeper) BroadcastIBCTransfer(ctx sdk.Context, pool types.Pool, amount sd
 		return 0, err
 	}
 
-	if callbackId != "" && callbackArgs != nil {
+	if callbackID != "" && callbackArgs != nil {
 		callback := icacallbackstypes.CallbackData{
 			CallbackKey:  icacallbackstypes.PacketID(msg.SourcePort, msg.SourceChannel, res.Sequence),
 			PortId:       msg.SourcePort,
 			ChannelId:    msg.SourceChannel,
 			Sequence:     res.Sequence,
-			CallbackId:   callbackId,
+			CallbackId:   callbackID,
 			CallbackArgs: callbackArgs,
 		}
 		k.ICACallbacksKeeper.SetCallbackData(ctx, callback)
 	}
 
-	k.Logger(ctx).Debug(fmt.Sprintf("Broadcasted IBC transfer with sequence %d", res.Sequence))
+	logger.Debug(
+		fmt.Sprintf("Broadcasted IBC transfer with sequence %d", res.Sequence),
+		"pool_id", pool.GetPoolId(),
+	)
 	return res.Sequence, nil
 }
 
-func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType string, msgs []sdk.Msg, timeoutNanos uint64, callbackId string, callbackArgs []byte) (uint64, error) {
-	// Acquire our pool instance
-	pool, err := k.GetPool(ctx, poolID)
-	if err != nil {
-		return 0, err
+// BroadcastICAMessages broadcasts ICA transaction containing the specified Messages
+// Also registers the requested callback
+func (k Keeper) BroadcastICAMessages(ctx sdk.Context, pool types.Pool, accountType string, msgs []sdk.Msg, timeoutNanos uint64, callbackID string, callbackArgs []byte) (uint64, error) {
+	logger := k.Logger(ctx).With("ctx", "pool_broadcast_ica")
+
+	// Pool must be ready to process those kind of operations
+	if pool.GetState() != types.PoolState_Ready {
+		return 0, types.ErrPoolNotReady
 	}
 
-	// Compute the port ID
+	// Acquire the ICA PortID
 	var portID string
 	if accountType == types.ICATypeDeposit {
 		portID = pool.GetIcaDepositPortId()
 	} else if accountType == types.ICATypePrizePool {
 		portID = pool.GetIcaPrizepoolPortId()
+	} else {
+		return 0, fmt.Errorf("unknown account type %q", accountType)
 	}
 
 	// Acquire the channel capacities
@@ -638,71 +646,44 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType
 	}
 
 	// Store the callback data
-	if callbackId != "" && callbackArgs != nil {
+	if callbackID != "" && callbackArgs != nil {
 		callback := icacallbackstypes.CallbackData{
 			CallbackKey:  icacallbackstypes.PacketID(portID, channelID, res.Sequence),
 			PortId:       portID,
 			ChannelId:    channelID,
 			Sequence:     res.Sequence,
-			CallbackId:   callbackId,
+			CallbackId:   callbackID,
 			CallbackArgs: callbackArgs,
 		}
 		k.ICACallbacksKeeper.SetCallbackData(ctx, callback)
 	}
 
-	k.Logger(ctx).Debug(fmt.Sprintf("Broadcasted ICA messages with sequence %d", res.Sequence))
+	logger.Debug(
+		fmt.Sprintf("Broadcasted ICA messages with sequence %d", res.Sequence),
+		"pool_id", pool.GetPoolId(),
+	)
 	return res.Sequence, nil
 }
 
-func (k Keeper) QueryBalance(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
-	logger := k.Logger(ctx).With("ctx", "pool_query_balance")
-
-	// Acquire our pool instance
-	pool, err := k.GetPool(ctx, poolID)
-	if err != nil {
-		return nil, err
-	}
-
+func (k Keeper) BroadcastICQuery(ctx sdk.Context, pool types.Pool, callbackID string, extraID string, queryType string, queryData []byte, timeoutNanos uint64) error {
 	// Pool must be ready to process those kind of operations
 	if pool.GetState() != types.PoolState_Ready {
-		return nil, types.ErrPoolNotReady
+		return types.ErrPoolNotReady
 	}
 
-	draw, err := k.GetPoolDraw(ctx, poolID, drawID)
-	if err != nil {
-		return nil, err
-	}
-
-	// If it's a local pool, proceed with local balance fetch and synchronously return
-	if pool.IsLocalZone(ctx) {
-		moduleAccAddress := sdk.MustAccAddressFromBech32(pool.GetIcaPrizepoolAddress())
-		balance := k.BankKeeper.GetBalance(ctx, moduleAccAddress, pool.GetNativeDenom())
-		return k.OnQueryRewardsOnNativeChainCompleted(ctx, poolID, drawID, sdk.NewCoins(balance), false)
-	}
-
-	// Encode the ica address for query
-	_, icaAddressBz, err := bech32.DecodeAndConvert(pool.GetIcaPrizepoolAddress())
-	if err != nil {
-		panic(err)
-	}
-
-	// Construct the query data and timeout timestamp (now + 30 minutes)
-	queryData := append(banktypes.CreateAccountBalancesPrefix(icaAddressBz), []byte(pool.GetNativeDenom())...)
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTimeoutNanos
-
-	// Submit the ICQ
-	extraId := types.CombineStringKeys(strconv.FormatUint(poolID, 10), strconv.FormatUint(drawID, 10))
-	err = k.ICQueriesKeeper.MakeRequest(ctx, types.ModuleName, ICQCallbackID_Balance, pool.GetChainId(), pool.GetConnectionId(), extraId, icqueriestypes.BANK_STORE_QUERY_WITH_PROOF, queryData, timeoutTimestamp)
-	if err != nil {
-		logger.Error(
-			fmt.Sprintf("failed to dispatch icq query to fetch prize pool balance: %v", err),
-			"pool_id", poolID,
-			"draw_id", drawID,
-		)
-		return k.OnQueryRewardsOnNativeChainCompleted(ctx, poolID, drawID, sdk.NewCoins(), true)
-	}
-
-	return &draw, nil
+	// Broadcast the query
+	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + timeoutNanos
+	return k.ICQueriesKeeper.MakeRequest(
+		ctx,
+		types.ModuleName,
+		callbackID,
+		pool.GetChainId(),
+		pool.GetConnectionId(),
+		extraID,
+		queryType,
+		queryData,
+		timeoutTimestamp,
+	)
 }
 
 // getPoolAppVersion returns the ICA app version for the pool connection

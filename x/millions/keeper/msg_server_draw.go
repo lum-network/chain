@@ -54,7 +54,7 @@ func (k msgServer) DrawRetry(goCtx context.Context, msg *types.MsgDrawRetry) (*t
 		draw.State = types.DrawState_IcqBalance
 		draw.ErrorState = types.DrawState_Unspecified
 		k.SetPoolDraw(ctx, draw)
-		if _, err := k.QueryBalance(ctx, draw.GetPoolId(), draw.GetDrawId()); err != nil {
+		if _, err := k.QueryRewardsOnNativeChain(ctx, draw.GetPoolId(), draw.GetDrawId()); err != nil {
 			return nil, err
 		}
 		// DrawState_IbcTransfer refers to the failed ibc call if OnTransferRewardsToLocalChainCompleted fails
