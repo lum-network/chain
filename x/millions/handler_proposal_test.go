@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
@@ -28,7 +29,6 @@ type HandlerTestSuite struct {
 	app         *app.App
 	ctx         sdk.Context
 	addrs       []sdk.AccAddress
-	valAddrs    []sdk.ValAddress
 	moduleAddrs []sdk.AccAddress
 	pool        millionstypes.Pool
 
@@ -38,8 +38,6 @@ type HandlerTestSuite struct {
 func (suite *HandlerTestSuite) SetupTest() {
 	app := app.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{ChainID: "lum-network-devnet"})
-	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
-	goCtx := sdk.WrapSDKContext(ctx)
 
 	suite.app = app
 	suite.ctx = ctx
@@ -54,65 +52,24 @@ func (suite *HandlerTestSuite) SetupTest() {
 		suite.moduleAddrs = append(suite.moduleAddrs, poolAddress)
 	}
 
-	pub1 := ed25519.GenPrivKey().PubKey()
-	pub2 := ed25519.GenPrivKey().PubKey()
-	addrs := []sdk.AccAddress{sdk.AccAddress(pub1.Address()), sdk.AccAddress(pub2.Address())}
+	// Generate validators
+	privKeys := make([]cryptotypes.PubKey, 3)
+	addrs := make([]sdk.AccAddress, 3)
+	validators := make([]stakingtypes.Validator, 3)
+	for i := 0; i < 3; i++ {
+		privKey := ed25519.GenPrivKey().PubKey()
+		privKeys[i] = privKey
+		addrs[i] = sdk.AccAddress(privKey.Address())
 
-	validator2, err := stakingtypes.NewValidator(sdk.ValAddress(addrs[0]), pub1, stakingtypes.Description{})
-	suite.Require().NoError(err)
-	validator2 = stakingkeeper.TestingUpdateValidator(*suite.app.StakingKeeper, suite.ctx, validator2, true)
-	err = app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator2.GetOperator())
-	suite.Require().NoError(err)
-
-	validator3, err := stakingtypes.NewValidator(sdk.ValAddress(addrs[1]), pub2, stakingtypes.Description{})
-	suite.Require().NoError(err)
-	validator2 = stakingkeeper.TestingUpdateValidator(*suite.app.StakingKeeper, suite.ctx, validator3, true)
-	err = app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator3.GetOperator())
-	suite.Require().NoError(err)
-
-	vals := app.StakingKeeper.GetAllValidators(ctx)
-	suite.Require().Len(vals, 3)
-	suite.valAddrs = []sdk.ValAddress{}
-	for _, v := range vals {
-		addr, err := sdk.ValAddressFromBech32(v.OperatorAddress)
+		validator, err := stakingtypes.NewValidator(sdk.ValAddress(addrs[i]), privKeys[i], stakingtypes.Description{})
 		suite.Require().NoError(err)
-		suite.valAddrs = append(suite.valAddrs, addr)
-	}
+		validator = stakingkeeper.TestingUpdateValidator(*suite.app.StakingKeeper, suite.ctx, validator, false)
+		err = app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator.GetOperator())
+		suite.Require().NoError(err)
 
-	valAddrs := []string{
-		suite.valAddrs[0].String(),
-		suite.valAddrs[1].String(),
-		suite.valAddrs[2].String(),
-	}
+		validators[i] = validator
+		validators = append(validators, validator)
 
-	valSet := map[string]*millionstypes.PoolValidator{
-		valAddrs[0]: {
-			OperatorAddress: valAddrs[0],
-			BondedAmount:    sdk.NewInt(0),
-			IsEnabled:       true,
-			Redelegate: &millionstypes.Redelegate{
-				IsGovPropRedelegated: false,
-				ErrorState:           millionstypes.RedelegateState_Unspecified,
-			},
-		},
-		valAddrs[1]: {
-			OperatorAddress: valAddrs[1],
-			BondedAmount:    sdk.NewInt(0),
-			IsEnabled:       true,
-			Redelegate: &millionstypes.Redelegate{
-				IsGovPropRedelegated: false,
-				ErrorState:           millionstypes.RedelegateState_Unspecified,
-			},
-		},
-		valAddrs[2]: {
-			OperatorAddress: valAddrs[2],
-			BondedAmount:    sdk.NewInt(0),
-			IsEnabled:       true,
-			Redelegate: &millionstypes.Redelegate{
-				IsGovPropRedelegated: false,
-				ErrorState:           millionstypes.RedelegateState_Unspecified,
-			},
-		},
 	}
 
 	// Initialize dummy pool
@@ -124,11 +81,39 @@ func (suite *HandlerTestSuite) SetupTest() {
 		ChainId:             "lum-network-devnet",
 		Bech32PrefixValAddr: "lumvaloper",
 		Bech32PrefixAccAddr: "lum",
-		IcaDepositAddress:   suite.moduleAddrs[0].String(),
-		Validators:          valSet,
-		MinDepositAmount:    sdk.NewInt(1000000),
-		State:               millionstypes.PoolState_Ready,
-		PoolId:              poolID,
+		Validators: []millionstypes.PoolValidator{
+			{
+				OperatorAddress: validators[0].OperatorAddress,
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+				Redelegate: &millionstypes.Redelegate{
+					IsGovPropRedelegated: false,
+					ErrorState:           millionstypes.RedelegateState_Unspecified,
+				},
+			},
+			{
+				OperatorAddress: validators[1].OperatorAddress,
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+				Redelegate: &millionstypes.Redelegate{
+					IsGovPropRedelegated: false,
+					ErrorState:           millionstypes.RedelegateState_Unspecified,
+				},
+			},
+			{
+				OperatorAddress: validators[2].OperatorAddress,
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+				Redelegate: &millionstypes.Redelegate{
+					IsGovPropRedelegated: false,
+					ErrorState:           millionstypes.RedelegateState_Unspecified,
+				},
+			},
+		},
+		IcaDepositAddress: suite.moduleAddrs[0].String(),
+		MinDepositAmount:  sdk.NewInt(1000000),
+		State:             millionstypes.PoolState_Ready,
+		PoolId:            poolID,
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
 				{PoolPercent: 100, Quantity: 1, DrawProbability: sdk.NewDecWithPrec(int64(0.00*1_000_000), 6)},
@@ -141,28 +126,6 @@ func (suite *HandlerTestSuite) SetupTest() {
 		AvailablePrizePool: sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), math.NewInt(1000)),
 	})
 	suite.pool, _ = app.MillionsKeeper.GetPool(ctx, poolID)
-	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(suite.pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin("ulum", sdk.NewInt(8_000_000))})
-	suite.Require().NoError(err)
-
-	validator2, _ = validator2.AddTokensFromDel(sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction))
-	apptesting.InitAccountWithCoins(suite.app, suite.ctx, sdk.MustAccAddressFromBech32(suite.pool.IcaDepositAddress), sdk.NewCoins(sdk.NewCoin("ulum", sdk.NewInt(1_000_000))))
-	_, err = suite.app.StakingKeeper.Delegate(suite.ctx, sdk.MustAccAddressFromBech32(suite.pool.IcaDepositAddress), sdk.NewInt(1_000_000), stakingtypes.Unbonded, validator2, true)
-	validator2.UpdateStatus(stakingtypes.Bonded)
-	suite.Require().NoError(err)
-
-	validator3, _ = validator3.AddTokensFromDel(sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction))
-	apptesting.InitAccountWithCoins(suite.app, suite.ctx, sdk.MustAccAddressFromBech32(suite.pool.IcaDepositAddress), sdk.NewCoins(sdk.NewCoin("ulum", sdk.NewInt(1_000_000))))
-	_, err = suite.app.StakingKeeper.Delegate(suite.ctx, sdk.MustAccAddressFromBech32(suite.pool.IcaDepositAddress), sdk.NewInt(1_000_000), stakingtypes.Unbonded, validator3, true)
-	validator3.UpdateStatus(stakingtypes.Bonded)
-	suite.Require().NoError(err)
-
-	// Initialize a deposit for redelegation to validators
-	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
-		DepositorAddress: suite.addrs[0].String(),
-		PoolId:           suite.pool.PoolId,
-		Amount:           sdk.NewCoin("ulum", sdk.NewInt(6_000_000)),
-	})
-	suite.Require().NoError(err)
 }
 
 func (suite *HandlerTestSuite) TestProposal_RegisterPool() {
@@ -468,6 +431,20 @@ func (suite *HandlerTestSuite) TestProposal_UpdateParams() {
 }
 
 func (suite *HandlerTestSuite) TestProposal_DisableValidator() {
+	msgServer := millionskeeper.NewMsgServerImpl(*suite.app.MillionsKeeper)
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	err := suite.app.BankKeeper.SendCoins(suite.ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(suite.pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin("ulum", sdk.NewInt(10_000_000))})
+	suite.Require().NoError(err)
+
+	// Initialize a deposit for redelegation to validators
+	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
+		DepositorAddress: suite.addrs[0].String(),
+		PoolId:           suite.pool.PoolId,
+		Amount:           sdk.NewCoin("ulum", sdk.NewInt(10_000_000)),
+	})
+	suite.Require().NoError(err)
+
 	cases := []struct {
 		name            string
 		proposal        govtypesv1beta1.Content
@@ -481,14 +458,20 @@ func (suite *HandlerTestSuite) TestProposal_DisableValidator() {
 			true,
 		},
 		{
-			"Should fail with wrong poolID",
-			millionstypes.NewDisableValidatorProposal("Test title", "test description", suite.valAddrs[0].String(), uint64(0)),
+			"Should fail with unknown poolID",
+			millionstypes.NewDisableValidatorProposal("Test title", "test description", suite.pool.Validators[1].OperatorAddress, uint64(0)),
 			true,
 			true,
 		},
 		{
-			"Should pass with sufficient delegation shares",
-			millionstypes.NewDisableValidatorProposal("Test title", "test description", suite.valAddrs[2].String(), suite.pool.GetPoolId()),
+			"Should fail with wrong poolID",
+			millionstypes.NewDisableValidatorProposal("Test title", "test description", suite.pool.Validators[1].OperatorAddress, uint64(10)),
+			false,
+			true,
+		},
+		{
+			"Should pass with valid params",
+			millionstypes.NewDisableValidatorProposal("Test title", "test description", suite.pool.Validators[1].OperatorAddress, suite.pool.GetPoolId()),
 			false,
 			false,
 		},

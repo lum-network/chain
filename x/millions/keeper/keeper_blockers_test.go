@@ -46,13 +46,11 @@ func (suite *KeeperTestSuite) TestBlockers_PoolUpdates() {
 			DrawDelta:     drawDelta2,
 		},
 		AvailablePrizePool: sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), math.NewInt(1000)),
-		Validators: map[string]*millionstypes.PoolValidator{
-			"lumvaloper1qx2dts3tglxcu0jh47k7ghstsn4nactufgmmlk": {
-				OperatorAddress: "lumvaloper1qx2dts3tglxcu0jh47k7ghstsn4nactufgmmlk",
-				IsEnabled:       true,
-				BondedAmount:    math.NewInt(1_000_000),
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: "lumvaloper1qx2dts3tglxcu0jh47k7ghstsn4nactufgmmlk",
+			IsEnabled:       true,
+			BondedAmount:    math.NewInt(1_000_000),
+		}},
 	}))
 
 	// Pool3 should be able to draw (until we hardset faulty draw config)
@@ -375,8 +373,8 @@ func (suite *KeeperTestSuite) TestBlockers_RedelegateUpdates() {
 		"cosmosvaloper1vvwtk805lxehwle9l4yudmq6mn0g32px9xtkhc",
 	}
 
-	valSetRemote := map[string]*millionstypes.PoolValidator{
-		valAddrsRemote[0]: {
+	valSetRemote := []millionstypes.PoolValidator{
+		{
 			OperatorAddress: valAddrsRemote[0],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
@@ -386,7 +384,7 @@ func (suite *KeeperTestSuite) TestBlockers_RedelegateUpdates() {
 				State:                millionstypes.RedelegateState_IcaRedelegate,
 			},
 		},
-		valAddrsRemote[1]: {
+		{
 			OperatorAddress: valAddrsRemote[1],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
@@ -396,7 +394,7 @@ func (suite *KeeperTestSuite) TestBlockers_RedelegateUpdates() {
 				State:                millionstypes.RedelegateState_IcaRedelegate,
 			},
 		},
-		valAddrsRemote[2]: {
+		{
 			OperatorAddress: valAddrsRemote[2],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
@@ -406,7 +404,7 @@ func (suite *KeeperTestSuite) TestBlockers_RedelegateUpdates() {
 				State:                millionstypes.RedelegateState_IcaRedelegate,
 			},
 		},
-		valAddrsRemote[3]: {
+		{
 			OperatorAddress: valAddrsRemote[3],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
@@ -416,7 +414,7 @@ func (suite *KeeperTestSuite) TestBlockers_RedelegateUpdates() {
 				State:                millionstypes.RedelegateState_IcaRedelegate,
 			},
 		},
-		valAddrsRemote[4]: {
+		{
 			OperatorAddress: valAddrsRemote[4],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
@@ -471,10 +469,10 @@ func (suite *KeeperTestSuite) TestBlockers_RedelegateUpdates() {
 	suite.Require().NoError(err)
 
 	// simulate that the pool got updated with disabled validator
-	bondedDisabledAmount := pool.Validators[valAddrsRemote[0]].BondedAmount
+	bondedDisabledAmount := pool.Validators[0].BondedAmount
 	// Disable the target validator
-	pool.Validators[valAddrsRemote[0]].Redelegate.IsGovPropRedelegated = true
-	pool.Validators[valAddrsRemote[0]].IsEnabled = false
+	pool.Validators[0].Redelegate.IsGovPropRedelegated = true
+	pool.Validators[0].IsEnabled = false
 
 	splits = pool.ComputeSplitDelegations(ctx, bondedDisabledAmount)
 	suite.Require().Len(splits, 4)
@@ -509,14 +507,14 @@ func (suite *KeeperTestSuite) TestBlockers_RedelegateUpdates() {
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
 
-	suite.Require().Equal(millionstypes.RedelegateState_Success, pool.Validators[valAddrsRemote[0]].Redelegate.State)
-	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[valAddrsRemote[0]].Redelegate.ErrorState)
-	suite.Require().Equal(millionstypes.RedelegateState_Success, pool.Validators[valAddrsRemote[1]].Redelegate.State)
-	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[valAddrsRemote[1]].Redelegate.ErrorState)
-	suite.Require().Equal(millionstypes.RedelegateState_Success, pool.Validators[valAddrsRemote[2]].Redelegate.State)
-	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[valAddrsRemote[2]].Redelegate.ErrorState)
-	suite.Require().Equal(millionstypes.RedelegateState_Success, pool.Validators[valAddrsRemote[3]].Redelegate.State)
-	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[valAddrsRemote[3]].Redelegate.ErrorState)
-	suite.Require().Equal(millionstypes.RedelegateState_Failure, pool.Validators[valAddrsRemote[4]].Redelegate.State)
-	suite.Require().Equal(millionstypes.RedelegateState_IcaRedelegate, pool.Validators[valAddrsRemote[4]].Redelegate.ErrorState)
+	suite.Require().Equal(millionstypes.RedelegateState_Success, pool.Validators[0].Redelegate.State)
+	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[0].Redelegate.ErrorState)
+	suite.Require().Equal(millionstypes.RedelegateState_Success, pool.Validators[1].Redelegate.State)
+	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[1].Redelegate.ErrorState)
+	suite.Require().Equal(millionstypes.RedelegateState_Success, pool.Validators[2].Redelegate.State)
+	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[2].Redelegate.ErrorState)
+	suite.Require().Equal(millionstypes.RedelegateState_Success, pool.Validators[3].Redelegate.State)
+	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[3].Redelegate.ErrorState)
+	suite.Require().Equal(millionstypes.RedelegateState_Failure, pool.Validators[4].Redelegate.State)
+	suite.Require().Equal(millionstypes.RedelegateState_IcaRedelegate, pool.Validators[4].Redelegate.ErrorState)
 }

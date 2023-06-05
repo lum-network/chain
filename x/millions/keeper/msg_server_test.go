@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -685,13 +686,11 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 		PoolId:      uint64(1),
 		Denom:       localPoolDenom,
 		NativeDenom: localPoolDenom,
-		Validators: map[string]*millionstypes.PoolValidator{
-			suite.valAddrs[0].String(): {
-				OperatorAddress: suite.valAddrs[0].String(),
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: suite.valAddrs[0].String(),
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
 				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
@@ -936,48 +935,59 @@ func (suite *KeeperTestSuite) TestMsgServer_RedelegateRetry() {
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 
-	pub1 := ed25519.GenPrivKey().PubKey()
-	pub2 := ed25519.GenPrivKey().PubKey()
-	addrs2 := []sdk.AccAddress{sdk.AccAddress(pub1.Address()), sdk.AccAddress(pub2.Address())}
+	privKeys := make([]cryptotypes.PubKey, 3)
+	addrs := make([]sdk.AccAddress, 3)
+	validators := make([]stakingtypes.Validator, 3)
+	for i := 0; i < 3; i++ {
+		privKey := ed25519.GenPrivKey().PubKey()
+		privKeys[i] = privKey
+		addrs[i] = sdk.AccAddress(privKey.Address())
 
-	validator2, err := stakingtypes.NewValidator(sdk.ValAddress(addrs2[0]), pub1, stakingtypes.Description{})
-	suite.Require().NoError(err)
-	validator2 = stakingkeeper.TestingUpdateValidator(*suite.app.StakingKeeper, suite.ctx, validator2, true)
-	err = app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator2.GetOperator())
-	suite.Require().NoError(err)
+		validator, err := stakingtypes.NewValidator(sdk.ValAddress(addrs[i]), privKeys[i], stakingtypes.Description{})
+		suite.Require().NoError(err)
+		validator = stakingkeeper.TestingUpdateValidator(*suite.app.StakingKeeper, suite.ctx, validator, false)
+		err = app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator.GetOperator())
+		suite.Require().NoError(err)
 
-	// create local pool with local valAddresses
-	valAddrs := []string{
-		suite.valAddrs[0].String(),
-		validator2.OperatorAddress,
-	}
+		validators[i] = validator
+		validators = append(validators, validator)
 
-	valSet := map[string]*millionstypes.PoolValidator{
-		valAddrs[0]: {
-			OperatorAddress: valAddrs[0],
-			BondedAmount:    sdk.NewInt(0),
-			IsEnabled:       true,
-			Redelegate: &millionstypes.Redelegate{
-				IsGovPropRedelegated: false,
-				ErrorState:           millionstypes.RedelegateState_Unspecified,
-				State:                millionstypes.RedelegateState_Unspecified,
-			},
-		},
-		valAddrs[1]: {
-			OperatorAddress: valAddrs[1],
-			BondedAmount:    sdk.NewInt(0),
-			IsEnabled:       true,
-			Redelegate: &millionstypes.Redelegate{
-				IsGovPropRedelegated: true,
-				ErrorState:           millionstypes.RedelegateState_IcaRedelegate,
-				State:                millionstypes.RedelegateState_Failure,
-			},
-		},
 	}
 
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
-		PoolId:     1,
-		Validators: valSet,
+		PoolId: 1,
+		Validators: []millionstypes.PoolValidator{
+			{
+				OperatorAddress: validators[0].OperatorAddress,
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+				Redelegate: &millionstypes.Redelegate{
+					IsGovPropRedelegated: false,
+					ErrorState:           millionstypes.RedelegateState_Unspecified,
+					State:                millionstypes.RedelegateState_Unspecified,
+				},
+			},
+			{
+				OperatorAddress: validators[1].OperatorAddress,
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+				Redelegate: &millionstypes.Redelegate{
+					IsGovPropRedelegated: true,
+					ErrorState:           millionstypes.RedelegateState_IcaRedelegate,
+					State:                millionstypes.RedelegateState_Failure,
+				},
+			},
+			{
+				OperatorAddress: validators[2].OperatorAddress,
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+				Redelegate: &millionstypes.Redelegate{
+					IsGovPropRedelegated: false,
+					ErrorState:           millionstypes.RedelegateState_IcaRedelegate,
+					State:                millionstypes.RedelegateState_Failure,
+				},
+			},
+		},
 	}))
 
 	pool, err := app.MillionsKeeper.GetPool(ctx, 1)
@@ -986,7 +996,7 @@ func (suite *KeeperTestSuite) TestMsgServer_RedelegateRetry() {
 	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
 		DepositorAddress: suite.addrs[0].String(),
 		PoolId:           pool.PoolId,
-		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(2_000_000)),
+		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(3_000_000)),
 	})
 	suite.Require().NoError(err)
 
@@ -997,8 +1007,9 @@ func (suite *KeeperTestSuite) TestMsgServer_RedelegateRetry() {
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
 
-	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[suite.valAddrs[0].String()].BondedAmount)
-	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[validator2.OperatorAddress].BondedAmount)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[0].BondedAmount)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[1].BondedAmount)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[2].BondedAmount)
 
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
@@ -1012,14 +1023,21 @@ func (suite *KeeperTestSuite) TestMsgServer_RedelegateRetry() {
 
 	_, err = msgServer.RedelegateRetry(goCtx, &millionstypes.MsgRedelegateRetry{
 		PoolId:                 1,
-		OperatetorAddress:      valAddrs[1],
+		OperatetorAddress:      pool.Validators[1].OperatorAddress,
 		RedelegateRetryAddress: "",
 	})
 	suite.Require().ErrorIs(err, millionstypes.ErrInvalidRedelegateRetryAddress)
 
 	_, err = msgServer.RedelegateRetry(goCtx, &millionstypes.MsgRedelegateRetry{
 		PoolId:                 1,
-		OperatetorAddress:      valAddrs[1],
+		OperatetorAddress:      pool.Validators[0].OperatorAddress,
+		RedelegateRetryAddress: suite.addrs[0].String(),
+	})
+	suite.Require().ErrorIs(err, millionstypes.ErrValidatorNotRedelegated)
+
+	_, err = msgServer.RedelegateRetry(goCtx, &millionstypes.MsgRedelegateRetry{
+		PoolId:                 1,
+		OperatetorAddress:      pool.Validators[1].OperatorAddress,
 		RedelegateRetryAddress: suite.addrs[0].String(),
 	})
 	suite.Require().NoError(err)
@@ -1027,8 +1045,9 @@ func (suite *KeeperTestSuite) TestMsgServer_RedelegateRetry() {
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
 
-	suite.Require().Equal(sdk.NewInt(2_000_000), pool.Validators[suite.valAddrs[0].String()].BondedAmount)
-	suite.Require().Equal(sdk.NewInt(0), pool.Validators[validator2.OperatorAddress].BondedAmount)
-	suite.Require().Equal(millionstypes.RedelegateState_IcaRedelegateUnbonding, pool.Validators[validator2.OperatorAddress].Redelegate.State)
-	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[validator2.OperatorAddress].Redelegate.ErrorState)
+	suite.Require().Equal(sdk.NewInt(1_500_000), pool.Validators[0].BondedAmount)
+	suite.Require().Equal(sdk.NewInt(1_500_000), pool.Validators[2].BondedAmount)
+	suite.Require().Equal(sdk.NewInt(0), pool.Validators[1].BondedAmount)
+	suite.Require().Equal(millionstypes.RedelegateState_IcaRedelegateUnbonding, pool.Validators[1].Redelegate.State)
+	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[1].Redelegate.ErrorState)
 }

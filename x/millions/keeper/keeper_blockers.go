@@ -174,40 +174,51 @@ func (k Keeper) BlockRedelegateUpdates(ctx sdk.Context) (successCount, errorCoun
 	for _, val := range expiredRedelegatedVals {
 		pool, err := k.GetPool(ctx, val.PoolId)
 
-		if err == nil && pool.Validators[val.OperatorAddress].Redelegate.State == types.RedelegateState_IcaRedelegateUnbonding {
-			cacheCtx, writeCache := ctx.CacheContext()
+		if err == nil {
+			indexVal, _, err := pool.FindValidatorByOperatorAddress(ctx, val.OperatorAddress)
 
-			if err := k.UpdateRedelegateStatus(cacheCtx, pool.PoolId, types.RedelegateState_Success, val.OperatorAddress, nil, false); err != nil {
+			if err == nil && pool.Validators[indexVal].Redelegate.State == types.RedelegateState_IcaRedelegateUnbonding {
+				cacheCtx, writeCache := ctx.CacheContext()
+
+				if err := k.UpdateRedelegateStatus(cacheCtx, pool.PoolId, types.RedelegateState_Success, val.OperatorAddress, nil, false); err != nil {
+					logger.Error(
+						fmt.Sprintf("failed to update successful redelegation status: %v", err),
+						"pool_id", pool.PoolId,
+						"operator_address", val.OperatorAddress,
+					)
+					// Commit failing state using base context to make retries possible
+					k.UpdateRedelegateStatus(cacheCtx, pool.PoolId, types.RedelegateState_IcaRedelegate, val.OperatorAddress, nil, true)
+					errorCount++
+				} else {
+					// Commit succesful changes
+					writeCache()
+					successCount++
+
+					ctx.EventManager().EmitEvents(sdk.Events{
+						sdk.NewEvent(
+							sdk.EventTypeMessage,
+							sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+						),
+						sdk.NewEvent(
+							types.EventTypeRedelegate,
+							sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(pool.PoolId, 10)),
+							sdk.NewAttribute(types.AttributeKeyOperatorAddress, val.GetOperatorAddress()),
+						),
+					})
+				}
+			} else {
 				logger.Error(
-					fmt.Sprintf("failed to update successful redelegation status: %v", err),
-					"pool_id", pool.PoolId,
+					fmt.Sprintf("failed to acquire pool validator state: %v", err),
+					"pool_id", val.PoolId,
 					"operator_address", val.OperatorAddress,
 				)
-				// Commit failing state using base context to make retries possible
-				k.UpdateRedelegateStatus(cacheCtx, pool.PoolId, types.RedelegateState_IcaRedelegate, val.OperatorAddress, nil, true)
 				errorCount++
-			} else {
-				// Commit succesful changes
-				writeCache()
-				successCount++
-
-				ctx.EventManager().EmitEvents(sdk.Events{
-					sdk.NewEvent(
-						sdk.EventTypeMessage,
-						sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-					),
-					sdk.NewEvent(
-						types.EventTypeRedelegate,
-						sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(pool.PoolId, 10)),
-						sdk.NewAttribute(types.AttributeKeyOperatorAddress, val.GetOperatorAddress()),
-					),
-				})
 			}
+
 		} else {
 			logger.Error(
-				fmt.Sprintf("failed to acquire pool validator state: %v", err),
+				fmt.Sprintf("failed to acquire pool: %v", err),
 				"pool_id", val.PoolId,
-				"operator_address", val.OperatorAddress,
 			)
 			errorCount++
 		}

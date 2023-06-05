@@ -560,13 +560,11 @@ func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 		NativeDenom:         "uatom",
 		ConnectionId:        "connection-id",
 		TransferChannelId:   "transferChannel-id",
-		Validators: map[string]*millionstypes.PoolValidator{
-			cosmosPoolValidator: {
-				OperatorAddress: cosmosPoolValidator,
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: cosmosPoolValidator,
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		IcaDepositAddress:   cosmosIcaDepositAddress,
 		IcaPrizepoolAddress: cosmosIcaPrizePoolAddress,
 		PrizeStrategy: millionstypes.PrizeStrategy{
@@ -586,8 +584,8 @@ func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 
 	// - Test the full deposit process from the transfer till the delegation point
 	// - Test if the validator is enabled and bonded amount
-	suite.Require().Equal(true, pools[0].Validators[cosmosPoolValidator].IsEnabled)
-	suite.Require().Equal(sdk.NewInt(1_000_000), pools[0].Validators[cosmosPoolValidator].BondedAmount)
+	suite.Require().Equal(true, pools[0].Validators[0].IsEnabled)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pools[0].Validators[0].BondedAmount)
 
 	// Create a new deposit and add it to the state
 	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
@@ -645,13 +643,11 @@ func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 		PoolId:      app.MillionsKeeper.GetNextPoolID(ctx),
 		Denom:       "ulum",
 		NativeDenom: "ulum",
-		Validators: map[string]*millionstypes.PoolValidator{
-			suite.valAddrs[0].String(): {
-				OperatorAddress: suite.valAddrs[0].String(),
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: suite.valAddrs[0].String(),
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
 				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
@@ -667,8 +663,8 @@ func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 	suite.Require().Len(pools, 2)
 
 	// - Test if the validator is enabled and bonded amount
-	suite.Require().Equal(true, pools[1].Validators[suite.valAddrs[0].String()].IsEnabled)
-	suite.Require().Equal(sdk.NewInt(1_000_000), pools[1].Validators[suite.valAddrs[0].String()].BondedAmount)
+	suite.Require().Equal(true, pools[1].Validators[0].IsEnabled)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pools[1].Validators[0].BondedAmount)
 
 	// Create a new deposit and add it to the state
 	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
@@ -718,13 +714,11 @@ func (suite *KeeperTestSuite) TestDeposit_DelegateDeposit() {
 		NativeDenom:         "uatom",
 		ConnectionId:        "connection-id",
 		TransferChannelId:   "transferChannel-id",
-		Validators: map[string]*millionstypes.PoolValidator{
-			cosmosPoolValidator: {
-				OperatorAddress: cosmosPoolValidator,
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: cosmosPoolValidator,
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		IcaDepositAddress:   cosmosIcaDepositAddress,
 		IcaPrizepoolAddress: cosmosIcaPrizePoolAddress,
 		PrizeStrategy: millionstypes.PrizeStrategy{
@@ -743,8 +737,8 @@ func (suite *KeeperTestSuite) TestDeposit_DelegateDeposit() {
 	suite.Require().Len(pools, 1)
 
 	// - Test if the validator is enabled and bonded amount
-	suite.Require().Equal(true, pools[0].Validators[cosmosPoolValidator].IsEnabled)
-	suite.Require().Equal(sdk.NewInt(1_000_000), pools[0].Validators[cosmosPoolValidator].BondedAmount)
+	suite.Require().Equal(true, pools[0].Validators[0].IsEnabled)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pools[0].Validators[0].BondedAmount)
 
 	// Create a new deposit and add it to the state
 	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
@@ -798,13 +792,11 @@ func (suite *KeeperTestSuite) TestDeposit_DelegateDeposit() {
 		PoolId:      app.MillionsKeeper.GetNextPoolID(ctx),
 		Denom:       "ulum",
 		NativeDenom: "ulum",
-		Validators: map[string]*millionstypes.PoolValidator{
-			suite.valAddrs[0].String(): {
-				OperatorAddress: suite.valAddrs[0].String(),
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: suite.valAddrs[0].String(),
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
 				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
@@ -820,8 +812,8 @@ func (suite *KeeperTestSuite) TestDeposit_DelegateDeposit() {
 	suite.Require().Len(pools, 2)
 
 	// - Test if the validator is enabled and bonded amount
-	suite.Require().Equal(true, pools[1].Validators[suite.valAddrs[0].String()].IsEnabled)
-	suite.Require().Equal(sdk.NewInt(1_000_000), pools[1].Validators[suite.valAddrs[0].String()].BondedAmount)
+	suite.Require().Equal(true, pools[1].Validators[0].IsEnabled)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pools[1].Validators[0].BondedAmount)
 
 	// Create a new deposit and add it to the state
 	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
@@ -875,13 +867,11 @@ func (suite *KeeperTestSuite) TestDeposit_BalanceDeposit() {
 		NativeDenom:         "uatom",
 		ConnectionId:        "connection-id",
 		TransferChannelId:   "transferChannel-id",
-		Validators: map[string]*millionstypes.PoolValidator{
-			cosmosPoolValidator: {
-				OperatorAddress: cosmosPoolValidator,
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: cosmosPoolValidator,
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		IcaDepositAddress:   cosmosIcaDepositAddress,
 		IcaPrizepoolAddress: cosmosIcaPrizePoolAddress,
 		PrizeStrategy: millionstypes.PrizeStrategy{
@@ -907,8 +897,8 @@ func (suite *KeeperTestSuite) TestDeposit_BalanceDeposit() {
 	suite.Require().Equal(int64(0), balanceModuleAccBefore.Amount.Int64())
 
 	// - Test if the validator is enabled and bonded amount
-	suite.Require().Equal(true, pools[0].Validators[cosmosPoolValidator].IsEnabled)
-	suite.Require().Equal(sdk.NewInt(1_000_000), pools[0].Validators[cosmosPoolValidator].BondedAmount)
+	suite.Require().Equal(true, pools[0].Validators[0].IsEnabled)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pools[0].Validators[0].BondedAmount)
 
 	// Create a new deposit and add it to the state
 	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
@@ -967,13 +957,11 @@ func (suite *KeeperTestSuite) TestDeposit_BalanceDeposit() {
 		PoolId:      app.MillionsKeeper.GetNextPoolID(ctx),
 		Denom:       "ulum",
 		NativeDenom: "ulum",
-		Validators: map[string]*millionstypes.PoolValidator{
-			suite.valAddrs[0].String(): {
-				OperatorAddress: suite.valAddrs[0].String(),
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: suite.valAddrs[0].String(),
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
 				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
@@ -996,8 +984,8 @@ func (suite *KeeperTestSuite) TestDeposit_BalanceDeposit() {
 	suite.Require().Equal(int64(0), balanceModuleAccBefore.Amount.Int64())
 
 	// - Test if the validator is enabled and bonded amount
-	suite.Require().Equal(true, pools[1].Validators[suite.valAddrs[0].String()].IsEnabled)
-	suite.Require().Equal(sdk.NewInt(1_000_000), pools[1].Validators[suite.valAddrs[0].String()].BondedAmount)
+	suite.Require().Equal(true, pools[1].Validators[0].IsEnabled)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pools[1].Validators[0].BondedAmount)
 
 	// Create a new deposit and add it to the state
 	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
@@ -1088,13 +1076,11 @@ func (suite *KeeperTestSuite) TestDeposit_FullDepositProcess() {
 		PoolId:      poolID,
 		Denom:       "ulum",
 		NativeDenom: "ulum",
-		Validators: map[string]*millionstypes.PoolValidator{
-			suite.valAddrs[0].String(): {
-				OperatorAddress: suite.valAddrs[0].String(),
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: suite.valAddrs[0].String(),
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
 				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
@@ -1118,8 +1104,8 @@ func (suite *KeeperTestSuite) TestDeposit_FullDepositProcess() {
 	suite.Require().Equal(int64(0), balanceModuleAccBefore.Amount.Int64())
 
 	// - Test if the validator is enabled and bonded amount
-	suite.Require().Equal(true, pools[0].Validators[suite.valAddrs[0].String()].IsEnabled)
-	suite.Require().Equal(sdk.NewInt(1_000_000), pools[0].Validators[suite.valAddrs[0].String()].BondedAmount)
+	suite.Require().Equal(true, pools[0].Validators[0].IsEnabled)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pools[0].Validators[0].BondedAmount)
 
 	// Create a new deposit and add it to the state
 	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{

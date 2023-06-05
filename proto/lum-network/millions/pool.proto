@@ -43,7 +43,7 @@ message Pool {
   string ica_prizepool_port_id = 8;
   reserved 9;
 
-  map<string, PoolValidator> validators = 10;
+  repeated PoolValidator validators = 10 [ (gogoproto.nullable) = false ];
   string bech32_prefix_acc_addr = 11;
   string bech32_prefix_val_addr = 12;
 

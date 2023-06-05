@@ -27,13 +27,17 @@ func (k msgServer) RedelegateRetry(goCtx context.Context, msg *types.MsgRedelega
 		return nil, types.ErrInvalidRedelegateRetryAddress
 	}
 
-	validator, found := pool.Validators[msg.GetOperatetorAddress()]
-	if !found {
-		return nil, errorsmod.Wrapf(types.ErrValidatorNotFound, "%s", validator.String())
+	_, validator, err := pool.FindValidatorByOperatorAddress(ctx, msg.GetOperatetorAddress())
+	if err != nil {
+		return nil, err
 	}
 
 	if !validator.Redelegate.IsGovPropRedelegated {
 		return nil, types.ErrValidatorNotRedelegated
+	}
+
+	if !validator.IsEnabled {
+		return nil, types.ErrValidatorNotDisabled
 	}
 
 	// State should be set to failure in order to retry something
@@ -46,9 +50,7 @@ func (k msgServer) RedelegateRetry(goCtx context.Context, msg *types.MsgRedelega
 	}
 
 	if validator.Redelegate.ErrorState == types.RedelegateState_IcaRedelegate {
-		redelegationEndsAt := pool.Validators[validator.GetOperatorAddress()].Redelegate.RedelegationEndsAt
-
-		if err := k.UpdateRedelegateStatus(ctx, pool.PoolId, types.RedelegateState_IcaRedelegate, validator.GetOperatorAddress(), redelegationEndsAt, false); err != nil {
+		if err := k.UpdateRedelegateStatus(ctx, pool.PoolId, types.RedelegateState_IcaRedelegate, validator.GetOperatorAddress(), validator.Redelegate.RedelegationEndsAt, false); err != nil {
 			return &types.MsgRedelegateRetryResponse{}, err
 		}
 
