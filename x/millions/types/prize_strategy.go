@@ -42,7 +42,7 @@ func (ps PrizeStrategy) ComputePrizesProbs(prizePool sdk.Coin) (prizesProbs []Pr
 	usedAmount = sdk.ZeroInt()
 	remainingAmount = prizePool.Amount
 	sortedBatches := append([]PrizeBatch{}, ps.PrizeBatches...)
-	sort.Slice(sortedBatches, func(i, j int) bool {
+	sort.SliceStable(sortedBatches, func(i, j int) bool {
 		return sortedBatches[i].GetPrizeAmount(prizePool).GT(sortedBatches[j].GetPrizeAmount(prizePool))
 	})
 

@@ -76,7 +76,7 @@ func GetPoolKey(poolID uint64) []byte {
 }
 
 func NewPoolName(poolID uint64, addressType string) []byte {
-	key := []byte(fmt.Sprintf("pool%d.%s", poolID, addressType))
+	key := []byte(fmt.Sprintf("pool.%d.%s", poolID, addressType))
 	return key
 }
 
