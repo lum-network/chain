@@ -1188,13 +1188,11 @@ func (suite *KeeperTestSuite) TestDraw_ClaimRewardsOnNativeChain() {
 		NativeDenom:         remotePoolDenom,
 		ConnectionId:        remoteConnectionId,
 		TransferChannelId:   remoteTransferChannelId,
-		Validators: map[string]*millionstypes.PoolValidator{
-			cosmosPoolValidator: {
-				OperatorAddress: cosmosPoolValidator,
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: cosmosPoolValidator,
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		IcaDepositAddress:   cosmosIcaDepositAddress,
 		IcaPrizepoolAddress: cosmosIcaPrizePoolAddress,
 		PrizeStrategy: millionstypes.PrizeStrategy{
@@ -1267,13 +1265,11 @@ func (suite *KeeperTestSuite) TestDraw_ClaimRewardsOnNativeChain() {
 		PoolId:      app.MillionsKeeper.GetNextPoolID(ctx),
 		Denom:       localPoolDenom,
 		NativeDenom: localPoolDenom,
-		Validators: map[string]*millionstypes.PoolValidator{
-			suite.valAddrs[0].String(): {
-				OperatorAddress: suite.valAddrs[0].String(),
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: suite.valAddrs[0].String(),
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
 				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(1.00)},
@@ -1340,13 +1336,11 @@ func (suite *KeeperTestSuite) TestDraw_TransferRewardsToLocalChain() {
 		NativeDenom:         remotePoolDenom,
 		ConnectionId:        remoteConnectionId,
 		TransferChannelId:   remoteTransferChannelId,
-		Validators: map[string]*millionstypes.PoolValidator{
-			cosmosPoolValidator: {
-				OperatorAddress: cosmosPoolValidator,
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: cosmosPoolValidator,
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		IcaDepositAddress:   cosmosIcaDepositAddress,
 		IcaPrizepoolAddress: cosmosIcaPrizePoolAddress,
 		PrizeStrategy: millionstypes.PrizeStrategy{
@@ -1411,13 +1405,11 @@ func (suite *KeeperTestSuite) TestDraw_TransferRewardsToLocalChain() {
 		PoolId:      app.MillionsKeeper.GetNextPoolID(ctx),
 		Denom:       localPoolDenom,
 		NativeDenom: localPoolDenom,
-		Validators: map[string]*millionstypes.PoolValidator{
-			suite.valAddrs[0].String(): {
-				OperatorAddress: suite.valAddrs[0].String(),
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: suite.valAddrs[0].String(),
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
 				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(1.00)},

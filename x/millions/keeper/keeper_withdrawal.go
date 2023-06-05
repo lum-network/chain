@@ -9,8 +9,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
 	"github.com/lum-network/chain/x/millions/types"
 )
@@ -203,13 +204,21 @@ func (k Keeper) TransferWithdrawalToLocalChain(ctx sdk.Context, poolID uint64, w
 		return err
 	}
 
+	// We start by acquiring the counterparty channel id
+	transferChannel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, ibctransfertypes.PortID, pool.GetTransferChannelId())
+	if !found {
+		return errorsmod.Wrapf(channeltypes.ErrChannelNotFound, "transfer channel %s not found", pool.GetTransferChannelId())
+	}
+	counterpartyChannelId := transferChannel.Counterparty.ChannelId
+
 	// Converts the local ibc Denom into the native chain Denom
 	amount := sdk.NewCoin(pool.NativeDenom, withdrawal.Amount.Amount)
 	// Build transfer tx
 	var msgs []sdk.Msg
-	msgs = append(msgs, ibctypes.NewMsgTransfer(
-		ibctypes.PortID,
-		pool.GetTransferChannelId(),
+	// From Remote to Local - use counterparty transfer channel ID
+	msgs = append(msgs, ibctransfertypes.NewMsgTransfer(
+		ibctransfertypes.PortID,
+		counterpartyChannelId,
 		amount,
 		pool.GetIcaDepositAddress(),
 		withdrawal.GetToAddress(),

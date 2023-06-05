@@ -46,13 +46,11 @@ func (suite *KeeperTestSuite) TestBlockers_PoolUpdates() {
 			DrawDelta:     drawDelta2,
 		},
 		AvailablePrizePool: sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), math.NewInt(1000)),
-		Validators: map[string]*millionstypes.PoolValidator{
-			"lumvaloper1qx2dts3tglxcu0jh47k7ghstsn4nactufgmmlk": {
-				OperatorAddress: "lumvaloper1qx2dts3tglxcu0jh47k7ghstsn4nactufgmmlk",
-				IsEnabled:       true,
-				BondedAmount:    math.NewInt(1_000_000),
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: "lumvaloper1qx2dts3tglxcu0jh47k7ghstsn4nactufgmmlk",
+			IsEnabled:       true,
+			BondedAmount:    math.NewInt(1_000_000),
+		}},
 	}))
 
 	// Pool3 should be able to draw (until we hardset faulty draw config)
