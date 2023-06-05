@@ -47,9 +47,11 @@ func (suite *HandlerTestSuite) SetupTest() {
 		ChainId:             "lum-network-devnet",
 		Bech32PrefixValAddr: "lumvaloper",
 		Bech32PrefixAccAddr: "lum",
-		Validators: map[string]*millionstypes.PoolValidator{
-			"lumvaloper16rlynj5wvzwts5lqep0je5q4m3eaepn5cqj38s": {IsEnabled: true, BondedAmount: sdk.NewInt(10), OperatorAddress: "lumvaloper16rlynj5wvzwts5lqep0je5q4m3eaepn5cqj38s"},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: "lumvaloper16rlynj5wvzwts5lqep0je5q4m3eaepn5cqj38s",
+			IsEnabled:       true,
+			BondedAmount:    sdk.NewInt(10),
+		}},
 		MinDepositAmount: sdk.NewInt(1000000),
 		State:            millionstypes.PoolState_Ready,
 		PoolId:           poolID,
