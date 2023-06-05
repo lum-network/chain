@@ -680,8 +680,8 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 		NativeDenom:         remotePoolDenom,
 		ConnectionId:        remoteConnectionId,
 		TransferChannelId:   remoteTransferChannelId,
-		Validators: map[string]*millionstypes.PoolValidator{
-			cosmosPoolValidator: {
+		Validators: []millionstypes.PoolValidator{
+			{
 				OperatorAddress: cosmosPoolValidator,
 				BondedAmount:    sdk.NewInt(1_000_000),
 				IsEnabled:       true,
@@ -753,13 +753,11 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 		PoolId:      uint64(1),
 		Denom:       localPoolDenom,
 		NativeDenom: localPoolDenom,
-		Validators: map[string]*millionstypes.PoolValidator{
-			suite.valAddrs[0].String(): {
-				OperatorAddress: suite.valAddrs[0].String(),
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: suite.valAddrs[0].String(),
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
 				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},

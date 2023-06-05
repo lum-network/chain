@@ -2,21 +2,20 @@ package millions
 
 import (
 	"fmt"
-	"github.com/lum-network/chain/x/millions/types"
-
-	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
 
 	"github.com/lum-network/chain/x/icacallbacks"
 	icacallbacktypes "github.com/lum-network/chain/x/icacallbacks/types"
 	"github.com/lum-network/chain/x/millions/keeper"
+	"github.com/lum-network/chain/x/millions/types"
 )
 
 // Map the interface
@@ -131,8 +130,8 @@ func (im IBCModule) OnAcknowledgementPacket(ctx sdk.Context, modulePacket channe
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			eventType,
-			sdk.NewAttribute(sdk.AttributeKeyModule, transfertypes.ModuleName),
-			sdk.NewAttribute(transfertypes.AttributeKeyAck, ackInfo),
+			sdk.NewAttribute(sdk.AttributeKeyModule, ibctransfertypes.ModuleName),
+			sdk.NewAttribute(ibctransfertypes.AttributeKeyAck, ackInfo),
 		),
 	)
 
