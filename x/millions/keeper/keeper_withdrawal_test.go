@@ -538,13 +538,11 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawal() {
 		NativeDenom:         remotePoolDenom,
 		ConnectionId:        remoteConnectionId,
 		TransferChannelId:   remoteTransferChannelId,
-		Validators: map[string]*millionstypes.PoolValidator{
-			cosmosPoolValidator: {
-				OperatorAddress: cosmosPoolValidator,
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: cosmosPoolValidator,
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		IcaDepositAddress:   cosmosIcaDepositAddress,
 		IcaPrizepoolAddress: cosmosIcaPrizePoolAddress,
 		PrizeStrategy: millionstypes.PrizeStrategy{
@@ -564,8 +562,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawal() {
 	suite.Require().Len(pools, 1)
 
 	// Verify that the validators is enabled and the bondedamount
-	suite.Require().Equal(true, pools[0].Validators[cosmosPoolValidator].IsEnabled)
-	suite.Require().Equal(sdk.NewInt(1_000_000), pools[0].Validators[cosmosPoolValidator].BondedAmount)
+	suite.Require().Equal(true, pools[0].Validators[0].IsEnabled)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pools[0].Validators[0].BondedAmount)
 
 	// Create a new deposit and simulate successful transfered deposit
 	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
@@ -655,13 +653,11 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawal() {
 		PoolId:      app.MillionsKeeper.GetNextPoolID(ctx),
 		Denom:       localPoolDenom,
 		NativeDenom: localPoolDenom,
-		Validators: map[string]*millionstypes.PoolValidator{
-			suite.valAddrs[0].String(): {
-				OperatorAddress: suite.valAddrs[0].String(),
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: suite.valAddrs[0].String(),
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
 				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
@@ -677,8 +673,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawal() {
 	pools = app.MillionsKeeper.ListPools(ctx)
 
 	// - Test if the validator is enabled and bondedamount
-	suite.Require().Equal(true, pools[1].Validators[suite.valAddrs[0].String()].IsEnabled)
-	suite.Require().Equal(sdk.NewInt(1_000_000), pools[1].Validators[suite.valAddrs[0].String()].BondedAmount)
+	suite.Require().Equal(true, pools[1].Validators[0].IsEnabled)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pools[1].Validators[0].BondedAmount)
 
 	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
 		PoolId:           pools[1].PoolId,
@@ -765,13 +761,11 @@ func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 		NativeDenom:         remotePoolDenom,
 		ConnectionId:        remoteConnectionId,
 		TransferChannelId:   remoteTransferChannelId,
-		Validators: map[string]*millionstypes.PoolValidator{
-			cosmosPoolValidator: {
-				OperatorAddress: cosmosPoolValidator,
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: cosmosPoolValidator,
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		IcaDepositAddress:   cosmosIcaDepositAddress,
 		IcaPrizepoolAddress: cosmosIcaPrizePoolAddress,
 		PrizeStrategy: millionstypes.PrizeStrategy{
@@ -791,8 +785,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 	suite.Require().Len(pools, 1)
 
 	// Verify that the validators is enabled and the bondedamount
-	suite.Require().Equal(true, pools[0].Validators[cosmosPoolValidator].IsEnabled)
-	suite.Require().Equal(sdk.NewInt(1_000_000), pools[0].Validators[cosmosPoolValidator].BondedAmount)
+	suite.Require().Equal(true, pools[0].Validators[0].IsEnabled)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pools[0].Validators[0].BondedAmount)
 
 	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
 		PoolId:           pools[0].PoolId,
@@ -869,13 +863,11 @@ func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 		PoolId:      app.MillionsKeeper.GetNextPoolID(ctx),
 		Denom:       localPoolDenom,
 		NativeDenom: localPoolDenom,
-		Validators: map[string]*millionstypes.PoolValidator{
-			suite.valAddrs[0].String(): {
-				OperatorAddress: suite.valAddrs[0].String(),
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: suite.valAddrs[0].String(),
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
 				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
@@ -891,8 +883,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 	suite.Require().Len(pools, 2)
 
 	// - Test if the validator is enabled and bonded amount
-	suite.Require().Equal(true, pools[1].Validators[suite.valAddrs[0].String()].IsEnabled)
-	suite.Require().Equal(sdk.NewInt(1_000_000), pools[1].Validators[suite.valAddrs[0].String()].BondedAmount)
+	suite.Require().Equal(true, pools[1].Validators[0].IsEnabled)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pools[1].Validators[0].BondedAmount)
 
 	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
 		PoolId:           pools[1].PoolId,
@@ -965,13 +957,11 @@ func (suite *KeeperTestSuite) TestWithdrawal_DequeueMaturedWithdrawal() {
 			PoolId:      poolID,
 			Denom:       localPoolDenom,
 			NativeDenom: localPoolDenom,
-			Validators: map[string]*millionstypes.PoolValidator{
-				suite.valAddrs[0].String(): {
-					OperatorAddress: suite.valAddrs[0].String(),
-					BondedAmount:    sdk.NewInt(1_000_000),
-					IsEnabled:       true,
-				},
-			},
+			Validators: []millionstypes.PoolValidator{{
+				OperatorAddress: suite.valAddrs[0].String(),
+				BondedAmount:    sdk.NewInt(1_000_000),
+				IsEnabled:       true,
+			}},
 			PrizeStrategy: millionstypes.PrizeStrategy{
 				PrizeBatches: []millionstypes.PrizeBatch{
 					{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
@@ -1021,13 +1011,11 @@ func (suite *KeeperTestSuite) TestWithdrawal_BalanceWithdrawal() {
 		PoolId:      poolID,
 		Denom:       localPoolDenom,
 		NativeDenom: localPoolDenom,
-		Validators: map[string]*millionstypes.PoolValidator{
-			suite.valAddrs[0].String(): {
-				OperatorAddress: suite.valAddrs[0].String(),
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: suite.valAddrs[0].String(),
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
 				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
@@ -1160,13 +1148,11 @@ func (suite *KeeperTestSuite) TestWithdrawal_FullWithdrawalProcess() {
 		PoolId:      poolID,
 		Denom:       localPoolDenom,
 		NativeDenom: localPoolDenom,
-		Validators: map[string]*millionstypes.PoolValidator{
-			suite.valAddrs[0].String(): {
-				OperatorAddress: suite.valAddrs[0].String(),
-				BondedAmount:    sdk.NewInt(1_000_000),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: suite.valAddrs[0].String(),
+			BondedAmount:    sdk.NewInt(1_000_000),
+			IsEnabled:       true,
+		}},
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
 				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},

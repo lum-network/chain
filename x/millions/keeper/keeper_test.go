@@ -100,13 +100,12 @@ func newValidPool(suite *KeeperTestSuite, pool millionstypes.Pool) *millionstype
 		pool.ChainId = testChainID
 	}
 	if pool.Validators == nil {
-		pool.Validators = map[string]*millionstypes.PoolValidator{}
 		for _, addr := range suite.valAddrs {
-			pool.Validators[addr.String()] = &millionstypes.PoolValidator{
+			pool.Validators = append(pool.Validators, millionstypes.PoolValidator{
 				OperatorAddress: addr.String(),
 				BondedAmount:    sdk.ZeroInt(),
 				IsEnabled:       true,
-			}
+			})
 		}
 	}
 	if pool.Bech32PrefixAccAddr == "" {

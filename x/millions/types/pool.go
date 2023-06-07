@@ -73,8 +73,18 @@ func (p *Pool) ShouldDraw(ctx sdk.Context) bool {
 	return false
 }
 
+// GetValidatorsMapIndex maps validators operator address to their index in the Pool.Validators array
+// utility function to facilitate access to Validators
+func (p *Pool) GetValidatorsMapIndex() map[string]int {
+	valIdx := make(map[string]int)
+	for i, v := range p.Validators {
+		valIdx[v.OperatorAddress] = i
+	}
+	return valIdx
+}
+
 // ActiveValidators returns currently enabled validators
-func (p *Pool) ActiveValidators() (vals []*PoolValidator) {
+func (p *Pool) ActiveValidators() (vals []PoolValidator) {
 	for _, v := range p.Validators {
 		if v.IsEnabled {
 			vals = append(vals, v)
@@ -84,7 +94,7 @@ func (p *Pool) ActiveValidators() (vals []*PoolValidator) {
 }
 
 // BondedValidators returns active and inactive validators with a bonded amount > 0 for
-func (p *Pool) BondedValidators() (activeVals, inactiveVals []*PoolValidator) {
+func (p *Pool) BondedValidators() (activeVals, inactiveVals []PoolValidator) {
 	for _, v := range p.Validators {
 		if v.IsBonded() {
 			if v.IsEnabled {
@@ -106,6 +116,11 @@ func (p *Pool) ComputeSplitDelegations(ctx sdk.Context, amount math.Int) (splits
 	}
 	used := math.ZeroInt()
 	valShare := amount.QuoRaw(int64(len(activeValidators)))
+
+	// Sort vals by bonded amount ascending to for the sake of consistency
+	sort.SliceStable(activeValidators, func(i, j int) bool {
+		return activeValidators[j].BondedAmount.GT(activeValidators[i].BondedAmount)
+	})
 
 	for i, v := range activeValidators {
 		// Compute the amount to use
@@ -142,7 +157,7 @@ func (p *Pool) ComputeSplitUndelegations(ctx sdk.Context, amount math.Int) (spli
 	used := math.ZeroInt()
 
 	// Sort vals by bonded amount descending to ensure we can fulfill the request
-	sort.Slice(bondedInactiveVals, func(i, j int) bool {
+	sort.SliceStable(bondedInactiveVals, func(i, j int) bool {
 		return bondedInactiveVals[i].BondedAmount.GT(bondedInactiveVals[j].BondedAmount)
 	})
 	for _, v := range bondedInactiveVals {
@@ -166,7 +181,7 @@ func (p *Pool) ComputeSplitUndelegations(ctx sdk.Context, amount math.Int) (spli
 
 	if !used.Equal(amount) {
 		// Sort vals by bonded amount ascending to ensure we can fulfill the request
-		sort.Slice(bondedActiveVals, func(i, j int) bool {
+		sort.SliceStable(bondedActiveVals, func(i, j int) bool {
 			return bondedActiveVals[j].BondedAmount.GT(bondedActiveVals[i].BondedAmount)
 		})
 
@@ -205,15 +220,17 @@ func (p *Pool) ComputeSplitUndelegations(ctx sdk.Context, amount math.Int) (spli
 }
 
 func (p *Pool) ApplySplitDelegate(ctx sdk.Context, splits []*SplitDelegation) {
+	valIdx := p.GetValidatorsMapIndex()
 	for _, split := range splits {
-		p.Validators[split.ValidatorAddress].BondedAmount = p.Validators[split.ValidatorAddress].BondedAmount.Add(split.Amount)
+		p.Validators[valIdx[split.ValidatorAddress]].BondedAmount = p.Validators[valIdx[split.ValidatorAddress]].BondedAmount.Add(split.Amount)
 	}
 }
 
 func (p *Pool) ApplySplitUndelegate(ctx sdk.Context, splits []*SplitDelegation) {
+	valIdx := p.GetValidatorsMapIndex()
 	for _, split := range splits {
-		p.Validators[split.ValidatorAddress].BondedAmount = p.Validators[split.ValidatorAddress].BondedAmount.Sub(split.Amount)
-		if p.Validators[split.ValidatorAddress].BondedAmount.LT(sdk.ZeroInt()) {
+		p.Validators[valIdx[split.ValidatorAddress]].BondedAmount = p.Validators[valIdx[split.ValidatorAddress]].BondedAmount.Sub(split.Amount)
+		if p.Validators[valIdx[split.ValidatorAddress]].BondedAmount.LT(sdk.ZeroInt()) {
 			panic(ErrPoolInvalidSplit)
 		}
 	}

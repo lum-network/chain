@@ -48,12 +48,10 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsBasics() {
 	pool.Bech32PrefixValAddr = "cosmosvaloper"
 	suite.Require().Error(pool.ValidateBasic(params))
 	suite.Require().ErrorIs(pool.ValidateBasic(params), millionstypes.ErrInvalidPoolParams)
-	pool.Validators = map[string]*millionstypes.PoolValidator{
-		"cosmosvaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4epsluffn": {
-			OperatorAddress: "cosmosvaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4epsluffn",
-			BondedAmount:    sdk.ZeroInt(),
-		},
-	}
+	pool.Validators = []millionstypes.PoolValidator{{
+		OperatorAddress: "cosmosvaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4epsluffn",
+		BondedAmount:    sdk.ZeroInt(),
+	}}
 	suite.Require().NoError(pool.ValidateBasic(params))
 }
 
@@ -348,72 +346,72 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitDelegate() {
 	}
 
 	// valSet1 make validator 0 inactive
-	valSet1 := map[string]*millionstypes.PoolValidator{
-		valAddrs[0]: {
+	valSet1 := []millionstypes.PoolValidator{
+		{
 			OperatorAddress: valAddrs[0],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       false,
 		},
 	}
 	// valSet2 make validator 0 active
-	valSet2 := map[string]*millionstypes.PoolValidator{
-		valAddrs[0]: {
+	valSet2 := []millionstypes.PoolValidator{
+		{
 			OperatorAddress: valAddrs[0],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
 		},
 	}
 	// valSet3 adds 3 more validators active and one inactive
-	valSet3 := map[string]*millionstypes.PoolValidator{
-		valAddrs[0]: {
+	valSet3 := []millionstypes.PoolValidator{
+		{
 			OperatorAddress: valAddrs[0],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
 		},
-		valAddrs[1]: {
+		{
 			OperatorAddress: valAddrs[1],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
 		},
-		valAddrs[2]: {
+		{
 			OperatorAddress: valAddrs[2],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
 		},
-		valAddrs[3]: {
+		{
 			OperatorAddress: valAddrs[3],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
 		},
-		valAddrs[4]: {
+		{
 			OperatorAddress: valAddrs[4],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       false,
 		},
 	}
 	// valSet4 disables validators 0 and 1
-	valSet4 := map[string]*millionstypes.PoolValidator{
-		valAddrs[0]: {
+	valSet4 := []millionstypes.PoolValidator{
+		{
 			OperatorAddress: valAddrs[0],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       false,
 		},
-		valAddrs[1]: {
+		{
 			OperatorAddress: valAddrs[1],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       false,
 		},
-		valAddrs[2]: {
+		{
 			OperatorAddress: valAddrs[2],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
 		},
-		valAddrs[3]: {
+		{
 			OperatorAddress: valAddrs[3],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
 		},
-		valAddrs[4]: {
+		{
 			OperatorAddress: valAddrs[4],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       false,
@@ -495,72 +493,72 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
 	}
 
 	// valSet1 make validator 0 inactive
-	valSet1 := map[string]*millionstypes.PoolValidator{
-		valAddrs[0]: {
+	valSet1 := []millionstypes.PoolValidator{
+		{
 			OperatorAddress: valAddrs[0],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       false,
 		},
 	}
 	// valSet2 make validator 0 active
-	valSet2 := map[string]*millionstypes.PoolValidator{
-		valAddrs[0]: {
+	valSet2 := []millionstypes.PoolValidator{
+		{
 			OperatorAddress: valAddrs[0],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
 		},
 	}
 	// valSet3 adds 3 more validators active and one inactive
-	valSet3 := map[string]*millionstypes.PoolValidator{
-		valAddrs[0]: {
+	valSet3 := []millionstypes.PoolValidator{
+		{
 			OperatorAddress: valAddrs[0],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
 		},
-		valAddrs[1]: {
+		{
 			OperatorAddress: valAddrs[1],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
 		},
-		valAddrs[2]: {
+		{
 			OperatorAddress: valAddrs[2],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
 		},
-		valAddrs[3]: {
+		{
 			OperatorAddress: valAddrs[3],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
 		},
-		valAddrs[4]: {
+		{
 			OperatorAddress: valAddrs[4],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       false,
 		},
 	}
 	// valSet4 disables validators 0 and 1
-	valSet4 := map[string]*millionstypes.PoolValidator{
-		valAddrs[0]: {
+	valSet4 := []millionstypes.PoolValidator{
+		{
 			OperatorAddress: valAddrs[0],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       false,
 		},
-		valAddrs[1]: {
+		{
 			OperatorAddress: valAddrs[1],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       false,
 		},
-		valAddrs[2]: {
+		{
 			OperatorAddress: valAddrs[2],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
 		},
-		valAddrs[3]: {
+		{
 			OperatorAddress: valAddrs[3],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       true,
 		},
-		valAddrs[4]: {
+		{
 			OperatorAddress: valAddrs[4],
 			BondedAmount:    sdk.NewInt(0),
 			IsEnabled:       false,
@@ -588,12 +586,12 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
 	suite.Require().Nil(sUndel)
 
 	// Splits should return nil (error case) values if bonded validators don't have enough to undelegate
-	pool.Validators[valAddrs[0]].BondedAmount = amount.Sub(sdk.NewInt(1))
+	pool.Validators[0].BondedAmount = amount.Sub(sdk.NewInt(1))
 	sUndel = pool.ComputeSplitUndelegations(ctx, amount)
 	suite.Require().Nil(sUndel)
 
 	// Splits should return ok values if bonded amount is enough even if validator set is fully disabled
-	pool.Validators[valAddrs[0]].BondedAmount = amount
+	pool.Validators[0].BondedAmount = amount
 	sUndel = pool.ComputeSplitUndelegations(ctx, amount)
 	suite.Require().Len(sUndel, 1)
 	suite.Require().Equal(valAddrs[0], sUndel[0].ValidatorAddress)
@@ -603,10 +601,10 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
 	pool.Validators = valSet2
 
 	// Splits should have the same behaviour regardless of the activation status of the validator
-	pool.Validators[valAddrs[0]].BondedAmount = amount.Sub(sdk.NewInt(1))
+	pool.Validators[0].BondedAmount = amount.Sub(sdk.NewInt(1))
 	sUndel = pool.ComputeSplitUndelegations(ctx, amount)
 	suite.Require().Nil(sUndel)
-	pool.Validators[valAddrs[0]].BondedAmount = amount
+	pool.Validators[0].BondedAmount = amount
 	sUndel = pool.ComputeSplitUndelegations(ctx, amount)
 	suite.Require().Len(sUndel, 1)
 	suite.Require().Equal(valAddrs[0], sUndel[0].ValidatorAddress)
@@ -619,11 +617,11 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
 	sUndel = pool.ComputeSplitUndelegations(ctx, amount)
 	suite.Require().Nil(sUndel)
 
-	pool.Validators[valAddrs[0]].BondedAmount = sdk.NewInt(1)
-	pool.Validators[valAddrs[1]].BondedAmount = sdk.NewInt(1)
-	pool.Validators[valAddrs[2]].BondedAmount = sdk.NewInt(1)
-	pool.Validators[valAddrs[3]].BondedAmount = sdk.NewInt(1)
-	pool.Validators[valAddrs[4]].BondedAmount = sdk.NewInt(1)
+	pool.Validators[0].BondedAmount = sdk.NewInt(1)
+	pool.Validators[1].BondedAmount = sdk.NewInt(1)
+	pool.Validators[2].BondedAmount = sdk.NewInt(1)
+	pool.Validators[3].BondedAmount = sdk.NewInt(1)
+	pool.Validators[4].BondedAmount = sdk.NewInt(1)
 
 	sUndel = pool.ComputeSplitUndelegations(ctx, amount)
 	suite.Require().Nil(sUndel)
@@ -633,12 +631,12 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
 
 	// Splits should prioritize inactive validators
 	// Disabled set
-	pool.Validators[valAddrs[0]].BondedAmount = sdk.NewInt(1_000)
-	pool.Validators[valAddrs[1]].BondedAmount = sdk.NewInt(100)
-	pool.Validators[valAddrs[4]].BondedAmount = sdk.NewInt(10)
+	pool.Validators[0].BondedAmount = sdk.NewInt(1_000)
+	pool.Validators[1].BondedAmount = sdk.NewInt(100)
+	pool.Validators[4].BondedAmount = sdk.NewInt(10)
 	// Enabled set
-	pool.Validators[valAddrs[2]].BondedAmount = sdk.NewInt(100)
-	pool.Validators[valAddrs[3]].BondedAmount = sdk.NewInt(10)
+	pool.Validators[2].BondedAmount = sdk.NewInt(100)
+	pool.Validators[3].BondedAmount = sdk.NewInt(10)
 
 	// Will pick up all val[0]
 	amount = sdk.NewInt(1_000)
@@ -652,8 +650,8 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
 	sUndel = pool.ComputeSplitUndelegations(ctx, amount)
 	suite.Require().Len(sUndel, 3)
 	suMap = splitDelegationSliceToMap(sUndel)
-	suite.Require().Equal(pool.Validators[valAddrs[0]].BondedAmount, suMap[valAddrs[0]].Amount)
-	suite.Require().Equal(pool.Validators[valAddrs[1]].BondedAmount, suMap[valAddrs[1]].Amount)
+	suite.Require().Equal(pool.Validators[0].BondedAmount, suMap[valAddrs[0]].Amount)
+	suite.Require().Equal(pool.Validators[1].BondedAmount, suMap[valAddrs[1]].Amount)
 	suite.Require().Equal(sdk.NewInt(5), suMap[valAddrs[4]].Amount)
 
 	// Will pick up inactive vals then split the remaining on all active validators
@@ -661,18 +659,18 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
 	sUndel = pool.ComputeSplitUndelegations(ctx, amount)
 	suite.Require().Len(sUndel, 4)
 	suMap = splitDelegationSliceToMap(sUndel)
-	suite.Require().Equal(pool.Validators[valAddrs[0]].BondedAmount, suMap[valAddrs[0]].Amount)
-	suite.Require().Equal(pool.Validators[valAddrs[1]].BondedAmount, suMap[valAddrs[1]].Amount)
-	suite.Require().Equal(pool.Validators[valAddrs[4]].BondedAmount, suMap[valAddrs[4]].Amount)
+	suite.Require().Equal(pool.Validators[0].BondedAmount, suMap[valAddrs[0]].Amount)
+	suite.Require().Equal(pool.Validators[1].BondedAmount, suMap[valAddrs[1]].Amount)
+	suite.Require().Equal(pool.Validators[4].BondedAmount, suMap[valAddrs[4]].Amount)
 	suite.Require().Equal(sdk.NewInt(1), suMap[valAddrs[2]].Amount)
 
 	amount = sdk.NewInt(1_112)
 	sUndel = pool.ComputeSplitUndelegations(ctx, amount)
 	suite.Require().Len(sUndel, 5)
 	suMap = splitDelegationSliceToMap(sUndel)
-	suite.Require().Equal(pool.Validators[valAddrs[0]].BondedAmount, suMap[valAddrs[0]].Amount)
-	suite.Require().Equal(pool.Validators[valAddrs[1]].BondedAmount, suMap[valAddrs[1]].Amount)
-	suite.Require().Equal(pool.Validators[valAddrs[4]].BondedAmount, suMap[valAddrs[4]].Amount)
+	suite.Require().Equal(pool.Validators[0].BondedAmount, suMap[valAddrs[0]].Amount)
+	suite.Require().Equal(pool.Validators[1].BondedAmount, suMap[valAddrs[1]].Amount)
+	suite.Require().Equal(pool.Validators[4].BondedAmount, suMap[valAddrs[4]].Amount)
 	suite.Require().Equal(sdk.NewInt(1), suMap[valAddrs[2]].Amount)
 	suite.Require().Equal(sdk.NewInt(1), suMap[valAddrs[3]].Amount)
 
@@ -680,9 +678,9 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
 	sUndel = pool.ComputeSplitUndelegations(ctx, amount)
 	suite.Require().Len(sUndel, 5)
 	suMap = splitDelegationSliceToMap(sUndel)
-	suite.Require().Equal(pool.Validators[valAddrs[0]].BondedAmount, suMap[valAddrs[0]].Amount)
-	suite.Require().Equal(pool.Validators[valAddrs[1]].BondedAmount, suMap[valAddrs[1]].Amount)
-	suite.Require().Equal(pool.Validators[valAddrs[4]].BondedAmount, suMap[valAddrs[4]].Amount)
+	suite.Require().Equal(pool.Validators[0].BondedAmount, suMap[valAddrs[0]].Amount)
+	suite.Require().Equal(pool.Validators[1].BondedAmount, suMap[valAddrs[1]].Amount)
+	suite.Require().Equal(pool.Validators[4].BondedAmount, suMap[valAddrs[4]].Amount)
 	suite.Require().Equal(sdk.NewInt(6), suMap[valAddrs[2]].Amount)
 	suite.Require().Equal(sdk.NewInt(6), suMap[valAddrs[3]].Amount)
 
@@ -690,9 +688,9 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
 	sUndel = pool.ComputeSplitUndelegations(ctx, amount)
 	suite.Require().Len(sUndel, 5)
 	suMap = splitDelegationSliceToMap(sUndel)
-	suite.Require().Equal(pool.Validators[valAddrs[0]].BondedAmount, suMap[valAddrs[0]].Amount)
-	suite.Require().Equal(pool.Validators[valAddrs[1]].BondedAmount, suMap[valAddrs[1]].Amount)
-	suite.Require().Equal(pool.Validators[valAddrs[4]].BondedAmount, suMap[valAddrs[4]].Amount)
+	suite.Require().Equal(pool.Validators[0].BondedAmount, suMap[valAddrs[0]].Amount)
+	suite.Require().Equal(pool.Validators[1].BondedAmount, suMap[valAddrs[1]].Amount)
+	suite.Require().Equal(pool.Validators[4].BondedAmount, suMap[valAddrs[4]].Amount)
 	suite.Require().Equal(sdk.NewInt(30), suMap[valAddrs[2]].Amount)
 	suite.Require().Equal(sdk.NewInt(10), suMap[valAddrs[3]].Amount)
 
@@ -700,11 +698,11 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
 	sUndel = pool.ComputeSplitUndelegations(ctx, amount)
 	suite.Require().Len(sUndel, 5)
 	suMap = splitDelegationSliceToMap(sUndel)
-	suite.Require().Equal(pool.Validators[valAddrs[0]].BondedAmount, suMap[valAddrs[0]].Amount)
-	suite.Require().Equal(pool.Validators[valAddrs[1]].BondedAmount, suMap[valAddrs[1]].Amount)
-	suite.Require().Equal(pool.Validators[valAddrs[4]].BondedAmount, suMap[valAddrs[4]].Amount)
-	suite.Require().Equal(pool.Validators[valAddrs[2]].BondedAmount, suMap[valAddrs[2]].Amount)
-	suite.Require().Equal(pool.Validators[valAddrs[3]].BondedAmount, suMap[valAddrs[3]].Amount)
+	suite.Require().Equal(pool.Validators[0].BondedAmount, suMap[valAddrs[0]].Amount)
+	suite.Require().Equal(pool.Validators[1].BondedAmount, suMap[valAddrs[1]].Amount)
+	suite.Require().Equal(pool.Validators[4].BondedAmount, suMap[valAddrs[4]].Amount)
+	suite.Require().Equal(pool.Validators[2].BondedAmount, suMap[valAddrs[2]].Amount)
+	suite.Require().Equal(pool.Validators[3].BondedAmount, suMap[valAddrs[3]].Amount)
 
 	// Will fail due to missing amount
 	amount = sdk.NewInt(1_221)
@@ -727,13 +725,11 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 		NativeDenom:         "uatom",
 		ConnectionId:        "connection-id",
 		TransferChannelId:   "transferChannel-id",
-		Validators: map[string]*millionstypes.PoolValidator{
-			valAddr: {
-				OperatorAddress: valAddr,
-				BondedAmount:    sdk.NewInt(0),
-				IsEnabled:       true,
-			},
-		},
+		Validators: []millionstypes.PoolValidator{{
+			OperatorAddress: valAddr,
+			BondedAmount:    sdk.NewInt(0),
+			IsEnabled:       true,
+		}},
 		IcaDepositAddress:   cosmosIcaDepositAddress,
 		IcaPrizepoolAddress: cosmosIcaPrizePoolAddress,
 		State:               millionstypes.PoolState_Ready,
@@ -771,7 +767,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	// Validators bounded amount should still be 0 (not delegated yet)
 	pool, err := app.MillionsKeeper.GetPool(ctx, poolID)
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.ZeroInt(), pool.Validators[valAddr].BondedAmount)
+	suite.Require().Equal(sdk.ZeroInt(), pool.Validators[0].BondedAmount)
 
 	// Simulate coin transfer for d1 and d2 + failure on d3
 	err = app.MillionsKeeper.OnTransferDepositToNativeChainCompleted(ctx, poolID, d1.DepositId, false)
@@ -789,7 +785,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	// Validators bounded amount should still be 0 (not delegated yet)
 	pool, err = app.MillionsKeeper.GetPool(ctx, poolID)
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.ZeroInt(), pool.Validators[valAddr].BondedAmount)
+	suite.Require().Equal(sdk.ZeroInt(), pool.Validators[0].BondedAmount)
 
 	// Simulate delegate success for d1 + failure on d2
 	sd := pool.ComputeSplitDelegations(ctx, d1.Amount.Amount)
@@ -804,7 +800,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	// Validators bounded amount should be d1 amount now
 	pool, err = app.MillionsKeeper.GetPool(ctx, poolID)
 	suite.Require().NoError(err)
-	suite.Require().Equal(d1.Amount.Amount, pool.Validators[valAddr].BondedAmount)
+	suite.Require().Equal(d1.Amount.Amount, pool.Validators[0].BondedAmount)
 
 	// Simulate delegate success for d2
 	sd = pool.ComputeSplitDelegations(ctx, d2.Amount.Amount)
@@ -816,7 +812,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	// Validators bounded amount should be d1+d2 amount now
 	pool, err = app.MillionsKeeper.GetPool(ctx, poolID)
 	suite.Require().NoError(err)
-	suite.Require().Equal(d1.Amount.Amount.Add(d2.Amount.Amount), pool.Validators[valAddr].BondedAmount)
+	suite.Require().Equal(d1.Amount.Amount.Add(d2.Amount.Amount), pool.Validators[0].BondedAmount)
 
 	// Start withdrawal d1 and d2
 	w1 := millionstypes.Withdrawal{
@@ -858,7 +854,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	// Validators bounded amount should be 0 now
 	pool, err = app.MillionsKeeper.GetPool(ctx, poolID)
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.ZeroInt(), pool.Validators[valAddr].BondedAmount)
+	suite.Require().Equal(sdk.ZeroInt(), pool.Validators[0].BondedAmount)
 
 	// Simulate undelegate success for d1 + failure on d2
 	t := time.Now()
@@ -870,7 +866,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	// Validators bounded amount should be d2 now since d2 undelegate request failed
 	pool, err = app.MillionsKeeper.GetPool(ctx, poolID)
 	suite.Require().NoError(err)
-	suite.Require().Equal(d2.Amount.Amount, pool.Validators[valAddr].BondedAmount)
+	suite.Require().Equal(d2.Amount.Amount, pool.Validators[0].BondedAmount)
 
 	// Simulate undelegate success for d2
 	app.MillionsKeeper.UpdateWithdrawalStatus(ctx, poolID, w2.WithdrawalId, millionstypes.WithdrawalState_IcaUndelegate, nil, false)
@@ -882,7 +878,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	// Validators bounded amount should be 0 now
 	pool, err = app.MillionsKeeper.GetPool(ctx, poolID)
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.ZeroInt(), pool.Validators[valAddr].BondedAmount)
+	suite.Require().Equal(sdk.ZeroInt(), pool.Validators[0].BondedAmount)
 }
 
 // TestPool_UpdatePool tests the different conditions for a proposal pool update
