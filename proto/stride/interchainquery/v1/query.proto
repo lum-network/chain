@@ -1,0 +1,28 @@
+syntax = "proto3";
+package stride.interchainquery.v1;
+
+import "stride/interchainquery/v1/genesis.proto";
+import "google/api/annotations.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/lum-network/chain/x/icqueries/types";
+
+service QueryService {
+  rpc Queries(QueryQueriesRequest) returns (QueryQueriesResponse) {
+    option (google.api.http).get = "/lum-network/icqueries/queries";
+  };
+  rpc PendingQueries(QueryPendingQueriesRequest)
+      returns (QueryPendingQueriesResponse) {
+    option (google.api.http).get = "/lum-network/icqueries/pending_queries";
+  };
+}
+
+message QueryPendingQueriesRequest {}
+message QueryPendingQueriesResponse {
+  repeated Query pending_queries = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryQueriesRequest {}
+message QueryQueriesResponse {
+  repeated Query queries = 1 [ (gogoproto.nullable) = false ];
+}
