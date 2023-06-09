@@ -435,6 +435,26 @@ func (k Keeper) UpdatePool(
 	return nil
 }
 
+// UnsafeKillPool This method switches the provided pool state but does not handle any withdrawal or deposit.
+// It shouldn't be used and is very specific to UNUSED and EMPTY pools
+func (k Keeper) UnsafeKillPool(ctx sdk.Context, poolID uint64) (types.Pool, error) {
+	// Grab our pool instance
+	pool, err := k.GetPool(ctx, poolID)
+	if err != nil {
+		return types.Pool{}, err
+	}
+
+	// Make sure the pool isn't killed yet
+	if pool.GetState() == types.PoolState_Killed {
+		return pool, errorsmod.Wrapf(types.ErrPoolKilled, "%d", poolID)
+	}
+
+	// Kill the pool
+	pool.State = types.PoolState_Killed
+	k.updatePool(ctx, &pool)
+	return pool, nil
+}
+
 func (k Keeper) updatePool(ctx sdk.Context, pool *types.Pool) {
 	pool.UpdatedAt = ctx.BlockTime()
 	pool.UpdatedAtHeight = ctx.BlockHeight()
