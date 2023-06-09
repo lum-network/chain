@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"github.com/lum-network/chain/x/millions/types"
