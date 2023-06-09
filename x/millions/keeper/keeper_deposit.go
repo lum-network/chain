@@ -398,6 +398,8 @@ func (k Keeper) EditDeposit(ctx sdk.Context, poolID uint64, depositID uint64, wi
 
 	deposit.WinnerAddress = winnerAddr.String()
 	deposit.IsSponsor = isSponsor
+	deposit.UpdatedAtHeight = ctx.BlockHeight()
+	deposit.UpdatedAt = ctx.BlockTime()
 
 	k.setAccountDeposit(ctx, &deposit)
 	k.setPoolDeposit(ctx, &deposit)

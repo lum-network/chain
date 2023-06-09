@@ -38,8 +38,21 @@ func (msg *MsgDepositEdit) ValidateBasic() error {
 		return ErrInvalidDepositorAddress
 	}
 
+	if msg.GetWinnerAddress() != "" {
+		if _, err := sdk.AccAddressFromBech32(msg.GetWinnerAddress()); err != nil {
+			return ErrInvalidWinnerAddress
+		}
+	}
+
 	if msg.GetPoolId() == UnknownID || msg.GetDepositId() == UnknownID {
 		return ErrInvalidID
 	}
+
+	if msg.IsSponsor != nil {
+		if msg.WinnerAddress != "" && msg.WinnerAddress != msg.DepositorAddress && msg.IsSponsor.Value {
+			return ErrInvalidSponsorWinnerCombo
+		}
+	}
+
 	return nil
 }
