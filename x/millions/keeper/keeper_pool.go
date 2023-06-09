@@ -435,7 +435,9 @@ func (k Keeper) UpdatePool(
 	return nil
 }
 
-func (k Keeper) KillPool(ctx sdk.Context, poolID uint64) (types.Pool, error) {
+// UnsafeKillPool This method switch the provided pool state but does not handle any withdrawal or deposit handling.
+// It shouldn't be used and is very specific to UNUSED and EMPTY pools
+func (k Keeper) UnsafeKillPool(ctx sdk.Context, poolID uint64) (types.Pool, error) {
 	// Grab our pool instance
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {

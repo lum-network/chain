@@ -755,7 +755,7 @@ func (app *App) registerUpgradeHandlers() {
 
 	app.UpgradeKeeper.SetUpgradeHandler("v1.4.3", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// Kill the first pool that shouldn't be used anymore after that upgrade
-		_, err := app.MillionsKeeper.KillPool(ctx, 1)
+		_, err := app.MillionsKeeper.UnsafeKillPool(ctx, 1)
 		if err != nil {
 			return fromVM, err
 		}
