@@ -25,6 +25,7 @@ var (
 	ErrInvalidRedelegateRetryAddress     = errorsmod.Register(ModuleName, 1112, "Invalid redelegate retry address")
 	ErrInvalidRedelegateState            = errorsmod.Register(ModuleName, 1113, "Invalid redelegate state")
 	ErrValidatorNotRedelegated           = errorsmod.Register(ModuleName, 1114, "Validator not redelegated by gov prop")
+	ErrInvalidOperatorAddrToDisable      = errorsmod.Register(ModuleName, 1115, "Invalid operator address to disable")
 	ErrInvalidDepositAmount              = errorsmod.Register(ModuleName, 1200, "Deposit amount must be positive")
 	ErrInvalidDepositDenom               = errorsmod.Register(ModuleName, 1201, "Invalid deposit denom")
 	ErrInvalidDepositorAddress           = errorsmod.Register(ModuleName, 1202, "Invalid depositor address")

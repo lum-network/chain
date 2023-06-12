@@ -14,7 +14,7 @@ func NewMillionsProposalHandler(k keeper.Keeper) govtypes.Handler {
 		switch c := content.(type) {
 		case *types.ProposalUpdatePool:
 			{
-				return k.UpdatePool(ctx, c.PoolId, c.Validators, c.MinDepositAmount, c.DrawSchedule, c.PrizeStrategy)
+				return k.UpdatePool(ctx, c.PoolId, c.Validators, c.MinDepositAmount, c.DrawSchedule, c.PrizeStrategy, c.DisableValidator)
 			}
 		case *types.ProposalRegisterPool:
 			{
@@ -67,10 +67,6 @@ func NewMillionsProposalHandler(k keeper.Keeper) govtypes.Handler {
 				}
 				k.SetParams(ctx, params)
 				return nil
-			}
-		case *types.ProposalDisableValidator:
-			{
-				return k.Redelegate(ctx, c.OperatorAddress, c.PoolId)
 			}
 		default:
 			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized millions proposal content type: %T", c)

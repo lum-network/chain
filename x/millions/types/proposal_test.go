@@ -23,6 +23,6 @@ func (suite *ProposalTestSuite) TestKeysTypes() {
 	suite.Require().Equal("UpdatePool", (&millionstypes.ProposalUpdatePool{}).ProposalType())
 	suite.Require().Equal("millions", (&millionstypes.ProposalUpdatePool{}).ProposalRoute())
 	suite.Require().Equal("UpdateParams", (&millionstypes.ProposalUpdateParams{}).ProposalType())
-	suite.Require().Equal("DisableValidator", (&millionstypes.ProposalDisableValidator{}).ProposalType())
-	suite.Require().Equal("millions", (&millionstypes.ProposalDisableValidator{}).ProposalRoute())
+	// suite.Require().Equal("DisableValidator", (&millionstypes.ProposalDisableValidator{}).ProposalType())
+	// suite.Require().Equal("millions", (&millionstypes.ProposalDisableValidator{}).ProposalRoute())
 }

@@ -260,6 +260,20 @@ func (suite *HandlerTestSuite) TestProposal_RegisterPool() {
 }
 
 func (suite *HandlerTestSuite) TestProposal_UpdatePool() {
+	msgServer := millionskeeper.NewMsgServerImpl(*suite.app.MillionsKeeper)
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	err := suite.app.BankKeeper.SendCoins(suite.ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(suite.pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin("ulum", sdk.NewInt(10_000_000))})
+	suite.Require().NoError(err)
+
+	// Initialize a deposit for redelegation to validators
+	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
+		DepositorAddress: suite.addrs[0].String(),
+		PoolId:           suite.pool.PoolId,
+		Amount:           sdk.NewCoin("ulum", sdk.NewInt(10_000_000)),
+	})
+	suite.Require().NoError(err)
+
 	validPrizeStrategy := millionstypes.PrizeStrategy{
 		PrizeBatches: []millionstypes.PrizeBatch{
 			{PoolPercent: 90, DrawProbability: sdk.NewDec(1), Quantity: 10},
@@ -287,7 +301,9 @@ func (suite *HandlerTestSuite) TestProposal_UpdatePool() {
 		InitialDrawAt: time.Time{},
 	}
 
-	validValidatorSet := []string{"lumvaloper16rlynj5wvzwts5lqep0je5q4m3eaepn5cqj38s"}
+	validatorToDisable := suite.pool.Validators[1].OperatorAddress
+
+	validValidatorSet := []string{suite.pool.Validators[0].OperatorAddress, suite.pool.Validators[1].OperatorAddress, suite.pool.Validators[2].OperatorAddress}
 	invalidValidatorSet := []string{"lumvaloper16rlynj5wvzw"}
 
 	validMinDepositAmount := millionstypes.DefaultParams().MinDepositAmount
@@ -301,61 +317,61 @@ func (suite *HandlerTestSuite) TestProposal_UpdatePool() {
 	}{
 		{
 			"Title cannot be empty",
-			millionstypes.NewUpdatePoolProposal("", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, ""),
 			true,
 			false,
 		},
 		{
 			"Description cannot be empty",
-			millionstypes.NewUpdatePoolProposal("Test", "", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, ""),
 			true,
 			false,
 		},
 		{
 			"Validators list can be empty",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, ""),
 			false,
 			false,
 		},
 		{
 			"Validators list cannot be invalid",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), invalidValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), invalidValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, ""),
 			false,
 			true,
 		},
 		{
 			"Min deposit amount cannot be less than 1000000 (default params)",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &invalidMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &invalidMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, ""),
 			true,
 			true,
 		},
 		{
 			"Prize strategy cannot be empty",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &emptyPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &emptyPrizeStrategy, &validDrawSchedule, ""),
 			true,
 			true,
 		},
 		{
 			"Prize strategy cannot be invalid",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &invalidPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &invalidPrizeStrategy, &validDrawSchedule, ""),
 			false,
 			true,
 		},
 		{
 			"Draw Schedule cannot be invalid",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &invalidDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &invalidDrawSchedule, ""),
 			true,
 			true,
 		},
 		{
 			"Fine should be fine",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, validatorToDisable),
 			false,
 			false,
 		},
 		{
 			"Partial should be fine",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, nil, nil, nil),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, nil, nil, nil, ""),
 			false,
 			false,
 		},
@@ -430,71 +446,71 @@ func (suite *HandlerTestSuite) TestProposal_UpdateParams() {
 	}
 }
 
-func (suite *HandlerTestSuite) TestProposal_DisableValidator() {
-	msgServer := millionskeeper.NewMsgServerImpl(*suite.app.MillionsKeeper)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+// func (suite *HandlerTestSuite) TestProposal_DisableValidator() {
+// 	msgServer := millionskeeper.NewMsgServerImpl(*suite.app.MillionsKeeper)
+// 	goCtx := sdk.WrapSDKContext(suite.ctx)
 
-	err := suite.app.BankKeeper.SendCoins(suite.ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(suite.pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin("ulum", sdk.NewInt(10_000_000))})
-	suite.Require().NoError(err)
+// 	err := suite.app.BankKeeper.SendCoins(suite.ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(suite.pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin("ulum", sdk.NewInt(10_000_000))})
+// 	suite.Require().NoError(err)
 
-	// Initialize a deposit for redelegation to validators
-	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
-		DepositorAddress: suite.addrs[0].String(),
-		PoolId:           suite.pool.PoolId,
-		Amount:           sdk.NewCoin("ulum", sdk.NewInt(10_000_000)),
-	})
-	suite.Require().NoError(err)
+// 	// Initialize a deposit for redelegation to validators
+// 	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
+// 		DepositorAddress: suite.addrs[0].String(),
+// 		PoolId:           suite.pool.PoolId,
+// 		Amount:           sdk.NewCoin("ulum", sdk.NewInt(10_000_000)),
+// 	})
+// 	suite.Require().NoError(err)
 
-	cases := []struct {
-		name            string
-		proposal        govtypesv1beta1.Content
-		expectPreError  bool
-		expectPostError bool
-	}{
-		{
-			"Should fail with wrong operator address",
-			millionstypes.NewDisableValidatorProposal("Test title", "test description", "", suite.pool.GetPoolId()),
-			true,
-			true,
-		},
-		{
-			"Should fail with unknown poolID",
-			millionstypes.NewDisableValidatorProposal("Test title", "test description", suite.pool.Validators[1].OperatorAddress, uint64(0)),
-			true,
-			true,
-		},
-		{
-			"Should fail with wrong poolID",
-			millionstypes.NewDisableValidatorProposal("Test title", "test description", suite.pool.Validators[1].OperatorAddress, uint64(10)),
-			false,
-			true,
-		},
-		{
-			"Should pass with valid params",
-			millionstypes.NewDisableValidatorProposal("Test title", "test description", suite.pool.Validators[1].OperatorAddress, suite.pool.GetPoolId()),
-			false,
-			false,
-		},
-	}
+// 	cases := []struct {
+// 		name            string
+// 		proposal        govtypesv1beta1.Content
+// 		expectPreError  bool
+// 		expectPostError bool
+// 	}{
+// 		{
+// 			"Should fail with wrong operator address",
+// 			millionstypes.NewDisableValidatorProposal("Test title", "test description", "", suite.pool.GetPoolId()),
+// 			true,
+// 			true,
+// 		},
+// 		{
+// 			"Should fail with unknown poolID",
+// 			millionstypes.NewDisableValidatorProposal("Test title", "test description", suite.pool.Validators[1].OperatorAddress, uint64(0)),
+// 			true,
+// 			true,
+// 		},
+// 		{
+// 			"Should fail with wrong poolID",
+// 			millionstypes.NewDisableValidatorProposal("Test title", "test description", suite.pool.Validators[1].OperatorAddress, uint64(10)),
+// 			false,
+// 			true,
+// 		},
+// 		{
+// 			"Should pass with valid params",
+// 			millionstypes.NewDisableValidatorProposal("Test title", "test description", suite.pool.Validators[1].OperatorAddress, suite.pool.GetPoolId()),
+// 			false,
+// 			false,
+// 		},
+// 	}
 
-	for _, tc := range cases {
-		tc := tc
-		suite.Run(tc.name, func() {
-			preError := tc.proposal.ValidateBasic()
-			if tc.expectPreError {
-				suite.Require().Error(preError)
-			} else {
-				suite.Require().NoError(preError)
-			}
-			err := suite.handler(suite.ctx, tc.proposal)
-			if tc.expectPostError {
-				suite.Require().Error(err)
-			} else {
-				suite.Require().NoError(err)
-			}
-		})
-	}
-}
+// 	for _, tc := range cases {
+// 		tc := tc
+// 		suite.Run(tc.name, func() {
+// 			preError := tc.proposal.ValidateBasic()
+// 			if tc.expectPreError {
+// 				suite.Require().Error(preError)
+// 			} else {
+// 				suite.Require().NoError(preError)
+// 			}
+// 			err := suite.handler(suite.ctx, tc.proposal)
+// 			if tc.expectPostError {
+// 				suite.Require().Error(err)
+// 			} else {
+// 				suite.Require().NoError(err)
+// 			}
+// 		})
+// 	}
+// }
 
 func TestHandlerSuite(t *testing.T) {
 	suite.Run(t, new(HandlerTestSuite))

@@ -42,6 +42,7 @@ message ProposalUpdatePool {
   string min_deposit_amount = 5 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = true ];
   DrawSchedule draw_schedule = 6 [ (gogoproto.nullable) = true ];
   PrizeStrategy prize_strategy = 7 [ (gogoproto.nullable) = true ];
+  string disable_validator = 8 [ (gogoproto.nullable) = true, (cosmos_proto.scalar) = "cosmos.AddressString" ];
 }
 
 message ProposalUpdateParams {

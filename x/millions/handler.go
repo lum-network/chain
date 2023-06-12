@@ -40,9 +40,6 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgRestoreInterchainAccounts:
 			res, err := msgServer.RestoreInterchainAccounts(goCtx, msg)
 			return sdk.WrapServiceResult(ctx, res, err)
-		case *types.MsgRedelegateRetry:
-			res, err := msgServer.RedelegateRetry(goCtx, msg)
-			return sdk.WrapServiceResult(ctx, res, err)
 		default:
 			errMsg := fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg)
 			return nil, errorsmod.Wrap(sdkerrors.ErrUnknownRequest, errMsg)

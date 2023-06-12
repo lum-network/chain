@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"cosmossdk.io/math"
@@ -370,6 +371,7 @@ func (k Keeper) UpdatePool(
 	minDepositAmount *math.Int,
 	drawSchedule *types.DrawSchedule,
 	prizeStrategy *types.PrizeStrategy,
+	disableValidator string,
 ) error {
 	// Acquire and deserialize our pool entity
 	pool, err := k.GetPool(ctx, poolID)
@@ -394,6 +396,16 @@ func (k Keeper) UpdatePool(
 				})
 				valIdx[addr] = len(pool.Validators) - 1
 			}
+		}
+	}
+
+	if strings.TrimSpace(disableValidator) != "" {
+		disableOperatorAddr, err := sdk.ValAddressFromBech32(disableValidator)
+		if err != nil {
+			return types.ErrInvalidOperatorAddrToDisable
+		}
+		if err := k.Redelegate(ctx, disableOperatorAddr.String(), pool.PoolId); err != nil {
+			return err
 		}
 	}
 
