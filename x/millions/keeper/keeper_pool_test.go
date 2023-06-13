@@ -997,7 +997,7 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
 
-	// The remaining pool amount amount of 9_000_000 should be divided by 3 among the remaining active validators
+	// The remaining pool amount of 9_000_000 should be divided by 3 among the remaining active validators
 	suite.Require().Equal(sdk.NewInt(3_000_000), pool.Validators[0].BondedAmount)
 	suite.Require().Equal(true, pool.Validators[0].IsEnabled)
 	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[0].Redelegate.State)
@@ -1146,7 +1146,7 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 	pool, err = app.MillionsKeeper.GetPool(ctx, 2)
 	suite.Require().NoError(err)
 
-	// The remaining pool amount amount of 5_000_000 should be divided by 4 among the remaining active validators
+	// The remaining pool amount of 5_000_000 should be divided by 4 among the remaining active validators
 	suite.Require().Equal(sdk.NewInt(0), pool.Validators[0].BondedAmount)
 	suite.Require().Equal(sdk.NewInt(1_250_000), pool.Validators[1].BondedAmount)
 	suite.Require().Equal(sdk.NewInt(1_250_000), pool.Validators[2].BondedAmount)
