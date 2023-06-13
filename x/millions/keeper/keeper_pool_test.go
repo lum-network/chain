@@ -959,8 +959,6 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 	}))
 	pool, err := app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
-	err = suite.app.BankKeeper.SendCoins(suite.ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin("ulum", sdk.NewInt(10_000_000))})
-	suite.Require().NoError(err)
 
 	// Deposit to trigger delegation for local pool
 	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
@@ -972,6 +970,7 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 
 	deposit, err := app.MillionsKeeper.GetPoolDeposit(ctx, uint64(1), uint64(1))
 	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.DepositState_Success, deposit.State)
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
 
