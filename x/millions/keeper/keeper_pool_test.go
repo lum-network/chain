@@ -892,10 +892,12 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 
-	privKeys := make([]cryptotypes.PubKey, 3)
-	addrs := make([]sdk.AccAddress, 3)
-	validators := make([]stakingtypes.Validator, 3)
-	for i := 0; i < 3; i++ {
+	privKeys := make([]cryptotypes.PubKey, 5)
+	addrs := make([]sdk.AccAddress, 5)
+	validators := make([]stakingtypes.Validator, 5)
+
+	// create 5 validators
+	for i := 0; i < 5; i++ {
 		privKey := ed25519.GenPrivKey().PubKey()
 		privKeys[i] = privKey
 		addrs[i] = sdk.AccAddress(privKey.Address())
@@ -908,9 +910,8 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 
 		validators[i] = validator
 		validators = append(validators, validator)
-
 	}
-
+	// Add pool with valSet
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
 		PoolId: 1,
 		Validators: []millionstypes.PoolValidator{
@@ -919,8 +920,7 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 				BondedAmount:    sdk.NewInt(0),
 				IsEnabled:       true,
 				Redelegate: &millionstypes.Redelegate{
-					IsGovPropRedelegated: false,
-					ErrorState:           millionstypes.RedelegateState_Unspecified,
+					ErrorState: millionstypes.RedelegateState_Unspecified,
 				},
 			},
 			{
@@ -928,8 +928,7 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 				BondedAmount:    sdk.NewInt(0),
 				IsEnabled:       true,
 				Redelegate: &millionstypes.Redelegate{
-					IsGovPropRedelegated: false,
-					ErrorState:           millionstypes.RedelegateState_Unspecified,
+					ErrorState: millionstypes.RedelegateState_Unspecified,
 				},
 			},
 			{
@@ -937,108 +936,97 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 				BondedAmount:    sdk.NewInt(0),
 				IsEnabled:       true,
 				Redelegate: &millionstypes.Redelegate{
-					IsGovPropRedelegated: false,
-					ErrorState:           millionstypes.RedelegateState_Unspecified,
+					ErrorState: millionstypes.RedelegateState_Unspecified,
+				},
+			},
+			{
+				OperatorAddress: validators[3].OperatorAddress,
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+				Redelegate: &millionstypes.Redelegate{
+					ErrorState: millionstypes.RedelegateState_Unspecified,
+				},
+			},
+			{
+				OperatorAddress: validators[4].OperatorAddress,
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+				Redelegate: &millionstypes.Redelegate{
+					ErrorState: millionstypes.RedelegateState_Unspecified,
 				},
 			},
 		},
 	}))
-
 	pool, err := app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
+	err = suite.app.BankKeeper.SendCoins(suite.ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin("ulum", sdk.NewInt(10_000_000))})
+	suite.Require().NoError(err)
 
+	// Deposit to trigger delegation for local pool
 	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
 		DepositorAddress: suite.addrs[0].String(),
-		PoolId:           pool.PoolId,
-		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(3_000_000)),
+		PoolId:           uint64(1),
+		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(9_000_000)),
 	})
 	suite.Require().NoError(err)
 
 	deposit, err := app.MillionsKeeper.GetPoolDeposit(ctx, uint64(1), uint64(1))
 	suite.Require().NoError(err)
-	suite.Require().Equal(millionstypes.DepositState_Success, deposit.State)
-
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
 
-	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[0].BondedAmount)
-	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[1].BondedAmount)
-	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[2].BondedAmount)
+	// Pool validators should have equal BondedAmount
+	suite.Require().Equal(sdk.NewInt(1_800_000), pool.Validators[0].BondedAmount)
+	suite.Require().Equal(sdk.NewInt(1_800_000), pool.Validators[1].BondedAmount)
+	suite.Require().Equal(sdk.NewInt(1_800_000), pool.Validators[2].BondedAmount)
+	suite.Require().Equal(sdk.NewInt(1_800_000), pool.Validators[3].BondedAmount)
 
-	// validator does not exist in the validators pool set
-	err = app.MillionsKeeper.Redelegate(ctx, "cosmosvaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4epsluffn", uint64(1))
-	suite.Require().ErrorIs(err, millionstypes.ErrValidatorNotFound)
-
-	err = app.MillionsKeeper.Redelegate(ctx, validators[1].OperatorAddress, uint64(1))
+	// Remove 2 validators from the pool set by simulating the UpdatePool gov prop with a new val set
+	// - Validator 2 and 4 are being removed
+	err = app.MillionsKeeper.UpdateRedelegateStatus(ctx, pool.PoolId, millionstypes.RedelegateState_IcaRedelegate, pool.Validators[1].GetOperatorAddress(), false, false)
+	suite.Require().NoError(err)
+	app.MillionsKeeper.UpdateRedelegateStatus(ctx, pool.PoolId, millionstypes.RedelegateState_IcaRedelegate, pool.Validators[3].GetOperatorAddress(), false, false)
 	suite.Require().NoError(err)
 
+	// Redelegate disabled validators
+	err = app.MillionsKeeper.Redelegate(ctx, pool.PoolId, []millionstypes.PoolValidator{pool.Validators[1], pool.Validators[3]})
+	suite.Require().NoError(err)
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
+
+	// The remaining pool amount amount of 9_000_000 should be divided by 3 among the remaining active validators
+	suite.Require().Equal(sdk.NewInt(3_000_000), pool.Validators[0].BondedAmount)
+	suite.Require().Equal(true, pool.Validators[0].IsEnabled)
+	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[0].Redelegate.State)
+	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[0].Redelegate.ErrorState)
 
 	suite.Require().Equal(sdk.NewInt(0), pool.Validators[1].BondedAmount)
-	suite.Require().Equal(sdk.NewInt(1_500_000), pool.Validators[0].BondedAmount)
-	suite.Require().Equal(sdk.NewInt(1_500_000), pool.Validators[2].BondedAmount)
-
 	suite.Require().Equal(false, pool.Validators[1].IsEnabled)
-	suite.Require().Equal(true, pool.Validators[1].Redelegate.IsGovPropRedelegated)
+	suite.Require().Equal(millionstypes.RedelegateState_Success, pool.Validators[1].Redelegate.State)
 	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[1].Redelegate.ErrorState)
 
-	// Create remote pool with remote valAddreses
+	suite.Require().Equal(sdk.NewInt(3_000_000), pool.Validators[2].BondedAmount)
+	suite.Require().Equal(true, pool.Validators[2].IsEnabled)
+	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[2].Redelegate.State)
+	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[2].Redelegate.ErrorState)
+
+	suite.Require().Equal(sdk.NewInt(0), pool.Validators[3].BondedAmount)
+	suite.Require().Equal(false, pool.Validators[3].IsEnabled)
+	suite.Require().Equal(millionstypes.RedelegateState_Success, pool.Validators[3].Redelegate.State)
+	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[3].Redelegate.ErrorState)
+
+	suite.Require().Equal(sdk.NewInt(3_000_000), pool.Validators[4].BondedAmount)
+	suite.Require().Equal(true, pool.Validators[4].IsEnabled)
+	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[4].Redelegate.State)
+	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[4].Redelegate.ErrorState)
+
+	// Create remote pool with 5 remote valAddreses
 	valAddrsRemote := []string{
 		"cosmosvaloper196ax4vc0lwpxndu9dyhvca7jhxp70rmcvrj90c",
 		"cosmosvaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4epsluffn",
 		"cosmosvaloper1fsg635n5vgc7jazz9sx5725wnc3xqgr7awxaag",
 		"cosmosvaloper1gpx52r9h3zeul45amvcy2pysgvcwddxrgx6cnv",
 		"cosmosvaloper1vvwtk805lxehwle9l4yudmq6mn0g32px9xtkhc",
-	}
-
-	valSetRemote := []millionstypes.PoolValidator{
-		{
-			OperatorAddress: valAddrsRemote[0],
-			BondedAmount:    sdk.NewInt(0),
-			IsEnabled:       true,
-			Redelegate: &millionstypes.Redelegate{
-				IsGovPropRedelegated: false,
-				ErrorState:           millionstypes.RedelegateState_Unspecified,
-				State:                millionstypes.RedelegateState_IcaRedelegate,
-			},
-		},
-		{
-			OperatorAddress: valAddrsRemote[1],
-			BondedAmount:    sdk.NewInt(0),
-			IsEnabled:       true,
-			Redelegate: &millionstypes.Redelegate{
-				IsGovPropRedelegated: false,
-				ErrorState:           millionstypes.RedelegateState_Unspecified,
-			},
-		},
-		{
-			OperatorAddress: valAddrsRemote[2],
-			BondedAmount:    sdk.NewInt(0),
-			IsEnabled:       true,
-			Redelegate: &millionstypes.Redelegate{
-				IsGovPropRedelegated: false,
-				ErrorState:           millionstypes.RedelegateState_Unspecified,
-			},
-		},
-		{
-			OperatorAddress: valAddrsRemote[3],
-			BondedAmount:    sdk.NewInt(0),
-			IsEnabled:       true,
-			Redelegate: &millionstypes.Redelegate{
-				IsGovPropRedelegated: false,
-				ErrorState:           millionstypes.RedelegateState_Unspecified,
-			},
-		},
-		{
-			OperatorAddress: valAddrsRemote[4],
-			BondedAmount:    sdk.NewInt(0),
-			IsEnabled:       true,
-			Redelegate: &millionstypes.Redelegate{
-				IsGovPropRedelegated: false,
-				ErrorState:           millionstypes.RedelegateState_Unspecified,
-			},
-		},
 	}
 
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
@@ -1049,15 +1037,53 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 		NativeDenom:         "uatom",
 		ConnectionId:        "connection-id",
 		TransferChannelId:   "transferChannel-id",
-		Validators:          valSetRemote,
+		Validators: []millionstypes.PoolValidator{
+			{
+				OperatorAddress: valAddrsRemote[0],
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+				Redelegate: &millionstypes.Redelegate{
+					ErrorState: millionstypes.RedelegateState_Unspecified,
+				},
+			},
+			{
+				OperatorAddress: valAddrsRemote[1],
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+				Redelegate: &millionstypes.Redelegate{
+					ErrorState: millionstypes.RedelegateState_Unspecified,
+				},
+			},
+			{
+				OperatorAddress: valAddrsRemote[2],
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+				Redelegate: &millionstypes.Redelegate{
+					ErrorState: millionstypes.RedelegateState_Unspecified,
+				},
+			},
+			{
+				OperatorAddress: valAddrsRemote[3],
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+				Redelegate: &millionstypes.Redelegate{
+					ErrorState: millionstypes.RedelegateState_Unspecified,
+				},
+			},
+			{
+				OperatorAddress: valAddrsRemote[4],
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+				Redelegate: &millionstypes.Redelegate{
+					ErrorState: millionstypes.RedelegateState_Unspecified,
+				},
+			},
+		},
 		IcaDepositAddress:   cosmosIcaDepositAddress,
 		IcaPrizepoolAddress: cosmosIcaPrizePoolAddress,
 		State:               millionstypes.PoolState_Ready,
 	}))
-
-	pool, err = app.MillionsKeeper.GetPool(ctx, 2)
-	suite.Require().NoError(err)
-
+	// Add new deposit to pool
 	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
 		DepositId:        1,
 		PoolId:           2,
@@ -1066,23 +1092,21 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 		DepositorAddress: suite.addrs[0].String(),
 		WinnerAddress:    suite.addrs[0].String(),
 	})
-
 	pool, err = app.MillionsKeeper.GetPool(ctx, 2)
 	suite.Require().NoError(err)
-
 	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, uint64(2), uint64(1))
 	suite.Require().NoError(err)
 
+	// ComputeSplitDelegations to ease the simulation of DelegateDeposit for remote pool
 	splits := pool.ComputeSplitDelegations(ctx, deposit.Amount.Amount)
 	suite.Require().Len(splits, 5)
-
 	// Simulate successful delegation
 	err = app.MillionsKeeper.OnDelegateDepositOnNativeChainCompleted(ctx, pool.PoolId, deposit.DepositId, splits, false)
 	suite.Require().NoError(err)
-
 	pool, err = app.MillionsKeeper.GetPool(ctx, 2)
 	suite.Require().NoError(err)
 
+	// Pool validators should have equal BondedAmount
 	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[0].BondedAmount)
 	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[1].BondedAmount)
 	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[2].BondedAmount)
@@ -1091,40 +1115,38 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 
 	pool, err = app.MillionsKeeper.GetPool(ctx, 2)
 	suite.Require().NoError(err)
-
-	// simulate that the pool got updated with disabled validator
+	// simulate that the pool got updated with 1 disabled validator (first validator in the pool set)
 	bondedDisabledAmount := pool.Validators[0].BondedAmount
 	// Disable the target validator
-	pool.Validators[0].Redelegate.IsGovPropRedelegated = true
 	pool.Validators[0].IsEnabled = false
 
+	// ComputeSplitDelegations to ease the simulation of Redelegate for remote pool
 	splits = pool.ComputeSplitDelegations(ctx, bondedDisabledAmount)
 	suite.Require().Len(splits, 4)
 
 	// Simulate failed redelegation for remote pools
-	err = app.MillionsKeeper.OnRedelegateOnNativeChainCompleted(ctx, 2, valAddrsRemote[0], splits, nil, true)
+	app.MillionsKeeper.UpdateRedelegateStatus(ctx, pool.PoolId, millionstypes.RedelegateState_IcaRedelegate, valAddrsRemote[0], true, false)
+	suite.Require().NoError(err)
+	err = app.MillionsKeeper.OnRedelegateOnNativeChainCompleted(ctx, 2, valAddrsRemote[0], splits, true)
 	suite.Require().NoError(err)
 	pool, err = app.MillionsKeeper.GetPool(ctx, 2)
 	suite.Require().NoError(err)
-	suite.Require().Equal(millionstypes.RedelegateState_IcaRedelegate, pool.Validators[0].Redelegate.ErrorState)
 	suite.Require().Equal(true, pool.Validators[0].IsEnabled)
-
-	redelegationEndsAt := ctx.BlockTime().Add(-10 * time.Second)
-
-	app.MillionsKeeper.UpdateRedelegateStatus(ctx, pool.PoolId, millionstypes.RedelegateState_IcaRedelegate, valAddrsRemote[0], &redelegationEndsAt, false)
+	suite.Require().Equal(millionstypes.RedelegateState_Failure, pool.Validators[0].Redelegate.State)
+	suite.Require().Equal(millionstypes.RedelegateState_IcaRedelegate, pool.Validators[0].Redelegate.ErrorState)
 
 	// Simulate successfull redelegation for remote pools
-	err = app.MillionsKeeper.OnRedelegateOnNativeChainCompleted(ctx, 2, valAddrsRemote[0], splits, &redelegationEndsAt, false)
+	app.MillionsKeeper.UpdateRedelegateStatus(ctx, pool.PoolId, millionstypes.RedelegateState_IcaRedelegate, valAddrsRemote[0], true, false)
 	suite.Require().NoError(err)
-
+	err = app.MillionsKeeper.OnRedelegateOnNativeChainCompleted(ctx, 2, valAddrsRemote[0], splits, false)
+	suite.Require().NoError(err)
 	pool, err = app.MillionsKeeper.GetPool(ctx, 2)
 	suite.Require().NoError(err)
 
+	// The remaining pool amount amount of 5_000_000 should be divided by 4 among the remaining active validators
 	suite.Require().Equal(sdk.NewInt(0), pool.Validators[0].BondedAmount)
 	suite.Require().Equal(sdk.NewInt(1_250_000), pool.Validators[1].BondedAmount)
 	suite.Require().Equal(sdk.NewInt(1_250_000), pool.Validators[2].BondedAmount)
 	suite.Require().Equal(sdk.NewInt(1_250_000), pool.Validators[3].BondedAmount)
 	suite.Require().Equal(sdk.NewInt(1_250_000), pool.Validators[4].BondedAmount)
-
-	suite.Require().Equal(millionstypes.RedelegateState_Unspecified, pool.Validators[0].Redelegate.ErrorState)
 }

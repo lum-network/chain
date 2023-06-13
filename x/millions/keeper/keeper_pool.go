@@ -3,15 +3,12 @@ package keeper
 import (
 	"fmt"
 	"strconv"
-	"strings"
-	"time"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distribtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
 
 	gogotypes "github.com/gogo/protobuf/types"
@@ -19,6 +16,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
@@ -371,7 +369,6 @@ func (k Keeper) UpdatePool(
 	minDepositAmount *math.Int,
 	drawSchedule *types.DrawSchedule,
 	prizeStrategy *types.PrizeStrategy,
-	disableValidator string,
 ) error {
 	// Acquire and deserialize our pool entity
 	pool, err := k.GetPool(ctx, poolID)
@@ -399,16 +396,6 @@ func (k Keeper) UpdatePool(
 		}
 	}
 
-	if strings.TrimSpace(disableValidator) != "" {
-		disableOperatorAddr, err := sdk.ValAddressFromBech32(disableValidator)
-		if err != nil {
-			return types.ErrInvalidOperatorAddrToDisable
-		}
-		if err := k.Redelegate(ctx, disableOperatorAddr.String(), pool.PoolId); err != nil {
-			return err
-		}
-	}
-
 	// Only a few properties can be updated
 	if minDepositAmount != nil {
 		pool.MinDepositAmount = *minDepositAmount
@@ -433,6 +420,17 @@ func (k Keeper) UpdatePool(
 	// Commit the pool to the KVStore
 	k.updatePool(ctx, &pool)
 
+	// Redelegate validator(s) after pool update in case there is a new ValSet with disabled validators
+	if len(vals) > 0 {
+		disabledValidators, err := pool.GetDisabledValidators(ctx)
+		if err != nil {
+			return err
+		}
+		if err := k.Redelegate(ctx, pool.PoolId, disabledValidators); err != nil {
+			return err
+		}
+	}
+
 	// Emit event
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -449,8 +447,8 @@ func (k Keeper) UpdatePool(
 	return nil
 }
 
-// Redelegate disables a validator voted by gov prop and redistribute the bondedAmount to the active valitator set of the pool
-func (k Keeper) Redelegate(ctx sdk.Context, operatorAddress string, poolID uint64) error {
+// Redelegate redistribute the bondedAmount of the disabled validators to the active valitator set of the pool
+func (k Keeper) Redelegate(ctx sdk.Context, poolID uint64, disabledValidators []types.PoolValidator) error {
 	logger := k.Logger(ctx).With("ctx", "pool_redelegate")
 
 	pool, err := k.GetPool(ctx, poolID)
@@ -463,112 +461,101 @@ func (k Keeper) Redelegate(ctx sdk.Context, operatorAddress string, poolID uint6
 		return types.ErrPoolNotReady
 	}
 
-	indexVal, validator, err := pool.FindValidatorByOperatorAddress(ctx, operatorAddress)
-	if err != nil {
-		return err
-	}
+	for _, dv := range disabledValidators {
+		// Generate splits for active validators based on the bonded amount from incoming disabled validator
+		splits := pool.ComputeSplitDelegations(ctx, dv.BondedAmount)
+		if len(splits) == 0 {
+			return types.ErrPoolEmptySplitDelegations
+		}
 
-	if !validator.IsEnabled {
-		return types.ErrValidatorNotDisabled
-	}
-
-	// Disable validator so that it is excluded in the split computation
-	pool.Validators[indexVal].IsEnabled = false
-	pool.Validators[indexVal].Redelegate.State = types.RedelegateState_IcaRedelegate
-	pool.Validators[indexVal].Redelegate.IsGovPropRedelegated = true
-	k.updatePool(ctx, &pool)
-
-	// Generate splits for active validators based on the bonded amount from incoming disabled validator
-	splits := pool.ComputeSplitDelegations(ctx, validator.BondedAmount)
-	if len(splits) == 0 {
-		return types.ErrPoolEmptySplitDelegations
-	}
-
-	// If pool is local, we just process operation in place
-	// Otherwise we trigger ICA transactions
-	if pool.IsLocalZone(ctx) {
-		modAddr := sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress())
-		valSrcAddr, err := sdk.ValAddressFromBech32(validator.GetOperatorAddress())
-		if err != nil {
+		if err := k.UpdateRedelegateStatus(ctx, pool.PoolId, types.RedelegateState_IcaRedelegate, dv.GetOperatorAddress(), false, false); err != nil {
 			return err
 		}
 
-		var redelegationEndsAt *time.Time
-
-		for _, split := range splits {
-			valDstAddr, err := sdk.ValAddressFromBech32(split.ValidatorAddress)
+		// If pool is local, we just process operation in place
+		// Otherwise we trigger ICA transactions
+		if pool.IsLocalZone(ctx) {
+			modAddr := sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress())
+			valSrcAddr, err := sdk.ValAddressFromBech32(dv.GetOperatorAddress())
 			if err != nil {
 				return err
 			}
 
-			shares, err := k.StakingKeeper.ValidateUnbondAmount(
-				ctx,
-				modAddr,
-				valDstAddr,
-				split.Amount,
-			)
-			if err != nil {
-				return errorsmod.Wrapf(err, "%s", valDstAddr.String())
-			}
+			for _, split := range splits {
+				valDstAddr, err := sdk.ValAddressFromBech32(split.ValidatorAddress)
+				if err != nil {
+					return err
+				}
 
-			endsAt, err := k.StakingKeeper.BeginRedelegation(ctx, sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress()), valSrcAddr, sdk.ValAddress(valDstAddr), shares)
-			if err != nil {
-				return errorsmod.Wrapf(err, "%s", valDstAddr.String())
-			}
+				// Validate the redelegation sharesAmount
+				sharesAmount, err := k.StakingKeeper.ValidateUnbondAmount(
+					ctx,
+					modAddr,
+					valDstAddr,
+					split.Amount,
+				)
+				if err != nil {
+					return errorsmod.Wrapf(err, "%s", valDstAddr.String())
+				}
 
-			if redelegationEndsAt == nil || endsAt.After(*redelegationEndsAt) {
-				redelegationEndsAt = &endsAt
+				_, err = k.StakingKeeper.BeginRedelegation(ctx, sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress()), valSrcAddr, sdk.ValAddress(valDstAddr), sharesAmount)
+				if err != nil {
+					return errorsmod.Wrapf(err, "%s", valDstAddr.String())
+				}
 			}
+			err = k.OnRedelegateOnNativeChainCompleted(ctx, pool.PoolId, dv.GetOperatorAddress(), splits, false)
+			if err != nil {
+				return err
+			}
+			continue
 		}
 
-		return k.OnRedelegateOnNativeChainCompleted(ctx, pool.PoolId, operatorAddress, splits, redelegationEndsAt, false)
-	}
+		// Construct our callback data
+		callbackData := types.RedelegateCallback{
+			PoolId:           poolID,
+			OperatorAddress:  dv.GetOperatorAddress(),
+			SplitDelegations: splits,
+		}
+		marshalledCallbackData, err := k.MarshalRedelegateCallbackArgs(ctx, callbackData)
+		if err != nil {
+			return err
+		}
 
-	// Construct our callback data
-	callbackData := types.RedelegateCallback{
-		PoolId:           poolID,
-		OperatorAddress:  validator.GetOperatorAddress(),
-		SplitDelegations: splits,
-	}
-	marshalledCallbackData, err := k.MarshalRedelegateCallbackArgs(ctx, callbackData)
-	if err != nil {
-		return err
-	}
+		// Build the MsgBeginRedelegate
+		var msgs []sdk.Msg
+		for _, split := range splits {
+			msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{
+				DelegatorAddress:    pool.GetIcaDepositAddress(),
+				ValidatorSrcAddress: dv.GetOperatorAddress(),
+				ValidatorDstAddress: split.ValidatorAddress,
+				Amount:              sdk.NewCoin(pool.NativeDenom, split.Amount),
+			})
+		}
 
-	// Build redelegation tx
-	var msgs []sdk.Msg
-	for _, split := range splits {
-		msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{
-			DelegatorAddress:    pool.GetIcaDepositAddress(),
-			ValidatorSrcAddress: validator.GetOperatorAddress(),
-			ValidatorDstAddress: split.ValidatorAddress,
-			Amount:              sdk.NewCoin(pool.NativeDenom, split.Amount),
-		})
-	}
-
-	// Dispatch our message with a timeout of 30 minutes in nanos
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
-	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, timeoutTimestamp, ICACallbackID_Redelegate, marshalledCallbackData)
-	if err != nil {
-		logger.Error(
-			fmt.Sprintf("failed to dispatch ICA redelegation: %v", err),
+		// Dispatch our message with a timeout of 30 minutes in nanos
+		timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
+		sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, timeoutTimestamp, ICACallbackID_Redelegate, marshalledCallbackData)
+		if err != nil {
+			logger.Error(
+				fmt.Sprintf("failed to dispatch ICA redelegation: %v", err),
+				"pool_id", poolID,
+				"chain_id", pool.GetChainId(),
+				"sequence", sequence,
+			)
+			return err
+		}
+		logger.Debug(
+			"ICA redelegation dispatched",
 			"pool_id", poolID,
 			"chain_id", pool.GetChainId(),
 			"sequence", sequence,
 		)
-		return err
 	}
-	logger.Debug(
-		"ICA redelegation dispatched",
-		"pool_id", poolID,
-		"chain_id", pool.GetChainId(),
-		"sequence", sequence,
-	)
 	return nil
 }
 
-// OnRedelegateOnNativeChainCompleted Acknowledged a redelegation of a validator's bondedAmount
-func (k Keeper) OnRedelegateOnNativeChainCompleted(ctx sdk.Context, poolID uint64, operatorAddress string, splits []*types.SplitDelegation, redelegationEndsAt *time.Time, isError bool) error {
+// OnRedelegateOnNativeChainCompleted Acknowledged a redelegation of a disabled validator's bondedAmount
+func (k Keeper) OnRedelegateOnNativeChainCompleted(ctx sdk.Context, poolID uint64, operatorAddress string, splits []*types.SplitDelegation, isError bool) error {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err
@@ -579,114 +566,73 @@ func (k Keeper) OnRedelegateOnNativeChainCompleted(ctx sdk.Context, poolID uint6
 		return types.ErrPoolNotReady
 	}
 
-	_, validator, err := pool.FindValidatorByOperatorAddress(ctx, operatorAddress)
-	if err != nil {
-		return err
+	// Get the validator
+	valIdx := pool.GetValidatorsMapIndex()
+	index, found := valIdx[operatorAddress]
+	if !found {
+		return errorsmod.Wrapf(types.ErrValidatorNotFound, "%s", operatorAddress)
 	}
 
-	if validator.Redelegate.State != types.RedelegateState_IcaRedelegate {
-		return errorsmod.Wrapf(types.ErrIllegalStateOperation, "state should be %s but is %s", types.RedelegateState_IcaRedelegate.String(), validator.Redelegate.State.String())
+	if pool.Validators[index].Redelegate.State != types.RedelegateState_IcaRedelegate {
+		return errorsmod.Wrapf(types.ErrIllegalStateOperation, "state should be %s but is %s", types.RedelegateState_IcaRedelegate.String(), pool.Validators[index].Redelegate.State.String())
 	}
 
-	// Rollback is Enabled as we want to ComputeSplitDelegation again on retry
+	// Keep internal tracking when an ICA callback fails to allow new gov prop
 	if isError {
-		if err := k.UpdateRedelegateStatus(ctx, pool.PoolId, types.RedelegateState_IcaRedelegate, validator.GetOperatorAddress(), redelegationEndsAt, true); err != nil {
+		if err := k.UpdateRedelegateStatus(ctx, pool.PoolId, types.RedelegateState_IcaRedelegate, pool.Validators[index].GetOperatorAddress(), true, true); err != nil {
 			return err
 		}
 		return nil
 	}
 
-	k.addRedelegateValToEPRQueue(ctx, pool.PoolId, redelegationEndsAt, validator.GetOperatorAddress())
-	pool.ApplySplitRedelegate(ctx, splits, validator.GetOperatorAddress())
+	pool.ApplySplitRedelegate(ctx, splits, pool.Validators[index].GetOperatorAddress())
 	k.updatePool(ctx, &pool)
-
-	if err := k.UpdateRedelegateStatus(ctx, pool.PoolId, types.RedelegateState_IcaRedelegateUnbonding, validator.GetOperatorAddress(), redelegationEndsAt, false); err != nil {
+	if err := k.UpdateRedelegateStatus(ctx, pool.PoolId, types.RedelegateState_Success, pool.Validators[index].GetOperatorAddress(), false, false); err != nil {
 		return err
 	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+		sdk.NewEvent(
+			types.EventTypeRedelegate,
+			sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(pool.PoolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyOperatorAddress, pool.Validators[index].GetOperatorAddress()),
+		),
+	})
+
 	return nil
 }
 
-func (k Keeper) UpdateRedelegateStatus(ctx sdk.Context, poolID uint64, status types.RedelegateState, operatorAddress string, redelegatingEndsAt *time.Time, isError bool) error {
+// UpdateRedelegateStatus is a utils function to update redelegated validators
+func (k Keeper) UpdateRedelegateStatus(ctx sdk.Context, poolID uint64, status types.RedelegateState, operatorAddress string, isEnabled bool, isError bool) error {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err
 	}
 
-	// Make sure pool is ready
-	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
-		return types.ErrPoolNotReady
-	}
-
-	indexVal, _, err := pool.FindValidatorByOperatorAddress(ctx, operatorAddress)
-	if err != nil {
-		return err
+	// Get validator
+	valIdx := pool.GetValidatorsMapIndex()
+	index, found := valIdx[operatorAddress]
+	if !found {
+		return errorsmod.Wrapf(types.ErrValidatorNotFound, "%s", operatorAddress)
 	}
 
 	if isError {
-		pool.Validators[indexVal].IsEnabled = true
-		pool.Validators[indexVal].Redelegate.ErrorState = status
-		pool.Validators[indexVal].Redelegate.State = types.RedelegateState_Failure
-		pool.Validators[indexVal].Redelegate.RedelegationEndsAt = nil
+		pool.Validators[index].IsEnabled = isEnabled
+		pool.Validators[index].Redelegate.ErrorState = status
+		pool.Validators[index].Redelegate.State = types.RedelegateState_Failure
 		k.updatePool(ctx, &pool)
 		return nil
 	}
 
-	if redelegatingEndsAt != nil {
-		pool.Validators[indexVal].Redelegate.RedelegationEndsAt = redelegatingEndsAt
-		k.updatePool(ctx, &pool)
-	}
-
-	pool.Validators[indexVal].Redelegate.State = status
-	pool.Validators[indexVal].Redelegate.ErrorState = types.RedelegateState_Unspecified
+	pool.Validators[index].IsEnabled = isEnabled
+	pool.Validators[index].Redelegate.State = status
+	pool.Validators[index].Redelegate.ErrorState = types.RedelegateState_Unspecified
 	k.updatePool(ctx, &pool)
-
 	return nil
-}
-
-// addRedelegateValToEPRQueue adds a redelegate to the expiring queue
-func (k Keeper) addRedelegateValToEPRQueue(ctx sdk.Context, poolID uint64, completionTime *time.Time, operatorAddress string) {
-	redelegateStore := ctx.KVStore(k.storeKey)
-	col := k.GetRedelegateValsEPRQueue(ctx, *completionTime)
-	col.RedelegateVals = append(col.RedelegateVals, types.RedelegateVals{
-		PoolId:          poolID,
-		OperatorAddress: operatorAddress,
-	})
-	redelegateStore.Set(types.GetExpiringRedelegateTimeKey(*completionTime), k.cdc.MustMarshal(&col))
-}
-
-// GetRedelegateValsEPRQueue gets a redelegateVals collection for the expiring redelegating timestamp
-func (k Keeper) GetRedelegateValsEPRQueue(ctx sdk.Context, timestamp time.Time) (col types.RedelegateValsCollection) {
-	redelegateStore := ctx.KVStore(k.storeKey)
-	bz := redelegateStore.Get(types.GetExpiringRedelegateTimeKey(timestamp))
-	if bz == nil {
-		return
-	}
-	k.cdc.MustUnmarshal(bz, &col)
-	return
-}
-
-// ExpRedelegateQueueIterator returns an iterator for the redelegate expired queue up to the specified endTime
-func (k Keeper) ExpRedelegateQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
-	redelegateStore := ctx.KVStore(k.storeKey)
-	// Add end bytes to ensure the last item gets included in the iterator
-	return redelegateStore.Iterator(types.RedelegateExpirationTimePrefix, append(types.GetExpiringRedelegateTimeKey(endTime), byte(0x00)))
-}
-
-// DequeueEPRQueue return all the Expired Redelegations and remove them from the queue
-func (k Keeper) DequeueEPRQueue(ctx sdk.Context, endTime time.Time) (redelegations []types.RedelegateVals) {
-	prizeStore := ctx.KVStore(k.storeKey)
-
-	iterator := k.ExpRedelegateQueueIterator(ctx, endTime)
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		var col types.RedelegateValsCollection
-		k.cdc.MustUnmarshal(iterator.Value(), &col)
-		redelegations = append(redelegations, col.RedelegateVals...)
-		prizeStore.Delete(iterator.Key())
-	}
-
-	return
 }
 
 func (k Keeper) updatePool(ctx sdk.Context, pool *types.Pool) {

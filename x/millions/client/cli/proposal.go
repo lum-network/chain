@@ -52,18 +52,6 @@ func parseUpdateParamsProposalFile(cdc codec.JSONCodec, proposalFile string) (pr
 	return proposal, nil
 }
 
-func parseDisableValidatorProposalFile(cdc codec.JSONCodec, proposalFile string) (proposal types.ProposalDisableValidator, err error) {
-	contents, err := os.ReadFile(proposalFile)
-	if err != nil {
-		return proposal, err
-	}
-
-	if err = cdc.UnmarshalJSON(contents, &proposal); err != nil {
-		return proposal, err
-	}
-	return proposal, nil
-}
-
 func CmdProposalRegisterPool() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "millions-register-pool [proposal-file]",
@@ -183,8 +171,7 @@ Where proposal.json contains:
             "pool_percent": "100",
             "quantity": "100"
         }]
-    },
-	"disable_validator": "lumvaloper12x88yexvf6qexfjg9czp6jhpv7vpjdwwedhzhk"
+    }
 }
 `, version.AppName),
 		),
@@ -319,72 +306,3 @@ Where proposal.json contains:
 	}
 	return cmd
 }
-
-// func CmdProposalDisableValidator() *cobra.Command {
-// 	cmd := &cobra.Command{
-// 		Use:   "millions-disable-validator [proposal-file]",
-// 		Short: "Submit a millions disable validator",
-// 		Long: strings.TrimSpace(
-// 			fmt.Sprintf(`Submit an DisableValidator proposal along with an initial deposit.
-// The proposal details must be supplied via a JSON file.
-
-// Example:
-// $ %s tx gov submit-legacy-proposal millions-disable-validator <path/to/proposal.json> --from=<key_or_address>
-
-// Where proposal.json contains:
-// {
-//     "title": "Disable validator",
-//     "description": "This is the reason why we want to disable this validator",
-// 	"pool_id": "1",
-//     "operator_address": "lumvaloper12x88yexvf6qexfjg9czp6jhpv7vpjdwwedhzhk"
-// }
-// `, version.AppName),
-// 		),
-// 		Args: cobra.ExactArgs(1),
-// 		RunE: func(cmd *cobra.Command, args []string) error {
-// 			// Acquire the client context
-// 			clientCtx, err := client.GetClientTxContext(cmd)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			// Parse the proposal file
-// 			proposal, err := parseDisableValidatorProposalFile(clientCtx.Codec, args[0])
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			if err := proposal.ValidateBasic(); err != nil {
-// 				return err
-// 			}
-
-// 			// Grab the parameters
-// 			from := clientCtx.GetFromAddress()
-
-// 			// Grab the deposit
-// 			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			deposit, err := sdk.ParseCoinsNormalized(depositStr)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			msg, err := govtypes.NewMsgSubmitProposal(&proposal, deposit, from)
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			// Generate the transaction
-// 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-// 		},
-// 	}
-
-// 	cmd.Flags().String(govcli.FlagDeposit, "1ulum", "deposit of proposal")
-// 	if err := cmd.MarkFlagRequired(govcli.FlagDeposit); err != nil {
-// 		panic(err)
-// 	}
-// 	return cmd
-// }

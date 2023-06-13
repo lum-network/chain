@@ -236,6 +236,7 @@ func (p *Pool) ApplySplitUndelegate(ctx sdk.Context, splits []*SplitDelegation) 
 	}
 }
 
+// ApplySplitRedelegate serves as internal tracking to redelegate the bonded amount from the inactive to the active validators
 func (p *Pool) ApplySplitRedelegate(ctx sdk.Context, splits []*SplitDelegation, operatorAddress string) {
 	valIdx := p.GetValidatorsMapIndex()
 	for _, split := range splits {
@@ -250,13 +251,20 @@ func (p *Pool) ApplySplitRedelegate(ctx sdk.Context, splits []*SplitDelegation, 
 	}
 }
 
-// FindValidatorByOperatorAddress allows to find a validator among a validators PoolSet
-func (p *Pool) FindValidatorByOperatorAddress(ctx sdk.Context, operatorAddress string) (int, PoolValidator, error) {
+// GetDisabledValidators returns all disabled validators from the pool
+func (p *Pool) GetDisabledValidators(ctx sdk.Context) ([]PoolValidator, error) {
+	var disabledValidators []PoolValidator
+
 	valIdx := p.GetValidatorsMapIndex()
-	index, found := valIdx[operatorAddress]
-	if !found {
-		return -1, PoolValidator{}, errorsmod.Wrapf(ErrValidatorNotFound, "%s", operatorAddress)
+	for _, index := range valIdx {
+		if !p.Validators[index].IsEnabled {
+			disabledValidators = append(disabledValidators, p.Validators[index])
+		}
 	}
-	validator := p.Validators[index]
-	return index, validator, nil
+
+	if len(disabledValidators) == 0 {
+		return []PoolValidator{}, ErrNoDisabledValidator
+	}
+
+	return disabledValidators, nil
 }

@@ -19,5 +19,4 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 	keeper.BlockPrizeUpdates(ctx)
 	keeper.BlockWithdrawalUpdates(ctx)
-	keeper.BlockRedelegateUpdates(ctx)
 }

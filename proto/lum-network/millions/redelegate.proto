@@ -11,23 +11,11 @@ enum RedelegateState {
 
   REDELEGATE_STATE_UNSPECIFIED = 0 [ (gogoproto.enumvalue_customname) = "Unspecified" ];
   REDELEGATE_STATE_ICA_REDELEGATE = 1 [ (gogoproto.enumvalue_customname) = "IcaRedelegate" ];
-  REDELEGATE_STATE_ICA_REDELEGATE_UNBONDING = 2 [ (gogoproto.enumvalue_customname) = "IcaRedelegateUnbonding" ];
-  REDELEGATE_STATE_SUCCESS = 3 [ (gogoproto.enumvalue_customname) = "Success" ];
-  REDELEGATE_STATE_FAILURE = 4 [ (gogoproto.enumvalue_customname) = "Failure" ];
+  REDELEGATE_STATE_SUCCESS = 2 [ (gogoproto.enumvalue_customname) = "Success" ];
+  REDELEGATE_STATE_FAILURE = 3 [ (gogoproto.enumvalue_customname) = "Failure" ];
 }
 
 message Redelegate {
-  bool is_gov_prop_redelegated = 1;
-  RedelegateState state = 2;
-  RedelegateState error_state = 3;
-  google.protobuf.Timestamp redelegation_ends_at = 4 [ (gogoproto.stdtime) = true, (gogoproto.nullable) = true ];
-}
-
-message RedelegateVals {
-  uint64 pool_id = 1;
-  string operator_address = 2;
-}
-
-message RedelegateValsCollection {
-  repeated RedelegateVals redelegate_vals = 1 [ (gogoproto.nullable) = false ];
+  RedelegateState state = 1;
+  RedelegateState error_state = 2;
 }

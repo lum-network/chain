@@ -11,7 +11,6 @@ const (
 	EventTypeClaimPrize           = "prize_claim"
 	EventTypeClawbackPrize        = "prize_clawback"
 	EventTypeRedelegate           = "redelegate"
-	EventTypeRedelegateRetry      = "redelegate_retry"
 	EventTypeWithdrawDeposit      = "withdraw_deposit"
 	EventTypeWithdrawDepositRetry = "withdraw_deposit_retry"
 
