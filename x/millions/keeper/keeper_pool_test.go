@@ -987,9 +987,13 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 	suite.Require().NoError(err)
 	app.MillionsKeeper.UpdateRedelegateStatus(ctx, pool.PoolId, millionstypes.RedelegateState_IcaRedelegate, pool.Validators[3].GetOperatorAddress(), false, false)
 	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
 
 	// Redelegate disabled validators
-	err = app.MillionsKeeper.Redelegate(ctx, pool.PoolId, []millionstypes.PoolValidator{pool.Validators[1], pool.Validators[3]})
+	disabledValidators, err := pool.GetDisabledValidators(ctx)
+	suite.Require().NoError(err)
+	err = app.MillionsKeeper.Redelegate(ctx, pool.PoolId, disabledValidators)
 	suite.Require().NoError(err)
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
