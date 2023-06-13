@@ -613,6 +613,11 @@ func (k Keeper) UpdateRedelegateStatus(ctx sdk.Context, poolID uint64, status ty
 		return err
 	}
 
+	// Make sure pool is ready
+	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
+		return types.ErrPoolNotReady
+	}
+
 	// Get validator
 	valIdx := pool.GetValidatorsMapIndex()
 	index, found := valIdx[operatorAddress]
