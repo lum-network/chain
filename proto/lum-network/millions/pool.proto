@@ -32,14 +32,6 @@ enum PoolState {
   POOL_STATE_KILLED = 4 [ (gogoproto.enumvalue_customname) = "Killed" ];
 }
 
-enum PoolValidatorRedelegateState {
-  option (gogoproto.goproto_enum_prefix) = true;
-
-  POOL_VALIDATOR_REDELEGATE_STATE_UNSPECIFIED = 0 [ (gogoproto.enumvalue_customname) = "Unspecified" ];
-  POOL_VALIDATOR_REDELEGATE_STATE_SUCCESS = 1 [ (gogoproto.enumvalue_customname) = "Success" ];
-  POOL_VALIDATOR_REDELEGATE_STATE_FAILURE = 2 [ (gogoproto.enumvalue_customname) = "Failure" ];
-}
-
 message Pool {
   uint64 pool_id = 1;
   string denom = 2;

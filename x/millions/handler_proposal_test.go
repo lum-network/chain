@@ -268,7 +268,7 @@ func (suite *HandlerTestSuite) TestProposal_UpdatePool() {
 	msgServer := millionskeeper.NewMsgServerImpl(*suite.app.MillionsKeeper)
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 
-	// Initialize a deposit for to trigger delegation to validators
+	// Initialize a deposit to trigger delegation to validators
 	_, err := msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
 		DepositorAddress: suite.addrs[0].String(),
 		PoolId:           suite.pool.PoolId,

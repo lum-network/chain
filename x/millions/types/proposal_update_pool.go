@@ -67,11 +67,11 @@ func (p *ProposalUpdatePool) ValidateBasic() error {
 
 func (p ProposalUpdatePool) String() string {
 	return fmt.Sprintf(`Update Pool Proposal:
-	Title:            		%s
-	Description:      		%s
-	Pool ID:				%d
-	Validators:       		%+v
-	Min Deposit Amount: 	%d
+	Title:            	%s
+	Description:      	%s
+	Pool ID:			%d
+	Validators:       	%+v
+	Min Deposit Amount: %d
 	======Draw Schedule======
 	%s
 	======Prize Strategy======

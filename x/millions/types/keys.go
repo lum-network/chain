@@ -51,7 +51,6 @@ var (
 	NextWithdrawalPrefix           = []byte{0x12}
 	PrizeExpirationTimePrefix      = []byte{0x13}
 	WithdrawalMaturationTimePrefix = []byte{0x14}
-	RedelegateExpirationTimePrefix = []byte{0x15}
 	ParamsPrefix                   = []byte{0x20}
 	// KeyIndexSeparator separator between combined keys
 	KeyIndexSeparator = []byte{0xFF}
@@ -187,10 +186,4 @@ func GetAccountWithdrawalsKey(addr sdk.Address) []byte {
 
 func GetMaturedWithdrawalTimeKey(timestamp time.Time) []byte {
 	return CombineKeys(WithdrawalMaturationTimePrefix, sdk.FormatTimeBytes(timestamp))
-}
-
-// Redelegation
-
-func GetExpiringRedelegateTimeKey(timestamp time.Time) []byte {
-	return CombineKeys(RedelegateExpirationTimePrefix, sdk.FormatTimeBytes(timestamp))
 }
