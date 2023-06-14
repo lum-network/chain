@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
 var _ sdk.Msg = &MsgWithdrawDeposit{}
@@ -39,7 +40,9 @@ func (msg *MsgWithdrawDeposit) ValidateBasic() error {
 		return ErrInvalidDepositorAddress
 	}
 
-	if _, err := sdk.AccAddressFromBech32(msg.GetToAddress()); err != nil {
+	// Verify that a valid bech32 address is passed regardless of its prefix
+	// because the toAddress can be targeting the local zone or the pool remote zone
+	if _, _, err := bech32.DecodeAndConvert(msg.GetToAddress()); err != nil {
 		return ErrInvalidDestinationAddress
 	}
 

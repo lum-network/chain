@@ -20,8 +20,11 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types
 	if err != nil {
 		return nil, types.ErrPoolNotFound
 	}
-	if pool.State != types.PoolState_Ready {
-		return nil, types.ErrPoolNotReady
+
+	if pool.State != types.PoolState_Ready && pool.State != types.PoolState_Paused {
+		return nil, errorsmod.Wrapf(
+			types.ErrInvalidPoolState, "cannot deposit in pool during state %s", pool.State.String(),
+		)
 	}
 
 	depositorAddr, err := sdk.AccAddressFromBech32(msg.GetDepositorAddress())

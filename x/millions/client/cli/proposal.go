@@ -172,7 +172,8 @@ Where proposal.json contains:
             "pool_percent": "100",
             "quantity": "100"
         }]
-    }
+    },
+	"state": 3
 }
 `, version.AppName),
 		),

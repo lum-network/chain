@@ -366,6 +366,7 @@ func (k Keeper) UpdatePool(
 	minDepositAmount *math.Int,
 	drawSchedule *types.DrawSchedule,
 	prizeStrategy *types.PrizeStrategy,
+	state types.PoolState,
 ) error {
 	// Acquire and deserialize our pool entity
 	pool, err := k.GetPool(ctx, poolID)
@@ -409,6 +410,16 @@ func (k Keeper) UpdatePool(
 		pool.PrizeStrategy = *prizeStrategy
 	}
 
+	// Update pool state only if current pool state is in paused and incoming state ready
+	// else if current pool state is in ready and incoming state paused
+	if state == types.PoolState_Paused && pool.State == types.PoolState_Ready {
+		pool.State = state
+	} else if state == types.PoolState_Ready && pool.State == types.PoolState_Paused {
+		pool.State = state
+	} else if state != types.PoolState_Unspecified {
+		return types.ErrPoolStateChangeNotAllowed
+	}
+
 	// Validate pool configuration
 	if err := pool.ValidateBasic(k.GetParams(ctx)); err != nil {
 		return errorsmod.Wrapf(types.ErrFailedToUpdatePool, err.Error())
@@ -431,6 +442,26 @@ func (k Keeper) UpdatePool(
 	})
 
 	return nil
+}
+
+// UnsafeKillPool This method switches the provided pool state but does not handle any withdrawal or deposit.
+// It shouldn't be used and is very specific to UNUSED and EMPTY pools
+func (k Keeper) UnsafeKillPool(ctx sdk.Context, poolID uint64) (types.Pool, error) {
+	// Grab our pool instance
+	pool, err := k.GetPool(ctx, poolID)
+	if err != nil {
+		return types.Pool{}, err
+	}
+
+	// Make sure the pool isn't killed yet
+	if pool.GetState() == types.PoolState_Killed {
+		return pool, errorsmod.Wrapf(types.ErrPoolKilled, "%d", poolID)
+	}
+
+	// Kill the pool
+	pool.State = types.PoolState_Killed
+	k.updatePool(ctx, &pool)
+	return pool, nil
 }
 
 func (k Keeper) updatePool(ctx sdk.Context, pool *types.Pool) {
@@ -555,8 +586,8 @@ func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint
 		return nil, nil, err
 	}
 
-	// Pool must be ready to process those kind of operations
-	if pool.GetState() != types.PoolState_Ready {
+	// We always want our pool to have passed the created state and not be unspecified
+	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
 		return nil, nil, types.ErrPoolNotReady
 	}
 
@@ -655,7 +686,7 @@ func (k Keeper) QueryBalance(ctx sdk.Context, poolID uint64, drawID uint64) (*ty
 	}
 
 	// Pool must be ready to process those kind of operations
-	if pool.GetState() != types.PoolState_Ready {
+	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
 		return nil, types.ErrPoolNotReady
 	}
 

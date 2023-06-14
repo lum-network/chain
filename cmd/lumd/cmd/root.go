@@ -22,7 +22,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -139,6 +141,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		debug.Cmd(),
+		pruning.PruningCmd(newApp),
+		snapshot.Cmd(newApp),
 	)
 
 	a := appCreator{encodingConfig}
