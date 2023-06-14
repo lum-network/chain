@@ -1,6 +1,7 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -39,12 +40,12 @@ func (msg *MsgDeposit) ValidateBasic() error {
 	// Ensure the address is correct and that we are able to acquire it
 	_, err := sdk.AccAddressFromBech32(msg.GetDepositorAddress())
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid creator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid creator address (%s)", err)
 	}
 
 	// If we have an amount, make sure it is not negative nor zero
 	if msg.GetAmount().IsZero() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "Invalid amount: must be greater than 0")
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "Invalid amount: must be greater than 0")
 	}
 	return nil
 }

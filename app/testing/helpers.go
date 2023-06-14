@@ -23,7 +23,7 @@ func AddTestAddrsIncremental(app *app.App, ctx sdk.Context, accNum int, accAmt m
 type EmptyAppOptions struct{}
 
 // Get implements AppOptions.
-func (ao EmptyAppOptions) Get(o string) interface{} {
+func (ao EmptyAppOptions) Get(_ string) interface{} {
 	return nil
 }
 
