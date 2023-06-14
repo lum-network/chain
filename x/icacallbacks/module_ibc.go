@@ -116,27 +116,27 @@ func (im IBCModule) OnChanOpenTry(
 
 // OnChanOpenConfirm implements the IBCModule interface.
 func (im IBCModule) OnChanOpenConfirm(
-	ctx sdk.Context,
-	portID,
-	channelID string,
+	_ sdk.Context,
+	_,
+	_ string,
 ) error {
 	panic("UNIMPLEMENTED")
 }
 
 // OnChanCloseInit implements the IBCModule interface.
 func (im IBCModule) OnChanCloseInit(
-	ctx sdk.Context,
-	portID,
-	channelID string,
+	_ sdk.Context,
+	_,
+	_ string,
 ) error {
 	panic("UNIMPLEMENTED")
 }
 
 // OnRecvPacket implements the IBCModule interface.
 func (im IBCModule) OnRecvPacket(
-	ctx sdk.Context,
-	modulePacket channeltypes.Packet,
-	relayer sdk.AccAddress,
+	_ sdk.Context,
+	_ channeltypes.Packet,
+	_ sdk.AccAddress,
 ) ibcexported.Acknowledgement {
 	panic("UNIMPLEMENTED")
 }

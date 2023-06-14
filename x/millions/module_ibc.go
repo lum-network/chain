@@ -105,7 +105,7 @@ func (im IBCModule) OnChanCloseConfirm(_ sdk.Context, _, _ string) error {
 
 // OnRecvPacket implements the IBCModule interface. A successful acknowledgement
 // is returned if the packet data is successfully decoded and the received application logic returns without error.
-func (im IBCModule) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
+func (im IBCModule) OnRecvPacket(_ sdk.Context, _ channeltypes.Packet, _ sdk.AccAddress) ibcexported.Acknowledgement {
 	panic("UNIMPLEMENTED")
 }
 

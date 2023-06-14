@@ -11,7 +11,7 @@ import (
 var _ types.QueryServiceServer = Keeper{}
 
 // PendingQueries Query all queries that have been requested but have not received a response.
-func (k Keeper) PendingQueries(c context.Context, req *types.QueryPendingQueriesRequest) (*types.QueryPendingQueriesResponse, error) {
+func (k Keeper) PendingQueries(c context.Context, _ *types.QueryPendingQueriesRequest) (*types.QueryPendingQueriesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	pendingQueries := []types.Query{}
@@ -25,7 +25,7 @@ func (k Keeper) PendingQueries(c context.Context, req *types.QueryPendingQueries
 }
 
 // Queries Query all queries that have been requested but have not received a response.
-func (k Keeper) Queries(c context.Context, req *types.QueryQueriesRequest) (*types.QueryQueriesResponse, error) {
+func (k Keeper) Queries(c context.Context, _ *types.QueryQueriesRequest) (*types.QueryQueriesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	queries := k.AllQueries(ctx)

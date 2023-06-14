@@ -20,7 +20,7 @@ func GenerateQueryHash(connectionId, chainId, extraId, queryType string, request
 }
 
 // NewQuery Build a new query structure.
-func (k *Keeper) NewQuery(ctx sdk.Context, module, callbackId, chainId, connectionId, extraId, queryType string, request []byte, ttl uint64) *types.Query {
+func (k *Keeper) NewQuery(_ sdk.Context, module, callbackId, chainId, connectionId, extraId, queryType string, request []byte, ttl uint64) *types.Query {
 	return &types.Query{
 		Id:           GenerateQueryHash(connectionId, chainId, extraId, queryType, request, module, callbackId),
 		ConnectionId: connectionId,
