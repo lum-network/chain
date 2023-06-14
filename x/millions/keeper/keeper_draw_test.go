@@ -937,8 +937,8 @@ func (suite *KeeperTestSuite) TestDraw_EvenPrizeDistributionLLN() {
 		probaTotalWinners += float64(pb.Quantity) * drawProb * float64(drawCount)
 	}
 
-	suite.Require().Greater(float64(totalWinners)/float64(probaTotalWinners), 0.999)
-	suite.Require().Less(float64(totalWinners)/float64(probaTotalWinners), 1.001)
+	suite.Require().Greater(float64(totalWinners)/probaTotalWinners, 0.999)
+	suite.Require().Less(float64(totalWinners)/probaTotalWinners, 1.001)
 	// Draws outcome + remains should be equal to inflation
 	suite.Require().Equal(totalInf.Int64(), totalWinAmount.Add(remainsFromLastDraw).Int64())
 	// Draws outcome should be close to inflation (less than 0.01% difference)
@@ -1048,8 +1048,8 @@ func (suite *KeeperTestSuite) TestDraw_WeightedPrizeDistributionLLN() {
 		probaTotalWinners += float64(pb.Quantity) * drawProb * float64(drawCount)
 	}
 
-	suite.Require().Greater(float64(totalWinners)/float64(probaTotalWinners), 0.999)
-	suite.Require().Less(float64(totalWinners)/float64(probaTotalWinners), 1.001)
+	suite.Require().Greater(float64(totalWinners)/probaTotalWinners, 0.999)
+	suite.Require().Less(float64(totalWinners)/probaTotalWinners, 1.001)
 	// Draws outcome + remains should be equal to inflation
 	suite.Require().Equal(totalInf.Int64(), totalWinAmount.Add(remainsFromLastDraw).Int64())
 	// Draws outcome should be close to inflation (less than 0.01% difference)

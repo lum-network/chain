@@ -605,7 +605,7 @@ func (k Keeper) ComputeDepositsTWB(ctx sdk.Context, depositStartAt, drawAt time.
 				// Consider deposits which do not abide to the min deposit to draw delta to be 0
 				elapsed = 0
 			}
-			twb = sdkmath.LegacyNewDec(int64(elapsed)).QuoInt64(int64(totalElapsed)).MulInt(d.Amount.Amount).RoundInt()
+			twb = sdkmath.LegacyNewDec(elapsed).QuoInt64(totalElapsed).MulInt(d.Amount.Amount).RoundInt()
 		}
 		dtwb := DepositTWB{
 			Address: d.WinnerAddress,
