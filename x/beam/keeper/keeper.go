@@ -50,7 +50,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetBeamAccount Return the beam module account interface.
-func (k Keeper) GetBeamAccount(ctx sdk.Context) sdk.AccAddress {
+func (k Keeper) GetBeamAccount(_ sdk.Context) sdk.AccAddress {
 	return k.AuthKeeper.GetModuleAddress(types.ModuleName)
 }
 

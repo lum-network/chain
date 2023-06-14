@@ -49,7 +49,7 @@ func ParseTxMsgData(acknowledgementResult []byte) ([][]byte, error) {
 // ICA transactions have associated messages responses. IBC transfer do not.
 // With ICA transactions, the schema of the response differs depending on the version of ibc-go used,
 // however, this function unifies the format into a common response (a slice of byte arrays).
-func UnpackAcknowledgementResponse(ctx sdk.Context, logger log.Logger, ack []byte, isICA bool) (*types.AcknowledgementResponse, error) {
+func UnpackAcknowledgementResponse(_ sdk.Context, logger log.Logger, ack []byte, isICA bool) (*types.AcknowledgementResponse, error) {
 	// Unmarshal the raw ack response
 	var acknowledgement channeltypes.Acknowledgement
 	if err := ibctransfertypes.ModuleCdc.UnmarshalJSON(ack, &acknowledgement); err != nil {

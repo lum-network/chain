@@ -6,5 +6,5 @@ import (
 	"github.com/lum-network/chain/x/dfract/keeper"
 )
 
-func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
+func EndBlocker(_ sdk.Context, _ keeper.Keeper) {
 }

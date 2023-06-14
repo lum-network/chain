@@ -81,7 +81,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetModuleAccount Return the module account address.
-func (k Keeper) GetModuleAccount(ctx sdk.Context) sdk.AccAddress {
+func (k Keeper) GetModuleAccount(_ sdk.Context) sdk.AccAddress {
 	return k.AuthKeeper.GetModuleAddress(types.ModuleName)
 }
 

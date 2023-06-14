@@ -6,5 +6,5 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 )
 
-func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
+func RegisterRoutes(_ client.Context, _ *mux.Router) {
 }
