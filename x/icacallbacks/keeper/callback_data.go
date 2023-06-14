@@ -7,7 +7,7 @@ import (
 	"github.com/lum-network/chain/x/icacallbacks/types"
 )
 
-// SetCallbackData set a specific callbackData in the store from its index
+// SetCallbackData set a specific callbackData in the store from its index.
 func (k Keeper) SetCallbackData(ctx sdk.Context, callbackData types.CallbackData) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CallbackDataKeyPrefix))
 	b := k.cdc.MustMarshal(&callbackData)
@@ -16,7 +16,7 @@ func (k Keeper) SetCallbackData(ctx sdk.Context, callbackData types.CallbackData
 	), b)
 }
 
-// GetCallbackData returns a callbackData from its index
+// GetCallbackData returns a callbackData from its index.
 func (k Keeper) GetCallbackData(
 	ctx sdk.Context,
 	callbackKey string,
@@ -34,7 +34,7 @@ func (k Keeper) GetCallbackData(
 	return val, true
 }
 
-// RemoveCallbackData removes a callbackData from the store
+// RemoveCallbackData removes a callbackData from the store.
 func (k Keeper) RemoveCallbackData(
 	ctx sdk.Context,
 	callbackKey string,
@@ -45,7 +45,7 @@ func (k Keeper) RemoveCallbackData(
 	))
 }
 
-// GetAllCallbackData returns all callbackData
+// GetAllCallbackData returns all callbackData.
 func (k Keeper) GetAllCallbackData(ctx sdk.Context) (list []types.CallbackData) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CallbackDataKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})

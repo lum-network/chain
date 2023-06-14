@@ -10,7 +10,7 @@ import (
 )
 
 // BlockPoolUpdates runs all pool updates and draws
-// Called in each BeginBlock
+// Called in each BeginBlock.
 func (k Keeper) BlockPoolUpdates(ctx sdk.Context) (successCount, errorCount int) {
 	logger := k.Logger(ctx).With("ctx", "blocker_pools")
 
@@ -29,7 +29,7 @@ func (k Keeper) BlockPoolUpdates(ctx sdk.Context) (successCount, errorCount int)
 			)
 			errorCount++
 		} else {
-			// Commit succesful changes (draw and pool updates)
+			// Commit successful changes (draw and pool updates)
 			logger.Info(
 				"draw launched with success",
 				"pool_id", pool.PoolId,
@@ -62,7 +62,7 @@ func (k Keeper) BlockPoolUpdates(ctx sdk.Context) (successCount, errorCount int)
 }
 
 // BlockPrizeUpdates runs all prize updates (clawback)
-// Called in each EndBlock
+// Called in each EndBlock.
 func (k Keeper) BlockPrizeUpdates(ctx sdk.Context) (successCount, errorCount int) {
 	logger := k.Logger(ctx).With("ctx", "blocker_prizes")
 
@@ -118,7 +118,7 @@ func (k Keeper) BlockPrizeUpdates(ctx sdk.Context) (successCount, errorCount int
 }
 
 // BlockWithdrawalUpdates runs all matured withdrawals updates (transfer post unbonding)
-// Called in each EndBlock
+// Called in each EndBlock.
 func (k Keeper) BlockWithdrawalUpdates(ctx sdk.Context) (successCount, errorCount int) {
 	logger := k.Logger(ctx).With("ctx", "blocker_withdrawals")
 
@@ -141,7 +141,7 @@ func (k Keeper) BlockWithdrawalUpdates(ctx sdk.Context) (successCount, errorCoun
 				k.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, types.WithdrawalState_IbcTransfer, nil, true)
 				errorCount++
 			} else {
-				// Commit succesful changes
+				// Commit successful changes
 				writeCache()
 				successCount++
 			}

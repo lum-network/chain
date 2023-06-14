@@ -17,7 +17,7 @@ import (
 // Parses ICA tx responses and returns a list of each serialized response
 // The format of the raw ack differs depending on which version of ibc-go is used
 // For v4 and prior, the message responses are stored under the `Data` attribute of TxMsgData
-// For v5 and later, the message responses are stored under the `MsgResponse` attribute of TxMsgdata
+// For v5 and later, the message responses are stored under the `MsgResponse` attribute of TxMsgdata.
 func ParseTxMsgData(acknowledgementResult []byte) ([][]byte, error) {
 	txMsgData := &sdk.TxMsgData{}
 	if err := proto.Unmarshal(acknowledgementResult, txMsgData); err != nil {
@@ -35,7 +35,7 @@ func ParseTxMsgData(acknowledgementResult []byte) ([][]byte, error) {
 		return msgResponses, nil
 	default:
 		// for SDK 0.45 and below
-		var msgResponses = make([][]byte, len(txMsgData.Data))
+		msgResponses := make([][]byte, len(txMsgData.Data))
 		for i, msgData := range txMsgData.Data {
 			msgResponses[i] = msgData.Data
 		}
@@ -48,7 +48,7 @@ func ParseTxMsgData(acknowledgementResult []byte) ([][]byte, error) {
 //
 // ICA transactions have associated messages responses. IBC transfer do not.
 // With ICA transactions, the schema of the response differs depending on the version of ibc-go used,
-// however, this function unifies the format into a common response (a slice of byte arrays)
+// however, this function unifies the format into a common response (a slice of byte arrays).
 func UnpackAcknowledgementResponse(ctx sdk.Context, logger log.Logger, ack []byte, isICA bool) (*types.AcknowledgementResponse, error) {
 	// Unmarshal the raw ack response
 	var acknowledgement channeltypes.Acknowledgement

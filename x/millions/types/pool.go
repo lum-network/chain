@@ -10,7 +10,7 @@ import (
 )
 
 // ValidateBasic validates if a pool has a valid configuration
-// meaning that it can be stored
+// meaning that it can be stored.
 func (pool *Pool) ValidateBasic(params Params) error {
 	if pool.PoolId == UnknownID {
 		return ErrInvalidID
@@ -74,7 +74,7 @@ func (p *Pool) ShouldDraw(ctx sdk.Context) bool {
 }
 
 // GetValidatorsMapIndex maps validators operator address to their index in the Pool.Validators array
-// utility function to facilitate access to Validators
+// utility function to facilitate access to Validators.
 func (p *Pool) GetValidatorsMapIndex() map[string]int {
 	valIdx := make(map[string]int)
 	for i, v := range p.Validators {
@@ -83,7 +83,7 @@ func (p *Pool) GetValidatorsMapIndex() map[string]int {
 	return valIdx
 }
 
-// ActiveValidators returns currently enabled validators
+// ActiveValidators returns currently enabled validators.
 func (p *Pool) ActiveValidators() (vals []PoolValidator) {
 	for _, v := range p.Validators {
 		if v.IsEnabled {
@@ -93,7 +93,7 @@ func (p *Pool) ActiveValidators() (vals []PoolValidator) {
 	return
 }
 
-// BondedValidators returns active and inactive validators with a bonded amount > 0 for
+// BondedValidators returns active and inactive validators with a bonded amount > 0 for.
 func (p *Pool) BondedValidators() (activeVals, inactiveVals []PoolValidator) {
 	for _, v := range p.Validators {
 		if v.IsBonded() {
@@ -108,7 +108,7 @@ func (p *Pool) BondedValidators() (activeVals, inactiveVals []PoolValidator) {
 }
 
 // ComputeSplitDelegations computes the delegation split to enforce based on the active validators in the set
-// amount is divided evenly to all active validators
+// amount is divided evenly to all active validators.
 func (p *Pool) ComputeSplitDelegations(ctx sdk.Context, amount math.Int) (splits []*SplitDelegation) {
 	activeValidators := p.ActiveValidators()
 	if len(activeValidators) <= 0 {
@@ -148,7 +148,7 @@ func (p *Pool) ComputeSplitDelegations(ctx sdk.Context, amount math.Int) (splits
 }
 
 // ComputeSplitUndelegations compute the undelegation split to enforce based on the bonded validators in the set
-// disabled validators are prioritized and remaining amount is divided evenly between all validators
+// disabled validators are prioritized and remaining amount is divided evenly between all validators.
 func (p *Pool) ComputeSplitUndelegations(ctx sdk.Context, amount math.Int) (splits []*SplitDelegation) {
 	bondedActiveVals, bondedInactiveVals := p.BondedValidators()
 	if len(bondedActiveVals) <= 0 && len(bondedInactiveVals) <= 0 {

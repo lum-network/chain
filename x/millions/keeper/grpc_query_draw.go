@@ -26,7 +26,7 @@ func (k queryServer) Draws(goCtx context.Context, req *types.QueryDrawsRequest) 
 
 	// Make the paginated query
 	var draws []types.Draw
-	pageRes, err := query.Paginate(drawStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(drawStore, req.Pagination, func(key, value []byte) error {
 		var draw types.Draw
 		if err := k.cdc.Unmarshal(value, &draw); err != nil {
 			return err
@@ -35,7 +35,6 @@ func (k queryServer) Draws(goCtx context.Context, req *types.QueryDrawsRequest) 
 		draws = append(draws, draw)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -61,7 +60,7 @@ func (k queryServer) PoolDraws(goCtx context.Context, req *types.QueryPoolDrawsR
 
 	// Make the paginated query
 	var draws []types.Draw
-	pageRes, err := query.Paginate(drawStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(drawStore, req.Pagination, func(key, value []byte) error {
 		var draw types.Draw
 		if err := k.cdc.Unmarshal(value, &draw); err != nil {
 			return err
@@ -70,7 +69,6 @@ func (k queryServer) PoolDraws(goCtx context.Context, req *types.QueryPoolDrawsR
 		draws = append(draws, draw)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

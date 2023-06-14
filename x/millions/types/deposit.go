@@ -6,7 +6,7 @@ import (
 )
 
 // ValidateBasic validates if a deposit has a valid poolID, depositID and depositorAddress
-// meaning that it can be stored
+// meaning that it can be stored.
 func (deposit *Deposit) ValidateBasic() error {
 	if deposit.PoolId == UnknownID {
 		return errorsmod.Wrapf(ErrInvalidID, "pool ID")
@@ -26,7 +26,7 @@ func (deposit *Deposit) ValidateBasic() error {
 	return nil
 }
 
-// ValidateDepositRetryBasic validates the incoming message for a deposit retry
+// ValidateDepositRetryBasic validates the incoming message for a deposit retry.
 func (msg *MsgDepositRetry) ValidateDepositRetryBasic() error {
 	if msg.PoolId == UnknownID {
 		return errorsmod.Wrapf(ErrInvalidID, "pool ID")

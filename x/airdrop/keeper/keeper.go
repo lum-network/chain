@@ -42,7 +42,6 @@ func NewKeeper(
 	bk bankkeeper.Keeper,
 	sk *stakingkeeper.Keeper,
 	dk *distrkeeper.Keeper,
-
 ) *Keeper {
 	return &Keeper{
 		cdc:           cdc,
@@ -63,7 +62,7 @@ func (k Keeper) GetAirdropAccount(ctx sdk.Context) sdk.AccAddress {
 	return k.AuthKeeper.GetModuleAddress(types.ModuleName)
 }
 
-// CreateModuleAccount create the module account
+// CreateModuleAccount create the module account.
 func (k Keeper) CreateModuleAccount(ctx sdk.Context, amount sdk.Coin) {
 	moduleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter)
 	k.AuthKeeper.SetModuleAccount(ctx, moduleAcc)
@@ -73,7 +72,7 @@ func (k Keeper) CreateModuleAccount(ctx sdk.Context, amount sdk.Coin) {
 	}
 }
 
-// GetAirdropAccountBalance gets the airdrop coin balance of module account
+// GetAirdropAccountBalance gets the airdrop coin balance of module account.
 func (k Keeper) GetAirdropAccountBalance(ctx sdk.Context) sdk.Coin {
 	moduleAccAddr := k.GetAirdropAccount(ctx)
 	params, err := k.GetParams(ctx)
@@ -92,7 +91,7 @@ func (k Keeper) EndAirdrop(ctx sdk.Context) error {
 	return nil
 }
 
-// clearInitialClaimables clear claimable amounts
+// clearInitialClaimables clear claimable amounts.
 func (k Keeper) clearInitialClaimables(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, []byte(types.ClaimRecordsStorePrefix))
@@ -103,7 +102,7 @@ func (k Keeper) clearInitialClaimables(ctx sdk.Context) {
 	iterator.Close()
 }
 
-// SetClaimRecords set claimable amount from balances object
+// SetClaimRecords set claimable amount from balances object.
 func (k Keeper) SetClaimRecords(ctx sdk.Context, claimRecords []types.ClaimRecord) error {
 	for _, claimRecord := range claimRecords {
 		err := k.SetClaimRecord(ctx, claimRecord)
@@ -114,7 +113,7 @@ func (k Keeper) SetClaimRecords(ctx sdk.Context, claimRecords []types.ClaimRecor
 	return nil
 }
 
-// GetClaimRecords get claimables for genesis export
+// GetClaimRecords get claimables for genesis export.
 func (k Keeper) GetClaimRecords(ctx sdk.Context) []types.ClaimRecord {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.ClaimRecordsStorePrefix))
@@ -124,7 +123,6 @@ func (k Keeper) GetClaimRecords(ctx sdk.Context) []types.ClaimRecord {
 
 	claimRecords := []types.ClaimRecord{}
 	for ; iterator.Valid(); iterator.Next() {
-
 		claimRecord := types.ClaimRecord{}
 
 		err := proto.Unmarshal(iterator.Value(), &claimRecord)
@@ -137,7 +135,7 @@ func (k Keeper) GetClaimRecords(ctx sdk.Context) []types.ClaimRecord {
 	return claimRecords
 }
 
-// GetClaimRecord returns the claim record for a specific address
+// GetClaimRecord returns the claim record for a specific address.
 func (k Keeper) GetClaimRecord(ctx sdk.Context, addr sdk.AccAddress) (types.ClaimRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.ClaimRecordsStorePrefix))
@@ -155,7 +153,7 @@ func (k Keeper) GetClaimRecord(ctx sdk.Context, addr sdk.AccAddress) (types.Clai
 	return claimRecord, nil
 }
 
-// SetClaimRecord sets a claim record for an address in store
+// SetClaimRecord sets a claim record for an address in store.
 func (k Keeper) SetClaimRecord(ctx sdk.Context, claimRecord types.ClaimRecord) error {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.ClaimRecordsStorePrefix))
@@ -174,7 +172,7 @@ func (k Keeper) SetClaimRecord(ctx sdk.Context, claimRecord types.ClaimRecord) e
 	return nil
 }
 
-// GetClaimableAmountForAction returns claimable amount (free, vested) for a specific action done by an address
+// GetClaimableAmountForAction returns claimable amount (free, vested) for a specific action done by an address.
 func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress, action types.Action) (sdk.Coin, sdk.Coin, error) {
 	params, err := k.GetParams(ctx)
 	if err != nil {
@@ -242,7 +240,7 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress
 	return claimableCoins[0], claimableCoins[1], nil
 }
 
-// GetUserTotalClaimable returns total claimable amounts for an address
+// GetUserTotalClaimable returns total claimable amounts for an address.
 func (k Keeper) GetUserTotalClaimable(ctx sdk.Context, addr sdk.AccAddress) (sdk.Coin, sdk.Coin, error) {
 	params, err := k.GetParams(ctx)
 	if err != nil {
@@ -274,7 +272,7 @@ func (k Keeper) GetUserTotalClaimable(ctx sdk.Context, addr sdk.AccAddress) (sdk
 	return claimableFreeCoin, claimableVestedCoin, nil
 }
 
-// ClaimCoinsForAction remove claimable amount entry and transfer it to user's account
+// ClaimCoinsForAction remove claimable amount entry and transfer it to user's account.
 func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action types.Action) (sdk.Coin, sdk.Coin, error) {
 	claimableFreeCoin, claimableVestedCoin, err := k.GetClaimableAmountForAction(ctx, addr, action)
 	if err != nil {
@@ -329,7 +327,7 @@ func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action
 	return claimableFreeCoin, claimableVestedCoin, nil
 }
 
-// fundRemainingsToCommunity fund remainings to the community when airdrop period end
+// fundRemainingsToCommunity fund remainings to the community when airdrop period end.
 func (k Keeper) fundRemainingsToCommunity(ctx sdk.Context) error {
 	moduleAccAddr := k.GetAirdropAccount(ctx)
 	amt := k.GetAirdropAccountBalance(ctx)

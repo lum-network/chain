@@ -1,23 +1,23 @@
 package types
 
 const (
-	// ModuleName defines the module name
+	// ModuleName defines the module name.
 	ModuleName = "interchainquery"
 
-	// ModuleVersion defines the module version
+	// ModuleVersion defines the module version.
 	ModuleVersion = 1
 
-	// StoreKey defines the primary module store key
+	// StoreKey defines the primary module store key.
 	StoreKey = ModuleName
 
-	// RouterKey is the message route for slashing
+	// RouterKey is the message route for slashing.
 	RouterKey = ModuleName
 
-	// QuerierRoute defines the module's query routing key
+	// QuerierRoute defines the module's query routing key.
 	QuerierRoute = ModuleName
 )
 
-// prefix bytes for the icqueries persistent store
+// prefix bytes for the icqueries persistent store.
 const (
 	prefixData  = iota + 1
 	prefixQuery = iota + 1

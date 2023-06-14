@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// ValidateBasic validates if a withdrawal is complete and valid
+// ValidateBasic validates if a withdrawal is complete and valid.
 func (withdrawal *Withdrawal) ValidateBasic() error {
 	if withdrawal.PoolId == UnknownID {
 		return errorsmod.Wrapf(ErrInvalidID, "pool ID")
@@ -26,7 +26,7 @@ func (withdrawal *Withdrawal) ValidateBasic() error {
 	return nil
 }
 
-// ValidateWithdrawDepositRetryBasic validates the incoming message for a withdraw deposit retry
+// ValidateWithdrawDepositRetryBasic validates the incoming message for a withdraw deposit retry.
 func (msg *MsgWithdrawDepositRetry) ValidateWithdrawDepositRetryBasic() error {
 	if msg.PoolId == UnknownID {
 		return errorsmod.Wrapf(ErrInvalidID, "pool ID")

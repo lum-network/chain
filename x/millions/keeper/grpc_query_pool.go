@@ -26,7 +26,7 @@ func (k queryServer) Pools(goCtx context.Context, req *types.QueryPoolsRequest) 
 
 	// Make the paginated query
 	var pools []types.Pool
-	pageRes, err := query.Paginate(poolStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(poolStore, req.Pagination, func(key, value []byte) error {
 		var pool types.Pool
 		if err := k.cdc.Unmarshal(value, &pool); err != nil {
 			return err
@@ -35,7 +35,6 @@ func (k queryServer) Pools(goCtx context.Context, req *types.QueryPoolsRequest) 
 		pools = append(pools, pool)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

@@ -84,7 +84,7 @@ func (k *Keeper) GetICACallbackHandler(module string) (types.ICACallbackHandler,
 	return callback, nil
 }
 
-// ClaimCapability claims the channel capability passed via the OnOpenChanInit callback
+// ClaimCapability claims the channel capability passed via the OnOpenChanInit callback.
 func (k *Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error {
 	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
 }
@@ -143,7 +143,7 @@ func (k Keeper) CallRegisteredICACallback(ctx sdk.Context, modulePacket channelt
 		// if acknowledgement is empty, then it is a timeout
 		err := (*callbackHandler).CallICACallback(ctx, callbackData.CallbackId, modulePacket, ackResponse, callbackData.CallbackArgs)
 		if err != nil {
-			errMsg := fmt.Sprintf("Error occured while calling ICACallback (%s) | err: %s", callbackData.CallbackId, err.Error())
+			errMsg := fmt.Sprintf("Error occurred while calling ICACallback (%s) | err: %s", callbackData.CallbackId, err.Error())
 			k.Logger(ctx).Error(errMsg)
 			return errorsmod.Wrapf(types.ErrCallbackFailed, errMsg)
 		}

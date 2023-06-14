@@ -13,7 +13,7 @@ import (
 	"github.com/lum-network/chain/x/millions/types"
 )
 
-// MarshalUndelegateCallbackArgs Marshal delegate UndelegateCallback arguments
+// MarshalUndelegateCallbackArgs Marshal delegate UndelegateCallback arguments.
 func (k Keeper) MarshalUndelegateCallbackArgs(ctx sdk.Context, undelegateCallback types.UndelegateCallback) ([]byte, error) {
 	out, err := k.cdc.Marshal(&undelegateCallback)
 	if err != nil {
@@ -23,7 +23,7 @@ func (k Keeper) MarshalUndelegateCallbackArgs(ctx sdk.Context, undelegateCallbac
 	return out, nil
 }
 
-// UnmarshalUndelegateCallbackArgs Marshal delegate callback arguments into a UndelegateCallback struct
+// UnmarshalUndelegateCallbackArgs Marshal delegate callback arguments into a UndelegateCallback struct.
 func (k Keeper) UnmarshalUndelegateCallbackArgs(ctx sdk.Context, undelegateCallback []byte) (*types.UndelegateCallback, error) {
 	unmarshalledUndelegateCallback := types.UndelegateCallback{}
 	if err := k.cdc.Unmarshal(undelegateCallback, &unmarshalledUndelegateCallback); err != nil {
@@ -33,7 +33,7 @@ func (k Keeper) UnmarshalUndelegateCallbackArgs(ctx sdk.Context, undelegateCallb
 	return &unmarshalledUndelegateCallback, nil
 }
 
-// Get the latest completion time across each MsgUndelegate in the ICA transaction
+// Get the latest completion time across each MsgUndelegate in the ICA transaction.
 func (k Keeper) GetLatestUnbondingCompletionTime(ctx sdk.Context, msgResponses [][]byte) (*time.Time, error) {
 	// Update the completion time using the latest completion time across each message within the transaction
 	latestCompletionTime := time.Time{}

@@ -80,7 +80,6 @@ func (k *Keeper) VerifyKeyProof(ctx sdk.Context, msg *types.MsgSubmitQueryRespon
 		if err := merkleProof.VerifyMembership(clientStateProof, stateRoot, path, msg.Result); err != nil {
 			return errorsmod.Wrapf(types.ErrInvalidICQProof, "Unable to verify membership proof: %s", err.Error())
 		}
-
 	} else {
 		// if we got a nil query response, verify non inclusion proof.
 		if err := merkleProof.VerifyNonMembership(clientStateProof, stateRoot, path); err != nil {
@@ -91,7 +90,7 @@ func (k *Keeper) VerifyKeyProof(ctx sdk.Context, msg *types.MsgSubmitQueryRespon
 	return nil
 }
 
-// call the query's associated callback function
+// call the query's associated callback function.
 func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryResponse, query types.Query, status types.QueryResponseStatus) error {
 	// get all the callback handlers and sort them for determinism (each module has their own callback handler)
 	moduleNames := []string{}
@@ -114,7 +113,7 @@ func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryRespons
 	return types.ErrICQCallbackNotFound
 }
 
-// SubmitQueryResponse Handle ICQ query responses by validating the proof, and calling the query's corresponding callback
+// SubmitQueryResponse Handle ICQ query responses by validating the proof, and calling the query's corresponding callback.
 func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubmitQueryResponse) (*types.MsgSubmitQueryResponseResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

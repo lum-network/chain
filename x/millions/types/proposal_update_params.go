@@ -13,15 +13,13 @@ const (
 	ProposalTypeUpdateParams = "UpdateParams"
 )
 
-var (
-	_ govtypes.Content = &ProposalUpdateParams{}
-)
+var _ govtypes.Content = &ProposalUpdateParams{}
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeUpdateParams)
 }
 
-func NewUpdateParamsProposal(title, description string, minDepositAmount *math.Int, fees *sdk.Dec, prizeDelta *time.Duration, minDepDrawDelta *time.Duration, minDrawDelta *time.Duration, maxDrawDelta *time.Duration, maxBatchQuantity *math.Int, maxStrategyBatches *math.Int) govtypes.Content {
+func NewUpdateParamsProposal(title, description string, minDepositAmount *math.Int, fees *sdk.Dec, prizeDelta, minDepDrawDelta, minDrawDelta, maxDrawDelta *time.Duration, maxBatchQuantity, maxStrategyBatches *math.Int) govtypes.Content {
 	return &ProposalUpdateParams{
 		Title:                   title,
 		Description:             description,

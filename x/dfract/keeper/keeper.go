@@ -45,7 +45,7 @@ type (
 	}
 )
 
-// NewKeeper Create a new keeper instance and return the pointer
+// NewKeeper Create a new keeper instance and return the pointer.
 func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey storetypes.StoreKey, paramSpace paramtypes.Subspace, auth authkeeper.AccountKeeper, bank bankkeeper.Keeper, sk *stakingkeeper.Keeper) *Keeper {
 	moduleAddr, perms := auth.GetModuleAddressAndPermissions(types.ModuleName)
 	if moduleAddr == nil {
@@ -80,12 +80,12 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// GetModuleAccount Return the module account address
+// GetModuleAccount Return the module account address.
 func (k Keeper) GetModuleAccount(ctx sdk.Context) sdk.AccAddress {
 	return k.AuthKeeper.GetModuleAddress(types.ModuleName)
 }
 
-// CreateModuleAccount Initialize the module account and set the original amount of coins
+// CreateModuleAccount Initialize the module account and set the original amount of coins.
 func (k Keeper) CreateModuleAccount(ctx sdk.Context, amount sdk.Coins) {
 	moduleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter)
 	k.AuthKeeper.SetModuleAccount(ctx, moduleAcc)
@@ -100,13 +100,13 @@ func (k Keeper) GetModuleAccountBalance(ctx sdk.Context) sdk.Coins {
 	return k.BankKeeper.GetAllBalances(ctx, moduleAcc)
 }
 
-// GetModuleAccountBalanceForDenom Return the module account's balance
+// GetModuleAccountBalanceForDenom Return the module account's balance.
 func (k Keeper) GetModuleAccountBalanceForDenom(ctx sdk.Context, denom string) sdk.Coin {
 	moduleAcc := k.GetModuleAccount(ctx)
 	return k.BankKeeper.GetBalance(ctx, moduleAcc, denom)
 }
 
-// CreateDeposit Process the deposit message
+// CreateDeposit Process the deposit message.
 func (k Keeper) CreateDeposit(ctx sdk.Context, msg types.MsgDeposit) error {
 	// Acquire the parameters to get the denoms
 	params := k.GetParams(ctx)

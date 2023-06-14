@@ -72,7 +72,7 @@ func (k queryServer) FetchDeposits(c context.Context, req *types.QueryFetchDepos
 	}
 
 	var deposits []types.Deposit
-	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key, value []byte) error {
 		var deposit types.Deposit
 		if err := k.cdc.Unmarshal(value, &deposit); err != nil {
 			return err
@@ -81,7 +81,6 @@ func (k queryServer) FetchDeposits(c context.Context, req *types.QueryFetchDepos
 		deposits = append(deposits, deposit)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

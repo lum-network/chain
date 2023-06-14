@@ -58,7 +58,7 @@ func (k Keeper) SetDepositMinted(ctx sdk.Context, depositorAddress sdk.AccAddres
 	store.Set(types.GetDepositsMintedKey(depositorAddress), encodedDeposit)
 }
 
-// AddDepositMinted same as SetDepositMinted but takes into account the existing value
+// AddDepositMinted same as SetDepositMinted but takes into account the existing value.
 func (k Keeper) AddDepositMinted(ctx sdk.Context, depositorAddress sdk.AccAddress, deposit types.Deposit) {
 	previousDeposit, found := k.GetDepositMinted(ctx, depositorAddress)
 	if !found {

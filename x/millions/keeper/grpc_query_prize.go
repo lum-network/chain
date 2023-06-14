@@ -26,7 +26,7 @@ func (k queryServer) Prizes(goCtx context.Context, req *types.QueryPrizesRequest
 
 	// Make the paginated query
 	var prizes []types.Prize
-	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key, value []byte) error {
 		var prize types.Prize
 		if err := k.cdc.Unmarshal(value, &prize); err != nil {
 			return err
@@ -35,7 +35,6 @@ func (k queryServer) Prizes(goCtx context.Context, req *types.QueryPrizesRequest
 		prizes = append(prizes, prize)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -60,7 +59,7 @@ func (k queryServer) PoolPrizes(goCtx context.Context, req *types.QueryPoolPrize
 
 	// Make the paginated query
 	var prizes []types.Prize
-	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key, value []byte) error {
 		var prize types.Prize
 		if err := k.cdc.Unmarshal(value, &prize); err != nil {
 			return err
@@ -69,7 +68,6 @@ func (k queryServer) PoolPrizes(goCtx context.Context, req *types.QueryPoolPrize
 		prizes = append(prizes, prize)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -95,7 +93,7 @@ func (k queryServer) PoolDrawPrizes(goCtx context.Context, req *types.QueryPoolD
 
 	// Make the paginated query
 	var prizes []types.Prize
-	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key, value []byte) error {
 		var prize types.Prize
 		if err := k.cdc.Unmarshal(value, &prize); err != nil {
 			return err
@@ -104,7 +102,6 @@ func (k queryServer) PoolDrawPrizes(goCtx context.Context, req *types.QueryPoolD
 		prizes = append(prizes, prize)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -147,7 +144,7 @@ func (k queryServer) AccountPrizes(goCtx context.Context, req *types.QueryAccoun
 
 	// Make the paginated query
 	var prizes []types.Prize
-	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key, value []byte) error {
 		var prize types.Prize
 		if err := k.cdc.Unmarshal(value, &prize); err != nil {
 			return err
@@ -156,7 +153,6 @@ func (k queryServer) AccountPrizes(goCtx context.Context, req *types.QueryAccoun
 		prizes = append(prizes, prize)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -187,7 +183,7 @@ func (k queryServer) AccountPoolPrizes(goCtx context.Context, req *types.QueryAc
 
 	// Make the paginated query
 	var prizes []types.Prize
-	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key, value []byte) error {
 		var prize types.Prize
 		if err := k.cdc.Unmarshal(value, &prize); err != nil {
 			return err
@@ -196,7 +192,6 @@ func (k queryServer) AccountPoolPrizes(goCtx context.Context, req *types.QueryAc
 		prizes = append(prizes, prize)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -227,7 +222,7 @@ func (k queryServer) AccountPoolDrawPrizes(goCtx context.Context, req *types.Que
 
 	// Make the paginated query
 	var prizes []types.Prize
-	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key, value []byte) error {
 		var prize types.Prize
 		if err := k.cdc.Unmarshal(value, &prize); err != nil {
 			return err
@@ -236,7 +231,6 @@ func (k queryServer) AccountPoolDrawPrizes(goCtx context.Context, req *types.Que
 		prizes = append(prizes, prize)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

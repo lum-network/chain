@@ -17,7 +17,7 @@ const (
 	ICACallbackID_SetWithdrawAddress = "set_withdraw_address"
 )
 
-// ICACallback wrapper struct for millions keeper
+// ICACallback wrapper struct for millions keeper.
 type ICACallback func(Keeper, sdk.Context, channeltypes.Packet, *icacallbackstypes.AcknowledgementResponse, []byte) error
 
 type ICACallbacks struct {

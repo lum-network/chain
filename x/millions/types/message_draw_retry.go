@@ -6,7 +6,7 @@ import (
 
 var _ sdk.Msg = &MsgDrawRetry{}
 
-func NewMsgDrawRetry(drawRetryAddr string, poolID uint64, drawID uint64) *MsgDrawRetry {
+func NewMsgDrawRetry(drawRetryAddr string, poolID, drawID uint64) *MsgDrawRetry {
 	return &MsgDrawRetry{
 		DrawRetryAddress: drawRetryAddr,
 		PoolId:           poolID,

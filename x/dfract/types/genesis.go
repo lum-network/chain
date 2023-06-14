@@ -5,6 +5,7 @@ func NewGenesisState(params Params) *GenesisState {
 		Params: params,
 	}
 }
+
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
 		Params: DefaultParams(),

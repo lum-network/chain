@@ -4,7 +4,7 @@ func NewGenesisState(queries []Query) *GenesisState {
 	return &GenesisState{Queries: queries}
 }
 
-// DefaultGenesis returns the default Capability genesis state
+// DefaultGenesis returns the default Capability genesis state.
 func DefaultGenesis() *GenesisState {
 	var queries []Query
 	return NewGenesisState(queries)

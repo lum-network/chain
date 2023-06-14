@@ -27,7 +27,7 @@ import (
 
 // SetupPoolICA registers the ICA account on the native chain
 // - waits for the ICA callback to move to OnSetupPoolICACompleted
-// - or go to OnSetupPoolICACompleted directly if local zone
+// - or go to OnSetupPoolICACompleted directly if local zone.
 func (k Keeper) SetupPoolICA(ctx sdk.Context, poolID uint64) (*types.Pool, error) {
 	// Acquire and deserialize our pool entity
 	pool, err := k.GetPool(ctx, poolID)
@@ -73,8 +73,8 @@ func (k Keeper) SetupPoolICA(ctx sdk.Context, poolID uint64) (*types.Pool, error
 
 // OnPoolICASetupCompleted Acknowledge the ICA account creation on the native chain
 // then moves to SetupPoolWithdrawalAddress once all ICA accounts have been created
-// TODO: error management based on the callback response
-func (k Keeper) OnSetupPoolICACompleted(ctx sdk.Context, poolID uint64, icaType string, icaAddress string) (*types.Pool, error) {
+// TODO: error management based on the callback response.
+func (k Keeper) OnSetupPoolICACompleted(ctx sdk.Context, poolID uint64, icaType, icaAddress string) (*types.Pool, error) {
 	logger := k.Logger(ctx).With("ctx", "pool_on_setup_ica_completed")
 
 	// Grab our local pool instance
@@ -133,7 +133,7 @@ func (k Keeper) OnSetupPoolICACompleted(ctx sdk.Context, poolID uint64, icaType 
 
 // SetupPoolWithdrawalAddress sets the PrizePoolAddress as the Staking withdrawal address for the DepositAddress
 // - waits for the ICA callback to move to OnSetupPoolWithdrawalAddressCompleted
-// - or go to OnSetupPoolWithdrawalAddressCompleted directly upon setting up the withdrawal address if local zone
+// - or go to OnSetupPoolWithdrawalAddressCompleted directly upon setting up the withdrawal address if local zone.
 func (k Keeper) SetupPoolWithdrawalAddress(ctx sdk.Context, poolID uint64) (*types.Pool, error) {
 	logger := k.Logger(ctx).With("ctx", "pool_setup_withdrawal")
 
@@ -195,7 +195,7 @@ func (k Keeper) SetupPoolWithdrawalAddress(ctx sdk.Context, poolID uint64) (*typ
 }
 
 // OnSetupPoolWithdrawalAddressCompleted Acknowledge the withdrawal address configuration on the native chain
-// then sets the pool to status ready in case of success
+// then sets the pool to status ready in case of success.
 func (k Keeper) OnSetupPoolWithdrawalAddressCompleted(ctx sdk.Context, poolID uint64) (*types.Pool, error) {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
@@ -209,7 +209,7 @@ func (k Keeper) OnSetupPoolWithdrawalAddressCompleted(ctx sdk.Context, poolID ui
 	return &pool, nil
 }
 
-// GetNextPoolID Return the next pool id to be used
+// GetNextPoolID Return the next pool id to be used.
 func (k Keeper) GetNextPoolID(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	nextPoolId := gogotypes.UInt64Value{}
@@ -222,7 +222,7 @@ func (k Keeper) GetNextPoolID(ctx sdk.Context) uint64 {
 	return nextPoolId.GetValue()
 }
 
-// SetNextPoolID sets next pool ID
+// SetNextPoolID sets next pool ID.
 func (k Keeper) SetNextPoolID(ctx sdk.Context, poolId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolId})
@@ -235,13 +235,13 @@ func (k Keeper) GetNextPoolIDAndIncrement(ctx sdk.Context) uint64 {
 	return nextPoolId
 }
 
-// HasPool Returns a boolean that indicates if the given poolID exists in the KVStore or not
+// HasPool Returns a boolean that indicates if the given poolID exists in the KVStore or not.
 func (k Keeper) HasPool(ctx sdk.Context, poolID uint64) bool {
 	store := ctx.KVStore(k.storeKey)
 	return store.Has(types.GetPoolKey(poolID))
 }
 
-// AddPool Set a pool structure in the KVStore for a given pool ID
+// AddPool Set a pool structure in the KVStore for a given pool ID.
 func (k Keeper) AddPool(ctx sdk.Context, pool *types.Pool) {
 	// Automatically affect ID if missing
 	if pool.GetPoolId() == types.UnknownID {
@@ -260,7 +260,7 @@ func (k Keeper) AddPool(ctx sdk.Context, pool *types.Pool) {
 	store.Set(types.GetPoolKey(pool.GetPoolId()), encodedPool)
 }
 
-// RegisterPool Register a given pool from the transaction message
+// RegisterPool Register a given pool from the transaction message.
 func (k Keeper) RegisterPool(
 	ctx sdk.Context,
 	denom, nativeDenom, chainId, connectionId, transferChannelId string,
@@ -270,7 +270,6 @@ func (k Keeper) RegisterPool(
 	drawSchedule types.DrawSchedule,
 	prizeStrategy types.PrizeStrategy,
 ) (uint64, error) {
-
 	// Acquire new pool ID
 	poolID := k.GetNextPoolIDAndIncrement(ctx)
 
@@ -290,7 +289,7 @@ func (k Keeper) RegisterPool(
 	k.AccountKeeper.SetAccount(ctx, poolAccount)
 
 	// Prepare new pool
-	var pool = types.Pool{
+	pool := types.Pool{
 		PoolId:              poolID,
 		Denom:               denom,
 		NativeDenom:         nativeDenom,
@@ -358,7 +357,7 @@ func (k Keeper) RegisterPool(
 	return poolID, nil
 }
 
-// UpdatePool Update the updatable properties of a pool from the transaction message
+// UpdatePool Update the updatable properties of a pool from the transaction message.
 func (k Keeper) UpdatePool(
 	ctx sdk.Context,
 	poolID uint64,
@@ -445,7 +444,7 @@ func (k Keeper) updatePool(ctx sdk.Context, pool *types.Pool) {
 	store.Set(types.GetPoolKey(pool.GetPoolId()), encodedPool)
 }
 
-// GetPool Returns a pool instance for the given poolID
+// GetPool Returns a pool instance for the given poolID.
 func (k Keeper) GetPool(ctx sdk.Context, poolID uint64) (types.Pool, error) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetPoolKey(poolID))
@@ -462,7 +461,7 @@ func (k Keeper) GetPool(ctx sdk.Context, poolID uint64) (types.Pool, error) {
 }
 
 func (k Keeper) GetPoolForChainID(ctx sdk.Context, chainID string) (types.Pool, bool) {
-	var pool = types.Pool{}
+	pool := types.Pool{}
 	found := false
 	k.IteratePools(ctx, func(p types.Pool) bool {
 		if p.GetChainId() == chainID {
@@ -477,7 +476,7 @@ func (k Keeper) GetPoolForChainID(ctx sdk.Context, chainID string) (types.Pool, 
 }
 
 func (k Keeper) GetPoolForConnectionID(ctx sdk.Context, connectionID string) (types.Pool, bool) {
-	var pool = types.Pool{}
+	pool := types.Pool{}
 	found := false
 	k.IteratePools(ctx, func(p types.Pool) bool {
 		if p.GetConnectionId() == connectionID {
@@ -492,7 +491,7 @@ func (k Keeper) GetPoolForConnectionID(ctx sdk.Context, connectionID string) (ty
 }
 
 func (k Keeper) GetPoolForControllerPortID(ctx sdk.Context, controllerPortID string) (types.Pool, bool) {
-	var pool = types.Pool{}
+	pool := types.Pool{}
 	found := false
 	k.IteratePools(ctx, func(p types.Pool) bool {
 		if p.GetIcaDepositPortId() == controllerPortID || p.GetIcaPrizepoolPortId() == controllerPortID {
@@ -506,7 +505,7 @@ func (k Keeper) GetPoolForControllerPortID(ctx sdk.Context, controllerPortID str
 	return pool, found
 }
 
-// IteratePools Iterate over the pools, and for each entry call the callback
+// IteratePools Iterate over the pools, and for each entry call the callback.
 func (k Keeper) IteratePools(ctx sdk.Context, callback func(pool types.Pool) (stop bool)) {
 	iterator := k.PoolsIterator(ctx)
 	defer iterator.Close()
@@ -520,13 +519,13 @@ func (k Keeper) IteratePools(ctx sdk.Context, callback func(pool types.Pool) (st
 	}
 }
 
-// PoolsIterator Return a ready to use iterator for the pools store
+// PoolsIterator Return a ready to use iterator for the pools store.
 func (k Keeper) PoolsIterator(ctx sdk.Context) sdk.Iterator {
 	kvStore := ctx.KVStore(k.storeKey)
 	return sdk.KVStorePrefixIterator(kvStore, types.PoolPrefix)
 }
 
-// ListPools Return the pools
+// ListPools Return the pools.
 func (k Keeper) ListPools(ctx sdk.Context) (pools []types.Pool) {
 	k.IteratePools(ctx, func(pool types.Pool) bool {
 		pools = append(pools, pool)
@@ -535,7 +534,7 @@ func (k Keeper) ListPools(ctx sdk.Context) (pools []types.Pool) {
 	return pools
 }
 
-// ListPoolsToDraw Returns the pools which should be launching a Draw
+// ListPoolsToDraw Returns the pools which should be launching a Draw.
 func (k Keeper) ListPoolsToDraw(ctx sdk.Context) (pools []types.Pool) {
 	allPools := k.ListPools(ctx)
 	for _, p := range allPools {
@@ -547,7 +546,7 @@ func (k Keeper) ListPoolsToDraw(ctx sdk.Context) (pools []types.Pool) {
 }
 
 // TransferAmountFromPoolToNativeChain Transfer a given amount to the native chain ICA account from the local module account
-// amount denom must be based on pool.Denom
+// amount denom must be based on pool.Denom.
 func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint64, amount sdk.Coin) (*ibctransfertypes.MsgTransfer, *ibctransfertypes.MsgTransferResponse, error) {
 	// Acquire our pool instance
 	pool, err := k.GetPool(ctx, poolID)
@@ -645,7 +644,7 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType
 	return res.Sequence, nil
 }
 
-func (k Keeper) QueryBalance(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
+func (k Keeper) QueryBalance(ctx sdk.Context, poolID, drawID uint64) (*types.Draw, error) {
 	logger := k.Logger(ctx).With("ctx", "pool_query_balance")
 
 	// Acquire our pool instance
@@ -696,7 +695,7 @@ func (k Keeper) QueryBalance(ctx sdk.Context, poolID uint64, drawID uint64) (*ty
 	return &draw, nil
 }
 
-// getPoolAppVersion returns the ICA app version for the pool connection
+// getPoolAppVersion returns the ICA app version for the pool connection.
 func (k Keeper) getPoolAppVersion(ctx sdk.Context, pool types.Pool) (string, error) {
 	connectionEnd, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, pool.GetConnectionId())
 	if !found {

@@ -12,7 +12,7 @@ import (
 	"github.com/lum-network/chain/x/millions/types"
 )
 
-// MarshalTransferFromNativeCallbackArgs Marshal TransferFromNativeCallback arguments
+// MarshalTransferFromNativeCallbackArgs Marshal TransferFromNativeCallback arguments.
 func (k Keeper) MarshalTransferFromNativeCallbackArgs(ctx sdk.Context, transferCallback types.TransferFromNativeCallback) ([]byte, error) {
 	out, err := k.cdc.Marshal(&transferCallback)
 	if err != nil {
@@ -22,7 +22,7 @@ func (k Keeper) MarshalTransferFromNativeCallbackArgs(ctx sdk.Context, transferC
 	return out, nil
 }
 
-// UnmarshalTransferFromNativeCallbackArgs Marshal callback arguments into a TransferFromNativeCallback struct
+// UnmarshalTransferFromNativeCallbackArgs Marshal callback arguments into a TransferFromNativeCallback struct.
 func (k Keeper) UnmarshalTransferFromNativeCallbackArgs(ctx sdk.Context, transferCallback []byte) (*types.TransferFromNativeCallback, error) {
 	unmarshalledTransferCallback := types.TransferFromNativeCallback{}
 	if err := k.cdc.Unmarshal(transferCallback, &unmarshalledTransferCallback); err != nil {

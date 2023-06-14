@@ -11,7 +11,7 @@ import (
 	"github.com/lum-network/chain/x/icqueries/types"
 )
 
-// NewHandler returns a handler for interchainquery module messages
+// NewHandler returns a handler for interchainquery module messages.
 func NewHandler(k keeper.Keeper) sdk.Handler {
 	return func(_ sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		errMsg := fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg)

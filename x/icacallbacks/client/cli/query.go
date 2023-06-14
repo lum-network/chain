@@ -12,7 +12,7 @@ import (
 	"github.com/lum-network/chain/x/icacallbacks/types"
 )
 
-// GetQueryCmd returns the cli query commands for this module
+// GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd(queryRoute string) *cobra.Command {
 	// Group icacallbacks queries under a subcommand
 	cmd := &cobra.Command{

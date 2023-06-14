@@ -18,7 +18,7 @@ func init() {
 	govtypesv1beta1.RegisterProposalType(ProposalTypeWithdrawAndMint)
 }
 
-func NewWithdrawAndMintProposal(title string, description string, withdrawalAddress string, microMintRate int64) *WithdrawAndMintProposal {
+func NewWithdrawAndMintProposal(title, description, withdrawalAddress string, microMintRate int64) *WithdrawAndMintProposal {
 	return &WithdrawAndMintProposal{
 		Title:             title,
 		Description:       description,

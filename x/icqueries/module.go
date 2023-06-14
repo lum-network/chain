@@ -31,7 +31,7 @@ type AppModuleBasic struct {
 	cdc codec.Codec
 }
 
-// NewAppModuleBasic return a new AppModuleBasic
+// NewAppModuleBasic return a new AppModuleBasic.
 func NewAppModuleBasic(cdc codec.Codec) AppModuleBasic {
 	return AppModuleBasic{cdc: cdc}
 }
@@ -41,12 +41,12 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterLegacyAminoCodec registers a legacy amino codec
+// RegisterLegacyAminoCodec registers a legacy amino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
-// RegisterInterfaces registers the module's interface types
+// RegisterInterfaces registers the module's interface types.
 func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	// RegisterInterfaces registers interfaces and implementations of the bank module.
 	types.RegisterInterfaces(reg)
@@ -89,7 +89,7 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
-// NewAppModule return a new AppModule
+// NewAppModule return a new AppModule.
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),

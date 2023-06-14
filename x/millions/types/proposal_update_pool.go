@@ -14,9 +14,7 @@ const (
 	ProposalTypeUpdatePool = "UpdatePool"
 )
 
-var (
-	_ govtypes.Content = &ProposalUpdatePool{}
-)
+var _ govtypes.Content = &ProposalUpdatePool{}
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeUpdatePool)

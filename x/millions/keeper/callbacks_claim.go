@@ -12,7 +12,7 @@ import (
 	"github.com/lum-network/chain/x/millions/types"
 )
 
-// MarshalClaimCallbackArgs Marshal claim ClaimCallback arguments
+// MarshalClaimCallbackArgs Marshal claim ClaimCallback arguments.
 func (k Keeper) MarshalClaimCallbackArgs(ctx sdk.Context, claimCallback types.ClaimRewardsCallback) ([]byte, error) {
 	out, err := k.cdc.Marshal(&claimCallback)
 	if err != nil {
@@ -22,7 +22,7 @@ func (k Keeper) MarshalClaimCallbackArgs(ctx sdk.Context, claimCallback types.Cl
 	return out, nil
 }
 
-// UnmarshalClaimCallbackArgs Marshal claim callback arguments into a ClaimCallback struct
+// UnmarshalClaimCallbackArgs Marshal claim callback arguments into a ClaimCallback struct.
 func (k Keeper) UnmarshalClaimCallbackArgs(ctx sdk.Context, claimCallback []byte) (*types.ClaimRewardsCallback, error) {
 	unmarshalledClaimCallback := types.ClaimRewardsCallback{}
 	if err := k.cdc.Unmarshal(claimCallback, &unmarshalledClaimCallback); err != nil {
@@ -47,7 +47,6 @@ func ClaimCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ackRes
 		k.Logger(ctx).Debug("Received failure for a claim packet")
 		_, err = k.OnClaimRewardsOnNativeChainCompleted(ctx, claimCallback.GetPoolId(), claimCallback.GetDrawId(), true)
 		return err
-
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
 		k.Logger(ctx).Debug("Received success for a claim packet")
 		_, err = k.OnClaimRewardsOnNativeChainCompleted(ctx, claimCallback.GetPoolId(), claimCallback.GetDrawId(), false)

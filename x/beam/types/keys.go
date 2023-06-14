@@ -3,25 +3,25 @@ package types
 import "fmt"
 
 const (
-	// ModuleName defines the module name
+	// ModuleName defines the module name.
 	ModuleName = "beam"
 
-	// ModuleVersion defines the current module version
+	// ModuleVersion defines the current module version.
 	ModuleVersion = 2
 
-	// StoreKey defines the primary module store key
+	// StoreKey defines the primary module store key.
 	StoreKey = ModuleName
 
-	// RouterKey is the message route for slashing
+	// RouterKey is the message route for slashing.
 	RouterKey = ModuleName
 
-	// QuerierRoute defines the module's query routing key
+	// QuerierRoute defines the module's query routing key.
 	QuerierRoute = ModuleName
 
-	// MemStoreKey defines the in-memory store key
+	// MemStoreKey defines the in-memory store key.
 	MemStoreKey = "mem_capability"
 
-	// MemStoreQueueSeparator Used to separate content in the by-height-open-beams queue
+	// MemStoreQueueSeparator Used to separate content in the by-height-open-beams queue.
 	MemStoreQueueSeparator = ","
 )
 

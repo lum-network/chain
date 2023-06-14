@@ -12,7 +12,7 @@ import (
 	"github.com/lum-network/chain/x/millions/types"
 )
 
-// MarshalRedelegateCallbackArgs Marshal delegate RedelegateCallback arguments
+// MarshalRedelegateCallbackArgs Marshal delegate RedelegateCallback arguments.
 func (k Keeper) MarshalRedelegateCallbackArgs(ctx sdk.Context, redelegateCallback types.RedelegateCallback) ([]byte, error) {
 	out, err := k.cdc.Marshal(&redelegateCallback)
 	if err != nil {
@@ -22,7 +22,7 @@ func (k Keeper) MarshalRedelegateCallbackArgs(ctx sdk.Context, redelegateCallbac
 	return out, nil
 }
 
-// UnmarshalRedelegateCallbackArgs Marshal delegate callback arguments into a RedelegateCallback struct
+// UnmarshalRedelegateCallbackArgs Marshal delegate callback arguments into a RedelegateCallback struct.
 func (k Keeper) UnmarshalRedelegateCallbackArgs(ctx sdk.Context, redelegateCallback []byte) (*types.RedelegateCallback, error) {
 	unmarshalledRedelegateCallback := types.RedelegateCallback{}
 	if err := k.cdc.Unmarshal(redelegateCallback, &unmarshalledRedelegateCallback); err != nil {

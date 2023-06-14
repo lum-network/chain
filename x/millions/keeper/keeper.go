@@ -41,7 +41,7 @@ type Keeper struct {
 	StakingKeeper       *stakingkeeper.Keeper
 }
 
-// NewKeeper Initialize the keeper with the base params
+// NewKeeper Initialize the keeper with the base params.
 func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, paramSpace paramtypes.Subspace, scopedKeeper capabilitykeeper.ScopedKeeper,
 	accountKeeper account.AccountKeeper, ibcKeeper ibckeeper.Keeper, ibcTransferKeeper ibctransferkeeper.Keeper, icaKeeper icacontrollerkeeper.Keeper, icaCallbacksKeeper icacallbackskeeper.Keeper,
 	icqueriesKeeper icquerieskeeper.Keeper, bank bankkeeper.Keeper, distribution *distributionkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper,
@@ -63,17 +63,17 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, paramSpace p
 	}
 }
 
-// Logger Return a keeper logger instance
+// Logger Return a keeper logger instance.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// ClaimCapability claims the channel capability passed via the OnOpenChanInit callback
+// ClaimCapability claims the channel capability passed via the OnOpenChanInit callback.
 func (k Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error {
 	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
 }
 
-// GetChainID Return the chain ID fetched from the ibc connection layer
+// GetChainID Return the chain ID fetched from the ibc connection layer.
 func (k Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error) {
 	conn, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
 	if !found {

@@ -9,7 +9,7 @@ import (
 	"github.com/lum-network/chain/x/millions/types"
 )
 
-// DrawRetry allows to retry a failed draw
+// DrawRetry allows to retry a failed draw.
 func (k msgServer) DrawRetry(goCtx context.Context, msg *types.MsgDrawRetry) (*types.MsgDrawRetryResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

@@ -10,7 +10,7 @@ const (
 	ICQCallbackID_Balance = "balance"
 )
 
-// ICQCallback wrapper struct for millions keeper
+// ICQCallback wrapper struct for millions keeper.
 type ICQCallback func(Keeper, sdk.Context, []byte, icqueriestypes.Query, icqueriestypes.QueryResponseStatus) error
 
 type ICQCallbacks struct {
