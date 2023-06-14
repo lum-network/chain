@@ -7,3 +7,5 @@ secret.yml
 ./x/DS_Store
 
 .idea/
+
+build/*

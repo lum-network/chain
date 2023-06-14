@@ -3,7 +3,10 @@ package cli
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
+
 	"github.com/lum-network/chain/x/airdrop/types"
 	"github.com/spf13/cobra"
 )

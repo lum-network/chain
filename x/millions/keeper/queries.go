@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
 )
 

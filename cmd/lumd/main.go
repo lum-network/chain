@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 
+	"github.com/lum-network/chain/app"
+
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/lum-network/chain/app"

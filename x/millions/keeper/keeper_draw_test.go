@@ -508,7 +508,7 @@ func (suite *KeeperTestSuite) TestDraw_PrizePoolPersistence() {
 		suite.Require().True(found)
 
 		// Attribute delegation
-		staking.EndBlocker(ctx, *app.StakingKeeper)
+		staking.EndBlocker(ctx, app.StakingKeeper)
 		err = app.DistrKeeper.Hooks().AfterDelegationModified(ctx, sdk.MustAccAddressFromBech32(pool2.IcaDepositAddress), val.MustValAddressFromBech32())
 		suite.Require().NoError(err)
 

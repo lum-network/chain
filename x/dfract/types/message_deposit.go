@@ -40,7 +40,7 @@ func (msg *MsgDeposit) ValidateBasic() error {
 	// Ensure the address is correct and that we are able to acquire it
 	_, err := sdk.AccAddressFromBech32(msg.GetDepositorAddress())
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid creator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, err.Error())
 	}
 
 	// If we have an amount, make sure it is not negative nor zero

@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	apptesting "github.com/lum-network/chain/app/testing"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )

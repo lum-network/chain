@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,8 +17,8 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+
 	"github.com/lum-network/chain/x/dfract/types"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 const MicroPrecision = 1000000

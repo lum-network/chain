@@ -3,6 +3,9 @@ package keeper
 import (
 	"fmt"
 
+	icquerieskeeper "github.com/lum-network/chain/x/icqueries/keeper"
+
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,10 +16,11 @@ import (
 	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
-	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+
 	icacallbackskeeper "github.com/lum-network/chain/x/icacallbacks/keeper"
 	icquerieskeeper "github.com/lum-network/chain/x/icqueries/keeper"
 	"github.com/lum-network/chain/x/millions/types"
@@ -81,7 +85,7 @@ func (k Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error)
 	if !found {
 		return "", fmt.Errorf(fmt.Sprintf("client id %s not found for connection %s", conn.ClientId, connectionID))
 	}
-	client, ok := clientState.(*ibctmtypes.ClientState)
+	client, ok := clientState.(*tendermint.ClientState)
 	if !ok {
 		return "", fmt.Errorf(fmt.Sprintf("invalid client state for client %s on connection %s", conn.ClientId, connectionID))
 	}

@@ -5,12 +5,13 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+	"github.com/cometbft/cometbft/crypto"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/lum-network/chain/x/icqueries/types"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // GenerateQueryHash Serialize the query parameters into a hash to give to the relayer.

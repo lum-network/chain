@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cometbft/cometbft/libs/log"
+
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -13,7 +15,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+
 	"github.com/lum-network/chain/utils"
+
 	"github.com/lum-network/chain/x/beam/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -343,7 +347,7 @@ func (k Keeper) UpdateBeamStatus(ctx sdk.Context, beamID string, newStatus types
 		beam.ClosedAt = ctx.BlockTime()
 
 		// Transfer funds only if the beam has been claimed already
-		if beam.GetClaimed() && beam.GetFundsWithdrawn() == false {
+		if beam.GetClaimed() && !beam.GetFundsWithdrawn() {
 			claimerAddress, err := sdk.AccAddressFromBech32(beam.GetClaimAddress())
 			if err != nil {
 				return sdkerrors.ErrInvalidAddress
@@ -360,7 +364,6 @@ func (k Keeper) UpdateBeamStatus(ctx sdk.Context, beamID string, newStatus types
 			k.RemoveFromOpenBeamByBlockQueue(ctx, int(beam.GetClosesAtBlock()), beam.GetId())
 		}
 		k.InsertClosedBeamQueue(ctx, beam.GetId())
-		break
 
 	case types.BeamState_StateCanceled:
 		beam.Status = types.BeamState_StateCanceled
@@ -381,7 +384,6 @@ func (k Keeper) UpdateBeamStatus(ctx sdk.Context, beamID string, newStatus types
 			k.RemoveFromOpenBeamByBlockQueue(ctx, int(beam.GetClosesAtBlock()), beam.GetId())
 		}
 		k.InsertClosedBeamQueue(ctx, beam.GetId())
-		break
 	}
 
 	k.SetBeam(ctx, beam.GetId(), &beam)
@@ -490,7 +492,7 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 	}
 
 	// Make sure transaction signer is authorized
-	if utils.CompareHashAndString(beam.Secret, msg.Secret) == false {
+	if !utils.CompareHashAndString(beam.Secret, msg.Secret) {
 		return types.ErrBeamInvalidSecret
 	}
 
@@ -501,7 +503,7 @@ func (k Keeper) ClaimBeam(ctx sdk.Context, msg types.MsgClaimBeam) error {
 	}
 
 	// Transfer funds only if beam is already closed
-	if beam.GetStatus() == types.BeamState_StateClosed && beam.GetFundsWithdrawn() == false {
+	if beam.GetStatus() == types.BeamState_StateClosed && !beam.GetFundsWithdrawn() {
 		if beam.GetAmount().IsPositive() {
 			if err = k.moveCoinsToAccount(ctx, claimerAddress, beam.GetAmount()); err != nil {
 				return err

@@ -1,0 +1,105 @@
+syntax = "proto3";
+package lumnetwork.millions;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+
+import "lumnetwork/millions/draw.proto";
+import "lumnetwork/millions/draw_schedule.proto";
+import "lumnetwork/millions/prize_strategy.proto";
+
+option go_package = "github.com/lum-network/chain/x/millions/types";
+
+// PoolState the state of a Pool
+// Deposits are only accepted for Pools in a Ready state
+//
+// TODO:
+// Pool states PAUSED and KILLED are not available in the current implementation
+// Introduce the capability to:
+// - Pause a Pool in case of Interchain issues or via Governance proposal
+// - Kill a Pool and withdraw or migrate all deposits to another Pool via
+// Governance proposal
+enum PoolState {
+  option (gogoproto.goproto_enum_prefix) = true;
+
+  POOL_STATE_UNSPECIFIED = 0
+      [ (gogoproto.enumvalue_customname) = "Unspecified" ];
+  POOL_STATE_CREATED = 1 [ (gogoproto.enumvalue_customname) = "Created" ];
+  POOL_STATE_READY = 2 [ (gogoproto.enumvalue_customname) = "Ready" ];
+  POOL_STATE_PAUSED = 3 [ (gogoproto.enumvalue_customname) = "Paused" ];
+  POOL_STATE_KILLED = 4 [ (gogoproto.enumvalue_customname) = "Killed" ];
+}
+
+message Pool {
+  uint64 pool_id = 1;
+  string denom = 2;
+  string native_denom = 3;
+  string chain_id = 4;
+  string connection_id = 5;
+  string transfer_channel_id = 6;
+  string ica_deposit_port_id = 7;
+  string ica_prizepool_port_id = 8;
+  reserved 9;
+
+  repeated PoolValidator validators = 10 [ (gogoproto.nullable) = false ];
+  string bech32_prefix_acc_addr = 11;
+  string bech32_prefix_val_addr = 12;
+
+  string min_deposit_amount = 13 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  DrawSchedule draw_schedule = 14 [ (gogoproto.nullable) = false ];
+  PrizeStrategy prize_strategy = 15 [ (gogoproto.nullable) = false ];
+  reserved 16;
+  reserved 17;
+
+  string local_address = 18 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string ica_deposit_address = 19
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string ica_prizepool_address = 20
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  reserved 21;
+
+  uint64 next_draw_id = 22;
+  string tvl_amount = 23 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  uint64 depositors_count = 24;
+  string sponsorship_amount = 25 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  reserved 26;
+
+  google.protobuf.Timestamp last_draw_created_at = 27
+      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = true ];
+  DrawState last_draw_state = 28;
+  cosmos.base.v1beta1.Coin available_prize_pool = 29
+      [ (gogoproto.nullable) = false ];
+  reserved 30;
+  reserved 31;
+
+  PoolState state = 32;
+
+  int64 created_at_height = 33;
+  int64 updated_at_height = 34;
+  google.protobuf.Timestamp created_at = 35
+      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+  google.protobuf.Timestamp updated_at = 36
+      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+}
+
+message PoolValidator {
+  string operator_address = 1
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  bool is_enabled = 2;
+  string bonded_amount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}

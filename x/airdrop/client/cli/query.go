@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/version"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -145,7 +148,7 @@ $ %s query claim claimable-for-action osmo1ey69r37gfxvxg62sh4r0ktpuc46pzjrm23kcr
 
 			action, ok := types.Action_value[args[1]]
 			if !ok {
-				return fmt.Errorf("invalid Action type: %s.  Valid actions are %s, %s", args[1], types.ActionVote, types.ActionDelegateStake)
+				return fmt.Errorf("invalid Action type: %s.  Valid actions are %s, %s", args[1], types.ACTION_VOTE, types.ACTION_DELEGATE_STAKE)
 			}
 
 			// Query store

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/lum-network/chain/x/icqueries/types"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/lum-network/chain/x/icqueries/types"

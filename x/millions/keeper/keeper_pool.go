@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,12 +14,12 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distribtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
-	gogotypes "github.com/gogo/protobuf/types"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+
 	icacallbackstypes "github.com/lum-network/chain/x/icacallbacks/types"
 	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
 	"github.com/lum-network/chain/x/millions/types"
@@ -170,8 +173,7 @@ func (k Keeper) SetupPoolWithdrawalAddress(ctx sdk.Context, poolID uint64) (*typ
 		DelegatorAddress: pool.GetIcaDepositAddress(),
 		WithdrawAddress:  pool.GetIcaPrizepoolAddress(),
 	}}
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
-	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, timeoutTimestamp, ICACallbackID_SetWithdrawAddress, marshalledCallbackData)
+	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_SetWithdrawAddress, marshalledCallbackData)
 	if err != nil {
 		logger.Error(
 			fmt.Sprintf("failed to dispatch ICA set withdraw address: %v", err),
@@ -579,7 +581,7 @@ func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint
 
 	// Timeout is now plus 30 minutes in nanoseconds
 	// We use the standard transfer port ID and not the one opened for ICA
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
+	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTimeoutNanos
 	// From Local to Remote - use transfer channel ID
 	msg := ibctransfertypes.NewMsgTransfer(
 		ibctransfertypes.PortID,
@@ -589,6 +591,7 @@ func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint
 		pool.GetIcaDepositAddress(),
 		clienttypes.Height{},
 		timeoutTimestamp,
+		"Cosmos Millions",
 	)
 
 	// Broadcast the transfer
@@ -600,7 +603,7 @@ func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint
 	return msg, msgResponse, nil
 }
 
-func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType string, msgs []sdk.Msg, timeoutTimestamp uint64, callbackId string, callbackArgs []byte) (uint64, error) {
+func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType string, msgs []sdk.Msg, timeoutNanos uint64, callbackId string, callbackArgs []byte) (uint64, error) {
 	// Acquire our pool instance
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
@@ -620,13 +623,13 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType
 	if !found {
 		return 0, errorsmod.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve open active channel for port %s", portID)
 	}
-	chanCap, found := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
-	if !found {
-		return 0, errorsmod.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
-	}
 
 	// Serialize the data and construct the packet to send
-	data, err := icatypes.SerializeCosmosTx(k.cdc, msgs)
+	var protoMsgs []proto.Message
+	for _, msg := range msgs {
+		protoMsgs = append(protoMsgs, msg)
+	}
+	data, err := icatypes.SerializeCosmosTx(k.cdc, protoMsgs)
 	if err != nil {
 		return 0, err
 	}
@@ -637,7 +640,9 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType
 	}
 
 	// Broadcast the messages
-	sequence, err := k.ICAControllerKeeper.SendTx(ctx, chanCap, pool.GetConnectionId(), portID, packetData, timeoutTimestamp)
+	msg := icacontrollertypes.NewMsgSendTx(portID, pool.GetConnectionId(), timeoutNanos, packetData)
+	msgServer := icacontrollerkeeper.NewMsgServerImpl(&k.ICAControllerKeeper)
+	res, err := msgServer.SendTx(ctx, msg)
 	if err != nil {
 		return 0, err
 	}
@@ -645,18 +650,18 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType
 	// Store the callback data
 	if callbackId != "" && callbackArgs != nil {
 		callback := icacallbackstypes.CallbackData{
-			CallbackKey:  icacallbackstypes.PacketID(portID, channelID, sequence),
+			CallbackKey:  icacallbackstypes.PacketID(portID, channelID, res.Sequence),
 			PortId:       portID,
 			ChannelId:    channelID,
-			Sequence:     sequence,
+			Sequence:     res.Sequence,
 			CallbackId:   callbackId,
 			CallbackArgs: callbackArgs,
 		}
 		k.ICACallbacksKeeper.SetCallbackData(ctx, callback)
 	}
 
-	k.Logger(ctx).Debug(fmt.Sprintf("Broadcasted ICA messages with sequence %d", sequence))
-	return sequence, nil
+	k.Logger(ctx).Debug(fmt.Sprintf("Broadcasted ICA messages with sequence %d", res.Sequence))
+	return res.Sequence, nil
 }
 
 func (k Keeper) QueryBalance(ctx sdk.Context, poolID, drawID uint64) (*types.Draw, error) {
@@ -693,7 +698,7 @@ func (k Keeper) QueryBalance(ctx sdk.Context, poolID, drawID uint64) (*types.Dra
 
 	// Construct the query data and timeout timestamp (now + 30 minutes)
 	queryData := append(banktypes.CreateAccountBalancesPrefix(icaAddressBz), []byte(pool.GetNativeDenom())...)
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
+	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTimeoutNanos
 
 	// Submit the ICQ
 	extraId := types.CombineStringKeys(strconv.FormatUint(poolID, 10), strconv.FormatUint(drawID, 10))

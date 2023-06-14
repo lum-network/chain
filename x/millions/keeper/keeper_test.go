@@ -4,8 +4,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/suite"
+
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/lum-network/chain/app"
+
 	apptesting "github.com/lum-network/chain/app/testing"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 	"github.com/stretchr/testify/suite"

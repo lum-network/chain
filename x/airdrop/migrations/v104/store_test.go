@@ -4,17 +4,19 @@ import (
 	"testing"
 	"time"
 
+	apptypes "github.com/lum-network/chain/app"
+
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	apptypes "github.com/lum-network/chain/app"
+	"github.com/stretchr/testify/suite"
+
 	v104 "github.com/lum-network/chain/x/airdrop/migrations/v104"
 	"github.com/lum-network/chain/x/airdrop/types"
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 var (
