@@ -214,9 +214,9 @@ func (k Keeper) GetNextPoolID(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	nextPoolId := gogotypes.UInt64Value{}
 
-	b := store.Get(types.NextPoolIdPrefix)
+	b := store.Get(types.NextPoolIDPrefix)
 	if b == nil {
-		panic(fmt.Errorf("getting at key (%v) should not have been nil", types.NextPoolIdPrefix))
+		panic(fmt.Errorf("getting at key (%v) should not have been nil", types.NextPoolIDPrefix))
 	}
 	k.cdc.MustUnmarshal(b, &nextPoolId)
 	return nextPoolId.GetValue()
@@ -226,7 +226,7 @@ func (k Keeper) GetNextPoolID(ctx sdk.Context) uint64 {
 func (k Keeper) SetNextPoolID(ctx sdk.Context, poolId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolId})
-	store.Set(types.NextPoolIdPrefix, bz)
+	store.Set(types.NextPoolIDPrefix, bz)
 }
 
 func (k Keeper) GetNextPoolIDAndIncrement(ctx sdk.Context) uint64 {
@@ -682,7 +682,7 @@ func (k Keeper) QueryBalance(ctx sdk.Context, poolID, drawID uint64) (*types.Dra
 
 	// Submit the ICQ
 	extraId := types.CombineStringKeys(strconv.FormatUint(poolID, 10), strconv.FormatUint(drawID, 10))
-	err = k.ICQueriesKeeper.MakeRequest(ctx, types.ModuleName, ICQCallbackID_Balance, pool.GetChainId(), pool.GetConnectionId(), extraId, icqueriestypes.BANK_STORE_QUERY_WITH_PROOF, queryData, timeoutTimestamp)
+	err = k.ICQueriesKeeper.MakeRequest(ctx, types.ModuleName, ICQCallbackIDBalance, pool.GetChainId(), pool.GetConnectionId(), extraId, icqueriestypes.BankStoreQueryWithProof, queryData, timeoutTimestamp)
 	if err != nil {
 		logger.Error(
 			fmt.Sprintf("failed to dispatch icq query to fetch prize pool balance: %v", err),

@@ -1182,11 +1182,11 @@ func (suite *KeeperTestSuite) TestDraw_ClaimRewardsOnNativeChain() {
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
 		PoolId:              poolID,
 		Bech32PrefixValAddr: remoteBech32PrefixValAddr,
-		ChainId:             remoteChainId,
+		ChainId:             remoteChainID,
 		Denom:               remotePoolDenom,
 		NativeDenom:         remotePoolDenom,
-		ConnectionId:        remoteConnectionId,
-		TransferChannelId:   remoteTransferChannelId,
+		ConnectionId:        remoteConnectionID,
+		TransferChannelId:   remoteTransferChannelID,
 		Validators: []millionstypes.PoolValidator{{
 			OperatorAddress: cosmosPoolValidator,
 			BondedAmount:    sdk.NewInt(1_000_000),
@@ -1330,11 +1330,11 @@ func (suite *KeeperTestSuite) TestDraw_TransferRewardsToLocalChain() {
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
 		PoolId:              poolID,
 		Bech32PrefixValAddr: remoteBech32PrefixValAddr,
-		ChainId:             remoteChainId,
+		ChainId:             remoteChainID,
 		Denom:               remotePoolDenom,
 		NativeDenom:         remotePoolDenom,
-		ConnectionId:        remoteConnectionId,
-		TransferChannelId:   remoteTransferChannelId,
+		ConnectionId:        remoteConnectionID,
+		TransferChannelId:   remoteTransferChannelID,
 		Validators: []millionstypes.PoolValidator{{
 			OperatorAddress: cosmosPoolValidator,
 			BondedAmount:    sdk.NewInt(1_000_000),

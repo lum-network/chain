@@ -21,14 +21,14 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeRegisterPool)
 }
 
-func NewRegisterPoolProposal(title, description, chainID, denom, nativeDenom, connectionId, bech32PrefixAccAddr, bech32PrefixValAddr string, validators []string, minDepositAmount math.Int, prizeStrategy PrizeStrategy, drawSchedule DrawSchedule) govtypes.Content {
+func NewRegisterPoolProposal(title, description, chainID, denom, nativeDenom, connectionID, bech32PrefixAccAddr, bech32PrefixValAddr string, validators []string, minDepositAmount math.Int, prizeStrategy PrizeStrategy, drawSchedule DrawSchedule) govtypes.Content {
 	return &ProposalRegisterPool{
 		Title:               title,
 		Description:         description,
 		ChainId:             chainID,
 		Denom:               denom,
 		NativeDenom:         nativeDenom,
-		ConnectionId:        connectionId,
+		ConnectionId:        connectionID,
 		Validators:          validators,
 		MinDepositAmount:    minDepositAmount,
 		Bech32PrefixAccAddr: bech32PrefixAccAddr,

@@ -818,7 +818,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	w1 := millionstypes.Withdrawal{
 		PoolId:           poolID,
 		DepositId:        d1.DepositId,
-		WithdrawalId:     app.MillionsKeeper.GetNextWithdrawalIdAndIncrement(ctx),
+		WithdrawalId:     app.MillionsKeeper.GetNextWithdrawalIDAndIncrement(ctx),
 		State:            millionstypes.WithdrawalState_IcaUndelegate,
 		DepositorAddress: d1.DepositorAddress,
 		ToAddress:        d1.DepositorAddress,
@@ -831,7 +831,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	w2 := millionstypes.Withdrawal{
 		PoolId:           poolID,
 		DepositId:        d2.DepositId,
-		WithdrawalId:     app.MillionsKeeper.GetNextWithdrawalIdAndIncrement(ctx),
+		WithdrawalId:     app.MillionsKeeper.GetNextWithdrawalIDAndIncrement(ctx),
 		State:            millionstypes.WithdrawalState_IcaUndelegate,
 		DepositorAddress: d2.DepositorAddress,
 		ToAddress:        d2.DepositorAddress,

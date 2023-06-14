@@ -28,7 +28,7 @@ const (
 // this might not be true for all IBC chains, and is something we should verify before onboarding a new chain
 
 const (
-	BANK_STORE_QUERY_WITH_PROOF = "store/bank/key"
+	BankStoreQueryWithProof = "store/bank/key"
 )
 
 var (

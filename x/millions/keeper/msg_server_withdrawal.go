@@ -45,7 +45,7 @@ func (k msgServer) WithdrawDeposit(goCtx context.Context, msg *types.MsgWithdraw
 	withdrawal := types.Withdrawal{
 		PoolId:           msg.PoolId,
 		DepositId:        msg.DepositId,
-		WithdrawalId:     k.GetNextWithdrawalIdAndIncrement(ctx),
+		WithdrawalId:     k.GetNextWithdrawalIDAndIncrement(ctx),
 		State:            types.WithdrawalState_IcaUndelegate,
 		DepositorAddress: deposit.DepositorAddress,
 		ToAddress:        toAddr.String(),

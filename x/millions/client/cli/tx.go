@@ -70,7 +70,7 @@ $ %s tx %s deposit <pool_id> <amount> --sponsor=true`,
 			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			// Acquire the command arguments
-			poolId, err := strconv.ParseUint(args[0], 10, 64)
+			poolID, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -90,7 +90,7 @@ $ %s tx %s deposit <pool_id> <amount> --sponsor=true`,
 			}
 
 			// Build the message
-			msg := types.NewMsgDeposit(clientCtx.GetFromAddress().String(), amount, poolId)
+			msg := types.NewMsgDeposit(clientCtx.GetFromAddress().String(), amount, poolID)
 			msg.WinnerAddress = winnerAddress
 			msg.IsSponsor = isSponsor
 
@@ -382,13 +382,13 @@ func CmdTxRestoreInterchainAccounts() *cobra.Command {
 			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			// Acquire the command arguments
-			poolId, err := strconv.ParseUint(args[0], 10, 64)
+			poolID, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
 				return err
 			}
 
 			// Build the message
-			msg := types.NewMsgRestoreInterchainAccounts(clientCtx.GetFromAddress().String(), poolId)
+			msg := types.NewMsgRestoreInterchainAccounts(clientCtx.GetFromAddress().String(), poolID)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

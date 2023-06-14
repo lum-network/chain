@@ -24,9 +24,9 @@ var (
 	localPoolDenom            = "ulum"
 	remotePoolDenom           = "uatom"
 	remoteBech32PrefixValAddr = "cosmosvaloper"
-	remoteChainId             = "cosmos"
-	remoteConnectionId        = "connection-id"
-	remoteTransferChannelId   = "transfer"
+	remoteChainID             = "cosmos"
+	remoteConnectionID        = "connection-id"
+	remoteTransferChannelID   = "transfer"
 )
 
 type KeeperTestSuite struct {

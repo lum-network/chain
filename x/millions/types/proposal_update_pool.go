@@ -20,11 +20,11 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeUpdatePool)
 }
 
-func NewUpdatePoolProposal(title, description string, poolId uint64, validators []string, minDepositAmount *math.Int, prizeStrategy *PrizeStrategy, drawSchedule *DrawSchedule) govtypes.Content {
+func NewUpdatePoolProposal(title, description string, poolID uint64, validators []string, minDepositAmount *math.Int, prizeStrategy *PrizeStrategy, drawSchedule *DrawSchedule) govtypes.Content {
 	return &ProposalUpdatePool{
 		Title:            title,
 		Description:      description,
-		PoolId:           poolId,
+		PoolId:           poolID,
 		Validators:       validators,
 		MinDepositAmount: minDepositAmount,
 		PrizeStrategy:    prizeStrategy,

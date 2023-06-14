@@ -209,7 +209,7 @@ func (k Keeper) TransferWithdrawalToLocalChain(ctx sdk.Context, poolID, withdraw
 	if !found {
 		return errorsmod.Wrapf(channeltypes.ErrChannelNotFound, "transfer channel %s not found", pool.GetTransferChannelId())
 	}
-	counterpartyChannelId := transferChannel.Counterparty.ChannelId
+	counterpartyChannelID := transferChannel.Counterparty.ChannelId
 
 	// Converts the local ibc Denom into the native chain Denom
 	amount := sdk.NewCoin(pool.NativeDenom, withdrawal.Amount.Amount)
@@ -218,7 +218,7 @@ func (k Keeper) TransferWithdrawalToLocalChain(ctx sdk.Context, poolID, withdraw
 	// From Remote to Local - use counterparty transfer channel ID
 	msgs = append(msgs, ibctransfertypes.NewMsgTransfer(
 		ibctransfertypes.PortID,
-		counterpartyChannelId,
+		counterpartyChannelID,
 		amount,
 		pool.GetIcaDepositAddress(),
 		withdrawal.GetToAddress(),
@@ -275,21 +275,21 @@ func (k Keeper) OnTransferWithdrawalToLocalChainCompleted(ctx sdk.Context, poolI
 // GetNextWithdrawalID gets the next withdrawal deposit ID.
 func (k Keeper) GetNextWithdrawalID(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
-	nextWithdrawalId := gogotypes.UInt64Value{}
+	nextWithdrawalID := gogotypes.UInt64Value{}
 
 	b := store.Get(types.NextWithdrawalPrefix)
 	if b == nil {
 		panic(fmt.Errorf("getting at key (%v) should not have been nil", types.NextWithdrawalPrefix))
 	}
-	k.cdc.MustUnmarshal(b, &nextWithdrawalId)
-	return nextWithdrawalId.GetValue()
+	k.cdc.MustUnmarshal(b, &nextWithdrawalID)
+	return nextWithdrawalID.GetValue()
 }
 
 // GetNextWithdrawalIdAndIncrement gets the next withdrawal ID and store the incremented ID.
-func (k Keeper) GetNextWithdrawalIdAndIncrement(ctx sdk.Context) uint64 {
-	nextWithdrawlId := k.GetNextWithdrawalID(ctx)
-	k.SetNextWithdrawalID(ctx, nextWithdrawlId+1)
-	return nextWithdrawlId
+func (k Keeper) GetNextWithdrawalIDAndIncrement(ctx sdk.Context) uint64 {
+	nextWithdrawlID := k.GetNextWithdrawalID(ctx)
+	k.SetNextWithdrawalID(ctx, nextWithdrawlID+1)
+	return nextWithdrawlID
 }
 
 // SetNextWithdrawalID sets next withdrawal ID.
@@ -372,7 +372,7 @@ func (k Keeper) UpdateWithdrawalStatus(ctx sdk.Context, poolID, withdrawalID uin
 func (k Keeper) AddWithdrawal(ctx sdk.Context, withdrawal types.Withdrawal) {
 	// Automatically affect ID if missing
 	if withdrawal.GetWithdrawalId() == types.UnknownID {
-		withdrawal.WithdrawalId = k.GetNextWithdrawalIdAndIncrement(ctx)
+		withdrawal.WithdrawalId = k.GetNextWithdrawalIDAndIncrement(ctx)
 	}
 	// Ensure payload is valid
 	if err := withdrawal.ValidateBasic(); err != nil {

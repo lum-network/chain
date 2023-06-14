@@ -66,7 +66,7 @@ func (msg *MsgOpenBeam) ValidateBasic() error {
 	}
 
 	// Validate the schema
-	if msg.GetSchema() != BEAM_SCHEMA_REVIEW && msg.GetSchema() != BEAM_SCHEMA_REWARD {
+	if msg.GetSchema() != BeamSchemaReview && msg.GetSchema() != BeamSchemaReward {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "Invalid schema must be review or reward")
 	}
 

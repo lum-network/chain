@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	ICQCallbackID_Balance = "balance"
+	ICQCallbackIDBalance = "balance"
 )
 
 // ICQCallback wrapper struct for millions keeper.
@@ -39,5 +39,5 @@ func (c ICQCallbacks) AddICQCallback(id string, fn interface{}) icqueriestypes.Q
 }
 
 func (c ICQCallbacks) RegisterICQCallbacks() icqueriestypes.QueryCallbacks {
-	return c.AddICQCallback(ICQCallbackID_Balance, ICQCallback(BalanceCallback))
+	return c.AddICQCallback(ICQCallbackIDBalance, ICQCallback(BalanceCallback))
 }

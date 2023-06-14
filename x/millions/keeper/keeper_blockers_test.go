@@ -286,7 +286,7 @@ func (suite *KeeperTestSuite) TestBlockers_WithdrawalUpdates() {
 			app.MillionsKeeper.AddWithdrawal(ctx, millionstypes.Withdrawal{
 				PoolId:           uint64(i + 1),
 				DepositId:        millionstypes.UnknownID + 1,
-				WithdrawalId:     app.MillionsKeeper.GetNextWithdrawalIdAndIncrement(ctx),
+				WithdrawalId:     app.MillionsKeeper.GetNextWithdrawalIDAndIncrement(ctx),
 				State:            millionstypes.WithdrawalState_IcaUnbonding,
 				DepositorAddress: suite.addrs[0].String(),
 				ToAddress:        suite.addrs[0].String(),

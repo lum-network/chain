@@ -219,14 +219,14 @@ func GetCmdPoolDeposits(groupID string) *cobra.Command {
 			// Acquire the query client from the context
 			queryClient := types.NewQueryClient(clientCtx)
 
-			poolId, err := strconv.ParseUint(args[0], 0, 64)
+			poolID, err := strconv.ParseUint(args[0], 0, 64)
 			if err != nil {
 				return err
 			}
 
 			// Construct the params payload
 			params := &types.QueryPoolDepositsRequest{
-				PoolId:     poolId,
+				PoolId:     poolID,
 				Pagination: pageReq,
 			}
 

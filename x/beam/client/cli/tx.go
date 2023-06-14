@@ -125,7 +125,7 @@ func CmdUpdateBeam() *cobra.Command {
 		Args:  cobra.RangeArgs(1, 7),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Acquire the command arguments
-			argsId := args[0]
+			argsID := args[0]
 
 			// Try to acquire the amount flag
 			amount, err := cmd.Flags().GetString(FlagAmount)
@@ -187,7 +187,7 @@ func CmdUpdateBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgUpdateBeam(clientCtx.GetFromAddress().String(), argsId, coin, types.BeamState(argStatus), data, argsCancelReason, argsHideContent, argsClosesAtBlock, argsClaimExpiresAtBlock)
+			msg := types.NewMsgUpdateBeam(clientCtx.GetFromAddress().String(), argsID, coin, types.BeamState(argStatus), data, argsCancelReason, argsHideContent, argsClosesAtBlock, argsClaimExpiresAtBlock)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -208,7 +208,7 @@ func CmdClaimBeam() *cobra.Command {
 		Short: "Claim a given beam",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argsId := args[0]
+			argsID := args[0]
 			argsSecret := args[1]
 
 			// Acquire the client context
@@ -218,7 +218,7 @@ func CmdClaimBeam() *cobra.Command {
 			}
 
 			// Construct the message and validate
-			msg := types.NewMsgClaimBeam(clientCtx.GetFromAddress().String(), argsId, argsSecret)
+			msg := types.NewMsgClaimBeam(clientCtx.GetFromAddress().String(), argsID, argsSecret)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

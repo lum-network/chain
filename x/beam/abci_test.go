@@ -74,7 +74,7 @@ func (suite *ABCITestSuite) TestTickBeamAutoClose() {
 		"",
 		&msgVal,
 		hex.EncodeToString(utils.GenerateHashFromString(claimSecret)),
-		types.BEAM_SCHEMA_REVIEW,
+		types.BeamSchemaReview,
 		nil,
 		10,
 		0,

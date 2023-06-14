@@ -10,5 +10,5 @@ var (
 	ErrBeamInvalidSecret           = errorsmod.Register(ModuleName, 1102, "Invalid secret provided")
 	ErrBeamAlreadyExists           = errorsmod.Register(ModuleName, 1103, "This beam ID already exists")
 	ErrBeamAutoCloseInThePast      = errorsmod.Register(ModuleName, 1104, "Cannot set autoclose height in the past")
-	ErrBeamIdContainsForbiddenChar = errorsmod.Register(ModuleName, 1105, "This beam ID cannot contains comma")
+	ErrBeamIDContainsForbiddenChar = errorsmod.Register(ModuleName, 1105, "This beam ID cannot contains comma")
 )

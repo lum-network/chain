@@ -260,7 +260,7 @@ func (k Keeper) SetBeam(ctx sdk.Context, beamID string, beam *types.Beam) {
 func (k Keeper) OpenBeam(ctx sdk.Context, msg types.MsgOpenBeam) error {
 	// Make sure the ID is in the correct format
 	if strings.Contains(msg.GetId(), types.MemStoreQueueSeparator) {
-		return types.ErrBeamIdContainsForbiddenChar
+		return types.ErrBeamIDContainsForbiddenChar
 	}
 
 	// If the generated ID already exists, refuse the payload

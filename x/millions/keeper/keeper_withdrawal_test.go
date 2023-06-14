@@ -20,7 +20,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_IDsGeneration() {
 	for i := 0; i < 10; i++ {
 		poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 		depositID := app.MillionsKeeper.GetNextDepositIdAndIncrement(ctx)
-		withdrawalID := app.MillionsKeeper.GetNextWithdrawalIdAndIncrement(ctx)
+		withdrawalID := app.MillionsKeeper.GetNextWithdrawalIDAndIncrement(ctx)
 		app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{PoolId: poolID}))
 
 		app.MillionsKeeper.AddWithdrawal(ctx, millionstypes.Withdrawal{
@@ -534,11 +534,11 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawal() {
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
 		PoolId:              poolID,
 		Bech32PrefixValAddr: remoteBech32PrefixValAddr,
-		ChainId:             remoteChainId,
+		ChainId:             remoteChainID,
 		Denom:               remotePoolDenom,
 		NativeDenom:         remotePoolDenom,
-		ConnectionId:        remoteConnectionId,
-		TransferChannelId:   remoteTransferChannelId,
+		ConnectionId:        remoteConnectionID,
+		TransferChannelId:   remoteTransferChannelID,
 		Validators: []millionstypes.PoolValidator{{
 			OperatorAddress: cosmosPoolValidator,
 			BondedAmount:    sdk.NewInt(1_000_000),
@@ -757,11 +757,11 @@ func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
 		PoolId:              poolID,
 		Bech32PrefixValAddr: remoteBech32PrefixValAddr,
-		ChainId:             remoteChainId,
+		ChainId:             remoteChainID,
 		Denom:               remotePoolDenom,
 		NativeDenom:         remotePoolDenom,
-		ConnectionId:        remoteConnectionId,
-		TransferChannelId:   remoteTransferChannelId,
+		ConnectionId:        remoteConnectionID,
+		TransferChannelId:   remoteTransferChannelID,
 		Validators: []millionstypes.PoolValidator{{
 			OperatorAddress: cosmosPoolValidator,
 			BondedAmount:    sdk.NewInt(1_000_000),

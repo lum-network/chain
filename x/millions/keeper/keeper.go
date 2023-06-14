@@ -91,12 +91,12 @@ func (k Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error)
 	return client.ChainId, nil
 }
 
-func (k Keeper) GetConnectionID(ctx sdk.Context, portId string) (string, error) {
+func (k Keeper) GetConnectionID(ctx sdk.Context, portID string) (string, error) {
 	icas := k.ICAControllerKeeper.GetAllInterchainAccounts(ctx)
 	for _, ica := range icas {
-		if ica.PortId == portId {
+		if ica.PortId == portID {
 			return ica.ConnectionId, nil
 		}
 	}
-	return "", fmt.Errorf(fmt.Sprintf("portId %s has no associated connectionId", portId))
+	return "", fmt.Errorf(fmt.Sprintf("portId %s has no associated connectionId", portID))
 }

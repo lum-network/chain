@@ -37,7 +37,7 @@ const (
 )
 
 var (
-	NextPoolIdPrefix               = []byte{0x01}
+	NextPoolIDPrefix               = []byte{0x01}
 	PoolPrefix                     = []byte{0x02}
 	NextDepositPrefix              = []byte{0x03}
 	PoolDepositPrefix              = []byte{0x04}

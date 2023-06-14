@@ -49,14 +49,14 @@ func (im IBCModule) OnChanOpenAck(ctx sdk.Context, portID, channelID, counterpar
 	im.keeper.Logger(ctx).Debug(fmt.Sprintf("OnChanOpenAck: portID %s, channelID %s, counterpartyChannelID %s, counterpartyVersion %s", portID, channelID, counterpartyChannelID, counterpartyVersion))
 
 	// Grab the controller connection ID for the port
-	controllerConnectionId, err := im.keeper.GetConnectionID(ctx, portID)
+	controllerConnectionID, err := im.keeper.GetConnectionID(ctx, portID)
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("Unable to get connection for port: %s", portID))
 		return err
 	}
 
 	// Extract the interchain account from the connection ID & port
-	interchainAccountAddress, found := im.keeper.ICAControllerKeeper.GetInterchainAccountAddress(ctx, controllerConnectionId, portID)
+	interchainAccountAddress, found := im.keeper.ICAControllerKeeper.GetInterchainAccountAddress(ctx, controllerConnectionID, portID)
 	if !found {
 		ctx.Logger().Error("Failed to find the interchain account")
 		return nil

@@ -128,13 +128,13 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(types.AttributeKeyQueryId, query.Id),
+			sdk.NewAttribute(types.AttributeKeyQueryID, query.Id),
 		),
 		sdk.NewEvent(
 			"query_response",
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(types.AttributeKeyQueryId, query.Id),
-			sdk.NewAttribute(types.AttributeKeyChainId, query.ChainId),
+			sdk.NewAttribute(types.AttributeKeyQueryID, query.Id),
+			sdk.NewAttribute(types.AttributeKeyChainID, query.ChainId),
 		),
 	})
 
