@@ -1,0 +1,48 @@
+syntax = "proto3";
+package lumnetwork.chain.beam;
+
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+import "lumnetwork/chain/beam/beam.proto";
+
+option go_package = "github.com/lum-network/chain/x/beam/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  rpc Beam(QueryGetBeamRequest) returns (QueryGetBeamResponse) {
+    option (google.api.http).get = "/lum-network/beams/{id}";
+  }
+
+  rpc Beams(QueryFetchBeamsRequest) returns (QueryFetchBeamsResponse) {
+    option (google.api.http).get = "/lum-network/beams";
+  }
+
+  rpc BeamsOpenQueue(QueryFetchBeamsOpenQueueRequest)
+      returns (QueryFetchBeamsOpenQueueResponse) {
+    option (google.api.http).get = "/lum-network/beams-open-queue";
+  }
+}
+
+message QueryGetBeamRequest { string id = 1; }
+
+message QueryGetBeamResponse { Beam beam = 1; }
+
+message QueryFetchBeamsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  BeamState state = 2;
+}
+
+message QueryFetchBeamsResponse {
+  repeated Beam beams = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryFetchBeamsOpenQueueRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryFetchBeamsOpenQueueResponse {
+  repeated string beam_ids = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
