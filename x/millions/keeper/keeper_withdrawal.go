@@ -8,6 +8,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
@@ -158,10 +159,11 @@ func (k Keeper) OnUndelegateWithdrawalOnNativeChainCompleted(ctx sdk.Context, po
 	return nil
 }
 
-// TransferWithdrawalToLocalChain Transfer a withdrawal from the native chain to the local chain
-// - wait for the ICA callback to move to OnTransferWithdrawalToLocalChainCompleted
-// - or go to OnTransferWithdrawalToLocalChainCompleted directly if local zone already
-func (k Keeper) TransferWithdrawalToLocalChain(ctx sdk.Context, poolID uint64, withdrawalID uint64) error {
+// TransferWithdrawalToDestAddr transfers a withdrawal to its destination address
+// - If local zone and local toAddress: BankSend with instant call to OnTransferWithdrawalToDestAddrCompleted
+// - If remote zone and remote toAddress: ICA BankSend and wait for ICA callback
+// - If remote zone and local toAddress: IBC Transfer and wait for ICA callback
+func (k Keeper) TransferWithdrawalToDestAddr(ctx sdk.Context, poolID uint64, withdrawalID uint64) error {
 	logger := k.Logger(ctx).With("ctx", "withdrawal_transfer")
 
 	pool, err := k.GetPool(ctx, poolID)
@@ -180,29 +182,28 @@ func (k Keeper) TransferWithdrawalToLocalChain(ctx sdk.Context, poolID uint64, w
 		return errorsmod.Wrapf(types.ErrIllegalStateOperation, "unbonding in progress")
 	}
 
+	isLocalToAddress, toAddr, err := pool.AccAddressFromBech32(withdrawal.ToAddress)
+	if err != nil {
+		return err
+	}
+
 	if pool.IsLocalZone(ctx) {
 		// Move funds
 		if err := k.BankKeeper.SendCoins(ctx,
 			sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress()),
-			sdk.MustAccAddressFromBech32(withdrawal.ToAddress),
+			toAddr,
 			sdk.NewCoins(withdrawal.Amount),
 		); err != nil {
 			// Return with error here and let the caller manage the state changes if needed
 			return err
 		}
-		return k.OnTransferWithdrawalToLocalChainCompleted(ctx, poolID, withdrawalID, false)
+		return k.OnTransferWithdrawalToDestAddrCompleted(ctx, poolID, withdrawalID, false)
 	}
 
-	// Construct our callback data
-	callbackData := types.TransferFromNativeCallback{
-		Type:         types.TransferType_Withdraw,
-		PoolId:       poolID,
-		WithdrawalId: withdrawalID,
-	}
-	marshalledCallbackData, err := k.MarshalTransferFromNativeCallbackArgs(ctx, callbackData)
-	if err != nil {
-		return err
-	}
+	var msgs []sdk.Msg
+	var msgLog string
+	var marshalledCallbackData []byte
+	var callbackID string
 
 	// We start by acquiring the counterparty channel id
 	transferChannel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, ibctransfertypes.PortID, pool.GetTransferChannelId())
@@ -213,26 +214,58 @@ func (k Keeper) TransferWithdrawalToLocalChain(ctx sdk.Context, poolID uint64, w
 
 	// Converts the local ibc Denom into the native chain Denom
 	amount := sdk.NewCoin(pool.NativeDenom, withdrawal.Amount.Amount)
-	// Build transfer tx
-	var msgs []sdk.Msg
-	// From Remote to Local - use counterparty transfer channel ID
-	msgs = append(msgs, ibctransfertypes.NewMsgTransfer(
-		ibctransfertypes.PortID,
-		counterpartyChannelId,
-		amount,
-		pool.GetIcaDepositAddress(),
-		withdrawal.GetToAddress(),
-		clienttypes.Height{},
-		uint64(ctx.BlockTime().UnixNano())+types.IBCTimeoutNanos,
-		"Cosmos Millions",
-	))
 
-	// Dispatch our message with a timeout of 30 minutes in nanos
-	sequence, err := k.BroadcastICAMessages(ctx, pool, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_TransferFromNative, marshalledCallbackData)
+	if isLocalToAddress {
+		// ICA transfer from remote zone to local zone
+		msgLog = "ICA transfer"
+		callbackID = ICACallbackID_TransferFromNative
+		callbackData := types.TransferFromNativeCallback{
+			Type:         types.TransferType_Withdraw,
+			PoolId:       poolID,
+			WithdrawalId: withdrawalID,
+		}
+		marshalledCallbackData, err = k.MarshalTransferFromNativeCallbackArgs(ctx, callbackData)
+		if err != nil {
+			return err
+		}
+
+		// From Remote to Local - use counterparty transfer channel ID
+		msgs = append(msgs, ibctransfertypes.NewMsgTransfer(
+			ibctransfertypes.PortID,
+			counterpartyChannelId,
+			amount,
+			pool.GetIcaDepositAddress(),
+			withdrawal.GetToAddress(),
+			clienttypes.Height{},
+			uint64(ctx.BlockTime().UnixNano())+types.IBCTimeoutNanos,
+			"Cosmos Millions",
+		))
+	} else {
+		// ICA bank send from remote to remote
+		msgLog = "ICA bank send"
+		callbackID = ICACallbackID_BankSend
+		callbackData := types.BankSendCallback{
+			PoolId:       poolID,
+			WithdrawalId: withdrawalID,
+		}
+		marshalledCallbackData, err = k.MarshalBankSendCallbackArgs(ctx, callbackData)
+		if err != nil {
+			return err
+		}
+
+		msgs = append(msgs, &banktypes.MsgSend{
+			FromAddress: pool.GetIcaDepositAddress(),
+			ToAddress:   toAddr.String(),
+			Amount:      sdk.NewCoins(amount),
+		})
+	}
+
+	// Dispatch message
+	sequence, err := k.BroadcastICAMessages(ctx, pool, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, callbackID, marshalledCallbackData)
 	if err != nil {
 		// Return with error here and let the caller manage the state changes if needed
 		logger.Error(
-			fmt.Sprintf("failed to dispatch ICA transfer: %v", err),
+			fmt.Sprintf("failed to dispatch %s: %v", msgLog, err),
 			"pool_id", poolID,
 			"withdrawal_id", withdrawalID,
 			"chain_id", pool.GetChainId(),
@@ -241,7 +274,7 @@ func (k Keeper) TransferWithdrawalToLocalChain(ctx sdk.Context, poolID uint64, w
 		return err
 	}
 	logger.Debug(
-		"ICA transfer dispatched",
+		fmt.Sprintf("%s dispatched", msgLog),
 		"pool_id", poolID,
 		"withdrawal_id", withdrawalID,
 		"chain_id", pool.GetChainId(),
@@ -250,8 +283,10 @@ func (k Keeper) TransferWithdrawalToLocalChain(ctx sdk.Context, poolID uint64, w
 	return nil
 }
 
-// OnTransferWithdrawalToLocalChainCompleted Acknowledge the IBC transfer to the local chain response
-func (k Keeper) OnTransferWithdrawalToLocalChainCompleted(ctx sdk.Context, poolID uint64, withdrawalID uint64, isError bool) error {
+// OnTransferWithdrawalToDestAddrCompleted Acknowledge the withdraw IBC transfer
+// - To to the local chain response if it's a transfer to local chain
+// - To the native chain if it's BankSend for a native pool with a native destination address
+func (k Keeper) OnTransferWithdrawalToDestAddrCompleted(ctx sdk.Context, poolID uint64, withdrawalID uint64, isError bool) error {
 	withdrawal, err := k.GetPoolWithdrawal(ctx, poolID, withdrawalID)
 	if err != nil {
 		return err

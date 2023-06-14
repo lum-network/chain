@@ -1,0 +1,30 @@
+syntax = "proto3";
+package lumnetwork.millions;
+
+import "gogoproto/gogo.proto";
+
+import "lumnetwork/millions/deposit.proto";
+import "lumnetwork/millions/draw.proto";
+import "lumnetwork/millions/params.proto";
+import "lumnetwork/millions/pool.proto";
+import "lumnetwork/millions/prize.proto";
+import "lumnetwork/millions/withdrawal.proto";
+
+option go_package = "github.com/lum-network/chain/x/millions/types";
+
+message GenesisState {
+  Params params = 1 [
+    (gogoproto.moretags) = "yaml:\"params\"",
+    (gogoproto.nullable) = false
+  ];
+
+  uint64 next_pool_id = 2;
+  uint64 next_deposit_id = 3;
+  uint64 next_prize_id = 4;
+  uint64 next_withdrawal_id = 5;
+  repeated Pool pools = 6 [ (gogoproto.nullable) = false ];
+  repeated Deposit deposits = 7 [ (gogoproto.nullable) = false ];
+  repeated Draw draws = 8 [ (gogoproto.nullable) = false ];
+  repeated Prize prizes = 9 [ (gogoproto.nullable) = false ];
+  repeated Withdrawal withdrawals = 10 [ (gogoproto.nullable) = false ];
+}

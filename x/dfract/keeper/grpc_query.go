@@ -13,23 +13,33 @@ import (
 	"github.com/lum-network/chain/x/dfract/types"
 )
 
-var _ types.QueryServer = Keeper{}
+type queryServer struct {
+	Keeper
+}
 
-func (k Keeper) ModuleAccountBalance(c context.Context, _ *types.QueryModuleAccountBalanceRequest) (*types.QueryModuleAccountBalanceResponse, error) {
+// NewQueryServerImpl returns an implementation of the QueryServer interface
+// for the provided Keeper.
+func NewQueryServerImpl(keeper Keeper) types.QueryServer {
+	return queryServer{Keeper: keeper}
+}
+
+var _ types.QueryServer = queryServer{}
+
+func (k queryServer) ModuleAccountBalance(c context.Context, _ *types.QueryModuleAccountBalanceRequest) (*types.QueryModuleAccountBalanceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	moduleAccBal := k.GetModuleAccountBalance(ctx)
 
 	return &types.QueryModuleAccountBalanceResponse{ModuleAccountBalance: moduleAccBal}, nil
 }
 
-func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (k queryServer) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	params := k.GetParams(ctx)
 
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
-func (k Keeper) GetDepositsForAddress(c context.Context, req *types.QueryGetDepositsForAddressRequest) (*types.QueryGetDepositsForAddressResponse, error) {
+func (k queryServer) GetDepositsForAddress(c context.Context, req *types.QueryGetDepositsForAddressRequest) (*types.QueryGetDepositsForAddressResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	accAddr, err := sdk.AccAddressFromBech32(req.Address)
@@ -48,7 +58,7 @@ func (k Keeper) GetDepositsForAddress(c context.Context, req *types.QueryGetDepo
 	}, nil
 }
 
-func (k Keeper) FetchDeposits(c context.Context, req *types.QueryFetchDepositsRequest) (*types.QueryFetchDepositsResponse, error) {
+func (k queryServer) FetchDeposits(c context.Context, req *types.QueryFetchDepositsRequest) (*types.QueryFetchDepositsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)

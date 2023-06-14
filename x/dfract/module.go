@@ -121,7 +121,7 @@ func (a AppModule) QuerierRoute() string {
 }
 
 func (a AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterQueryServer(cfg.QueryServer(), a.keeper)
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServerImpl(a.keeper))
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the capability module.
