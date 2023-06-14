@@ -625,7 +625,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawal() {
 	suite.Require().Equal(millionstypes.WithdrawalState_IcaUndelegate, withdrawal.State)
 	suite.Require().Equal(millionstypes.WithdrawalState_Unspecified, withdrawal.ErrorState)
 
-	// Simulate failed ackResponse AckResponseStatus_FAILURE
+	// Simulate failed ackResponse AckResponseStatusFailure
 	err = app.MillionsKeeper.OnUndelegateWithdrawalOnNativeChainCompleted(ctx, withdrawal.GetPoolId(), withdrawal.GetWithdrawalId(), splits, &time.Time{}, true)
 	suite.Require().NoError(err)
 	withdrawals = app.MillionsKeeper.ListAccountWithdrawals(ctx, uatomAddresses[0])
@@ -837,7 +837,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 	// Update status to simulate transfer from to local chain
 	app.MillionsKeeper.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, millionstypes.WithdrawalState_IbcTransfer, withdrawal.UnbondingEndsAt, false)
 
-	// Simulate failed ackResponse AckResponseStatus_FAILURE
+	// Simulate failed ackResponse AckResponseStatusFailure
 	err = app.MillionsKeeper.OnTransferWithdrawalToLocalChainCompleted(ctx, withdrawal.GetPoolId(), withdrawal.GetWithdrawalId(), true)
 	suite.Require().NoError(err)
 	withdrawals = app.MillionsKeeper.ListAccountWithdrawals(ctx, uatomAddresses[0])

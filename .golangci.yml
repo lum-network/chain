@@ -33,7 +33,6 @@ linters:
     - goconst
     - gocritic
     - godot
-    - godox
     - gofumpt
     - gomoddirectives
     - gomodguard
@@ -45,7 +44,6 @@ linters:
     - importas
     - ineffassign
     - interfacebloat
-    - ireturn
     - loggercheck
     - maintidx
     - makezero

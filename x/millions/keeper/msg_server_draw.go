@@ -38,7 +38,8 @@ func (k msgServer) DrawRetry(goCtx context.Context, msg *types.MsgDrawRetry) (*t
 	}
 
 	// DrawState_IcaWithdrawRewards refers to the failed ica callback if OnClaimRewardsOnNativeChainCompleted fails
-	if draw.ErrorState == types.DrawState_IcaWithdrawRewards {
+	switch draw.ErrorState {
+	case types.DrawState_IcaWithdrawRewards:
 		draw.UpdatedAtHeight = ctx.BlockHeight()
 		draw.UpdatedAt = ctx.BlockTime()
 		draw.State = types.DrawState_IcaWithdrawRewards
@@ -47,8 +48,8 @@ func (k msgServer) DrawRetry(goCtx context.Context, msg *types.MsgDrawRetry) (*t
 		if _, err := k.ClaimRewardsOnNativeChain(ctx, draw.PoolId, draw.DrawId); err != nil {
 			return nil, err
 		}
-		// DrawState_IcqRewards refers to the failed icq callback
-	} else if draw.ErrorState == types.DrawState_IcqBalance {
+	// DrawState_IcqRewards refers to the failed icq callback
+	case types.DrawState_IcqBalance:
 		draw.UpdatedAtHeight = ctx.BlockHeight()
 		draw.UpdatedAt = ctx.BlockTime()
 		draw.State = types.DrawState_IcqBalance
@@ -57,8 +58,8 @@ func (k msgServer) DrawRetry(goCtx context.Context, msg *types.MsgDrawRetry) (*t
 		if _, err := k.QueryBalance(ctx, draw.GetPoolId(), draw.GetDrawId()); err != nil {
 			return nil, err
 		}
-		// DrawState_IbcTransfer refers to the failed ibc call if OnTransferRewardsToLocalChainCompleted fails
-	} else if draw.ErrorState == types.DrawState_IbcTransfer {
+	// DrawState_IbcTransfer refers to the failed ibc call if OnTransferRewardsToLocalChainCompleted fails
+	case types.DrawState_IbcTransfer:
 		draw.UpdatedAtHeight = ctx.BlockHeight()
 		draw.UpdatedAt = ctx.BlockTime()
 		draw.State = types.DrawState_IbcTransfer
@@ -67,7 +68,7 @@ func (k msgServer) DrawRetry(goCtx context.Context, msg *types.MsgDrawRetry) (*t
 		if _, err := k.TransferRewardsToLocalChain(ctx, draw.PoolId, draw.DrawId); err != nil {
 			return nil, err
 		}
-	} else if draw.ErrorState == types.DrawState_Drawing {
+	case types.DrawState_Drawing:
 		draw.UpdatedAtHeight = ctx.BlockHeight()
 		draw.UpdatedAt = ctx.BlockTime()
 		draw.State = types.DrawState_Drawing
@@ -76,7 +77,7 @@ func (k msgServer) DrawRetry(goCtx context.Context, msg *types.MsgDrawRetry) (*t
 		if _, err := k.ExecuteDraw(ctx, draw.PoolId, draw.DrawId); err != nil {
 			return nil, err
 		}
-	} else {
+	default:
 		return nil, errorsmod.Wrapf(
 			types.ErrInvalidDrawState,
 			"error_state is %s instead of %s or %s",

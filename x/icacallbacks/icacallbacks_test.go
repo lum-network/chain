@@ -76,9 +76,9 @@ func TestParseTxMsgDataCurrent(t *testing.T) {
 		MsgResponses: make([]*codectypes.Any, len(expectedMessages)),
 	}
 	for i, msgBytes := range expectedMessages {
-		typeUrl := "type" + strconv.Itoa(i)
+		typeURL := "type" + strconv.Itoa(i)
 		msgData.MsgResponses[i] = &codectypes.Any{
-			TypeUrl: typeUrl,
+			TypeUrl: typeURL,
 			Value:   msgBytes,
 		}
 	}
@@ -99,9 +99,9 @@ func TestParseTxMsgDataLegacy(t *testing.T) {
 		Data: make([]*sdk.MsgData, len(expectedMessages)), //nolint:staticcheck
 	}
 	for i, msgBytes := range expectedMessages {
-		typeUrl := "type" + strconv.Itoa(i)
+		typeURL := "type" + strconv.Itoa(i)
 		msgData.Data[i] = &sdk.MsgData{ //nolint:staticcheck
-			MsgType: typeUrl,
+			MsgType: typeURL,
 			Data:    msgBytes,
 		}
 	}
@@ -133,13 +133,13 @@ func TestUnwrapAcknowledgement(t *testing.T) {
 			name:           "ibc_transfer_success",
 			isICA:          false,
 			ack:            channeltypes.NewResultAcknowledgement([]byte{1}),
-			expectedStatus: icacallbacktypes.AckResponseStatus_SUCCESS,
+			expectedStatus: icacallbacktypes.AckResponseStatusSuccess,
 		},
 		{
 			name:           "ibc_transfer_failure",
 			isICA:          false,
 			ack:            channeltypes.NewErrorAcknowledgement(exampleAckError),
-			expectedStatus: icacallbacktypes.AckResponseStatus_FAILURE,
+			expectedStatus: icacallbacktypes.AckResponseStatusFailure,
 			packetError:    exampleAckError.Error(),
 		},
 		{
@@ -150,7 +150,7 @@ func TestUnwrapAcknowledgement(t *testing.T) {
 				msgDelegate,
 				[]proto.Message{nil, nil},
 			),
-			expectedStatus:      icacallbacktypes.AckResponseStatus_SUCCESS,
+			expectedStatus:      icacallbacktypes.AckResponseStatusSuccess,
 			expectedNumMessages: 2,
 		},
 		{
@@ -164,7 +164,7 @@ func TestUnwrapAcknowledgement(t *testing.T) {
 					&stakingtypes.MsgUndelegateResponse{CompletionTime: time.Now().Add(time.Duration(10))},
 				},
 			),
-			expectedStatus:      icacallbacktypes.AckResponseStatus_SUCCESS,
+			expectedStatus:      icacallbacktypes.AckResponseStatusSuccess,
 			expectedNumMessages: 2,
 		},
 		{
@@ -175,7 +175,7 @@ func TestUnwrapAcknowledgement(t *testing.T) {
 				msgDelegate,
 				[]proto.Message{nil, nil},
 			),
-			expectedStatus:      icacallbacktypes.AckResponseStatus_SUCCESS,
+			expectedStatus:      icacallbacktypes.AckResponseStatusSuccess,
 			expectedNumMessages: 2,
 		},
 		{
@@ -189,14 +189,14 @@ func TestUnwrapAcknowledgement(t *testing.T) {
 					&stakingtypes.MsgUndelegateResponse{CompletionTime: time.Now().Add(time.Duration(10))},
 				},
 			),
-			expectedStatus:      icacallbacktypes.AckResponseStatus_SUCCESS,
+			expectedStatus:      icacallbacktypes.AckResponseStatusSuccess,
 			expectedNumMessages: 2,
 		},
 		{
 			name:           "ica_failure",
 			isICA:          true,
 			ack:            channeltypes.NewErrorAcknowledgement(exampleAckError),
-			expectedStatus: icacallbacktypes.AckResponseStatus_FAILURE,
+			expectedStatus: icacallbacktypes.AckResponseStatusFailure,
 			packetError:    exampleAckError.Error(),
 		},
 		{

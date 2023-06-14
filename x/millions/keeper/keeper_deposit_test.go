@@ -610,7 +610,7 @@ func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 	deposits = app.MillionsKeeper.ListAccountDeposits(ctx, uatomAddresses[0])
 	suite.Require().Len(deposits, 1)
 
-	// Simulate failed ackResponse AckResponseStatus_FAILURE
+	// Simulate failed ackResponse AckResponseStatusFailure
 	err = app.MillionsKeeper.OnTransferDepositToNativeChainCompleted(ctx, deposits[0].GetPoolId(), deposits[0].GetDepositId(), true)
 	suite.Require().NoError(err)
 
@@ -624,7 +624,7 @@ func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 	// Update status to simulate that the state is initially on DepositState_IbcTransfer
 	app.MillionsKeeper.UpdateDepositStatus(ctx, deposits[0].PoolId, deposits[0].DepositId, millionstypes.DepositState_IbcTransfer, false)
 
-	// Simulate successful ackResponse AckResponseStatus_SUCCESS
+	// Simulate successful ackResponse AckResponseStatusSuccess
 	err = app.MillionsKeeper.OnTransferDepositToNativeChainCompleted(ctx, deposits[0].GetPoolId(), deposits[0].GetDepositId(), false)
 	suite.Require().NoError(err)
 
@@ -776,7 +776,7 @@ func (suite *KeeperTestSuite) TestDeposit_DelegateDeposit() {
 
 	splits := []*millionstypes.SplitDelegation{{ValidatorAddress: cosmosPoolValidator, Amount: sdk.NewInt(int64(1_000_000))}}
 
-	// Now trigger a successful Delegation to simulate icacallbackstypes.AckResponseStatus_SUCCESS
+	// Now trigger a successful Delegation to simulate icacallbackstypes.AckResponseStatusSuccess
 	err = app.MillionsKeeper.OnDelegateDepositOnNativeChainCompleted(ctx, deposit.PoolId, deposit.DepositId, splits, false)
 	suite.Require().NoError(err)
 	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, deposit.PoolId, deposit.DepositId)
@@ -932,7 +932,7 @@ func (suite *KeeperTestSuite) TestDeposit_BalanceDeposit() {
 
 	splits := []*millionstypes.SplitDelegation{{ValidatorAddress: cosmosPoolValidator, Amount: sdk.NewInt(int64(1_000_000))}}
 
-	// Now trigger a successful Delegation to simulate icacallbackstypes.AckResponseStatus_SUCCESS
+	// Now trigger a successful Delegation to simulate icacallbackstypes.AckResponseStatusSuccess
 	err = app.MillionsKeeper.OnDelegateDepositOnNativeChainCompleted(ctx, deposit.PoolId, deposit.DepositId, splits, false)
 	suite.Require().NoError(err)
 

@@ -150,7 +150,7 @@ func (im IBCModule) OnTimeoutPacket(ctx sdk.Context, modulePacket channeltypes.P
 	im.keeper.Logger(ctx).Debug(fmt.Sprintf("OnTimeoutPacket: packet %v, relayer %v", modulePacket, relayer))
 
 	// Construct the timeout response
-	ackResponse := icacallbacktypes.AcknowledgementResponse{Status: icacallbacktypes.AckResponseStatus_TIMEOUT}
+	ackResponse := icacallbacktypes.AcknowledgementResponse{Status: icacallbacktypes.AckResponseStatusTimeout}
 
 	// Notify the callbacks
 	err := im.keeper.ICACallbacksKeeper.CallRegisteredICACallback(ctx, modulePacket, &ackResponse)

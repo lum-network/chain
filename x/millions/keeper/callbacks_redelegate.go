@@ -47,11 +47,11 @@ func RedelegateCallback(k Keeper, ctx sdk.Context, _ channeltypes.Packet, ackRes
 
 	// If the response status is a timeout, that's not an "error" since the relayer will retry then fail or succeed.
 	// We just log it out and return no error
-	if ackResponse.Status == icacallbackstypes.AckResponseStatus_TIMEOUT {
+	if ackResponse.Status == icacallbackstypes.AckResponseStatusTimeout {
 		k.Logger(ctx).Debug("Received timeout for a redelegate packet")
-	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
+	} else if ackResponse.Status == icacallbackstypes.AckResponseStatusFailure {
 		k.Logger(ctx).Debug("Received failure for a redelegate packet")
-	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
+	} else if ackResponse.Status == icacallbackstypes.AckResponseStatusSuccess {
 		k.Logger(ctx).Debug("Received success for a redelegate packet")
 	}
 	return nil

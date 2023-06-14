@@ -45,16 +45,16 @@ func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k *Keeper) MakeRequest(ctx sdk.Context, module, callbackId, chainId, connectionId, extraId, queryType string, request []byte, ttl uint64) error {
-	k.Logger(ctx).Info(fmt.Sprintf("Submitting ICQ Request - module=%s, callbackId=%s, connectionId=%s, queryType=%s, ttl=%d", module, callbackId, connectionId, queryType, ttl))
+func (k *Keeper) MakeRequest(ctx sdk.Context, module, callbackID, chainId, connectionID, extraID, queryType string, request []byte, ttl uint64) error {
+	k.Logger(ctx).Info(fmt.Sprintf("Submitting ICQ Request - module=%s, callbackID=%s, connectionId=%s, queryType=%s, ttl=%d", module, callbackID, connectionID, queryType, ttl))
 
 	// Confirm the connectionId and chainId are valid
-	if connectionId == "" {
+	if connectionID == "" {
 		errMsg := "[ICQ Validation Check] Failed! connection id cannot be empty"
 		k.Logger(ctx).Error(errMsg)
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, errMsg)
 	}
-	if !strings.HasPrefix(connectionId, "connection") {
+	if !strings.HasPrefix(connectionID, "connection") {
 		errMsg := "[ICQ Validation Check] Failed! connection id must begin with 'connection'"
 		k.Logger(ctx).Error(errMsg)
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, errMsg)
@@ -72,8 +72,8 @@ func (k *Keeper) MakeRequest(ctx sdk.Context, module, callbackId, chainId, conne
 			k.Logger(ctx).Error(err.Error())
 			return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no callback handler registered for module")
 		}
-		if exists := k.callbacks[module].HasICQCallback(callbackId); !exists {
-			err := fmt.Errorf("no callback %s registered for module %s", callbackId, module)
+		if exists := k.callbacks[module].HasICQCallback(callbackID); !exists {
+			err := fmt.Errorf("no callback %s registered for module %s", callbackID, module)
 			k.Logger(ctx).Error(err.Error())
 			return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no callback handler registered for module")
 		}
@@ -82,7 +82,7 @@ func (k *Keeper) MakeRequest(ctx sdk.Context, module, callbackId, chainId, conne
 	// Save the query to the store
 	// If the same query is re-requested, it will get replace in the store with an updated TTL
 	// and the RequestSent bool reset to false
-	query := k.NewQuery(ctx, module, callbackId, chainId, connectionId, extraId, queryType, request, ttl)
+	query := k.NewQuery(ctx, module, callbackID, chainId, connectionID, extraID, queryType, request, ttl)
 	k.SetQuery(ctx, *query)
 
 	return nil

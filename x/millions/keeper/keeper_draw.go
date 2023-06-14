@@ -112,51 +112,51 @@ func (k Keeper) ClaimRewardsOnNativeChain(ctx sdk.Context, poolID, drawID uint64
 			}
 		}
 		return k.OnClaimRewardsOnNativeChainCompleted(ctx, poolID, drawID, false)
-	} else {
-		var msgs []sdk.Msg
-		for _, validator := range pool.GetValidators() {
-			if validator.IsBonded() {
-				msgs = append(msgs, &distributiontypes.MsgWithdrawDelegatorReward{
-					DelegatorAddress: pool.GetIcaDepositAddress(),
-					ValidatorAddress: validator.OperatorAddress,
-				})
-			}
+	}
+	var msgs []sdk.Msg
+	for _, validator := range pool.GetValidators() {
+		if validator.IsBonded() {
+			msgs = append(msgs, &distributiontypes.MsgWithdrawDelegatorReward{
+				DelegatorAddress: pool.GetIcaDepositAddress(),
+				ValidatorAddress: validator.OperatorAddress,
+			})
 		}
-		if len(msgs) == 0 {
-			// Special case - no bonded validator
-			// Does not need to do any ICA call
-			return k.OnClaimRewardsOnNativeChainCompleted(ctx, poolID, drawID, false)
-		}
-		callbackData := types.ClaimRewardsCallback{
-			PoolId: poolID,
-			DrawId: drawID,
-		}
-		marshalledCallbackData, err := k.MarshalClaimCallbackArgs(ctx, callbackData)
-		if err != nil {
-			return &draw, err
-		}
+	}
+	if len(msgs) == 0 {
+		// Special case - no bonded validator
+		// Does not need to do any ICA call
+		return k.OnClaimRewardsOnNativeChainCompleted(ctx, poolID, drawID, false)
+	}
+	callbackData := types.ClaimRewardsCallback{
+		PoolId: poolID,
+		DrawId: drawID,
+	}
+	marshalledCallbackData, err := k.MarshalClaimCallbackArgs(ctx, callbackData)
+	if err != nil {
+		return &draw, err
+	}
 
-		// Dispatch our message with a timeout of 30 minutes in nanos
-		sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Claim, marshalledCallbackData)
-		if err != nil {
-			// Return with error here since it is the first operation and nothing needs to be saved to state
-			logger.Error(
-				fmt.Sprintf("failed to dispatch ICA claim delegator rewards: %v", err),
-				"pool_id", poolID,
-				"draw_id", drawID,
-				"chain_id", pool.GetChainId(),
-				"sequence", sequence,
-			)
-			return &draw, err
-		}
-		logger.Debug(
-			"ICA claim delegator rewards dispatched",
+	// Dispatch our message with a timeout of 30 minutes in nanos
+	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Claim, marshalledCallbackData)
+	if err != nil {
+		// Return with error here since it is the first operation and nothing needs to be saved to state
+		logger.Error(
+			fmt.Sprintf("failed to dispatch ICA claim delegator rewards: %v", err),
 			"pool_id", poolID,
 			"draw_id", drawID,
 			"chain_id", pool.GetChainId(),
 			"sequence", sequence,
 		)
+		return &draw, err
 	}
+	logger.Debug(
+		"ICA claim delegator rewards dispatched",
+		"pool_id", poolID,
+		"draw_id", drawID,
+		"chain_id", pool.GetChainId(),
+		"sequence", sequence,
+	)
+
 	return &draw, nil
 }
 
