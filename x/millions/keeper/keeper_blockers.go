@@ -58,7 +58,7 @@ func (k Keeper) BlockPoolUpdates(ctx sdk.Context) (successCount, errorCount int)
 			"nbr_error", errorCount,
 		)
 	}
-	return
+	return successCount, errorCount
 }
 
 // BlockPrizeUpdates runs all prize updates (clawback)
@@ -114,7 +114,7 @@ func (k Keeper) BlockPrizeUpdates(ctx sdk.Context) (successCount, errorCount int
 			"nbr_error", errorCount,
 		)
 	}
-	return
+	return successCount, errorCount
 }
 
 // BlockWithdrawalUpdates runs all matured withdrawals updates (transfer post unbonding)
@@ -161,5 +161,5 @@ func (k Keeper) BlockWithdrawalUpdates(ctx sdk.Context) (successCount, errorCoun
 			"nbr_error", errorCount,
 		)
 	}
-	return
+	return successCount, errorCount
 }

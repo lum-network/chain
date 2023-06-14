@@ -8,7 +8,7 @@ import (
 	"github.com/lum-network/chain/x/airdrop/types"
 )
 
-func (k Keeper) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
+func (k Keeper) AfterProposalVote(ctx sdk.Context, _ uint64, voterAddr sdk.AccAddress) {
 	_, _, err := k.ClaimCoinsForAction(ctx, voterAddr, types.ACTION_VOTE)
 	if err != nil {
 		panic(err.Error())
@@ -38,50 +38,50 @@ func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
-func (h Hooks) AfterProposalSubmission(ctx sdk.Context, proposalID uint64) {}
-func (h Hooks) AfterProposalDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) {
+func (h Hooks) AfterProposalSubmission(_ sdk.Context, _ uint64) {}
+func (h Hooks) AfterProposalDeposit(_ sdk.Context, _ uint64, _ sdk.AccAddress) {
 }
 
 func (h Hooks) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
 	h.k.AfterProposalVote(ctx, proposalID, voterAddr)
 }
 
-func (h Hooks) AfterProposalInactive(ctx sdk.Context, proposalID uint64) {}
-func (h Hooks) AfterProposalActive(ctx sdk.Context, proposalID uint64)   {}
+func (h Hooks) AfterProposalInactive(_ sdk.Context, _ uint64) {}
+func (h Hooks) AfterProposalActive(_ sdk.Context, _ uint64)   {}
 
-func (h Hooks) AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64) {}
+func (h Hooks) AfterProposalFailedMinDeposit(_ sdk.Context, _ uint64) {}
 
-func (h Hooks) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64) {}
+func (h Hooks) AfterProposalVotingPeriodEnded(_ sdk.Context, _ uint64) {}
 
-func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
+func (h Hooks) AfterValidatorCreated(_ sdk.Context, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) error {
+func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
+func (h Hooks) AfterValidatorRemoved(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
+func (h Hooks) AfterValidatorBonded(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
+func (h Hooks) AfterValidatorBeginUnbonding(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+func (h Hooks) BeforeDelegationCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+func (h Hooks) BeforeDelegationSharesModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+func (h Hooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
@@ -90,10 +90,10 @@ func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, 
 	return nil
 }
 
-func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
+func (h Hooks) BeforeValidatorSlashed(_ sdk.Context, _ sdk.ValAddress, _ sdk.Dec) error {
 	return nil
 }
 
-func (h Hooks) AfterUnbondingInitiated(ctx sdk.Context, id uint64) error {
+func (h Hooks) AfterUnbondingInitiated(_ sdk.Context, _ uint64) error {
 	return nil
 }

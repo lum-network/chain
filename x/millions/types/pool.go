@@ -144,7 +144,7 @@ func (p *Pool) ComputeSplitDelegations(_ sdk.Context, amount math.Int) (splits [
 		return nil
 	}
 
-	return
+	return splits
 }
 
 // ComputeSplitUndelegations compute the undelegation split to enforce based on the bonded validators in the set
@@ -216,7 +216,7 @@ func (p *Pool) ComputeSplitUndelegations(_ sdk.Context, amount math.Int) (splits
 		return nil
 	}
 
-	return
+	return splits
 }
 
 func (p *Pool) ApplySplitDelegate(_ sdk.Context, splits []*SplitDelegation) {

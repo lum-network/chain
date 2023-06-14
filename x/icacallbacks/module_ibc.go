@@ -76,11 +76,11 @@ func (im IBCModule) OnTimeoutPacket(
 }
 
 func (im IBCModule) NegotiateAppVersion(
-	ctx sdk.Context,
-	order channeltypes.Order,
-	connectionID string,
-	portID string,
-	counterparty channeltypes.Counterparty,
+	_ sdk.Context,
+	_ channeltypes.Order,
+	_ string,
+	_ string,
+	_ channeltypes.Counterparty,
 	proposedVersion string,
 ) (version string, err error) {
 	return proposedVersion, nil
@@ -92,9 +92,9 @@ func (im IBCModule) NegotiateAppVersion(
 
 // OnChanCloseConfirm implements the IBCModule interface.
 func (im IBCModule) OnChanCloseConfirm(
-	ctx sdk.Context,
-	portID,
-	channelID string,
+	_ sdk.Context,
+	_,
+	_ string,
 ) error {
 	// icacontroller calls OnChanCloseConfirm but doesn't call the underlying app's OnChanCloseConfirm callback.
 	return nil
@@ -102,14 +102,14 @@ func (im IBCModule) OnChanCloseConfirm(
 
 // OnChanOpenTry implements the IBCModule interface.
 func (im IBCModule) OnChanOpenTry(
-	ctx sdk.Context,
-	order channeltypes.Order,
-	connectionHops []string,
-	portID,
-	channelID string,
-	chanCap *capabilitytypes.Capability,
-	counterparty channeltypes.Counterparty,
-	counterpartyVersion string,
+	_ sdk.Context,
+	_ channeltypes.Order,
+	_ []string,
+	_,
+	_ string,
+	_ *capabilitytypes.Capability,
+	_ channeltypes.Counterparty,
+	_ string,
 ) (string, error) {
 	panic("UNIMPLEMENTED")
 }
