@@ -14,21 +14,26 @@ import (
 func (k msgServer) WithdrawDeposit(goCtx context.Context, msg *types.MsgWithdrawDeposit) (*types.MsgWithdrawDepositResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Verify address
-	depositorAddr, err := sdk.AccAddressFromBech32(msg.DepositorAddress)
+	pool, err := k.GetPool(ctx, msg.PoolId)
 	if err != nil {
-		return nil, types.ErrInvalidDepositorAddress
-	}
-
-	toAddr, err := sdk.AccAddressFromBech32(msg.ToAddress)
-	if err != nil {
-		return nil, types.ErrInvalidDestinationAddress
+		return nil, types.ErrPoolNotFound
 	}
 
 	// Get the pool deposit
 	deposit, err := k.GetPoolDeposit(ctx, msg.PoolId, msg.DepositId)
 	if err != nil {
 		return nil, types.ErrDepositNotFound
+	}
+
+	// Verify addresses
+	depositorAddr, err := sdk.AccAddressFromBech32(msg.DepositorAddress)
+	if err != nil {
+		return nil, types.ErrInvalidDepositorAddress
+	}
+
+	_, toAddr, err := pool.AccAddressFromBech32(msg.ToAddress)
+	if err != nil {
+		return nil, errorsmod.Wrapf(types.ErrInvalidDestinationAddress, err.Error())
 	}
 
 	// Verify that the incoming message withdrawAddr matches the deposit depositor_address
@@ -89,7 +94,7 @@ func (k msgServer) WithdrawDepositRetry(goCtx context.Context, msg *types.MsgWit
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Ensure msg received is valid
-	if err := msg.ValidateWithdrawDepositRetryBasic(); err != nil {
+	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
@@ -127,7 +132,7 @@ func (k msgServer) WithdrawDepositRetry(goCtx context.Context, msg *types.MsgWit
 	} else if withdrawal.ErrorState == types.WithdrawalState_IbcTransfer {
 		newState = types.WithdrawalState_IbcTransfer
 		k.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, newState, withdrawal.UnbondingEndsAt, false)
-		if err := k.TransferWithdrawalToLocalChain(ctx, withdrawal.PoolId, withdrawal.WithdrawalId); err != nil {
+		if err := k.TransferWithdrawalToDestAddr(ctx, withdrawal.PoolId, withdrawal.WithdrawalId); err != nil {
 			return nil, err
 		}
 	} else {
