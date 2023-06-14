@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
@@ -878,4 +879,94 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	pool, err = app.MillionsKeeper.GetPool(ctx, poolID)
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.ZeroInt(), pool.Validators[0].BondedAmount)
+}
+
+// TestPool_UpdatePool tests the different conditions for a proposal pool update
+func (suite *KeeperTestSuite) TestPool_UpdatePool() {
+	app := suite.app
+	ctx := suite.ctx
+
+	valAddrs := []string{
+		"lumvaloper16rlynj5wvzwts5lqep0je5q4m3eaepn5cqj38s",
+	}
+
+	drawDelta1 := 1 * time.Hour
+	newDrawSchedule := millionstypes.DrawSchedule{
+		InitialDrawAt: ctx.BlockTime().Add(2 * time.Hour),
+		DrawDelta:     drawDelta1,
+	}
+	newPrizeStrategy := millionstypes.PrizeStrategy{
+		PrizeBatches: []millionstypes.PrizeBatch{
+			{PoolPercent: 90, DrawProbability: sdk.NewDec(1), Quantity: 10},
+			{PoolPercent: 10, DrawProbability: sdk.NewDec(1), Quantity: 10},
+		},
+	}
+
+	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
+		PoolId: 1,
+		PrizeStrategy: millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
+			},
+		},
+		DrawSchedule: millionstypes.DrawSchedule{
+			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
+			DrawDelta:     drawDelta1,
+		},
+		AvailablePrizePool: sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
+		State:              millionstypes.PoolState_Ready,
+		MinDepositAmount:   sdk.NewInt(1_000_000),
+	}))
+
+	pool, err := app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+
+	// State should be unchanged as status ready and incoming state is killed
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, valAddrs, &pool.MinDepositAmount, &pool.DrawSchedule, &pool.PrizeStrategy, millionstypes.PoolState_Killed)
+	suite.Require().ErrorIs(err, millionstypes.ErrPoolStateChangeNotAllowed)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Ready, pool.State)
+
+	// State should be updated to status to PoolState_Paused
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, valAddrs, &pool.MinDepositAmount, &pool.DrawSchedule, &pool.PrizeStrategy, millionstypes.PoolState_Paused)
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Paused, pool.State)
+
+	// State should remain to PoolState_Paused
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, valAddrs, nil, nil, nil, millionstypes.PoolState_Unspecified)
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Paused, pool.State)
+
+	// State should remain to PoolState_Paused
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, valAddrs, nil, nil, nil, millionstypes.PoolState_Created)
+	suite.Require().ErrorIs(err, millionstypes.ErrPoolStateChangeNotAllowed)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Paused, pool.State)
+
+	// Test that the same pool can be ready again
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, valAddrs, &pool.MinDepositAmount, &pool.DrawSchedule, &pool.PrizeStrategy, millionstypes.PoolState_Ready)
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Ready, pool.State)
+
+	// Test new drawSchedule
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, valAddrs, &pool.MinDepositAmount, &newDrawSchedule, &pool.PrizeStrategy, millionstypes.PoolState_Paused)
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(newDrawSchedule, pool.DrawSchedule)
+
+	// Test new prizeStrategy
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, valAddrs, &pool.MinDepositAmount, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Ready)
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(newPrizeStrategy, pool.PrizeStrategy)
 }
