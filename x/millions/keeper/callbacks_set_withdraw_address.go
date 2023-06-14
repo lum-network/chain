@@ -32,7 +32,7 @@ func (k Keeper) UnmarshalSetWithdrawAddressCallbackArgs(ctx sdk.Context, setWith
 	return &unmarshalledWithdrawAddrCallback, nil
 }
 
-func SetWithdrawAddressCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
+func SetWithdrawAddressCallback(k Keeper, ctx sdk.Context, _ channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
 	// Deserialize the callback args
 	setWithdrawAddressCallback, err := k.UnmarshalSetWithdrawAddressCallbackArgs(ctx, args)
 	if err != nil {

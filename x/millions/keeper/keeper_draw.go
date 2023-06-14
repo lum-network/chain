@@ -485,7 +485,6 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID, drawID uint64) (*types.Draw
 
 	// Draw prizes
 	dRes, err := k.RunDrawPrizes(
-		ctx,
 		draw.PrizePool,
 		pool.PrizeStrategy,
 		depositorsTWB,
@@ -619,7 +618,7 @@ func (k Keeper) ComputeDepositsTWB(ctx sdk.Context, depositStartAt, drawAt time.
 
 // RunDrawPrizes computes available prizes and draws the prizes and their potential winners based on the specified prize strategy
 // this method does not store nor send anything, it only computes the DrawResult.
-func (k Keeper) RunDrawPrizes(ctx sdk.Context, prizePool sdk.Coin, prizeStrat types.PrizeStrategy, deposits []DepositTWB, randSeed int64) (result DrawResult, err error) {
+func (k Keeper) RunDrawPrizes(prizePool sdk.Coin, prizeStrat types.PrizeStrategy, deposits []DepositTWB, randSeed int64) (result DrawResult, err error) {
 	result.TotalWinAmount = sdk.ZeroInt()
 
 	// Compute all prizes probs

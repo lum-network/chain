@@ -36,7 +36,7 @@ func (fc *feeCollector) CollectedAmount() sdk.Coin {
 }
 
 // CollectPrizeFees computes and collects the fees for a prize and updates its final amount.
-func (fc *feeCollector) CollectPrizeFees(ctx sdk.Context, prize *types.Prize) (newAmount, fees math.Int) {
+func (fc *feeCollector) CollectPrizeFees(_ sdk.Context, prize *types.Prize) (newAmount, fees math.Int) {
 	fees = fc.feesStakers.MulInt(prize.Amount.Amount).RoundInt()
 	fc.stakersAmount = fc.stakersAmount.AddAmount(fees)
 	prize.Amount = prize.Amount.SubAmount(fees)

@@ -11,33 +11,33 @@ import (
 
 // ValidateBasic validates if a pool has a valid configuration
 // meaning that it can be stored.
-func (pool *Pool) ValidateBasic(params Params) error {
-	if pool.PoolId == UnknownID {
+func (p *Pool) ValidateBasic(params Params) error {
+	if p.PoolId == UnknownID {
 		return ErrInvalidID
 	}
-	if pool.State == PoolState_Unspecified {
+	if p.State == PoolState_Unspecified {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "no state specified")
 	}
-	if err := sdk.ValidateDenom(pool.Denom); err != nil {
+	if err := sdk.ValidateDenom(p.Denom); err != nil {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, err.Error())
 	}
-	if err := sdk.ValidateDenom(pool.NativeDenom); err != nil {
+	if err := sdk.ValidateDenom(p.NativeDenom); err != nil {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, err.Error())
 	}
-	if strings.TrimSpace(pool.ChainId) == "" {
+	if strings.TrimSpace(p.ChainId) == "" {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "empty chain ID")
 	}
-	if strings.TrimSpace(pool.Bech32PrefixAccAddr) == "" {
+	if strings.TrimSpace(p.Bech32PrefixAccAddr) == "" {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "empty bech32 prefix account address")
 	}
-	if strings.TrimSpace(pool.Bech32PrefixValAddr) == "" {
+	if strings.TrimSpace(p.Bech32PrefixValAddr) == "" {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "empty bech32 prefix validator address")
 	}
-	if len(pool.Validators) == 0 {
+	if len(p.Validators) == 0 {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "empty validators set")
 	} else {
-		for _, val := range pool.Validators {
-			bz, err := sdk.GetFromBech32(val.OperatorAddress, pool.Bech32PrefixValAddr)
+		for _, val := range p.Validators {
+			bz, err := sdk.GetFromBech32(val.OperatorAddress, p.Bech32PrefixValAddr)
 			if err != nil {
 				return errorsmod.Wrapf(ErrInvalidPoolParams, "invalid validator address %s: %v", val.OperatorAddress, err)
 			}
@@ -47,16 +47,16 @@ func (pool *Pool) ValidateBasic(params Params) error {
 			}
 		}
 	}
-	if pool.MinDepositAmount.IsNil() || pool.MinDepositAmount.LT(params.MinDepositAmount) {
+	if p.MinDepositAmount.IsNil() || p.MinDepositAmount.LT(params.MinDepositAmount) {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "min deposit denom must be gte %d", params.MinDepositAmount.Int64())
 	}
-	if pool.AvailablePrizePool.IsNil() || pool.AvailablePrizePool.Denom != pool.Denom {
+	if p.AvailablePrizePool.IsNil() || p.AvailablePrizePool.Denom != p.Denom {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "clawback prize pool must be initialized")
 	}
-	if err := pool.DrawSchedule.ValidateBasic(params); err != nil {
+	if err := p.DrawSchedule.ValidateBasic(params); err != nil {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, err.Error())
 	}
-	if err := pool.PrizeStrategy.Validate(params); err != nil {
+	if err := p.PrizeStrategy.Validate(params); err != nil {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, err.Error())
 	}
 	return nil
@@ -109,7 +109,7 @@ func (p *Pool) BondedValidators() (activeVals, inactiveVals []PoolValidator) {
 
 // ComputeSplitDelegations computes the delegation split to enforce based on the active validators in the set
 // amount is divided evenly to all active validators.
-func (p *Pool) ComputeSplitDelegations(ctx sdk.Context, amount math.Int) (splits []*SplitDelegation) {
+func (p *Pool) ComputeSplitDelegations(_ sdk.Context, amount math.Int) (splits []*SplitDelegation) {
 	activeValidators := p.ActiveValidators()
 	if len(activeValidators) == 0 {
 		return nil
@@ -149,7 +149,7 @@ func (p *Pool) ComputeSplitDelegations(ctx sdk.Context, amount math.Int) (splits
 
 // ComputeSplitUndelegations compute the undelegation split to enforce based on the bonded validators in the set
 // disabled validators are prioritized and remaining amount is divided evenly between all validators.
-func (p *Pool) ComputeSplitUndelegations(ctx sdk.Context, amount math.Int) (splits []*SplitDelegation) {
+func (p *Pool) ComputeSplitUndelegations(_ sdk.Context, amount math.Int) (splits []*SplitDelegation) {
 	bondedActiveVals, bondedInactiveVals := p.BondedValidators()
 	if len(bondedActiveVals) == 0 && len(bondedInactiveVals) == 0 {
 		return nil
@@ -219,14 +219,14 @@ func (p *Pool) ComputeSplitUndelegations(ctx sdk.Context, amount math.Int) (spli
 	return
 }
 
-func (p *Pool) ApplySplitDelegate(ctx sdk.Context, splits []*SplitDelegation) {
+func (p *Pool) ApplySplitDelegate(_ sdk.Context, splits []*SplitDelegation) {
 	valIdx := p.GetValidatorsMapIndex()
 	for _, split := range splits {
 		p.Validators[valIdx[split.ValidatorAddress]].BondedAmount = p.Validators[valIdx[split.ValidatorAddress]].BondedAmount.Add(split.Amount)
 	}
 }
 
-func (p *Pool) ApplySplitUndelegate(ctx sdk.Context, splits []*SplitDelegation) {
+func (p *Pool) ApplySplitUndelegate(_ sdk.Context, splits []*SplitDelegation) {
 	valIdx := p.GetValidatorsMapIndex()
 	for _, split := range splits {
 		p.Validators[valIdx[split.ValidatorAddress]].BondedAmount = p.Validators[valIdx[split.ValidatorAddress]].BondedAmount.Sub(split.Amount)

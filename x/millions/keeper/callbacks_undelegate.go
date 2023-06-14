@@ -34,7 +34,7 @@ func (k Keeper) UnmarshalUndelegateCallbackArgs(ctx sdk.Context, undelegateCallb
 }
 
 // Get the latest completion time across each MsgUndelegate in the ICA transaction.
-func (k Keeper) GetLatestUnbondingCompletionTime(ctx sdk.Context, msgResponses [][]byte) (*time.Time, error) {
+func (k Keeper) GetLatestUnbondingCompletionTime(_ sdk.Context, msgResponses [][]byte) (*time.Time, error) {
 	// Update the completion time using the latest completion time across each message within the transaction
 	latestCompletionTime := time.Time{}
 
@@ -56,7 +56,7 @@ func (k Keeper) GetLatestUnbondingCompletionTime(ctx sdk.Context, msgResponses [
 	return &latestCompletionTime, nil
 }
 
-func UndelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
+func UndelegateCallback(k Keeper, ctx sdk.Context, _ channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
 	// Deserialize the callback args
 	undelegateCallback, err := k.UnmarshalUndelegateCallbackArgs(ctx, args)
 	if err != nil {

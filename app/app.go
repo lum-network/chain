@@ -612,7 +612,7 @@ func (app *App) RegisterNodeService(clientCtx client.Context) {
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server.
-func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
+func RegisterSwaggerAPI(_ client.Context, rtr *mux.Router) {
 	statikFS, err := fs.New()
 	if err != nil {
 		panic(err)

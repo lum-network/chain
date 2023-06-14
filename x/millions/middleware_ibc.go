@@ -138,6 +138,6 @@ func (im IBCMiddleware) OnTimeoutPacket(ctx sdk.Context, modulePacket channeltyp
 	return im.app.OnTimeoutPacket(ctx, modulePacket, relayer)
 }
 
-func (im IBCMiddleware) NegotiateAppVersion(ctx sdk.Context, order channeltypes.Order, connectionID, portID string, counterparty channeltypes.Counterparty, proposedVersion string) (version string, err error) {
+func (im IBCMiddleware) NegotiateAppVersion(_ sdk.Context, _ channeltypes.Order, _, _ string, _ channeltypes.Counterparty, proposedVersion string) (version string, err error) {
 	return proposedVersion, nil
 }

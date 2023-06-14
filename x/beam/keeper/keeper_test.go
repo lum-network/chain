@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) TestClaimOpenBeam() {
 	suite.Require().Equal(beam.GetStatus(), types.BeamState_StateOpen)
 }
 
-// TestClaimClosedBeam Test to claim a closed beam and make sure funds were transfered.
+// TestClaimClosedBeam Test to claim a closed beam and make sure funds were transferred.
 func (suite *KeeperTestSuite) TestClaimClosedBeam() {
 	app := suite.app
 	ctx := suite.ctx

@@ -32,7 +32,7 @@ func (k Keeper) UnmarshalDelegateCallbackArgs(ctx sdk.Context, delegateCallback 
 	return &unmarshalledDelegateCallback, nil
 }
 
-func DelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
+func DelegateCallback(k Keeper, ctx sdk.Context, _ channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
 	// Deserialize the callback args
 	delegateCallback, err := k.UnmarshalDelegateCallbackArgs(ctx, args)
 	if err != nil {

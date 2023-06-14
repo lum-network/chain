@@ -32,7 +32,7 @@ func (k Keeper) UnmarshalRedelegateCallbackArgs(ctx sdk.Context, redelegateCallb
 	return &unmarshalledRedelegateCallback, nil
 }
 
-func RedelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
+func RedelegateCallback(k Keeper, ctx sdk.Context, _ channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
 	// Deserialize the callback args
 	redelegateCallback, err := k.UnmarshalRedelegateCallbackArgs(ctx, args)
 	if err != nil {

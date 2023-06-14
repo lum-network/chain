@@ -54,7 +54,7 @@ func (a AppModuleBasic) DefaultGenesis(jsonCodec codec.JSONCodec) json.RawMessag
 	return jsonCodec.MustMarshalJSON(types.DefaultGenesisState())
 }
 
-func (a AppModuleBasic) ValidateGenesis(jsonCodec codec.JSONCodec, config client.TxEncodingConfig, message json.RawMessage) error {
+func (a AppModuleBasic) ValidateGenesis(jsonCodec codec.JSONCodec, _ client.TxEncodingConfig, message json.RawMessage) error {
 	var data types.GenesisState
 	if err := jsonCodec.UnmarshalJSON(message, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -112,7 +112,7 @@ func (a AppModule) ExportGenesis(context sdk.Context, jsonCodec codec.JSONCodec)
 	return jsonCodec.MustMarshalJSON(genState)
 }
 
-func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {}
+func (a AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 func (a AppModule) QuerierRoute() string {
 	return types.QuerierRoute

@@ -32,7 +32,7 @@ func (k Keeper) UnmarshalTransferToNativeCallbackArgs(ctx sdk.Context, transferC
 	return &unmarshalledTransferCallback, nil
 }
 
-func TransferToNativeCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
+func TransferToNativeCallback(k Keeper, ctx sdk.Context, _ channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
 	// Deserialize the callback args
 	transferCallback, err := k.UnmarshalTransferToNativeCallbackArgs(ctx, args)
 	if err != nil {

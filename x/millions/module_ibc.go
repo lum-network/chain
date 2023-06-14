@@ -34,13 +34,13 @@ func NewIBCModule(k keeper.Keeper) IBCModule {
 }
 
 // OnChanOpenInit implements the IBCModule interface.
-func (im IBCModule) OnChanOpenInit(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string) (string, error) {
+func (im IBCModule) OnChanOpenInit(ctx sdk.Context, _ channeltypes.Order, _ []string, portID, channelID string, channelCap *capabilitytypes.Capability, _ channeltypes.Counterparty, version string) (string, error) {
 	im.keeper.Logger(ctx).Debug(fmt.Sprintf("OnChanOpenInit: portID %s, channelID %s", portID, channelID))
 	return version, im.keeper.ClaimCapability(ctx, channelCap, host.ChannelCapabilityPath(portID, channelID))
 }
 
 // OnChanOpenTry implements the IBCModule interface.
-func (im IBCModule) OnChanOpenTry(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID, channelID string, chanCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, counterpartyVersion string) (string, error) {
+func (im IBCModule) OnChanOpenTry(_ sdk.Context, _ channeltypes.Order, _ []string, _, _ string, _ *capabilitytypes.Capability, _ channeltypes.Counterparty, _ string) (string, error) {
 	return "", nil
 }
 
@@ -89,17 +89,17 @@ func (im IBCModule) OnChanOpenAck(ctx sdk.Context, portID, channelID, counterpar
 }
 
 // OnChanOpenConfirm implements the IBCModule interface.
-func (im IBCModule) OnChanOpenConfirm(ctx sdk.Context, portID, channelID string) error {
+func (im IBCModule) OnChanOpenConfirm(_ sdk.Context, _, _ string) error {
 	return nil
 }
 
 // OnChanCloseInit implements the IBCModule interface.
-func (im IBCModule) OnChanCloseInit(ctx sdk.Context, portID, channelID string) error {
+func (im IBCModule) OnChanCloseInit(_ sdk.Context, _, _ string) error {
 	return nil
 }
 
 // OnChanCloseConfirm implements the IBCModule interface.
-func (im IBCModule) OnChanCloseConfirm(ctx sdk.Context, portID, channelID string) error {
+func (im IBCModule) OnChanCloseConfirm(_ sdk.Context, _, _ string) error {
 	return nil
 }
 
@@ -160,6 +160,6 @@ func (im IBCModule) OnTimeoutPacket(ctx sdk.Context, modulePacket channeltypes.P
 	return nil
 }
 
-func (im IBCModule) NegotiateAppVersion(ctx sdk.Context, order channeltypes.Order, connectionID, portID string, counterparty channeltypes.Counterparty, proposedVersion string) (version string, err error) {
+func (im IBCModule) NegotiateAppVersion(_ sdk.Context, _ channeltypes.Order, _, _ string, _ channeltypes.Counterparty, proposedVersion string) (version string, err error) {
 	return proposedVersion, nil
 }

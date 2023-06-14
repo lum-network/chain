@@ -24,7 +24,7 @@ func (suite *KeeperTestSuite) TestDraw_NoPrizeToWin() {
 
 	// Empty prize pool should return 0 prizes
 	prizePool := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.ZeroInt())
-	result, err := app.MillionsKeeper.RunDrawPrizes(ctx,
+	result, err := app.MillionsKeeper.RunDrawPrizes(
 		prizePool,
 		millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
@@ -41,7 +41,7 @@ func (suite *KeeperTestSuite) TestDraw_NoPrizeToWin() {
 	suite.Require().Equal(uint64(0), result.TotalWinCount)
 	suite.Require().Len(result.PrizeDraws, 0)
 
-	result, err = app.MillionsKeeper.RunDrawPrizes(ctx,
+	result, err = app.MillionsKeeper.RunDrawPrizes(
 		prizePool,
 		millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
@@ -64,7 +64,7 @@ func (suite *KeeperTestSuite) TestDraw_NoPrizeToWin() {
 
 	// No depositors should return prizes without winners
 	prizePool = sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(1_000_000))
-	result, err = app.MillionsKeeper.RunDrawPrizes(ctx,
+	result, err = app.MillionsKeeper.RunDrawPrizes(
 		prizePool,
 		millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
@@ -91,7 +91,7 @@ func (suite *KeeperTestSuite) TestDraw_NoPrizesWon() {
 
 	// No depositors should return prizes without winners
 	prizePool := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(1_000_000))
-	result, err := app.MillionsKeeper.RunDrawPrizes(ctx,
+	result, err := app.MillionsKeeper.RunDrawPrizes(
 		prizePool,
 		millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
@@ -112,7 +112,7 @@ func (suite *KeeperTestSuite) TestDraw_NoPrizesWon() {
 	suite.Require().Nil(result.PrizeDraws[2].Winner)
 
 	// Unlikely odds to win despite a large number of draws (deterministic due to the seed used)
-	result, err = app.MillionsKeeper.RunDrawPrizes(ctx,
+	result, err = app.MillionsKeeper.RunDrawPrizes(
 		prizePool,
 		millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
@@ -231,7 +231,7 @@ func (suite *KeeperTestSuite) TestDraw_UnusualPrizeCases() {
 
 	// No depositors post TWB should result in no winner
 	prizePool := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(1_000_000))
-	result, err := app.MillionsKeeper.RunDrawPrizes(ctx,
+	result, err := app.MillionsKeeper.RunDrawPrizes(
 		prizePool,
 		millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
@@ -254,7 +254,7 @@ func (suite *KeeperTestSuite) TestDraw_UnusualPrizeCases() {
 
 	// Lone depositors should win with certainty
 	prizePool = sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(1_000_000))
-	result, err = app.MillionsKeeper.RunDrawPrizes(ctx,
+	result, err = app.MillionsKeeper.RunDrawPrizes(
 		prizePool,
 		millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
@@ -276,7 +276,7 @@ func (suite *KeeperTestSuite) TestDraw_UnusualPrizeCases() {
 
 	// Small deposits and prize pool should be possible even though they are not recommended
 	prizePool = sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(1))
-	result, err = app.MillionsKeeper.RunDrawPrizes(ctx,
+	result, err = app.MillionsKeeper.RunDrawPrizes(
 		prizePool,
 		millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
@@ -297,7 +297,7 @@ func (suite *KeeperTestSuite) TestDraw_UnusualPrizeCases() {
 	suite.Require().Equal(int64(0), result.TotalWinAmount.Int64())
 
 	prizePool = sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(100))
-	result, err = app.MillionsKeeper.RunDrawPrizes(ctx,
+	result, err = app.MillionsKeeper.RunDrawPrizes(
 		prizePool,
 		millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
@@ -319,7 +319,7 @@ func (suite *KeeperTestSuite) TestDraw_UnusualPrizeCases() {
 
 	// Large deposits and prize pool should work as expected
 	prizePool = sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(int64(^uint64(0)>>1)))
-	result, err = app.MillionsKeeper.RunDrawPrizes(ctx,
+	result, err = app.MillionsKeeper.RunDrawPrizes(
 		prizePool,
 		millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
@@ -350,7 +350,7 @@ func (suite *KeeperTestSuite) TestDraw_PrizesOrdering() {
 
 	// Prizes should always be order by value descending
 	prizePool := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(1_000_000))
-	result, err := app.MillionsKeeper.RunDrawPrizes(ctx,
+	result, err := app.MillionsKeeper.RunDrawPrizes(
 		prizePool,
 		millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
@@ -400,7 +400,7 @@ func (suite *KeeperTestSuite) TestDraw_PrizesDrawDeterminism() {
 	}
 
 	seed := int64(42)
-	firstDraw, err := app.MillionsKeeper.RunDrawPrizes(ctx,
+	firstDraw, err := app.MillionsKeeper.RunDrawPrizes(
 		prizePool,
 		strategy,
 		depositors,
@@ -409,7 +409,7 @@ func (suite *KeeperTestSuite) TestDraw_PrizesDrawDeterminism() {
 	suite.Require().NoError(err)
 
 	for i := 0; i < 100; i++ {
-		draw, err := app.MillionsKeeper.RunDrawPrizes(ctx,
+		draw, err := app.MillionsKeeper.RunDrawPrizes(
 			prizePool,
 			strategy,
 			depositors,
@@ -733,7 +733,7 @@ func (suite *KeeperTestSuite) TestDraw_PrizeDistribution() {
 	seed := int64(84)
 
 	prizePool := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(1_000_000))
-	drawRes, err := app.MillionsKeeper.RunDrawPrizes(ctx,
+	drawRes, err := app.MillionsKeeper.RunDrawPrizes(
 		prizePool,
 		millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
@@ -911,7 +911,7 @@ func (suite *KeeperTestSuite) TestDraw_EvenPrizeDistributionLLN() {
 		}
 
 		// DrawPrizes and save results
-		results, err := app.MillionsKeeper.RunDrawPrizes(ctx,
+		results, err := app.MillionsKeeper.RunDrawPrizes(
 			sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), prizePool),
 			strategy,
 			depositors,
@@ -1022,7 +1022,7 @@ func (suite *KeeperTestSuite) TestDraw_WeightedPrizeDistributionLLN() {
 		}
 
 		// DrawPrizes and save results
-		results, err := app.MillionsKeeper.RunDrawPrizes(ctx,
+		results, err := app.MillionsKeeper.RunDrawPrizes(
 			sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), prizePool),
 			strategy,
 			depositors,
