@@ -10,19 +10,18 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
-
 	"github.com/lum-network/chain/x/icacallbacks"
 	icacallbacktypes "github.com/lum-network/chain/x/icacallbacks/types"
 	"github.com/lum-network/chain/x/millions/keeper"
 )
 
-// IBCMiddleware Declare our IBCMiddleware structure
+// IBCMiddleware Declare our IBCMiddleware structure.
 type IBCMiddleware struct {
 	keeper keeper.Keeper
 	app    porttypes.IBCModule
 }
 
-// NewIBCMiddleware Initialize a new IBCModule instance
+// NewIBCMiddleware Initialize a new IBCModule instance.
 func NewIBCMiddleware(k keeper.Keeper, app porttypes.IBCModule) IBCMiddleware {
 	return IBCMiddleware{
 		keeper: k,
@@ -30,7 +29,7 @@ func NewIBCMiddleware(k keeper.Keeper, app porttypes.IBCModule) IBCMiddleware {
 	}
 }
 
-// OnChanOpenInit implements the IBCModule interface
+// OnChanOpenInit implements the IBCModule interface.
 func (im IBCMiddleware) OnChanOpenInit(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string) (string, error) {
 	return im.app.OnChanOpenInit(
 		ctx,
@@ -44,7 +43,7 @@ func (im IBCMiddleware) OnChanOpenInit(ctx sdk.Context, order channeltypes.Order
 	)
 }
 
-// OnChanOpenTry implements the IBCModule interface
+// OnChanOpenTry implements the IBCModule interface.
 func (im IBCMiddleware) OnChanOpenTry(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID, channelID string, chanCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, counterpartyVersion string) (string, error) {
 	return im.app.OnChanOpenTry(
 		ctx,
@@ -58,22 +57,22 @@ func (im IBCMiddleware) OnChanOpenTry(ctx sdk.Context, order channeltypes.Order,
 	)
 }
 
-// OnChanOpenAck implements the IBCModule interface
+// OnChanOpenAck implements the IBCModule interface.
 func (im IBCMiddleware) OnChanOpenAck(ctx sdk.Context, portID, channelID string, counterpartyChannelID string, counterpartyVersion string) error {
 	return im.app.OnChanOpenAck(ctx, portID, channelID, counterpartyChannelID, counterpartyVersion)
 }
 
-// OnChanOpenConfirm implements the IBCModule interface
+// OnChanOpenConfirm implements the IBCModule interface.
 func (im IBCMiddleware) OnChanOpenConfirm(ctx sdk.Context, portID, channelID string) error {
 	return im.app.OnChanOpenConfirm(ctx, portID, channelID)
 }
 
-// OnChanCloseInit implements the IBCModule interface
+// OnChanCloseInit implements the IBCModule interface.
 func (im IBCMiddleware) OnChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 	return im.app.OnChanCloseInit(ctx, portID, channelID)
 }
 
-// OnChanCloseConfirm implements the IBCModule interface
+// OnChanCloseConfirm implements the IBCModule interface.
 func (im IBCMiddleware) OnChanCloseConfirm(ctx sdk.Context, portID, channelID string) error {
 	return im.app.OnChanCloseConfirm(ctx, portID, channelID)
 }
@@ -85,7 +84,7 @@ func (im IBCMiddleware) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet
 	return im.app.OnRecvPacket(ctx, packet, relayer)
 }
 
-// OnAcknowledgementPacket implements the IBCModule interface
+// OnAcknowledgementPacket implements the IBCModule interface.
 func (im IBCMiddleware) OnAcknowledgementPacket(ctx sdk.Context, modulePacket channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
 	im.keeper.Logger(ctx).Debug(fmt.Sprintf("OnAcknowledgementPacket (millions) - packet: %+v, relayer: %v", modulePacket, relayer))
 
@@ -122,7 +121,7 @@ func (im IBCMiddleware) OnAcknowledgementPacket(ctx sdk.Context, modulePacket ch
 	return im.app.OnAcknowledgementPacket(ctx, modulePacket, acknowledgement, relayer)
 }
 
-// OnTimeoutPacket implements the IBCModule interface
+// OnTimeoutPacket implements the IBCModule interface.
 func (im IBCMiddleware) OnTimeoutPacket(ctx sdk.Context, modulePacket channeltypes.Packet, relayer sdk.AccAddress) error {
 	im.keeper.Logger(ctx).Debug(fmt.Sprintf("OnTimeoutPacket: packet %v, relayer %v", modulePacket, relayer))
 

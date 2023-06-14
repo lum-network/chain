@@ -3,7 +3,6 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
-
 	icacallbackstypes "github.com/lum-network/chain/x/icacallbacks/types"
 )
 
@@ -17,7 +16,7 @@ const (
 	ICACallbackID_SetWithdrawAddress = "set_withdraw_address"
 )
 
-// ICACallback wrapper struct for millions keeper
+// ICACallback wrapper struct for millions keeper.
 type ICACallback func(Keeper, sdk.Context, channeltypes.Packet, *icacallbackstypes.AcknowledgementResponse, []byte) error
 
 type ICACallbacks struct {

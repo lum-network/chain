@@ -3,14 +3,12 @@ package keeper
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"github.com/lum-network/chain/x/millions/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (k queryServer) Prizes(goCtx context.Context, req *types.QueryPrizesRequest) (*types.QueryPrizesResponse, error) {
@@ -35,7 +33,6 @@ func (k queryServer) Prizes(goCtx context.Context, req *types.QueryPrizesRequest
 		prizes = append(prizes, prize)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -69,7 +66,6 @@ func (k queryServer) PoolPrizes(goCtx context.Context, req *types.QueryPoolPrize
 		prizes = append(prizes, prize)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -104,7 +100,6 @@ func (k queryServer) PoolDrawPrizes(goCtx context.Context, req *types.QueryPoolD
 		prizes = append(prizes, prize)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -156,7 +151,6 @@ func (k queryServer) AccountPrizes(goCtx context.Context, req *types.QueryAccoun
 		prizes = append(prizes, prize)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -196,7 +190,6 @@ func (k queryServer) AccountPoolPrizes(goCtx context.Context, req *types.QueryAc
 		prizes = append(prizes, prize)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -236,7 +229,6 @@ func (k queryServer) AccountPoolDrawPrizes(goCtx context.Context, req *types.Que
 		prizes = append(prizes, prize)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

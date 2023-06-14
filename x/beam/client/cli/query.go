@@ -2,20 +2,14 @@ package cli
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-
-	// "strings"
-
-	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	// "github.com/cosmos/cosmos-sdk/client/flags"
-	// sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/lum-network/chain/x/beam/types"
+	"github.com/spf13/cobra"
 )
 
-// GetQueryCmd returns the cli query commands for this module
+// GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd(queryRoute string) *cobra.Command {
 	// Group chain queries under a subcommand
 	cmd := &cobra.Command{
@@ -37,7 +31,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	return cmd
 }
 
-// CmdFetchBeams Query the blockchain and print the list of beams from the store
+// CmdFetchBeams Query the blockchain and print the list of beams from the store.
 func CmdFetchBeams() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fetch",
@@ -75,7 +69,7 @@ func CmdFetchBeams() *cobra.Command {
 	return cmd
 }
 
-// CmdFetchOpenBeamsQueue Query the blockchain and print the list of beams from the open queue system
+// CmdFetchOpenBeamsQueue Query the blockchain and print the list of beams from the open queue system.
 func CmdFetchOpenBeamsQueue() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fetch-open-queue",
@@ -112,7 +106,7 @@ func CmdFetchOpenBeamsQueue() *cobra.Command {
 	return cmd
 }
 
-// CmdFetchClosedBeamsQueue Query the blockchain and print the list of beams from the closed queue system
+// CmdFetchClosedBeamsQueue Query the blockchain and print the list of beams from the closed queue system.
 func CmdFetchClosedBeamsQueue() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fetch-closed-queue",
@@ -150,7 +144,7 @@ func CmdFetchClosedBeamsQueue() *cobra.Command {
 	return cmd
 }
 
-// CmdFetchOldOpenBeamsQueue Query the blockchain and print the list of beams from the old open queue system
+// CmdFetchOldOpenBeamsQueue Query the blockchain and print the list of beams from the old open queue system.
 func CmdFetchOldOpenBeamsQueue() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fetch-open-old-queue",
@@ -188,7 +182,7 @@ func CmdFetchOldOpenBeamsQueue() *cobra.Command {
 	return cmd
 }
 
-// CmdGetBeam Query the blockchain about a beam and print response
+// CmdGetBeam Query the blockchain about a beam and print response.
 func CmdGetBeam() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get [id]",

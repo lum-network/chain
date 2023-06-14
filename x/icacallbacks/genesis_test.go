@@ -1,15 +1,14 @@
 package icacallbacks_test
 
 import (
-	apptypes "github.com/lum-network/chain/app"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/Stride-Labs/stride/v6/testutil/nullify"
+	apptypes "github.com/lum-network/chain/app"
 	"github.com/lum-network/chain/x/icacallbacks"
 	"github.com/lum-network/chain/x/icacallbacks/types"
+	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func TestGenesis(t *testing.T) {

@@ -54,7 +54,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsBasics() {
 	suite.Require().NoError(pool.ValidateBasic(params))
 }
 
-// TestPool_DrawSchedule validates draw schedule configuration and implementation
+// TestPool_DrawSchedule validates draw schedule configuration and implementation.
 func (suite *KeeperTestSuite) TestPool_DrawScheduleBasics() {
 	ctx := suite.ctx
 
@@ -90,7 +90,7 @@ func (suite *KeeperTestSuite) TestPool_DrawScheduleBasics() {
 	suite.Require().Equal(0, dsSan.GetInitialDrawAt().Nanosecond())
 
 	// Subsequent draw should trigger as soon as the draw delta is elapsed
-	// In other words, we should be able to launch a draw even if the elasped time is not passed draw delta depending
+	// In other words, we should be able to launch a draw even if the elapsed time is not passed draw delta depending
 	// on the initial launch time to prevent pool draw time drift (ex: if chain stalling for a while)
 	dsNow := time.Date(2000, 10, 10, 10, 10, 0, 0, time.UTC)
 	dsCtx := ctx.WithBlockTime(dsNow)
@@ -331,7 +331,7 @@ func (suite *KeeperTestSuite) TestPool_DepositorsCountAndTVL() {
 	}
 }
 
-// TestPool_ValidatorsSplitDelegate test pool validator set split delegations
+// TestPool_ValidatorsSplitDelegate test pool validator set split delegations.
 func (suite *KeeperTestSuite) TestPool_ValidatorsSplitDelegate() {
 	app := suite.app
 	ctx := suite.ctx
@@ -478,7 +478,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitDelegate() {
 	suite.Require().Equal(amountNotMultipleOf2, sdMap[valAddrs[2]].Amount.Add(sdMap[valAddrs[3]].Amount))
 }
 
-// TestPool_ValidatorsSplitUndelegate test pool validator set split undelegations
+// TestPool_ValidatorsSplitUndelegate test pool validator set split undelegations.
 func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
 	app := suite.app
 	ctx := suite.ctx
@@ -709,7 +709,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
 	suite.Require().Nil(sUndel)
 }
 
-// TestPool_ValidatorsSplitConsistency test pool validator set bonded amount consistency and associated race conditions
+// TestPool_ValidatorsSplitConsistency test pool validator set bonded amount consistency and associated race conditions.
 func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	app := suite.app
 	ctx := suite.ctx

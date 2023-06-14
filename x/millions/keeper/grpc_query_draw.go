@@ -3,14 +3,12 @@ package keeper
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"github.com/lum-network/chain/x/millions/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (k queryServer) Draws(goCtx context.Context, req *types.QueryDrawsRequest) (*types.QueryDrawsResponse, error) {
@@ -35,7 +33,6 @@ func (k queryServer) Draws(goCtx context.Context, req *types.QueryDrawsRequest) 
 		draws = append(draws, draw)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -70,7 +67,6 @@ func (k queryServer) PoolDraws(goCtx context.Context, req *types.QueryPoolDrawsR
 		draws = append(draws, draw)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

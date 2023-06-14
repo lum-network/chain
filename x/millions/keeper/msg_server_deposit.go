@@ -7,11 +7,10 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/lum-network/chain/x/millions/types"
 )
 
-// Deposit creates a deposit from the transaction message
+// Deposit creates a deposit from the transaction message.
 func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types.MsgDepositResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

@@ -39,7 +39,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	for _, denom := range params.DepositDenoms {
 		suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 6, sdk.NewInt(300000000), denom)
 	}
-
 }
 
 func (suite *KeeperTestSuite) TestInvalidParams() {
@@ -124,7 +123,6 @@ func (suite *KeeperTestSuite) TestInvalidAmountDeposit() {
 		require.Error(suite.T(), err)
 		require.Equal(suite.T(), err, types.ErrInsufficientDepositAmount)
 	}
-
 }
 
 func (suite *KeeperTestSuite) TestDoubleDeposit() {
@@ -156,7 +154,6 @@ func (suite *KeeperTestSuite) TestDoubleDeposit() {
 		require.True(suite.T(), found)
 		require.Equal(suite.T(), deposit.Amount, sdk.NewCoin(denom, sdk.NewInt(200000000)))
 	}
-
 }
 
 func (suite *KeeperTestSuite) TestValidDeposit() {

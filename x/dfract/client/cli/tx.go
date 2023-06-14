@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -10,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// GetTxCmd returns the transaction commands for this module
+// GetTxCmd returns the transaction commands for this module.
 func GetTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,

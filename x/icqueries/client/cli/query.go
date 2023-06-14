@@ -3,12 +3,13 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/lum-network/chain/x/icqueries/types"
 	"github.com/spf13/cobra"
-	"strings"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -30,7 +31,7 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCmdListQueries provides a list of all pending queries (queries that have not have been requested but have not received a response)
+// GetCmdListQueries provides a list of all pending queries (queries that have not have been requested but have not received a response).
 func GetCmdListQueries() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list-queries",
@@ -63,7 +64,7 @@ func GetCmdListQueries() *cobra.Command {
 	return cmd
 }
 
-// GetCmdListPendingQueries provides a list of all pending queries (queries that have not have been requested but have not received a response)
+// GetCmdListPendingQueries provides a list of all pending queries (queries that have not have been requested but have not received a response).
 func GetCmdListPendingQueries() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list-pending-queries",

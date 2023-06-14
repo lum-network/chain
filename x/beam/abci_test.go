@@ -2,6 +2,8 @@ package beam_test
 
 import (
 	"encoding/hex"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	apptypes "github.com/lum-network/chain/app"
@@ -13,7 +15,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"testing"
 )
 
 type ABCITestSuite struct {
@@ -25,7 +26,7 @@ type ABCITestSuite struct {
 	addrs       []sdk.AccAddress
 }
 
-// SetupTest Create our testing app, and make sure everything is correctly usable
+// SetupTest Create our testing app, and make sure everything is correctly usable.
 func (suite *ABCITestSuite) SetupTest() {
 	app := apptypes.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})

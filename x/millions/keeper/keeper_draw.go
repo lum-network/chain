@@ -16,7 +16,6 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
-
 	"github.com/lum-network/chain/x/millions/types"
 )
 
@@ -42,7 +41,7 @@ type DrawResult struct {
 }
 
 // LaunchNewDraw initiates a new draw and triggers the ICA get reward phase
-// See UpdateDrawAtStateICAOp for next phase
+// See UpdateDrawAtStateICAOp for next phase.
 func (k Keeper) LaunchNewDraw(ctx sdk.Context, poolID uint64) (*types.Draw, error) {
 	// Acquire Pool
 	pool, err := k.GetPool(ctx, poolID)
@@ -80,7 +79,7 @@ func (k Keeper) LaunchNewDraw(ctx sdk.Context, poolID uint64) (*types.Draw, erro
 
 // ClaimRewardsOnNativeChain Claim staking rewards from the native chain validators
 // - wait for the ICA callback to move to OnClaimRewardsOnNativeChainCompleted
-// - or go to OnClaimRewardsOnNativeChainCompleted directly upon claim rewards success if local zone
+// - or go to OnClaimRewardsOnNativeChainCompleted directly upon claim rewards success if local zone.
 func (k Keeper) ClaimRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
 	logger := k.Logger(ctx).With("func", "draw_claim_rewards")
 
@@ -161,7 +160,7 @@ func (k Keeper) ClaimRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID
 	return &draw, nil
 }
 
-// OnClaimRewardsOnNativeChainCompleted Acknowledge the ICA claim rewards from the native chain validators response and trigger an ICQ if success
+// OnClaimRewardsOnNativeChainCompleted Acknowledge the ICA claim rewards from the native chain validators response and trigger an ICQ if success.
 func (k Keeper) OnClaimRewardsOnNativeChainCompleted(ctx sdk.Context, poolID uint64, drawID uint64, isError bool) (*types.Draw, error) {
 	// Acquire pool config
 	pool, err := k.GetPool(ctx, poolID)
@@ -263,7 +262,7 @@ func (k Keeper) OnQueryRewardsOnNativeChainCompleted(ctx sdk.Context, poolID uin
 
 // TransferRewardsToLocalChain Transfer the claimed rewards to the local chain
 // - wait for the ICA callback to move to OnTransferRewardsToLocalChainCompleted
-// - or go to OnTransferRewardsToLocalChainCompleted directly if local zone
+// - or go to OnTransferRewardsToLocalChainCompleted directly if local zone.
 func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
 	logger := k.Logger(ctx).With("ctx", "draw_transfer_rewards")
 
@@ -366,7 +365,7 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 }
 
 // OnTransferRewardsToLocalChainCompleted Acknowledge the transfer of the claimed rewards
-// finalises the Draw if success
+// finalises the Draw if success.
 func (k Keeper) OnTransferRewardsToLocalChainCompleted(ctx sdk.Context, poolID uint64, drawID uint64, isError bool) (*types.Draw, error) {
 	logger := k.Logger(ctx).With("ctx", "draw_finalise")
 
@@ -404,7 +403,7 @@ func (k Keeper) OnTransferRewardsToLocalChainCompleted(ctx sdk.Context, poolID u
 	k.updatePool(ctx, &pool)
 
 	// Voluntary exit the current cache context here since:
-	// - the pool draw rewards have been transfered to the local chain
+	// - the pool draw rewards have been transferred to the local chain
 	// - the ExecuteDraw errors are not part of the transfer context
 	// - we do not want to partially commit any state of the execute draw phase by not returning an error
 	cacheCtx, writeCache := ctx.CacheContext()
@@ -439,7 +438,7 @@ func (k Keeper) OnTransferRewardsToLocalChainCompleted(ctx sdk.Context, poolID u
 
 // ExecuteDraw completes the draw phases by effectively drawing prizes
 // This is the last phase of a Draw
-// WARNING: this method can eventually commit critical partial store updates if the caller does not return on error
+// WARNING: this method can eventually commit critical partial store updates if the caller does not return on error.
 func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
 	// Acquire Pool
 	pool, err := k.GetPool(ctx, poolID)
@@ -557,7 +556,7 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*typ
 }
 
 // OnExecuteDrawCompeleted wrappers for draw state update upon drawing phase completion
-// returns the error specified in parameters and does not produce any internal error
+// returns the error specified in parameters and does not produce any internal error.
 func (k Keeper) OnExecuteDrawCompeleted(ctx sdk.Context, pool *types.Pool, draw *types.Draw, err error) (*types.Draw, error) {
 	if err != nil {
 		draw.State = types.DrawState_Failure
@@ -580,7 +579,7 @@ func (k Keeper) OnExecuteDrawCompeleted(ctx sdk.Context, pool *types.Pool, draw 
 }
 
 // ComputeDepositsTWB takes deposits and computes the weight based on their deposit time and the draw duration
-// It essentially compute the Time Weighted Balance of each deposit for the DrawPrizes phase
+// It essentially compute the Time Weighted Balance of each deposit for the DrawPrizes phase.
 func (k Keeper) ComputeDepositsTWB(ctx sdk.Context, depositStartAt time.Time, drawAt time.Time, deposits []types.Deposit) []DepositTWB {
 	params := k.GetParams(ctx)
 
@@ -619,7 +618,7 @@ func (k Keeper) ComputeDepositsTWB(ctx sdk.Context, depositStartAt time.Time, dr
 }
 
 // RunDrawPrizes computes available prizes and draws the prizes and their potential winners based on the specified prize strategy
-// this method does not store nor send anything, it only computes the DrawResult
+// this method does not store nor send anything, it only computes the DrawResult.
 func (k Keeper) RunDrawPrizes(ctx sdk.Context, prizePool sdk.Coin, prizeStrat types.PrizeStrategy, deposits []DepositTWB, randSeed int64) (result DrawResult, err error) {
 	result.TotalWinAmount = sdk.ZeroInt()
 
@@ -722,7 +721,7 @@ func (k Keeper) RunDrawPrizes(ctx sdk.Context, prizePool sdk.Coin, prizeStrat ty
 	return result, err
 }
 
-// DistributePrizes distributes the prizes if they have a winner
+// DistributePrizes distributes the prizes if they have a winner.
 func (k Keeper) DistributePrizes(ctx sdk.Context, fc feeCollector, dRes DrawResult, draw types.Draw) error {
 	var prizeRefs []types.PrizeRef
 	for _, pd := range dRes.PrizeDraws {
@@ -787,20 +786,20 @@ func (k Keeper) DistributePrizes(ctx sdk.Context, fc feeCollector, dRes DrawResu
 	return nil
 }
 
-// HasPoolDraw Returns a boolean that indicates if the given poolID and drawID combination exists in the KVStore or not
+// HasPoolDraw Returns a boolean that indicates if the given poolID and drawID combination exists in the KVStore or not.
 func (k Keeper) HasPoolDraw(ctx sdk.Context, poolID uint64, drawID uint64) bool {
 	store := ctx.KVStore(k.storeKey)
 	return store.Has(types.GetPoolDrawIDKey(poolID, drawID))
 }
 
-// SetPoolDraw Sets a draw result in the KVStore for a given poolID and drawID
+// SetPoolDraw Sets a draw result in the KVStore for a given poolID and drawID.
 func (k Keeper) SetPoolDraw(ctx sdk.Context, draw types.Draw) {
 	store := ctx.KVStore(k.storeKey)
 	encodedDraw := k.cdc.MustMarshal(&draw)
 	store.Set(types.GetPoolDrawIDKey(draw.GetPoolId(), draw.GetDrawId()), encodedDraw)
 }
 
-// GetPoolDraw Returns a draw instance for the given poolID and drawID combination
+// GetPoolDraw Returns a draw instance for the given poolID and drawID combination.
 func (k Keeper) GetPoolDraw(ctx sdk.Context, poolID uint64, drawID uint64) (types.Draw, error) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetPoolDrawIDKey(poolID, drawID))
@@ -816,13 +815,13 @@ func (k Keeper) GetPoolDraw(ctx sdk.Context, poolID uint64, drawID uint64) (type
 	return draw, nil
 }
 
-// PoolDrawsIterator Return a ready to use iterator for a pool draws store
+// PoolDrawsIterator Return a ready to use iterator for a pool draws store.
 func (k Keeper) PoolDrawsIterator(ctx sdk.Context, poolID uint64) sdk.Iterator {
 	kvStore := ctx.KVStore(k.storeKey)
 	return sdk.KVStorePrefixIterator(kvStore, types.GetPoolDrawsKey(poolID))
 }
 
-// IteratePoolDraws Iterates over a pool draws store, and for each entry call the callback
+// IteratePoolDraws Iterates over a pool draws store, and for each entry call the callback.
 func (k Keeper) IteratePoolDraws(ctx sdk.Context, poolID uint64, cb func(draw types.Draw) bool) {
 	iterator := k.PoolDrawsIterator(ctx, poolID)
 	defer iterator.Close()
@@ -838,7 +837,7 @@ func (k Keeper) IteratePoolDraws(ctx sdk.Context, poolID uint64, cb func(draw ty
 }
 
 // ListPoolDraws return the full pool draws list
-// expensive operation that should only be used by Genesis like features and unittests
+// expensive operation that should only be used by Genesis like features and unittests.
 func (k Keeper) ListPoolDraws(ctx sdk.Context, poolID uint64) (draws []types.Draw) {
 	k.IteratePoolDraws(ctx, poolID, func(draw types.Draw) bool {
 		draws = append(draws, draw)
@@ -847,13 +846,13 @@ func (k Keeper) ListPoolDraws(ctx sdk.Context, poolID uint64) (draws []types.Dra
 	return
 }
 
-// DrawsIterator Return a ready to use iterator for the draws store (all draws from all pools)
+// DrawsIterator Return a ready to use iterator for the draws store (all draws from all pools).
 func (k Keeper) DrawsIterator(ctx sdk.Context) sdk.Iterator {
 	kvStore := ctx.KVStore(k.storeKey)
 	return sdk.KVStorePrefixIterator(kvStore, types.DrawPrefix)
 }
 
-// IterateDraws Iterate over the draws store (all draws from all pools), and for each entry call the callback
+// IterateDraws Iterate over the draws store (all draws from all pools), and for each entry call the callback.
 func (k Keeper) IterateDraws(ctx sdk.Context, cb func(draw types.Draw) bool) {
 	iterator := k.DrawsIterator(ctx)
 	defer iterator.Close()
@@ -869,7 +868,7 @@ func (k Keeper) IterateDraws(ctx sdk.Context, cb func(draw types.Draw) bool) {
 }
 
 // ListDraws return the full draws list (all draws from all pools)
-// expensive operation that should only be used by Genesis like features
+// expensive operation that should only be used by Genesis like features.
 func (k Keeper) ListDraws(ctx sdk.Context) (draws []types.Draw) {
 	k.IterateDraws(ctx, func(draw types.Draw) bool {
 		draws = append(draws, draw)

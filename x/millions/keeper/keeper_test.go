@@ -4,15 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
+	"github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
-
-	"github.com/lum-network/chain/app"
+	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 const testChainID = "lum-network-devnet-1"
@@ -81,12 +78,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 	})
 }
 
-// floatToDec simple helper to create sdk.Dec with a precision of 6
+// floatToDec simple helper to create sdk.Dec with a precision of 6.
 func floatToDec(v float64) sdk.Dec {
 	return sdk.NewDecWithPrec(int64(v*1_000_000), 6)
 }
 
-// newValidPool fills up missing params to the pool to make it valid in order to ease testing
+// newValidPool fills up missing params to the pool to make it valid in order to ease testing.
 func newValidPool(suite *KeeperTestSuite, pool millionstypes.Pool) *millionstypes.Pool {
 	params := suite.app.MillionsKeeper.GetParams(suite.ctx)
 

@@ -1,7 +1,9 @@
-package types
+package types_test
 
 import (
 	"testing"
+
+	"github.com/lum-network/chain/x/dfract/types"
 )
 
 func TestParamsValidate(t *testing.T) {
@@ -27,7 +29,7 @@ func TestParamsValidate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := &Params{
+			p := &types.Params{
 				DepositDenoms:    tt.fields.DepositDenoms,
 				MinDepositAmount: tt.fields.MinDepositAmount,
 			}

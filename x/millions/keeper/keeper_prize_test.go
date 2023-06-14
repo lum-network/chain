@@ -8,7 +8,7 @@ import (
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 
-// TestPrize_IDsGeneration runs test related to prizeID generation
+// TestPrize_IDsGeneration runs test related to prizeID generation.
 func (suite *KeeperTestSuite) TestPrize_IDsGeneration() {
 	// Set the app context
 	app := suite.app
@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestPrize_IDsGeneration() {
 	}
 }
 
-// TestPrize_AddPrize tests the logic of adding a prize to the store
+// TestPrize_AddPrize tests the logic of adding a prize to the store.
 func (suite *KeeperTestSuite) TestPrize_AddPrize() {
 	// Set the app context
 	app := suite.app
@@ -197,7 +197,7 @@ func (suite *KeeperTestSuite) TestPrize_AddPrize() {
 	}
 }
 
-// TestPrize_RemovePrize tests the logic of removing a prize from the store
+// TestPrize_RemovePrize tests the logic of removing a prize from the store.
 func (suite *KeeperTestSuite) TestPrize_RemovePrize() {
 	// Set the app context
 	app := suite.app
@@ -352,7 +352,7 @@ func (suite *KeeperTestSuite) TestPrize_RemovePrize() {
 	}
 }
 
-// TestPrize_ClawBackPrize test the logic of the prize clawback
+// TestPrize_ClawBackPrize test the logic of the prize clawback.
 func (suite *KeeperTestSuite) TestPrize_ClawBackPrize() {
 	app := suite.app
 	ctx := suite.ctx
@@ -434,7 +434,7 @@ func (suite *KeeperTestSuite) TestPrize_ClawBackPrize() {
 	suite.Require().Len(prizes, 0)
 }
 
-// TestPrize_ClawbackQueueExpiration tests the Dequeueing of expired prizes
+// TestPrize_ClawbackQueueExpiration tests the Dequeueing of expired prizes.
 func (suite *KeeperTestSuite) TestPrize_ClawbackQueueExpiration() {
 	app := suite.app
 	ctx := suite.ctx
@@ -506,7 +506,7 @@ func (suite *KeeperTestSuite) TestPrize_ClawbackQueueExpiration() {
 		curPrizeId += 1
 	}
 
-	// Should dequeue 6 more prizes - 3 remaing prizes
+	// Should dequeue 6 more prizes - 3 remaining prizes
 	prizesToDequeue = app.MillionsKeeper.DequeueEPCBQueue(ctx, ctx.BlockTime().Add(time.Duration(4)*time.Second))
 	suite.Require().Len(prizesToDequeue, 6)
 	for _, prize := range prizesToDequeue {

@@ -27,10 +27,10 @@ import (
 	dbm "github.com/tendermint/tm-db"
 )
 
-// EmptyAppOptions is a stub implementing AppOptions
+// EmptyAppOptions is a stub implementing AppOptions.
 type EmptyAppOptions struct{}
 
-// Get implements AppOptions
+// Get implements AppOptions.
 func (ao EmptyAppOptions) Get(o string) interface{} {
 	return nil
 }
@@ -107,7 +107,7 @@ func SetupForTesting(isCheckTx bool) *App {
 	return app
 }
 
-// SetupForIBCTesting Configure the testing application and cast it as an IBC testing application
+// SetupForIBCTesting Configure the testing application and cast it as an IBC testing application.
 func SetupForIBCTesting() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	app := SetupForTesting(false)
 	return app, NewDefaultGenesisState()
@@ -196,7 +196,7 @@ func (p *TestPackage) Setup() {
 	p.ICAAddresses = make(map[string]string)
 }
 
-// SetupIBC Initialize the IBC configuration for test environment
+// SetupIBC Initialize the IBC configuration for test environment.
 func (p *TestPackage) SetupIBC(hostChainID string) {
 	p.Coordinator = ibctesting.NewCoordinator(p.T(), 0)
 
@@ -216,7 +216,7 @@ func (p *TestPackage) SetupIBC(hostChainID string) {
 	p.IbcEnabled = true
 }
 
-// NewTransferPath Creates a transfer channel between two chains
+// NewTransferPath Creates a transfer channel between two chains.
 func NewTransferPath(chainA *ibctesting.TestChain, chainB *ibctesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA, chainB)
 	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
@@ -228,7 +228,7 @@ func NewTransferPath(chainA *ibctesting.TestChain, chainB *ibctesting.TestChain)
 	return path
 }
 
-// NewIcaPath Creates an ICA channel between two chains
+// NewIcaPath Creates an ICA channel between two chains.
 func NewIcaPath(chainA *ibctesting.TestChain, chainB *ibctesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA, chainB)
 	path.EndpointA.ChannelConfig.PortID = icatypes.PortID
@@ -243,7 +243,7 @@ func NewIcaPath(chainA *ibctesting.TestChain, chainB *ibctesting.TestChain) *ibc
 // CopyConnectionAndClientToPath
 // In ibctesting, there's no easy way to create a new channel on an existing connection
 // To get around this, this helper function will copy the client/connection info from an existing channel
-// We use this when creating ICA channels, because we want to reuse the same connections/clients from the transfer channel
+// We use this when creating ICA channels, because we want to reuse the same connections/clients from the transfer channel.
 func CopyConnectionAndClientToPath(path *ibctesting.Path, pathToCopy *ibctesting.Path) *ibctesting.Path {
 	path.EndpointA.ClientID = pathToCopy.EndpointA.ClientID
 	path.EndpointB.ClientID = pathToCopy.EndpointB.ClientID
@@ -256,7 +256,7 @@ func CopyConnectionAndClientToPath(path *ibctesting.Path, pathToCopy *ibctesting
 	return path
 }
 
-// CreateTransferChannel Creates clients, connections, and a transfer channel between Lum and a host chain
+// CreateTransferChannel Creates clients, connections, and a transfer channel between Lum and a host chain.
 func (p *TestPackage) CreateTransferChannel(hostChainID string) {
 	// If we have yet to create the host chain, do that here
 	if !p.IbcEnabled {
@@ -285,7 +285,7 @@ func (p *TestPackage) CreateTransferChannel(hostChainID string) {
 	p.Require().Equal(ibctesting.FirstChannelID, p.TransferPath.EndpointB.ChannelID, "host transfer channelID")
 }
 
-// CreateICAChannel Creates an ICA channel through ibctesting, also creates a transfer channel if it hasn't been done yet
+// CreateICAChannel Creates an ICA channel through ibctesting, also creates a transfer channel if it hasn't been done yet.
 func (p *TestPackage) CreateICAChannel(owner string) string {
 	// If we have yet to create a client/connection (through creating a transfer channel), do that here
 	_, transferChannelExists := p.App.IBCKeeper.ChannelKeeper.GetChannel(p.Ctx, ibctesting.TransferPort, ibctesting.FirstChannelID)
@@ -335,7 +335,7 @@ func (p *TestPackage) CreateICAChannel(owner string) string {
 	return channelID
 }
 
-// RegisterInterchainAccount Register's a new ICA account on the next channel available, this function assumes a connection already exists
+// RegisterInterchainAccount Register's a new ICA account on the next channel available, this function assumes a connection already exists.
 func (p *TestPackage) RegisterInterchainAccount(endpoint *ibctesting.Endpoint, owner string) {
 	// Get the port ID from the owner name (i.e. "icacontroller-{owner}")
 	portID, err := icatypes.NewControllerPortID(owner)

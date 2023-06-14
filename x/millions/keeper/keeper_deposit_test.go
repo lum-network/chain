@@ -9,7 +9,7 @@ import (
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 
-// TestDeposit_IDsGeneration tests that the depositID is properly incremented for each new deposit
+// TestDeposit_IDsGeneration tests that the depositID is properly incremented for each new deposit.
 func (suite *KeeperTestSuite) TestDeposit_IDsGeneration() {
 	// Set the app context
 	app := suite.app
@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestDeposit_IDsGeneration() {
 	}
 }
 
-// TestDeposit_AddDeposit tests the logic of adding a deposit to the store
+// TestDeposit_AddDeposit tests the logic of adding a deposit to the store.
 func (suite *KeeperTestSuite) TestDeposit_AddDeposit() {
 	// Set the app context
 	app := suite.app
@@ -242,7 +242,7 @@ func (suite *KeeperTestSuite) TestDeposit_AddDeposit() {
 	}
 }
 
-// TestDeposit_RemoveDeposit tests the logic of removing a deposit from the store
+// TestDeposit_RemoveDeposit tests the logic of removing a deposit from the store.
 func (suite *KeeperTestSuite) TestDeposit_RemoveDeposit() {
 	// Set the app context
 	app := suite.app
@@ -394,7 +394,6 @@ func (suite *KeeperTestSuite) TestDeposit_RemoveDeposit() {
 			suite.Require().Equal(poolTvlBefore.Int64(), pool.TvlAmount.Int64())
 			// - Test that the deposit count is correctly incremented if it's a new depositor for the last pool
 			suite.Require().Equal(poolDepositorCountBefore, pool.DepositorsCount)
-
 		}
 	}
 
@@ -444,7 +443,7 @@ func (suite *KeeperTestSuite) TestDeposit_RemoveDeposit() {
 	suite.Require().Equal(len(depositsBefore), len(depositsAll))
 }
 
-// TestDeposit_UpdateDepositStatus tests the logic of updating a deposit from the store
+// TestDeposit_UpdateDepositStatus tests the logic of updating a deposit from the store.
 func (suite *KeeperTestSuite) TestDeposit_UpdateDepositStatus() {
 	// Set the app context
 	app := suite.app
@@ -485,7 +484,7 @@ func (suite *KeeperTestSuite) TestDeposit_UpdateDepositStatus() {
 	}
 
 	// - Test if the deposit exist
-	// Retrived deposits
+	// Retrieved deposits
 	deposits := app.MillionsKeeper.ListDeposits(ctx)
 	// Retrieve the pool from the state
 	pools := app.MillionsKeeper.ListPools(ctx)
@@ -542,7 +541,7 @@ func (suite *KeeperTestSuite) TestDeposit_UpdateDepositStatus() {
 	}
 }
 
-// TestDeposit_TransferDeposit tests the full flow from the transfer till the delegation point
+// TestDeposit_TransferDeposit tests the full flow from the transfer till the delegation point.
 func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 	// Set the app context
 	app := suite.app
@@ -624,7 +623,7 @@ func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 	// Update status to simulate that the state is initially on DepositState_IbcTransfer
 	app.MillionsKeeper.UpdateDepositStatus(ctx, deposits[0].PoolId, deposits[0].DepositId, millionstypes.DepositState_IbcTransfer, false)
 
-	// Simulate succesful ackResponse AckResponseStatus_SUCCESS
+	// Simulate successful ackResponse AckResponseStatus_SUCCESS
 	err = app.MillionsKeeper.OnTransferDepositToNativeChainCompleted(ctx, deposits[0].GetPoolId(), deposits[0].GetDepositId(), false)
 	suite.Require().NoError(err)
 
@@ -696,7 +695,7 @@ func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 	suite.Require().Equal(millionstypes.DepositState_Unspecified, deposit.ErrorState)
 }
 
-// TestDeposit_DelegateDeposit tests the delegate deposit from the transfer point till the final delegation
+// TestDeposit_DelegateDeposit tests the delegate deposit from the transfer point till the final delegation.
 func (suite *KeeperTestSuite) TestDeposit_DelegateDeposit() {
 	// Set the app context
 	app := suite.app
@@ -776,7 +775,7 @@ func (suite *KeeperTestSuite) TestDeposit_DelegateDeposit() {
 
 	splits := []*millionstypes.SplitDelegation{{ValidatorAddress: cosmosPoolValidator, Amount: sdk.NewInt(int64(1_000_000))}}
 
-	// Now trigger a successfull Delegation to simulate icacallbackstypes.AckResponseStatus_SUCCESS
+	// Now trigger a successful Delegation to simulate icacallbackstypes.AckResponseStatus_SUCCESS
 	err = app.MillionsKeeper.OnDelegateDepositOnNativeChainCompleted(ctx, deposit.PoolId, deposit.DepositId, splits, false)
 	suite.Require().NoError(err)
 	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, deposit.PoolId, deposit.DepositId)
@@ -849,7 +848,7 @@ func (suite *KeeperTestSuite) TestDeposit_DelegateDeposit() {
 	suite.Require().Equal(millionstypes.DepositState_Unspecified, deposit.ErrorState)
 }
 
-// TestDeposit_BalanceDeposit tests the balance in case of success or failed deposit
+// TestDeposit_BalanceDeposit tests the balance in case of success or failed deposit.
 func (suite *KeeperTestSuite) TestDeposit_BalanceDeposit() {
 	// Set the app context
 	app := suite.app
@@ -932,7 +931,7 @@ func (suite *KeeperTestSuite) TestDeposit_BalanceDeposit() {
 
 	splits := []*millionstypes.SplitDelegation{{ValidatorAddress: cosmosPoolValidator, Amount: sdk.NewInt(int64(1_000_000))}}
 
-	// Now trigger a successfull Delegation to simulate icacallbackstypes.AckResponseStatus_SUCCESS
+	// Now trigger a successful Delegation to simulate icacallbackstypes.AckResponseStatus_SUCCESS
 	err = app.MillionsKeeper.OnDelegateDepositOnNativeChainCompleted(ctx, deposit.PoolId, deposit.DepositId, splits, false)
 	suite.Require().NoError(err)
 
@@ -1061,7 +1060,7 @@ func (suite *KeeperTestSuite) TestDeposit_BalanceDeposit() {
 	suite.Require().Equal(depositToShare, delegationAmount[0].Shares)
 }
 
-// TestDeposit_FullDepositProcess tests the complete logic for deposits for a local pool
+// TestDeposit_FullDepositProcess tests the complete logic for deposits for a local pool.
 func (suite *KeeperTestSuite) TestDeposit_FullDepositProcess() {
 	// Set the app context
 	app := suite.app

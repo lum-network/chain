@@ -7,64 +7,32 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/lum-network/chain/x/icqueries"
-	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
-
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
-	ica "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts"
-	icacontrollertypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/types"
-	icahosttypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/types"
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	ibcfeetypes "github.com/cosmos/ibc-go/v5/modules/apps/29-fee/types"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
-	ibctestingtypes "github.com/cosmos/ibc-go/v5/testing/types"
-	"github.com/lum-network/chain/x/dfract"
-	dfractclient "github.com/lum-network/chain/x/dfract/client"
-	millionsclient "github.com/lum-network/chain/x/millions/client"
-
-	"github.com/lum-network/chain/x/icacallbacks"
-	"github.com/lum-network/chain/x/millions"
-	millionstypes "github.com/lum-network/chain/x/millions/types"
-
-	ibcconnectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
-	"github.com/gorilla/mux"
-	"github.com/rakyll/statik/fs"
-
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	"github.com/spf13/cast"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	dbm "github.com/tendermint/tm-db"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
+	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -73,10 +41,12 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -91,26 +61,47 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	appparams "github.com/lum-network/chain/app/params"
-	"github.com/lum-network/chain/x/beam"
-	beamtypes "github.com/lum-network/chain/x/beam/types"
-	dfracttypes "github.com/lum-network/chain/x/dfract/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-
-	"github.com/lum-network/chain/x/airdrop"
-	airdroptypes "github.com/lum-network/chain/x/airdrop/types"
-
+	ica "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts"
+	icacontrollertypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/types"
+	icahosttypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	ibcfeetypes "github.com/cosmos/ibc-go/v5/modules/apps/29-fee/types"
 	"github.com/cosmos/ibc-go/v5/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v5/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v5/modules/core/02-client/client"
+	ibcconnectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
 	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
-
+	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
+	ibctestingtypes "github.com/cosmos/ibc-go/v5/testing/types"
+	"github.com/gorilla/mux"
+	appparams "github.com/lum-network/chain/app/params"
+	"github.com/lum-network/chain/x/airdrop"
+	airdroptypes "github.com/lum-network/chain/x/airdrop/types"
+	"github.com/lum-network/chain/x/beam"
+	beamtypes "github.com/lum-network/chain/x/beam/types"
+	"github.com/lum-network/chain/x/dfract"
+	dfractclient "github.com/lum-network/chain/x/dfract/client"
+	dfracttypes "github.com/lum-network/chain/x/dfract/types"
+	"github.com/lum-network/chain/x/icacallbacks"
 	icacallbackstypes "github.com/lum-network/chain/x/icacallbacks/types"
+	"github.com/lum-network/chain/x/icqueries"
+	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
+	"github.com/lum-network/chain/x/millions"
+	millionsclient "github.com/lum-network/chain/x/millions/client"
+	millionstypes "github.com/lum-network/chain/x/millions/types"
+	"github.com/rakyll/statik/fs"
+	"github.com/spf13/cast"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmjson "github.com/tendermint/tendermint/libs/json"
+	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	dbm "github.com/tendermint/tm-db"
 )
 
 var (
-	// DefaultNodeHome default home directories for the application daemon
+	// DefaultNodeHome default home directories for the application daemon.
 	DefaultNodeHome string
 
 	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
@@ -157,7 +148,7 @@ var (
 		millions.AppModuleBasic{},
 	)
 
-	// module account permissions
+	// module account permissions.
 	maccPerms = map[string][]string{
 		authtypes.FeeCollectorName:     nil,
 		distrtypes.ModuleName:          nil,
@@ -236,7 +227,6 @@ func New(
 	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig,
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
-
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -277,7 +267,7 @@ func New(
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
 	// we prefer to be more strict in what arguments the modules expect.
-	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
+	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
@@ -463,10 +453,10 @@ func New(
 	return app
 }
 
-// Name returns the name of the App
+// Name returns the name of the App.
 func (app *App) Name() string { return app.BaseApp.Name() }
 
-// GetBaseApp returns the base app of the application
+// GetBaseApp returns the base app of the application.
 func (app *App) GetBaseApp() *baseapp.BaseApp { return app.BaseApp }
 
 // GetStakingKeeper implements the TestingApp interface.
@@ -495,17 +485,17 @@ func (app *App) GetTxConfig() client.TxConfig {
 	return cfg.TxConfig
 }
 
-// BeginBlocker application updates every begin block
+// BeginBlocker application updates every begin block.
 func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
 }
 
-// EndBlocker application updates every end block
+// EndBlocker application updates every end block.
 func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	return app.mm.EndBlock(ctx, req)
 }
 
-// InitChainer application update at chain initialization
+// InitChainer application update at chain initialization.
 func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
@@ -515,7 +505,7 @@ func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.Res
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
-// LoadHeight loads a particular height
+// LoadHeight loads a particular height.
 func (app *App) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
@@ -530,7 +520,7 @@ func (app *App) ModuleAccountAddrs() map[string]bool {
 	return modAccAddrs
 }
 
-// BlockedModuleAccountAddrs returns all the app's blocked module account addresses
+// BlockedModuleAccountAddrs returns all the app's blocked module account addresses.
 func (app *App) BlockedModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	return modAccAddrs
@@ -546,7 +536,7 @@ func (app *App) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
-// InterfaceRegistry returns Gaia's InterfaceRegistry
+// InterfaceRegistry returns Gaia's InterfaceRegistry.
 func (app *App) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }
@@ -606,7 +596,7 @@ func (app *App) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(clientCtx, app.BaseApp.GRPCQueryRouter(), app.interfaceRegistry, app.Query)
 }
 
-// RegisterSwaggerAPI registers swagger route with API Server
+// RegisterSwaggerAPI registers swagger route with API Server.
 func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
 	statikFS, err := fs.New()
 	if err != nil {

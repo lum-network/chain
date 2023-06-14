@@ -111,7 +111,7 @@ type AppKeepers struct {
 	MillionsKeeper     *millionskeeper.Keeper
 }
 
-// InitSpecialKeepers Init the "special" keepers in the order of definition
+// InitSpecialKeepers Init the "special" keepers in the order of definition.
 func (app *App) InitSpecialKeepers(
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
@@ -163,7 +163,7 @@ func (app *App) InitSpecialKeepers(
 	app.registerUpgradeHandlers()
 }
 
-// InitNormalKeepers Initialize the normal keepers
+// InitNormalKeepers Initialize the normal keepers.
 func (app *App) InitNormalKeepers() {
 	appCodec := app.appCodec
 	baseApp := app.BaseApp
@@ -453,7 +453,7 @@ func (app *App) SetupHooks() {
 	))
 }
 
-// InitParamsKeeper init params keeper and its subspaces
+// InitParamsKeeper init params keeper and its subspaces.
 func (app *App) InitParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey storetypes.StoreKey) paramskeeper.Keeper {
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
 

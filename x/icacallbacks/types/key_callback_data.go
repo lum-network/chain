@@ -7,11 +7,11 @@ import (
 var _ binary.ByteOrder
 
 const (
-	// CallbackDataKeyPrefix is the prefix to retrieve all CallbackData
+	// CallbackDataKeyPrefix is the prefix to retrieve all CallbackData.
 	CallbackDataKeyPrefix = "CallbackData/value/"
 )
 
-// CallbackDataKey returns the store key to retrieve a CallbackData from the index fields
+// CallbackDataKey returns the store key to retrieve a CallbackData from the index fields.
 func CallbackDataKey(
 	callbackKey string,
 ) []byte {

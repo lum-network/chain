@@ -6,10 +6,10 @@ import (
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 )
 
-// DefaultIndex is the default capability global index
+// DefaultIndex is the default capability global index.
 const DefaultIndex uint64 = 1
 
-// DefaultGenesis returns the default Capability genesis state
+// DefaultGenesis returns the default Capability genesis state.
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		PortId:           PortID,

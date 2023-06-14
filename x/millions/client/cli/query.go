@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-
 	"github.com/lum-network/chain/x/millions/types"
+	"github.com/spf13/cobra"
 )
 
 func GetQueryCmd(queryRoute string) *cobra.Command {
@@ -76,7 +74,6 @@ func GetCmdParams() *cobra.Command {
 
 			params := &types.QueryParamsRequest{}
 			res, err := queryClient.Params(context.Background(), params)
-
 			if err != nil {
 				return err
 			}

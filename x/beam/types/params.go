@@ -1,5 +1,3 @@
 package types
 
-var (
-	DefaultBeamDenom = "ulum"
-)
+var DefaultBeamDenom = "ulum"

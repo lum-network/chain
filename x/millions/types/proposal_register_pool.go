@@ -15,9 +15,7 @@ const (
 	ProposalTypeRegisterPool = "RegisterPool"
 )
 
-var (
-	_ govtypes.Content = &ProposalRegisterPool{}
-)
+var _ govtypes.Content = &ProposalRegisterPool{}
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeRegisterPool)

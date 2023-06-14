@@ -17,7 +17,7 @@ func (ps DrawSchedule) ValidateBasic(params Params) error {
 	return nil
 }
 
-// ValidateNew drawSchedule validation at pool creation time
+// ValidateNew drawSchedule validation at pool creation time.
 func (ps DrawSchedule) ValidateNew(ctx sdk.Context, params Params) error {
 	if ps.DrawDelta < params.MinDrawScheduleDelta {
 		return fmt.Errorf("draw delta cannot be lower than %s", params.MinDrawScheduleDelta.String())
@@ -31,12 +31,12 @@ func (ps DrawSchedule) ValidateNew(ctx sdk.Context, params Params) error {
 	return nil
 }
 
-// sanitizeTime returns the time rounded to the minute
+// sanitizeTime returns the time rounded to the minute.
 func (ps DrawSchedule) sanitizeTime(t time.Time) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 0, 0, t.Location())
 }
 
-// Sanitized returns the draw schedule with time rounded to the minute
+// Sanitized returns the draw schedule with time rounded to the minute.
 func (ps DrawSchedule) Sanitized() DrawSchedule {
 	return DrawSchedule{
 		InitialDrawAt: ps.sanitizeTime(ps.GetInitialDrawAt()),
@@ -44,7 +44,7 @@ func (ps DrawSchedule) Sanitized() DrawSchedule {
 	}
 }
 
-// ShouldDraw returns whether or not the current block time is past the next draw time (= time to launch draw)
+// ShouldDraw returns whether or not the current block time is past the next draw time (= time to launch draw).
 func (ps DrawSchedule) ShouldDraw(ctx sdk.Context, lastDrawAt *time.Time) bool {
 	if lastDrawAt == nil {
 		return !ctx.BlockTime().Before(ps.InitialDrawAt)

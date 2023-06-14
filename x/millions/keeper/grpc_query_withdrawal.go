@@ -3,14 +3,12 @@ package keeper
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"github.com/lum-network/chain/x/millions/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (k queryServer) Withdrawals(goCtx context.Context, req *types.QueryWithdrawalsRequest) (*types.QueryWithdrawalsResponse, error) {
@@ -35,7 +33,6 @@ func (k queryServer) Withdrawals(goCtx context.Context, req *types.QueryWithdraw
 		withdrawals = append(withdrawals, withdrawal)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -69,7 +66,6 @@ func (k queryServer) PoolWithdrawals(goCtx context.Context, req *types.QueryPool
 		withdrawals = append(withdrawals, withdrawal)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -123,7 +119,6 @@ func (k queryServer) AccountWithdrawals(goCtx context.Context, req *types.QueryA
 		withdrawals = append(withdrawals, withdrawal)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -161,7 +156,6 @@ func (k queryServer) AccountPoolWithdrawals(goCtx context.Context, req *types.Qu
 		withdrawals = append(withdrawals, withdrawal)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

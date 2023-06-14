@@ -12,7 +12,7 @@ import (
 // - validate strategy based on params
 // - validate each batch individually
 // - validate total number of prizes > 0
-// - validate total percentage of prize pool = 100
+// - validate total percentage of prize pool = 100.
 func (ps PrizeStrategy) Validate(params Params) error {
 	if uint64(len(ps.PrizeBatches)) > params.MaxPrizeStrategyBatches {
 		return fmt.Errorf("prize strategy must have maximum %d batches", params.MaxPrizeStrategyBatches)
@@ -37,7 +37,7 @@ func (ps PrizeStrategy) Validate(params Params) error {
 
 // ComputePrizesProbs computes final prizes probs list based on each prizeBatch configuration
 // always sort the prizes by most valuable to least valuable
-// error triggered if the prizeStrategy does not pass its internal validation function
+// error triggered if the prizeStrategy does not pass its internal validation function.
 func (ps PrizeStrategy) ComputePrizesProbs(prizePool sdk.Coin) (prizesProbs []PrizeProb, usedAmount math.Int, remainingAmount math.Int, err error) {
 	usedAmount = sdk.ZeroInt()
 	remainingAmount = prizePool.Amount

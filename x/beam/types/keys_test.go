@@ -1,9 +1,10 @@
 package types
 
 import (
+	"testing"
+
 	"github.com/lum-network/chain/utils"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestBeamKey(t *testing.T) {

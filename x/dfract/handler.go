@@ -2,6 +2,7 @@ package dfract
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/lum-network/chain/x/dfract/keeper"

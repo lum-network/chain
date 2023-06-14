@@ -2,33 +2,24 @@ package cmd
 
 import (
 	"context"
-	"github.com/cosmos/cosmos-sdk/client/pruning"
-	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	"io"
 	"os"
 	"path/filepath"
 
-	"github.com/cosmos/cosmos-sdk/client/config"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	"github.com/lum-network/chain/app/params"
-
-	"github.com/spf13/cast"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/client/snapshot"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
+	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,9 +30,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	"github.com/lum-network/chain/app"
-
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/lum-network/chain/app/params"
+	"github.com/spf13/cast"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	tmcfg "github.com/tendermint/tendermint/config"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 )
 
 var ChainID string
@@ -261,8 +257,8 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 
 func createSimappAndExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
-	appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
-
+	appOpts servertypes.AppOptions,
+) (servertypes.ExportedApp, error) {
 	encCfg := app.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	var a *app.App

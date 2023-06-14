@@ -11,40 +11,39 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
-
 	"github.com/lum-network/chain/x/icacallbacks"
 	icacallbacktypes "github.com/lum-network/chain/x/icacallbacks/types"
 	"github.com/lum-network/chain/x/millions/keeper"
 	"github.com/lum-network/chain/x/millions/types"
 )
 
-// Map the interface
+// Map the interface.
 var _ porttypes.IBCModule = IBCModule{}
 
-// IBCModule Declare our IBCModule structure
+// IBCModule Declare our IBCModule structure.
 type IBCModule struct {
 	keeper keeper.Keeper
 }
 
-// NewIBCModule Initialize a new IBCModule instance
+// NewIBCModule Initialize a new IBCModule instance.
 func NewIBCModule(k keeper.Keeper) IBCModule {
 	return IBCModule{
 		keeper: k,
 	}
 }
 
-// OnChanOpenInit implements the IBCModule interface
+// OnChanOpenInit implements the IBCModule interface.
 func (im IBCModule) OnChanOpenInit(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string) (string, error) {
 	im.keeper.Logger(ctx).Debug(fmt.Sprintf("OnChanOpenInit: portID %s, channelID %s", portID, channelID))
 	return version, im.keeper.ClaimCapability(ctx, channelCap, host.ChannelCapabilityPath(portID, channelID))
 }
 
-// OnChanOpenTry implements the IBCModule interface
+// OnChanOpenTry implements the IBCModule interface.
 func (im IBCModule) OnChanOpenTry(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID, channelID string, chanCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, counterpartyVersion string) (string, error) {
 	return "", nil
 }
 
-// OnChanOpenAck implements the IBCModule interface
+// OnChanOpenAck implements the IBCModule interface.
 func (im IBCModule) OnChanOpenAck(ctx sdk.Context, portID, channelID string, counterpartyChannelID string, counterpartyVersion string) error {
 	im.keeper.Logger(ctx).Debug(fmt.Sprintf("OnChanOpenAck: portID %s, channelID %s, counterpartyChannelID %s, counterpartyVersion %s", portID, channelID, counterpartyChannelID, counterpartyVersion))
 
@@ -88,17 +87,17 @@ func (im IBCModule) OnChanOpenAck(ctx sdk.Context, portID, channelID string, cou
 	return nil
 }
 
-// OnChanOpenConfirm implements the IBCModule interface
+// OnChanOpenConfirm implements the IBCModule interface.
 func (im IBCModule) OnChanOpenConfirm(ctx sdk.Context, portID, channelID string) error {
 	return nil
 }
 
-// OnChanCloseInit implements the IBCModule interface
+// OnChanCloseInit implements the IBCModule interface.
 func (im IBCModule) OnChanCloseInit(ctx sdk.Context, portID, channelID string) error {
 	return nil
 }
 
-// OnChanCloseConfirm implements the IBCModule interface
+// OnChanCloseConfirm implements the IBCModule interface.
 func (im IBCModule) OnChanCloseConfirm(ctx sdk.Context, portID, channelID string) error {
 	return nil
 }
@@ -109,7 +108,7 @@ func (im IBCModule) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, re
 	panic("UNIMPLEMENTED")
 }
 
-// OnAcknowledgementPacket implements the IBCModule interface
+// OnAcknowledgementPacket implements the IBCModule interface.
 func (im IBCModule) OnAcknowledgementPacket(ctx sdk.Context, modulePacket channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
 	im.keeper.Logger(ctx).Debug(fmt.Sprintf("OnAcknowledgementPacket (millions) - packet: %+v, relayer: %v", modulePacket, relayer))
 
@@ -145,7 +144,7 @@ func (im IBCModule) OnAcknowledgementPacket(ctx sdk.Context, modulePacket channe
 	return nil
 }
 
-// OnTimeoutPacket implements the IBCModule interface
+// OnTimeoutPacket implements the IBCModule interface.
 func (im IBCModule) OnTimeoutPacket(ctx sdk.Context, modulePacket channeltypes.Packet, relayer sdk.AccAddress) error {
 	im.keeper.Logger(ctx).Debug(fmt.Sprintf("OnTimeoutPacket: packet %v, relayer %v", modulePacket, relayer))
 

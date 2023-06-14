@@ -2,19 +2,18 @@ package keeper_test
 
 import (
 	"encoding/hex"
-	"github.com/lum-network/chain/utils"
-	"github.com/stretchr/testify/require"
 	"testing"
-
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/lum-network/chain/app"
 	apptypes "github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
+	"github.com/lum-network/chain/utils"
 	"github.com/lum-network/chain/x/beam/types"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type KeeperTestSuite struct {
@@ -26,7 +25,7 @@ type KeeperTestSuite struct {
 	addrs       []sdk.AccAddress
 }
 
-// SetupTest Create our testing app, and make sure everything is correctly usable
+// SetupTest Create our testing app, and make sure everything is correctly usable.
 func (suite *KeeperTestSuite) SetupTest() {
 	app := apptypes.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -41,7 +40,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.addrs = apptesting.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
 }
 
-// TestClaimNewBeam Try to create a beam and claim it using another account
+// TestClaimNewBeam Try to create a beam and claim it using another account.
 func (suite *KeeperTestSuite) TestClaimOpenBeam() {
 	app := suite.app
 	ctx := suite.ctx
@@ -107,7 +106,7 @@ func (suite *KeeperTestSuite) TestClaimOpenBeam() {
 	require.Equal(suite.T(), beam.GetStatus(), types.BeamState_StateOpen)
 }
 
-// TestClaimClosedBeam Test to claim a closed beam and make sure funds were transfered
+// TestClaimClosedBeam Test to claim a closed beam and make sure funds were transferred.
 func (suite *KeeperTestSuite) TestClaimClosedBeam() {
 	app := suite.app
 	ctx := suite.ctx
@@ -183,11 +182,11 @@ func (suite *KeeperTestSuite) TestClaimClosedBeam() {
 	))
 	require.Error(suite.T(), err)
 
-	// Now the funds should've been transfered
+	// Now the funds should've been transferred
 	require.Equal(suite.T(), claimerFunds.Add(beam.GetAmount()), app.BankKeeper.GetBalance(ctx, claimer, apptypes.CoinBondDenom))
 }
 
-// Test to cancel a beam and make sure funds were returned to the sender
+// Test to cancel a beam and make sure funds were returned to the sender.
 func (suite *KeeperTestSuite) TestCancelBeam() {
 	app := suite.app
 	ctx := suite.ctx
@@ -363,7 +362,7 @@ func (suite *KeeperTestSuite) TestOpenCloseIterators() {
 	closedIterator.Close()
 }
 
-// TestUnknownBeam Make sure we cannot get an unknown beam
+// TestUnknownBeam Make sure we cannot get an unknown beam.
 func (suite *KeeperTestSuite) TestUnknownBeam() {
 	app := suite.app
 	ctx := suite.ctx
@@ -372,7 +371,7 @@ func (suite *KeeperTestSuite) TestUnknownBeam() {
 	require.Error(suite.T(), err)
 }
 
-// TestOpenNewBeam Try to create a new beam and make sure the stored entity matches the original one
+// TestOpenNewBeam Try to create a new beam and make sure the stored entity matches the original one.
 func (suite *KeeperTestSuite) TestOpenNewBeam() {
 	app := suite.app
 	ctx := suite.ctx
@@ -420,10 +419,9 @@ func (suite *KeeperTestSuite) TestOpenNewBeam() {
 }
 
 func (suite *KeeperTestSuite) TestOpenAutoCloseBeam() {
-
 }
 
-// TestFetchBeams Open a new beam and try to fetch it through the list
+// TestFetchBeams Open a new beam and try to fetch it through the list.
 func (suite *KeeperTestSuite) TestFetchBeams() {
 	app := suite.app
 	ctx := suite.ctx
@@ -460,7 +458,7 @@ func (suite *KeeperTestSuite) TestFetchBeams() {
 	require.Equal(suite.T(), beam.GetId(), msg.GetId())
 }
 
-// TestIncorrectBeamId A beam id that contains a comma must be refused
+// TestIncorrectBeamId A beam id that contains a comma must be refused.
 func (suite *KeeperTestSuite) TestIncorrectBeamId() {
 	app := suite.app
 	ctx := suite.ctx
@@ -488,7 +486,7 @@ func (suite *KeeperTestSuite) TestIncorrectBeamId() {
 	require.False(suite.T(), app.BeamKeeper.HasBeam(ctx, msg.GetId()))
 }
 
-// TestKeeperSuite Main entry point for the testing suite
+// TestKeeperSuite Main entry point for the testing suite.
 func TestKeeperSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }

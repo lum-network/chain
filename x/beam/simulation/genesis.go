@@ -5,11 +5,12 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/lum-network/chain/x/beam/types"
 )
 
-// RandomizedGenState generates a random GenesisState for mint
+// RandomizedGenState generates a random GenesisState for mint.
 func RandomizedGenState(simState *module.SimulationState) {
 	mintGenesis := types.DefaultGenesis()
 

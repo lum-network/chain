@@ -5,12 +5,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 
-// TestGRPC_Params runs simple Params GRPCs integration tests
+// TestGRPC_Params runs simple Params GRPCs integration tests.
 func (suite *KeeperTestSuite) TestGRPC_Query_Params() {
 	app := suite.app
 	ctx := suite.ctx
@@ -31,7 +30,7 @@ func (suite *KeeperTestSuite) TestGRPC_Query_Params() {
 	suite.Require().Equal(initialParams.PrizeExpirationDelta, paramsRes.Params.PrizeExpirationDelta)
 }
 
-// TestGRPC_Query_Pool runs simple integration tests for pools and pool
+// TestGRPC_Query_Pool runs simple integration tests for pools and pool.
 func (suite *KeeperTestSuite) TestGRPC_Query_Pool() {
 	app := suite.app
 	ctx := suite.ctx
@@ -81,7 +80,7 @@ func (suite *KeeperTestSuite) TestGRPC_Query_Pool() {
 	suite.Require().Equal(sdk.NewCoin(pools[0].Denom, sdk.NewInt(1_000_000)), pools[0].AvailablePrizePool)
 }
 
-// TestGRPC_Query_Deposit runs simple integration tests for deposits and pools
+// TestGRPC_Query_Deposit runs simple integration tests for deposits and pools.
 func (suite *KeeperTestSuite) TestGRPC_Query_Deposit() {
 	app := suite.app
 	ctx := suite.ctx
@@ -136,7 +135,6 @@ func (suite *KeeperTestSuite) TestGRPC_Query_Deposit() {
 	for _, depositor := range depositorsRes.GetDeposits() {
 		poolsFound[depositor.PoolId] = true
 		depositsFound[fmt.Sprintf("%s-%d-%d", depositor.DepositorAddress, depositor.GetPoolId(), depositor.GetAmount().Amount.Int64())] = true
-
 	}
 	suite.Require().Len(poolsFound, nbrItems)               // 5 pools
 	suite.Require().Len(depositsFound, nbrItems*nbrItems*2) // 5 pools * 5 accounts * 2 deposits
@@ -208,7 +206,7 @@ func (suite *KeeperTestSuite) TestGRPC_Query_Deposit() {
 	suite.Require().Equal(accountPoolDeposits.GetDeposits()[1].DepositId, accountPoolDepositsPaginated.GetDeposits()[1].DepositId)
 }
 
-// TestGRPC_Query_Draw runs simple integration tests on draws and pools
+// TestGRPC_Query_Draw runs simple integration tests on draws and pools.
 func (suite *KeeperTestSuite) TestGRPC_Query_Draw() {
 	app := suite.app
 	ctx := suite.ctx
@@ -310,7 +308,7 @@ func (suite *KeeperTestSuite) TestGRPC_Query_Draw() {
 	suite.Require().Equal(uint64(nbrItems), poolDrawRes.GetDraw().DrawId)
 }
 
-// TestGRPC_Query_Prize runs simple integration tests on prizes, pools and draws
+// TestGRPC_Query_Prize runs simple integration tests on prizes, pools and draws.
 func (suite *KeeperTestSuite) TestGRPC_Query_Prize() {
 	app := suite.app
 	ctx := suite.ctx
@@ -468,7 +466,7 @@ func (suite *KeeperTestSuite) TestGRPC_Query_Prize() {
 	suite.Require().GreaterOrEqual(len(accountPoolDrawPrizesPaginated.GetPrizes()), 0)
 }
 
-// TestGRPC_Query_Withdrawal runs simple integration tests for withdrawals and pools
+// TestGRPC_Query_Withdrawal runs simple integration tests for withdrawals and pools.
 func (suite *KeeperTestSuite) TestGRPC_Query_Withdrawal() {
 	app := suite.app
 	ctx := suite.ctx

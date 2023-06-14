@@ -7,13 +7,13 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-// Default parameter constants
+// Default parameter constants.
 const (
 	DefaultDenom            = "ibc/05554A9BFDD28894D7F18F4C707AA0930D778751A437A9FE1F4684A3E1199728" // USDC ibc denom from Osmosis to Lum Network mainnet
 	DefaultMinDepositAmount = 1000000
 )
 
-// Default denoms variable
+// Default denoms variable.
 var DefaultDenoms = []string{DefaultDenom}
 
 // Parameter store keys.
@@ -27,7 +27,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-// DefaultParams return the default dfract module params
+// DefaultParams return the default dfract module params.
 func DefaultParams() Params {
 	return Params{
 		DepositDenoms:    DefaultDenoms,
@@ -53,7 +53,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	}
 }
 
-// Function that ensures that the deposited denom is an array of string
+// Function that ensures that the deposited denom is an array of string.
 func validateDepositDenom(i interface{}) error {
 	v, ok := i.([]string)
 
@@ -70,7 +70,7 @@ func validateDepositDenom(i interface{}) error {
 	return nil
 }
 
-// Function that ensures that the deposited amount is not inferior or equal to 0
+// Function that ensures that the deposited amount is not inferior or equal to 0.
 func validateMinDepositAmount(i interface{}) error {
 	v, ok := i.(uint32)
 	if !ok {

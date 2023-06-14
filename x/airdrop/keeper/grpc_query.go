@@ -11,7 +11,7 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// ModuleAccountBalance returns module account's balance
+// ModuleAccountBalance returns module account's balance.
 func (k Keeper) ModuleAccountBalance(c context.Context, _ *types.QueryModuleAccountBalanceRequest) (*types.QueryModuleAccountBalanceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	moduleAccBal := sdk.NewCoins(k.GetAirdropAccountBalance(ctx))
@@ -30,7 +30,7 @@ func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.Q
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
-// ClaimRecord returns claimable amount per user
+// ClaimRecord returns claimable amount per user.
 func (k Keeper) ClaimRecord(
 	goCtx context.Context,
 	req *types.QueryClaimRecordRequest,
@@ -50,7 +50,7 @@ func (k Keeper) ClaimRecord(
 	return &types.QueryClaimRecordResponse{ClaimRecord: claimRecord}, err
 }
 
-// ClaimableForAction returns the claimable for an action
+// ClaimableForAction returns the claimable for an action.
 func (k Keeper) ClaimableForAction(
 	goCtx context.Context,
 	req *types.QueryClaimableForActionRequest,
@@ -72,7 +72,7 @@ func (k Keeper) ClaimableForAction(
 	}, err
 }
 
-// TotalClaimable returns total claimable
+// TotalClaimable returns total claimable.
 func (k Keeper) TotalClaimable(
 	goCtx context.Context,
 	req *types.QueryTotalClaimableRequest,

@@ -13,12 +13,12 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-// GenerateQueryHash Serialize the query parameters into a hash to give to the relayer
+// GenerateQueryHash Serialize the query parameters into a hash to give to the relayer.
 func GenerateQueryHash(connectionId string, chainId string, extraId string, queryType string, request []byte, module string, callbackId string) string {
 	return fmt.Sprintf("%x", crypto.Sha256(append([]byte(module+connectionId+chainId+extraId+queryType+callbackId), request...)))
 }
 
-// NewQuery Build a new query structure
+// NewQuery Build a new query structure.
 func (k *Keeper) NewQuery(ctx sdk.Context, module string, callbackId string, chainId string, connectionId string, extraId string, queryType string, request []byte, ttl uint64) *types.Query {
 	return &types.Query{
 		Id:           GenerateQueryHash(connectionId, chainId, extraId, queryType, request, module, callbackId),
@@ -33,7 +33,7 @@ func (k *Keeper) NewQuery(ctx sdk.Context, module string, callbackId string, cha
 	}
 }
 
-// GetQuery returns query
+// GetQuery returns query.
 func (k *Keeper) GetQuery(ctx sdk.Context, id string) (types.Query, bool) {
 	query := types.Query{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
@@ -45,20 +45,20 @@ func (k *Keeper) GetQuery(ctx sdk.Context, id string) (types.Query, bool) {
 	return query, true
 }
 
-// SetQuery set query info
+// SetQuery set query info.
 func (k *Keeper) SetQuery(ctx sdk.Context, query types.Query) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
 	bz := k.cdc.MustMarshal(&query)
 	store.Set([]byte(query.Id), bz)
 }
 
-// DeleteQuery delete query info
+// DeleteQuery delete query info.
 func (k *Keeper) DeleteQuery(ctx sdk.Context, id string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
 	store.Delete([]byte(id))
 }
 
-// IterateQueries iterate through queries
+// IterateQueries iterate through queries.
 func (k *Keeper) IterateQueries(ctx sdk.Context, fn func(index int64, queryInfo types.Query) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
 	iterator := sdk.KVStorePrefixIterator(store, nil)
@@ -77,7 +77,7 @@ func (k *Keeper) IterateQueries(ctx sdk.Context, fn func(index int64, queryInfo 
 	}
 }
 
-// AllQueries returns every queryInfo in the store
+// AllQueries returns every queryInfo in the store.
 func (k *Keeper) AllQueries(ctx sdk.Context) []types.Query {
 	queries := []types.Query{}
 	k.IterateQueries(ctx, func(_ int64, queryInfo types.Query) (stop bool) {
@@ -91,7 +91,7 @@ func (k *Keeper) AllQueries(ctx sdk.Context) []types.Query {
 // Before SDK v46, the query response returned a sdk.Coin type. SDK v46 returns an int type
 // https://github.com/cosmos/cosmos-sdk/pull/9832
 func UnmarshalAmountFromBalanceQuery(cdc codec.BinaryCodec, queryResponseBz []byte) (amount sdkmath.Int, err error) {
-	// If the query response is empty, that means the account was never registed (and thus has a 0 balance)
+	// If the query response is empty, that means the account was never registered (and thus has a 0 balance)
 	if len(queryResponseBz) == 0 {
 		return sdkmath.ZeroInt(), nil
 	}

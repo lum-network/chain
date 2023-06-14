@@ -4,7 +4,6 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/lum-network/chain/x/millions/types"
 )
 

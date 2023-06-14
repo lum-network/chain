@@ -1,8 +1,10 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+	"strings"
+
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,7 +12,6 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 	"github.com/lum-network/chain/x/icqueries/types"
 	"github.com/tendermint/tendermint/libs/log"
-	"strings"
 )
 
 type Keeper struct {

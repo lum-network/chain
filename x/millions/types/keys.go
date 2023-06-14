@@ -52,7 +52,7 @@ var (
 	PrizeExpirationTimePrefix      = []byte{0x13}
 	WithdrawalMaturationTimePrefix = []byte{0x14}
 	ParamsPrefix                   = []byte{0x20}
-	// KeyIndexSeparator separator between combined keys
+	// KeyIndexSeparator separator between combined keys.
 	KeyIndexSeparator = []byte{0xFF}
 )
 

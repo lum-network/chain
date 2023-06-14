@@ -10,7 +10,7 @@ import (
 
 // MigrateModuleBalance performs in-place store migrations from v1.0.3 to v1.0.4.
 // The migration includes:
-// - Fix airdrop module account balance
+// - Fix airdrop module account balance.
 func MigrateModuleBalance(ctx sdk.Context, ak accountkeeper.AccountKeeper, bk bankkeeper.Keeper, claimRecords []airdroptypes.ClaimRecord) error {
 	// Compute how much of each coins the airdrop module account should have
 	moduleCoins := sdk.Coins{}

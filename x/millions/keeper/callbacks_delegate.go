@@ -7,11 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	icacallbackstypes "github.com/lum-network/chain/x/icacallbacks/types"
-
 	"github.com/lum-network/chain/x/millions/types"
 )
 
-// MarshalDelegateCallbackArgs Marshal delegate DelegateCallback arguments
+// MarshalDelegateCallbackArgs Marshal delegate DelegateCallback arguments.
 func (k Keeper) MarshalDelegateCallbackArgs(ctx sdk.Context, delegateCallback types.DelegateCallback) ([]byte, error) {
 	out, err := k.cdc.Marshal(&delegateCallback)
 	if err != nil {
@@ -21,7 +20,7 @@ func (k Keeper) MarshalDelegateCallbackArgs(ctx sdk.Context, delegateCallback ty
 	return out, nil
 }
 
-// UnmarshalDelegateCallbackArgs Marshal delegate callback arguments into a DelegateCallback struct
+// UnmarshalDelegateCallbackArgs Marshal delegate callback arguments into a DelegateCallback struct.
 func (k Keeper) UnmarshalDelegateCallbackArgs(ctx sdk.Context, delegateCallback []byte) (*types.DelegateCallback, error) {
 	unmarshalledDelegateCallback := types.DelegateCallback{}
 	if err := k.cdc.Unmarshal(delegateCallback, &unmarshalledDelegateCallback); err != nil {

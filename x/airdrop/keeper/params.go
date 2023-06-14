@@ -5,7 +5,7 @@ import (
 	"github.com/lum-network/chain/x/airdrop/types"
 )
 
-// GetParams Get the in-store params
+// GetParams Get the in-store params.
 func (k Keeper) GetParams(ctx sdk.Context) (types.Params, error) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get([]byte(types.ParamsKey))
@@ -14,7 +14,7 @@ func (k Keeper) GetParams(ctx sdk.Context) (types.Params, error) {
 	return params, err
 }
 
-// SetParams Set the in-store params
+// SetParams Set the in-store params.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 	store := ctx.KVStore(k.storeKey)
 	bz, err := k.cdc.Marshal(&params)

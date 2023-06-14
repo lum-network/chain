@@ -15,7 +15,7 @@ type PrizeProb struct {
 // Validate prizeBatch validation
 // - poolPercent must be [0, 100]
 // - quantity must be >= 0
-// - drawProbability must be [0, 1]
+// - drawProbability must be [0, 1].
 func (pb PrizeBatch) Validate(params Params) error {
 	if pb.PoolPercent == 0 || pb.PoolPercent > 100 {
 		return fmt.Errorf("prize batch pool percentrage must be gt 0 and lte 100")
@@ -42,7 +42,7 @@ func (pb PrizeBatch) GetPrizeAmount(prizePool sdk.Coin) math.Int {
 // ComputePrizesProbs computes batch prizes probs list based on the batch percentage of the prizePool
 // Returns as much prize up to quantity as possible, until the total batch amount has been fully consumed or is
 // not enough to create another prize
-// Each prize is identical and the usedAmount and remainingAmount are returned upon computation
+// Each prize is identical and the usedAmount and remainingAmount are returned upon computation.
 func (pb PrizeBatch) ComputePrizesProbs(prizePool sdk.Coin) (prizesProbs []PrizeProb, usedAmount math.Int, remainingAmount math.Int) {
 	usedAmount = math.ZeroInt()
 	remainingAmount = pb.GetTotalPrizesAmount(prizePool)

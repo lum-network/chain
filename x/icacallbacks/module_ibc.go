@@ -6,17 +6,16 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
-
 	"github.com/lum-network/chain/x/icacallbacks/keeper"
 )
 
-// IBCModule implements the ICS26 interface for interchain accounts controller chains
+// IBCModule implements the ICS26 interface for interchain accounts controller chains.
 type IBCModule struct {
 	keeper keeper.Keeper
 	app    porttypes.IBCModule
 }
 
-// NewIBCModule creates a new IBCModule given the keeper
+// NewIBCModule creates a new IBCModule given the keeper.
 func NewIBCModule(k keeper.Keeper, app porttypes.IBCModule) IBCModule {
 	return IBCModule{
 		keeper: k,
@@ -25,7 +24,7 @@ func NewIBCModule(k keeper.Keeper, app porttypes.IBCModule) IBCModule {
 }
 
 // func(ctx, order, connectionHops []string, portID string, channelID string, chanCap, counterparty, version string) (string, error)
-// func(ctx , order , connectionHops []string, portID string, channelID string, channelCap , counterparty , version string) error)
+// func(ctx , order , connectionHops []string, portID string, channelID string, channelCap , counterparty , version string) error).
 func (im IBCModule) OnChanOpenInit(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -43,7 +42,7 @@ func (im IBCModule) OnChanOpenInit(
 	return version, err
 }
 
-// OnChanOpenAck implements the IBCModule interface
+// OnChanOpenAck implements the IBCModule interface.
 func (im IBCModule) OnChanOpenAck(
 	ctx sdk.Context,
 	portID,
@@ -55,7 +54,7 @@ func (im IBCModule) OnChanOpenAck(
 	return im.app.OnChanOpenAck(ctx, portID, channelID, counterpartyChannelID, counterpartyVersion)
 }
 
-// OnAcknowledgementPacket implements the IBCModule interface
+// OnAcknowledgementPacket implements the IBCModule interface.
 func (im IBCModule) OnAcknowledgementPacket(
 	ctx sdk.Context,
 	modulePacket channeltypes.Packet,
@@ -66,7 +65,7 @@ func (im IBCModule) OnAcknowledgementPacket(
 	return im.app.OnAcknowledgementPacket(ctx, modulePacket, acknowledgement, relayer)
 }
 
-// OnTimeoutPacket implements the IBCModule interface
+// OnTimeoutPacket implements the IBCModule interface.
 func (im IBCModule) OnTimeoutPacket(
 	ctx sdk.Context,
 	modulePacket channeltypes.Packet,
@@ -90,7 +89,7 @@ func (im IBCModule) NegotiateAppVersion(
 // 	Required functions to satisfy interface but not implemented for ICA auth modules
 // ###################################################################################
 
-// OnChanCloseConfirm implements the IBCModule interface
+// OnChanCloseConfirm implements the IBCModule interface.
 func (im IBCModule) OnChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
@@ -100,7 +99,7 @@ func (im IBCModule) OnChanCloseConfirm(
 	return nil
 }
 
-// OnChanOpenTry implements the IBCModule interface
+// OnChanOpenTry implements the IBCModule interface.
 func (im IBCModule) OnChanOpenTry(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -114,7 +113,7 @@ func (im IBCModule) OnChanOpenTry(
 	panic("UNIMPLEMENTED")
 }
 
-// OnChanOpenConfirm implements the IBCModule interface
+// OnChanOpenConfirm implements the IBCModule interface.
 func (im IBCModule) OnChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
@@ -123,7 +122,7 @@ func (im IBCModule) OnChanOpenConfirm(
 	panic("UNIMPLEMENTED")
 }
 
-// OnChanCloseInit implements the IBCModule interface
+// OnChanCloseInit implements the IBCModule interface.
 func (im IBCModule) OnChanCloseInit(
 	ctx sdk.Context,
 	portID,
@@ -132,7 +131,7 @@ func (im IBCModule) OnChanCloseInit(
 	panic("UNIMPLEMENTED")
 }
 
-// OnRecvPacket implements the IBCModule interface
+// OnRecvPacket implements the IBCModule interface.
 func (im IBCModule) OnRecvPacket(
 	ctx sdk.Context,
 	modulePacket channeltypes.Packet,

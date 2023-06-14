@@ -3,14 +3,12 @@ package keeper
 import (
 	"context"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-
 	"github.com/lum-network/chain/x/millions/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (k queryServer) Deposits(goCtx context.Context, req *types.QueryDepositsRequest) (*types.QueryDepositsResponse, error) {
@@ -35,7 +33,6 @@ func (k queryServer) Deposits(goCtx context.Context, req *types.QueryDepositsReq
 		deposits = append(deposits, deposit)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -69,7 +66,6 @@ func (k queryServer) PoolDeposits(goCtx context.Context, req *types.QueryPoolDep
 		deposits = append(deposits, deposit)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -121,7 +117,6 @@ func (k queryServer) AccountDeposits(goCtx context.Context, req *types.QueryAcco
 		deposits = append(deposits, deposit)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -161,7 +156,6 @@ func (k queryServer) AccountPoolDeposits(goCtx context.Context, req *types.Query
 		deposits = append(deposits, deposit)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of pools
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

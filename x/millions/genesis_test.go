@@ -5,14 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	apptypes "github.com/lum-network/chain/app"
 	"github.com/lum-network/chain/x/millions"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
+	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 var (
@@ -50,27 +48,32 @@ var testGenesis = millionstypes.GenesisState{
 	NextPrizeId:      6,
 	NextWithdrawalId: 6,
 	Pools: []millionstypes.Pool{
-		{PoolId: 1, TvlAmount: sdk.NewInt(510), DepositorsCount: 3, SponsorshipAmount: sdk.ZeroInt(), Denom: "denom-1", NativeDenom: "denom-1", NextDrawId: 3,
+		{
+			PoolId: 1, TvlAmount: sdk.NewInt(510), DepositorsCount: 3, SponsorshipAmount: sdk.ZeroInt(), Denom: "denom-1", NativeDenom: "denom-1", NextDrawId: 3,
 			ChainId: "c1", Validators: defaultValidators, MinDepositAmount: sdk.NewInt(1_000_000), AvailablePrizePool: sdk.NewCoin("denom-1", sdk.ZeroInt()),
 			DrawSchedule: defaultSchedule, PrizeStrategy: defaultPrizeStrat,
 			State: millionstypes.PoolState_Created, Bech32PrefixAccAddr: "lum", Bech32PrefixValAddr: "lumvaloper",
 		},
-		{PoolId: 2, TvlAmount: sdk.NewInt(603), DepositorsCount: 2, SponsorshipAmount: sdk.NewInt(401), Denom: "denom-2", NativeDenom: "denom-2", NextDrawId: 2,
+		{
+			PoolId: 2, TvlAmount: sdk.NewInt(603), DepositorsCount: 2, SponsorshipAmount: sdk.NewInt(401), Denom: "denom-2", NativeDenom: "denom-2", NextDrawId: 2,
 			ChainId: "c1", Validators: defaultValidators, MinDepositAmount: sdk.NewInt(1_000_000), AvailablePrizePool: sdk.NewCoin("denom-2", sdk.ZeroInt()),
 			DrawSchedule: defaultSchedule, PrizeStrategy: defaultPrizeStrat,
 			State: millionstypes.PoolState_Ready, Bech32PrefixAccAddr: "lum", Bech32PrefixValAddr: "lumvaloper",
 		},
-		{PoolId: 3, TvlAmount: sdk.NewInt(601), DepositorsCount: 1, SponsorshipAmount: sdk.ZeroInt(), Denom: "denom-3", NativeDenom: "denom-3", NextDrawId: 1,
+		{
+			PoolId: 3, TvlAmount: sdk.NewInt(601), DepositorsCount: 1, SponsorshipAmount: sdk.ZeroInt(), Denom: "denom-3", NativeDenom: "denom-3", NextDrawId: 1,
 			ChainId: "c1", Validators: defaultValidators, MinDepositAmount: sdk.NewInt(1_000_000), AvailablePrizePool: sdk.NewCoin("denom-3", sdk.ZeroInt()),
 			DrawSchedule: defaultSchedule, PrizeStrategy: defaultPrizeStrat,
 			State: millionstypes.PoolState_Killed, Bech32PrefixAccAddr: "lum", Bech32PrefixValAddr: "lumvaloper",
 		},
-		{PoolId: 4, TvlAmount: sdk.NewInt(400), DepositorsCount: 1, SponsorshipAmount: sdk.ZeroInt(), Denom: "denom-4", NativeDenom: "denom-4", NextDrawId: 1,
+		{
+			PoolId: 4, TvlAmount: sdk.NewInt(400), DepositorsCount: 1, SponsorshipAmount: sdk.ZeroInt(), Denom: "denom-4", NativeDenom: "denom-4", NextDrawId: 1,
 			ChainId: "c1", Validators: defaultValidators, MinDepositAmount: sdk.NewInt(1_000_000), AvailablePrizePool: sdk.NewCoin("denom-4", sdk.ZeroInt()),
 			DrawSchedule: defaultSchedule, PrizeStrategy: defaultPrizeStrat,
 			State: millionstypes.PoolState_Created, Bech32PrefixAccAddr: "lum", Bech32PrefixValAddr: "lumvaloper",
 		},
-		{PoolId: 5, TvlAmount: sdk.NewInt(0), DepositorsCount: 0, SponsorshipAmount: sdk.ZeroInt(), Denom: "denom-5", NativeDenom: "denom-5", NextDrawId: 1,
+		{
+			PoolId: 5, TvlAmount: sdk.NewInt(0), DepositorsCount: 0, SponsorshipAmount: sdk.ZeroInt(), Denom: "denom-5", NativeDenom: "denom-5", NextDrawId: 1,
 			ChainId: "c1", Validators: defaultValidators, MinDepositAmount: sdk.NewInt(1_000_000), AvailablePrizePool: sdk.NewCoin("denom-5", sdk.ZeroInt()),
 			DrawSchedule: defaultSchedule, PrizeStrategy: defaultPrizeStrat,
 			State: millionstypes.PoolState_Killed, Bech32PrefixAccAddr: "lum", Bech32PrefixValAddr: "lumvaloper",

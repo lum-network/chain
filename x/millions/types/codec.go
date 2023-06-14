@@ -15,7 +15,7 @@ var (
 	ModuleCdc = codec.NewAminoCodec(amino)
 )
 
-// RegisterLegacyAminoCodec Register the codec for the message passing
+// RegisterLegacyAminoCodec Register the codec for the message passing.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	// Messages
 	cdc.RegisterConcrete(&MsgDeposit{}, "lum-network/millions/MsgDeposit", nil)
@@ -32,7 +32,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&ProposalUpdatePool{}, "lum-network/millions/ProposalUpdatePool", nil)
 }
 
-// RegisterInterfaces Register the implementations for the given codecs
+// RegisterInterfaces Register the implementations for the given codecs.
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	// Messages
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgDeposit{})

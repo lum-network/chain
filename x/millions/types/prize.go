@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// ValidateBasic validates if a prize is complete and valid
+// ValidateBasic validates if a prize is complete and valid.
 func (prize *Prize) ValidateBasic() error {
 	if prize.PoolId == UnknownID {
 		return errorsmod.Wrapf(ErrInvalidID, "pool ID")

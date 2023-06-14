@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 

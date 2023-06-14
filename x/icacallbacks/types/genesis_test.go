@@ -3,9 +3,8 @@ package types_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/lum-network/chain/x/icacallbacks/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGenesisState_Validate(t *testing.T) {

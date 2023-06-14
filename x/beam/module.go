@@ -4,25 +4,23 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/lum-network/chain/x/beam/migrations"
-	"github.com/lum-network/chain/x/beam/simulation"
 	"math/rand"
-
-	"github.com/gorilla/mux"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/lum-network/chain/x/beam/client/cli"
 	"github.com/lum-network/chain/x/beam/keeper"
+	"github.com/lum-network/chain/x/beam/migrations"
+	"github.com/lum-network/chain/x/beam/simulation"
 	"github.com/lum-network/chain/x/beam/types"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (
@@ -56,7 +54,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterCodec(cdc)
 }
 
-// RegisterInterfaces registers the module's interface types
+// RegisterInterfaces registers the module's interface types.
 func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
 }
@@ -189,7 +187,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 	return []abci.ValidatorUpdate{}
 }
 
-// ConsensusVersion returns the current module store definitions version
+// ConsensusVersion returns the current module store definitions version.
 func (am AppModule) ConsensusVersion() uint64 {
 	return types.ModuleVersion
 }

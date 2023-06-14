@@ -2,7 +2,6 @@ package millions
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/lum-network/chain/x/millions/keeper"
 	"github.com/lum-network/chain/x/millions/types"
 )

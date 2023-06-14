@@ -2,17 +2,18 @@ package keeper
 
 import (
 	"context"
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+	"net/url"
+	"sort"
+	"strings"
+
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	commitmenttypes "github.com/cosmos/ibc-go/v5/modules/core/23-commitment/types"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 	"github.com/lum-network/chain/x/icqueries/types"
 	"github.com/spf13/cast"
-	"net/url"
-	"sort"
-	"strings"
 )
 
 // VerifyKeyProof check if the query requires proving; if it does, verify it!
@@ -66,7 +67,6 @@ func (k *Keeper) VerifyKeyProof(ctx sdk.Context, msg *types.MsgSubmitQueryRespon
 		if err := merkleProof.VerifyMembership(tmClientState.ProofSpecs, consensusState.GetRoot(), path, msg.Result); err != nil {
 			return errorsmod.Wrapf(types.ErrInvalidICQProof, "Unable to verify membership proof: %s", err.Error())
 		}
-
 	} else {
 		// if we got a nil query response, verify non inclusion proof.
 		if err := merkleProof.VerifyNonMembership(tmClientState.ProofSpecs, consensusState.GetRoot(), path); err != nil {
@@ -77,7 +77,7 @@ func (k *Keeper) VerifyKeyProof(ctx sdk.Context, msg *types.MsgSubmitQueryRespon
 	return nil
 }
 
-// InvokeCallback call the query's associated callback function
+// InvokeCallback call the query's associated callback function.
 func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryResponse, query types.Query, status types.QueryResponseStatus) error {
 	// get all the callback handlers and sort them for determinism (each module has their own callback handler)
 	moduleNames := []string{}
@@ -100,7 +100,7 @@ func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryRespons
 	return types.ErrICQCallbackNotFound
 }
 
-// SubmitQueryResponse Handle ICQ query responses by validating the proof, and calling the query's corresponding callback
+// SubmitQueryResponse Handle ICQ query responses by validating the proof, and calling the query's corresponding callback.
 func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubmitQueryResponse) (*types.MsgSubmitQueryResponseResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

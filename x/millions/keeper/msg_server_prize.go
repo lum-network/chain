@@ -5,11 +5,10 @@ import (
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/lum-network/chain/x/millions/types"
 )
 
-// ClaimPrize claim a prize from the transaction message
+// ClaimPrize claim a prize from the transaction message.
 func (k msgServer) ClaimPrize(goCtx context.Context, msg *types.MsgClaimPrize) (*types.MsgClaimPrizeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

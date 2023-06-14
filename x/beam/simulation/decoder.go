@@ -3,6 +3,7 @@ package simulation
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/lum-network/chain/x/beam/types"

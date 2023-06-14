@@ -1,12 +1,11 @@
 package main
 
 import (
-	"github.com/lum-network/chain/app"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-
+	"github.com/lum-network/chain/app"
 	"github.com/lum-network/chain/cmd/lumd/cmd"
 )
 

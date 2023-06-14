@@ -9,7 +9,7 @@ import (
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 
-// TestWithdrawal_IDsGeneration tests the withdrawal ID generation
+// TestWithdrawal_IDsGeneration tests the withdrawal ID generation.
 func (suite *KeeperTestSuite) TestWithdrawal_IDsGeneration() {
 	// Set the app context
 	app := suite.app
@@ -50,7 +50,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_IDsGeneration() {
 	}
 }
 
-// TestWithdrawal_AddWithdrawal tests the logic of adding a withdrawal to the store
+// TestWithdrawal_AddWithdrawal tests the logic of adding a withdrawal to the store.
 func (suite *KeeperTestSuite) TestWithdrawal_AddWithdrawal() {
 	// Set the app context
 	app := suite.app
@@ -127,7 +127,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_AddWithdrawal() {
 	withdrawals = app.MillionsKeeper.ListAccountWithdrawals(ctx, suite.addrs[0])
 	suite.Require().Len(withdrawals, 4)
 
-	// Remove the deposit associated witht the previous withdrawals to respect flow logic
+	// Remove the deposit associated with the previous withdrawals to respect flow logic
 	for _, withdrawal := range withdrawals {
 		app.MillionsKeeper.RemoveDeposit(ctx, &millionstypes.Deposit{
 			PoolId:           withdrawal.PoolId,
@@ -260,7 +260,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_AddWithdrawal() {
 	}
 }
 
-// TestWithdrawal_RemoveWithdrawal tests the logic of removing a withdrawal from the store
+// TestWithdrawal_RemoveWithdrawal tests the logic of removing a withdrawal from the store.
 func (suite *KeeperTestSuite) TestWithdrawal_RemoveWithdrawal() {
 	// Set the app context
 	app := suite.app
@@ -407,7 +407,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_RemoveWithdrawal() {
 	suite.Require().Len(withdrawals, 0)
 }
 
-// TestWithdrawal_UpdateWithdrawalStatus test the logic of updating a withdrawal to the store
+// TestWithdrawal_UpdateWithdrawalStatus test the logic of updating a withdrawal to the store.
 func (suite *KeeperTestSuite) TestWithdrawal_UpdateWithdrawalStatus() {
 	// Set the app context
 	app := suite.app
@@ -520,7 +520,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_UpdateWithdrawalStatus() {
 	}
 }
 
-// TestWithdrawal_UndelegateWithdrawal tests the flow from the undelegation till the transfer
+// TestWithdrawal_UndelegateWithdrawal tests the flow from the undelegation till the transfer.
 func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawal() {
 	// Set the app context
 	app := suite.app
@@ -565,7 +565,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawal() {
 	suite.Require().Equal(true, pools[0].Validators[0].IsEnabled)
 	suite.Require().Equal(sdk.NewInt(1_000_000), pools[0].Validators[0].BondedAmount)
 
-	// Create a new deposit and simulate successful transfered deposit
+	// Create a new deposit and simulate successful transferred deposit
 	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
 		PoolId:           pools[0].PoolId,
 		DepositorAddress: uatomAddresses[0].String(),
@@ -743,7 +743,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawal() {
 	suite.Require().WithinDuration(*withdrawal.UnbondingEndsAt, undbondingTime, 21*24*time.Hour)
 }
 
-// TestWithdrawal_TransferWithdrawal tests from the undelegation point till the transfer to Local is completed
+// TestWithdrawal_TransferWithdrawal tests from the undelegation point till the transfer to Local is completed.
 func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 	// Set the app context
 	app := suite.app
@@ -942,7 +942,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 	suite.Require().Len(withdrawals, 0)
 }
 
-// TestWithdrawal_DequeueMaturedWithdrawal tests the dequeue process of matured withdrawals
+// TestWithdrawal_DequeueMaturedWithdrawal tests the dequeue process of matured withdrawals.
 func (suite *KeeperTestSuite) TestWithdrawal_DequeueMaturedWithdrawal() {
 	// Set the app context
 	app := suite.app
@@ -997,14 +997,14 @@ func (suite *KeeperTestSuite) TestWithdrawal_DequeueMaturedWithdrawal() {
 	suite.Require().Len(maturedQueue, 4)
 }
 
-// TestWithdrawal_BalanceWithdrawal test the depositor balance after a transfer back to local chain
+// TestWithdrawal_BalanceWithdrawal test the depositor balance after a transfer back to local chain.
 func (suite *KeeperTestSuite) TestWithdrawal_BalanceWithdrawal() {
 	// Set the app context
 	app := suite.app
 	ctx := suite.ctx
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
-	var now = time.Now().UTC()
+	now := time.Now().UTC()
 
 	// Initialize the local pool
 	pool := newValidPool(suite, millionstypes.Pool{
@@ -1121,7 +1121,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_BalanceWithdrawal() {
 	maturedWithdrawals = app.MillionsKeeper.DequeueMaturedWithdrawalQueue(ctx, ctx.BlockTime())
 	suite.Require().Len(maturedWithdrawals, 0)
 
-	// Test that the balance should compensate 1 deposit transfered back
+	// Test that the balance should compensate 1 deposit transferred back
 	balance = app.BankKeeper.GetBalance(ctx, suite.addrs[0], localPoolDenom)
 	suite.Require().Equal(balanceBefore.Amount.Int64()-1_000_000, balance.Amount.Int64())
 
@@ -1129,19 +1129,19 @@ func (suite *KeeperTestSuite) TestWithdrawal_BalanceWithdrawal() {
 	ctx = ctx.WithBlockTime(now.Add(10 * time.Second))
 	app.MillionsKeeper.BlockWithdrawalUpdates(ctx)
 
-	// Test that the balance should compensate 1 more deposit transfered back
+	// Test that the balance should compensate 1 more deposit transferred back
 	balance = app.BankKeeper.GetBalance(ctx, suite.addrs[0], localPoolDenom)
 	suite.Require().Equal(balanceBefore.Amount.Int64(), balance.Amount.Int64())
 }
 
-// TestWithdrawal_FullWithdrawalProcess complete the full from the undelegation till the transfer to the local chain for a local pool
+// TestWithdrawal_FullWithdrawalProcess complete the full from the undelegation till the transfer to the local chain for a local pool.
 func (suite *KeeperTestSuite) TestWithdrawal_FullWithdrawalProcess() {
 	// Set the app context
 	app := suite.app
 	ctx := suite.ctx
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
-	var now = time.Now().UTC()
+	now := time.Now().UTC()
 
 	// Initialize the local pool
 	pool := newValidPool(suite, millionstypes.Pool{
@@ -1280,7 +1280,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_FullWithdrawalProcess() {
 	maturedWithdrawals = app.MillionsKeeper.DequeueMaturedWithdrawalQueue(ctx, ctx.BlockTime())
 	suite.Require().Len(maturedWithdrawals, 0)
 
-	// Test that the balance should compensate 1 deposit transfered back
+	// Test that the balance should compensate 1 deposit transferred back
 	balance = app.BankKeeper.GetBalance(ctx, suite.addrs[0], localPoolDenom)
 	suite.Require().Equal(balanceBefore.Amount.Int64()-1_000_000, balance.Amount.Int64())
 
@@ -1296,7 +1296,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_FullWithdrawalProcess() {
 	ctx = ctx.WithBlockTime(now.Add(10 * time.Second))
 	app.MillionsKeeper.BlockWithdrawalUpdates(ctx)
 
-	// Test that the balance should compensate 1 more deposit transfered back
+	// Test that the balance should compensate 1 more deposit transferred back
 	balance = app.BankKeeper.GetBalance(ctx, suite.addrs[0], localPoolDenom)
 	suite.Require().Equal(balanceBefore.Amount.Int64(), balance.Amount.Int64())
 

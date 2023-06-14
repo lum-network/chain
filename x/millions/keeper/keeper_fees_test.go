@@ -4,9 +4,8 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/lum-network/chain/x/millions/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (suite *KeeperTestSuite) TestFees_FeeCollector() {

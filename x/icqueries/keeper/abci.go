@@ -3,14 +3,14 @@ package keeper
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/lum-network/chain/x/icqueries/types"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/lum-network/chain/x/icqueries/types"
 )
 
-// EndBlocker of icqueries module
+// EndBlocker of icqueries module.
 func (k *Keeper) EndBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 	logger := k.Logger(ctx).With("ctx", "blocker_icq")

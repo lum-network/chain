@@ -2,11 +2,12 @@ package types
 
 import (
 	"encoding/json"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// DefaultGenesis returns the default Capability genesis state
+// DefaultGenesis returns the default Capability genesis state.
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		Beams:                []*Beam{},

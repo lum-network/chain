@@ -3,9 +3,8 @@ package types_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
 	millionstypes "github.com/lum-network/chain/x/millions/types"
+	"github.com/stretchr/testify/suite"
 )
 
 type ProposalTestSuite struct {

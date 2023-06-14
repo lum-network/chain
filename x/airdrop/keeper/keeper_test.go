@@ -4,9 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lum-network/chain/app"
-	testing2 "github.com/lum-network/chain/app/testing"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,15 +11,19 @@ import (
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/lum-network/chain/app"
 	apptypes "github.com/lum-network/chain/app"
+	testing2 "github.com/lum-network/chain/app/testing"
 	"github.com/lum-network/chain/x/airdrop/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-var now = time.Now().UTC()
-var defaultClaimDenom = app.CoinBondDenom
-var defaultClaimBalance = int64(1_000_000)
+var (
+	now                 = time.Now().UTC()
+	defaultClaimDenom   = app.CoinBondDenom
+	defaultClaimBalance = int64(1_000_000)
+)
 
 type KeeperTestSuite struct {
 	suite.Suite
@@ -32,7 +33,7 @@ type KeeperTestSuite struct {
 	app         *app.App
 }
 
-// SetupTest Create our testing app, and make sure everything is correctly usable
+// SetupTest Create our testing app, and make sure everything is correctly usable.
 func (suite *KeeperTestSuite) SetupTest() {
 	app := apptypes.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -564,7 +565,7 @@ func (suite *KeeperTestSuite) TestModuleBalance() {
 	suite.Equal(sdk.NewDec(100_000), communityBalance.AmountOf(defaultClaimDenom))
 }
 
-// TestKeeperSuite Main entry point for the testing suite
+// TestKeeperSuite Main entry point for the testing suite.
 func TestKeeperSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }

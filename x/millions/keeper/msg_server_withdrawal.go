@@ -6,11 +6,10 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/lum-network/chain/x/millions/types"
 )
 
-// WithdrawDeposit withdraw a deposit from the transaction message
+// WithdrawDeposit withdraw a deposit from the transaction message.
 func (k msgServer) WithdrawDeposit(goCtx context.Context, msg *types.MsgWithdrawDeposit) (*types.MsgWithdrawDepositResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -84,7 +83,7 @@ func (k msgServer) WithdrawDeposit(goCtx context.Context, msg *types.MsgWithdraw
 	return &types.MsgWithdrawDepositResponse{WithdrawalId: withdrawal.WithdrawalId}, err
 }
 
-// WithdrawDepositRetry allows the user to manually trigger the withdrawal of their deposit in case of failure
+// WithdrawDepositRetry allows the user to manually trigger the withdrawal of their deposit in case of failure.
 func (k msgServer) WithdrawDepositRetry(goCtx context.Context, msg *types.MsgWithdrawDepositRetry) (*types.MsgWithdrawDepositRetryResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

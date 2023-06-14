@@ -1,17 +1,14 @@
 package keeper
 
 import (
-	// this line is used by starport scaffolding # 1
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/lum-network/chain/x/beam/types"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// NewQuerier Return a querier instance
+// NewQuerier Return a querier instance.
 func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		var (

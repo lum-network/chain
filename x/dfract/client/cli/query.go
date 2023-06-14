@@ -3,14 +3,15 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/spf13/cobra"
-	"strconv"
 )
 
-// GetQueryCmd returns the cli query commands for this module
+// GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd(queryRoute string) *cobra.Command {
 	// Group chain queries under a subcommand
 	cmd := &cobra.Command{
@@ -45,7 +46,6 @@ func GetCmdQueryModuleAccountBalance() *cobra.Command {
 
 			req := &types.QueryModuleAccountBalanceRequest{}
 			res, err := queryClient.ModuleAccountBalance(context.Background(), req)
-
 			if err != nil {
 				return err
 			}
@@ -73,7 +73,6 @@ func GetCmdQueryParams() *cobra.Command {
 
 			params := &types.QueryParamsRequest{}
 			res, err := queryClient.Params(context.Background(), params)
-
 			if err != nil {
 				return err
 			}

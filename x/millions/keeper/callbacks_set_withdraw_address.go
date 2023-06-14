@@ -7,11 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	icacallbackstypes "github.com/lum-network/chain/x/icacallbacks/types"
-
 	"github.com/lum-network/chain/x/millions/types"
 )
 
-// MarshalSetWithdrawAddressCallbackArgs Marshal delegate RedelegateCallback arguments
+// MarshalSetWithdrawAddressCallbackArgs Marshal delegate RedelegateCallback arguments.
 func (k Keeper) MarshalSetWithdrawAddressCallbackArgs(ctx sdk.Context, setWithdrawAddrCallback types.SetWithdrawAddressCallback) ([]byte, error) {
 	out, err := k.cdc.Marshal(&setWithdrawAddrCallback)
 	if err != nil {
@@ -21,7 +20,7 @@ func (k Keeper) MarshalSetWithdrawAddressCallbackArgs(ctx sdk.Context, setWithdr
 	return out, nil
 }
 
-// UnmarshalSetWithdrawAddressCallbackArgs Marshal delegate callback arguments into a RedelegateCallback struct
+// UnmarshalSetWithdrawAddressCallbackArgs Marshal delegate callback arguments into a RedelegateCallback struct.
 func (k Keeper) UnmarshalSetWithdrawAddressCallbackArgs(ctx sdk.Context, setWithdrawAddrCallback []byte) (*types.SetWithdrawAddressCallback, error) {
 	unmarshalledWithdrawAddrCallback := types.SetWithdrawAddressCallback{}
 	if err := k.cdc.Unmarshal(setWithdrawAddrCallback, &unmarshalledWithdrawAddrCallback); err != nil {

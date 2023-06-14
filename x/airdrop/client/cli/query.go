@@ -3,18 +3,16 @@ package cli
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/version"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client"
-
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/lum-network/chain/x/airdrop/types"
+	"github.com/spf13/cobra"
 )
 
-// GetQueryCmd returns the cli query commands for this module
+// GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -50,7 +48,6 @@ func GetCmdQueryModuleAccountBalance() *cobra.Command {
 
 			req := &types.QueryModuleAccountBalanceRequest{}
 			res, err := queryClient.ModuleAccountBalance(context.Background(), req)
-
 			if err != nil {
 				return err
 			}
@@ -79,7 +76,6 @@ func GetCmdQueryParams() *cobra.Command {
 
 			params := &types.QueryParamsRequest{}
 			res, err := queryClient.Params(context.Background(), params)
-
 			if err != nil {
 				return err
 			}

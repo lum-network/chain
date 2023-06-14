@@ -1,7 +1,6 @@
 package v104_test
 
 import (
-	apptypes "github.com/lum-network/chain/app"
 	"testing"
 	"time"
 
@@ -11,14 +10,17 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	apptypes "github.com/lum-network/chain/app"
 	v104 "github.com/lum-network/chain/x/airdrop/migrations/v104"
 	"github.com/lum-network/chain/x/airdrop/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-var defaultClaimDenom = sdk.DefaultBondDenom
-var now = time.Now().UTC()
+var (
+	defaultClaimDenom = sdk.DefaultBondDenom
+	now               = time.Now().UTC()
+)
 
 type StoreMigrationTestSuite struct {
 	suite.Suite
@@ -28,7 +30,7 @@ type StoreMigrationTestSuite struct {
 	app         *apptypes.App
 }
 
-// SetupTest Create our testing app, and make sure everything is correctly usable
+// SetupTest Create our testing app, and make sure everything is correctly usable.
 func (suite *StoreMigrationTestSuite) SetupTest() {
 	app := apptypes.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -150,7 +152,7 @@ func (suite *StoreMigrationTestSuite) TestMigration() {
 	suite.Equal(sdk.NewInt64Coin(defaultClaimDenom, 60+1500), supply)
 }
 
-// TestKeeperSuite Main entry point for the testing suite
+// TestKeeperSuite Main entry point for the testing suite.
 func TestKeeperSuite(t *testing.T) {
 	suite.Run(t, new(StoreMigrationTestSuite))
 }

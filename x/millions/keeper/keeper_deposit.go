@@ -3,19 +3,17 @@ package keeper
 import (
 	"fmt"
 
-	gogotypes "github.com/gogo/protobuf/types"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
+	gogotypes "github.com/gogo/protobuf/types"
 	icacallbackstypes "github.com/lum-network/chain/x/icacallbacks/types"
 	"github.com/lum-network/chain/x/millions/types"
 )
 
 // TransferDepositToNativeChain Transfer a deposit to a native chain
 // - wait for the ICA callback to move to OnTransferDepositToNativeChainCompleted
-// - or go to OnTransferDepositToNativeChainCompleted directly if local zone
+// - or go to OnTransferDepositToNativeChainCompleted directly if local zone.
 func (k Keeper) TransferDepositToNativeChain(ctx sdk.Context, poolID uint64, depositID uint64) error {
 	logger := k.Logger(ctx).With("ctx", "deposit_transfer")
 
@@ -83,7 +81,7 @@ func (k Keeper) TransferDepositToNativeChain(ctx sdk.Context, poolID uint64, dep
 }
 
 // OnTransferDepositToNativeChainCompleted Acknowledge the IBC transfer to the native chain response
-// then moves to DelegateDepositOnNativeChain in case of success
+// then moves to DelegateDepositOnNativeChain in case of success.
 func (k Keeper) OnTransferDepositToNativeChainCompleted(ctx sdk.Context, poolID uint64, depositID uint64, isError bool) error {
 	// Acquire the deposit
 	deposit, err := k.GetPoolDeposit(ctx, poolID, depositID)
@@ -107,7 +105,7 @@ func (k Keeper) OnTransferDepositToNativeChainCompleted(ctx sdk.Context, poolID 
 
 // DelegateDepositOnNativeChain Delegates a deposit to the native chain validators
 // - wait for the ICA callback to move to OnDelegateDepositOnNativeChainCompleted
-// - or go to OnDelegateDepositOnNativeChainCompleted directly if local zone
+// - or go to OnDelegateDepositOnNativeChainCompleted directly if local zone.
 func (k Keeper) DelegateDepositOnNativeChain(ctx sdk.Context, poolID uint64, depositID uint64) error {
 	logger := k.Logger(ctx).With("ctx", "deposit_delegate")
 
@@ -202,7 +200,7 @@ func (k Keeper) DelegateDepositOnNativeChain(ctx sdk.Context, poolID uint64, dep
 	return nil
 }
 
-// OnDelegateDepositOnNativeChainCompleted Acknowledge the ICA delegate to the native chain validators response
+// OnDelegateDepositOnNativeChainCompleted Acknowledge the ICA delegate to the native chain validators response.
 func (k Keeper) OnDelegateDepositOnNativeChainCompleted(ctx sdk.Context, poolID uint64, depositID uint64, splits []*types.SplitDelegation, isError bool) error {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
@@ -230,7 +228,7 @@ func (k Keeper) OnDelegateDepositOnNativeChainCompleted(ctx sdk.Context, poolID 
 	return nil
 }
 
-// GetNextDepositID gets the next deposit ID
+// GetNextDepositID gets the next deposit ID.
 func (k Keeper) GetNextDepositID(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	nextDepositId := gogotypes.UInt64Value{}
@@ -243,21 +241,21 @@ func (k Keeper) GetNextDepositID(ctx sdk.Context) uint64 {
 	return nextDepositId.GetValue()
 }
 
-// GetNextDepositIdAndIncrement gets the next deposit ID and store the incremented ID
+// GetNextDepositIdAndIncrement gets the next deposit ID and store the incremented ID.
 func (k Keeper) GetNextDepositIdAndIncrement(ctx sdk.Context) uint64 {
 	nextDepositId := k.GetNextDepositID(ctx)
 	k.SetNextDepositID(ctx, nextDepositId+1)
 	return nextDepositId
 }
 
-// SetNextDepositID sets next deposit ID
+// SetNextDepositID sets next deposit ID.
 func (k Keeper) SetNextDepositID(ctx sdk.Context, depositId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: depositId})
 	store.Set(types.NextDepositPrefix, bz)
 }
 
-// GetPoolDeposit returns a deposit by ID for a given poolID
+// GetPoolDeposit returns a deposit by ID for a given poolID.
 func (k Keeper) GetPoolDeposit(ctx sdk.Context, poolID uint64, depositID uint64) (types.Deposit, error) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetPoolDepositKey(poolID, depositID))
@@ -276,7 +274,7 @@ func (k Keeper) GetPoolDeposit(ctx sdk.Context, poolID uint64, depositID uint64)
 // AddDeposit adds a deposit to a pool and account
 // A new depositID is generated if not provided
 // - adds it to the pool {pool_id, deposit_id}
-// - adds it to the account {address, pool_id, deposit_id} deposits
+// - adds it to the account {address, pool_id, deposit_id} deposits.
 func (k Keeper) AddDeposit(ctx sdk.Context, deposit *types.Deposit) {
 	// Automatically affect ID if missing
 	if deposit.GetDepositId() == types.UnknownID {
@@ -322,7 +320,7 @@ func (k Keeper) AddDeposit(ctx sdk.Context, deposit *types.Deposit) {
 
 // RemoveDeposit removes a deposit from a pool
 // - removes it from the {pool_id, deposit_id}
-// - removes it from the {address, pool_id, deposit_id} deposits
+// - removes it from the {address, pool_id, deposit_id} deposits.
 func (k Keeper) RemoveDeposit(ctx sdk.Context, deposit *types.Deposit) {
 	// Ensure payload is valid
 	if err := deposit.ValidateBasic(); err != nil {
@@ -352,7 +350,7 @@ func (k Keeper) RemoveDeposit(ctx sdk.Context, deposit *types.Deposit) {
 	k.updatePool(ctx, &pool)
 }
 
-// UpdateDepositStatus Update a given deposit status by its ID
+// UpdateDepositStatus Update a given deposit status by its ID.
 func (k Keeper) UpdateDepositStatus(ctx sdk.Context, poolID uint64, depositID uint64, status types.DepositState, isError bool) {
 	deposit, err := k.GetPoolDeposit(ctx, poolID, depositID)
 	if err != nil {
@@ -373,7 +371,7 @@ func (k Keeper) UpdateDepositStatus(ctx sdk.Context, poolID uint64, depositID ui
 	k.setPoolDeposit(ctx, &deposit)
 }
 
-// setPoolDeposit sets a deposit to the pool deposit key
+// setPoolDeposit sets a deposit to the pool deposit key.
 func (k Keeper) setPoolDeposit(ctx sdk.Context, deposit *types.Deposit) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetPoolDepositKey(deposit.PoolId, deposit.DepositId)
@@ -381,7 +379,7 @@ func (k Keeper) setPoolDeposit(ctx sdk.Context, deposit *types.Deposit) {
 	store.Set(key, encodedDeposit)
 }
 
-// setAccountDeposit set the deposit for the Account deposit key
+// setAccountDeposit set the deposit for the Account deposit key.
 func (k Keeper) setAccountDeposit(ctx sdk.Context, deposit *types.Deposit) {
 	store := ctx.KVStore(k.storeKey)
 	depositorAddress := sdk.MustAccAddressFromBech32(deposit.DepositorAddress)
@@ -390,7 +388,7 @@ func (k Keeper) setAccountDeposit(ctx sdk.Context, deposit *types.Deposit) {
 	store.Set(key, encodedDeposit)
 }
 
-// hasPoolDeposit returns whether or not an account has at least one deposit for a given pool
+// hasPoolDeposit returns whether or not an account has at least one deposit for a given pool.
 func (k Keeper) hasPoolDeposit(ctx sdk.Context, address string, poolID uint64) bool {
 	addr := sdk.MustAccAddressFromBech32(address)
 
@@ -402,7 +400,7 @@ func (k Keeper) hasPoolDeposit(ctx sdk.Context, address string, poolID uint64) b
 }
 
 // ListPoolDeposits returns all deposits for a given poolID
-// Warning: expensive operation
+// Warning: expensive operation.
 func (k Keeper) ListPoolDeposits(ctx sdk.Context, poolID uint64) (deposits []types.Deposit) {
 	depositStore := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(depositStore, types.GetPoolDepositsKey(poolID))
@@ -417,7 +415,7 @@ func (k Keeper) ListPoolDeposits(ctx sdk.Context, poolID uint64) (deposits []typ
 }
 
 // ListAccountPoolDeposits return all the deposits for and address and a poolID
-// Warning: expensive operation
+// Warning: expensive operation.
 func (k Keeper) ListAccountPoolDeposits(ctx sdk.Context, addr sdk.Address, poolID uint64) (deposits []types.Deposit) {
 	depositStore := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(depositStore, types.GetAccountPoolDepositsKey(addr, poolID))
@@ -432,7 +430,7 @@ func (k Keeper) ListAccountPoolDeposits(ctx sdk.Context, addr sdk.Address, poolI
 }
 
 // ListAccountDeposits return deposits all the deposits for an address
-// Warning: expensive operation
+// Warning: expensive operation.
 func (k Keeper) ListAccountDeposits(ctx sdk.Context, addr sdk.Address) (deposits []types.Deposit) {
 	depositStore := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(depositStore, types.GetAccountDepositsKey(addr))
@@ -447,7 +445,7 @@ func (k Keeper) ListAccountDeposits(ctx sdk.Context, addr sdk.Address) (deposits
 }
 
 // ListDeposits return all the deposits for and address
-// Warning: expensive operation
+// Warning: expensive operation.
 func (k Keeper) ListDeposits(ctx sdk.Context) (deposits []types.Deposit) {
 	depositStore := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(depositStore, types.GetDepositsKey())

@@ -7,11 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	icacallbackstypes "github.com/lum-network/chain/x/icacallbacks/types"
-
 	"github.com/lum-network/chain/x/millions/types"
 )
 
-// MarshalTransferToNativeCallbackArgs Marshal TransferToNativeCallback arguments
+// MarshalTransferToNativeCallbackArgs Marshal TransferToNativeCallback arguments.
 func (k Keeper) MarshalTransferToNativeCallbackArgs(ctx sdk.Context, transferCallback types.TransferToNativeCallback) ([]byte, error) {
 	out, err := k.cdc.Marshal(&transferCallback)
 	if err != nil {
@@ -21,7 +20,7 @@ func (k Keeper) MarshalTransferToNativeCallbackArgs(ctx sdk.Context, transferCal
 	return out, nil
 }
 
-// UnmarshalTransferToNativeCallbackArgs Marshal callback arguments into a TransferToNativeCallback struct
+// UnmarshalTransferToNativeCallbackArgs Marshal callback arguments into a TransferToNativeCallback struct.
 func (k Keeper) UnmarshalTransferToNativeCallbackArgs(ctx sdk.Context, transferCallback []byte) (*types.TransferToNativeCallback, error) {
 	unmarshalledTransferCallback := types.TransferToNativeCallback{}
 	if err := k.cdc.Unmarshal(transferCallback, &unmarshalledTransferCallback); err != nil {

@@ -4,7 +4,6 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/lum-network/chain/x/millions/types"
 )
 
@@ -15,7 +14,7 @@ type feeCollector struct {
 	stakersAmount sdk.Coin
 }
 
-// NewFeeCollector creates a new fee collector for the specified pool
+// NewFeeCollector creates a new fee collector for the specified pool.
 func (k Keeper) NewFeeCollector(ctx sdk.Context, pool types.Pool) feeCollector {
 	params := k.GetParams(ctx)
 	feesStaker := params.FeesStakers
@@ -30,12 +29,12 @@ func (k Keeper) NewFeeCollector(ctx sdk.Context, pool types.Pool) feeCollector {
 	}
 }
 
-// CollectedAmount returns the collected and not sent amount
+// CollectedAmount returns the collected and not sent amount.
 func (fc *feeCollector) CollectedAmount() sdk.Coin {
 	return fc.stakersAmount
 }
 
-// CollectPrizeFees computes and collects the fees for a prize and updates its final amount
+// CollectPrizeFees computes and collects the fees for a prize and updates its final amount.
 func (fc *feeCollector) CollectPrizeFees(ctx sdk.Context, prize *types.Prize) (newAmount, fees math.Int) {
 	fees = fc.feesStakers.MulInt(prize.Amount.Amount).RoundInt()
 	fc.stakersAmount = fc.stakersAmount.AddAmount(fees)
@@ -43,7 +42,7 @@ func (fc *feeCollector) CollectPrizeFees(ctx sdk.Context, prize *types.Prize) (n
 	return prize.Amount.Amount, fees
 }
 
-// SendCollectedFees effectively sends the collected fees (if any) to their destination
+// SendCollectedFees effectively sends the collected fees (if any) to their destination.
 func (fc *feeCollector) SendCollectedFees(ctx sdk.Context) (err error) {
 	if fc.stakersAmount.Amount.GT(math.ZeroInt()) {
 		err = fc.keeper.BankKeeper.SendCoinsFromAccountToModule(

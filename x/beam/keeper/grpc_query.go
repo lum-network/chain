@@ -2,13 +2,14 @@ package keeper
 
 import (
 	"context"
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/lum-network/chain/x/beam/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"strings"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -44,7 +45,6 @@ func (k Keeper) Beams(c context.Context, req *types.QueryFetchBeamsRequest) (*ty
 		beams = append(beams, &beam)
 		return nil
 	})
-
 	// Was there any error while acquiring the list of beams
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -89,7 +89,6 @@ func (k Keeper) BeamsOpenQueue(c context.Context, req *types.QueryFetchBeamsOpen
 		}
 		return nil
 	})
-
 	// Was there any error while acquiring the list of beams
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 	"log"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 // ExportAppStateAndValidators exports the state of the application for a genesis
@@ -18,7 +17,6 @@ import (
 func (app *App) ExportAppStateAndValidators(
 	forZeroHeight bool, jailAllowedAddrs []string,
 ) (servertypes.ExportedApp, error) {
-
 	// as if they could withdraw from the start of the next block
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 

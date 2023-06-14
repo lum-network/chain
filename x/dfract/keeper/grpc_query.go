@@ -70,7 +70,6 @@ func (k Keeper) FetchDeposits(c context.Context, req *types.QueryFetchDepositsRe
 		deposits = append(deposits, deposit)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

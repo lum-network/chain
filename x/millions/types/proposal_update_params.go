@@ -13,9 +13,7 @@ const (
 	ProposalTypeUpdateParams = "UpdateParams"
 )
 
-var (
-	_ govtypes.Content = &ProposalUpdateParams{}
-)
+var _ govtypes.Content = &ProposalUpdateParams{}
 
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeUpdateParams)

@@ -4,17 +4,17 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/lum-network/chain/utils"
-	"github.com/spf13/cobra"
-
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/lum-network/chain/x/beam/types"
+	"github.com/spf13/cobra"
 )
 
-// GetTxCmd returns the transaction commands for this module
+// GetTxCmd returns the transaction commands for this module.
 func GetTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -32,7 +32,7 @@ func GetTxCmd() *cobra.Command {
 	return cmd
 }
 
-// CmdOpenBeam Command definition for beam opening dispatch
+// CmdOpenBeam Command definition for beam opening dispatch.
 func CmdOpenBeam() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "open <secret> <schema> [amount] [data] [closes-at-block] [claim-expires-at-block]",
@@ -114,7 +114,7 @@ func CmdOpenBeam() *cobra.Command {
 	return cmd
 }
 
-// CmdUpdateBeam Command definition for beam increase dispatch
+// CmdUpdateBeam Command definition for beam increase dispatch.
 func CmdUpdateBeam() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <id> [amount] [data] [cancel-reason] [hide-content] [closes-at-block] [claim-expires-at-block]",
@@ -198,7 +198,7 @@ func CmdUpdateBeam() *cobra.Command {
 	return cmd
 }
 
-// CmdClaimBeam Command definition for beam claim dispatch
+// CmdClaimBeam Command definition for beam claim dispatch.
 func CmdClaimBeam() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "claim <id> <secret>",

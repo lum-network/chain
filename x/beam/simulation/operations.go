@@ -1,6 +1,8 @@
 package simulation
 
 import (
+	"math/rand"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -14,7 +16,6 @@ import (
 	"github.com/lum-network/chain/utils"
 	"github.com/lum-network/chain/x/beam/keeper"
 	"github.com/lum-network/chain/x/beam/types"
-	"math/rand"
 )
 
 const (
@@ -24,7 +25,8 @@ const (
 )
 
 func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak account.AccountKeeper,
-	bk bank.Keeper, k keeper.Keeper, wContents []simtypes.WeightedProposalContent) simulation.WeightedOperations {
+	bk bank.Keeper, k keeper.Keeper, wContents []simtypes.WeightedProposalContent,
+) simulation.WeightedOperations {
 	var (
 		weightMsgOpenBeam   int
 		weightMsgUpdateBeam int
@@ -78,7 +80,6 @@ func operationSimulateMsgClaimBeam(k keeper.Keeper, ak account.AccountKeeper, bk
 			chainID,
 			[]uint64{account.GetAccountNumber()}, []uint64{account.GetSequence()}, simAccount.PrivKey,
 		)
-
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
@@ -152,7 +153,6 @@ func operationSimulateMsgUpdateBeam(k keeper.Keeper, ak account.AccountKeeper, b
 			chainID,
 			[]uint64{account.GetAccountNumber()}, []uint64{account.GetSequence()}, simAccount.PrivKey,
 		)
-
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
 		}
