@@ -6,7 +6,7 @@ import (
 
 var _ sdk.Msg = &MsgDepositRetry{}
 
-func NewMsgDepositRetry(depositorAddr string, poolID uint64, depositID uint64) *MsgDepositRetry {
+func NewMsgDepositRetry(depositorAddr string, poolID, depositID uint64) *MsgDepositRetry {
 	return &MsgDepositRetry{
 		PoolId:           poolID,
 		DepositId:        depositID,

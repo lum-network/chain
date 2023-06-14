@@ -14,6 +14,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	k.SetNextWithdrawalID(ctx, genState.NextWithdrawalId)
 
 	for _, pool := range genState.Pools {
+		pool := pool
 		// Voluntary reset TvlAmount, DepositorsCount and SponsorshipAmount since they will be recomputed from deposits
 		pool.TvlAmount = sdk.ZeroInt()
 		pool.DepositorsCount = 0
@@ -23,6 +24,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// Import deposits
 	for _, deposit := range genState.Deposits {
+		deposit := deposit
 		k.AddDeposit(ctx, &deposit)
 	}
 

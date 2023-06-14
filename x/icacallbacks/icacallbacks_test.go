@@ -131,13 +131,13 @@ func TestUnwrapAcknowledgement(t *testing.T) {
 			name:           "ibc_transfer_success",
 			isICA:          false,
 			ack:            channeltypes.NewResultAcknowledgement([]byte{1}),
-			expectedStatus: icacallbacktypes.AckResponseStatus_SUCCESS,
+			expectedStatus: icacallbacktypes.AckResponseStatusSuccess,
 		},
 		{
 			name:           "ibc_transfer_failure",
 			isICA:          false,
 			ack:            channeltypes.NewErrorAcknowledgement(exampleAckError),
-			expectedStatus: icacallbacktypes.AckResponseStatus_FAILURE,
+			expectedStatus: icacallbacktypes.AckResponseStatusFailure,
 			packetError:    exampleAckError.Error(),
 		},
 		{
@@ -148,7 +148,7 @@ func TestUnwrapAcknowledgement(t *testing.T) {
 				msgDelegate,
 				[]proto.Message{nil, nil},
 			),
-			expectedStatus:      icacallbacktypes.AckResponseStatus_SUCCESS,
+			expectedStatus:      icacallbacktypes.AckResponseStatusSuccess,
 			expectedNumMessages: 2,
 		},
 		{
@@ -162,7 +162,7 @@ func TestUnwrapAcknowledgement(t *testing.T) {
 					&stakingtypes.MsgUndelegateResponse{CompletionTime: time.Now().Add(time.Duration(10))},
 				},
 			),
-			expectedStatus:      icacallbacktypes.AckResponseStatus_SUCCESS,
+			expectedStatus:      icacallbacktypes.AckResponseStatusSuccess,
 			expectedNumMessages: 2,
 		},
 		{
@@ -173,7 +173,7 @@ func TestUnwrapAcknowledgement(t *testing.T) {
 				msgDelegate,
 				[]proto.Message{nil, nil},
 			),
-			expectedStatus:      icacallbacktypes.AckResponseStatus_SUCCESS,
+			expectedStatus:      icacallbacktypes.AckResponseStatusSuccess,
 			expectedNumMessages: 2,
 		},
 		{
@@ -187,14 +187,14 @@ func TestUnwrapAcknowledgement(t *testing.T) {
 					&stakingtypes.MsgUndelegateResponse{CompletionTime: time.Now().Add(time.Duration(10))},
 				},
 			),
-			expectedStatus:      icacallbacktypes.AckResponseStatus_SUCCESS,
+			expectedStatus:      icacallbacktypes.AckResponseStatusSuccess,
 			expectedNumMessages: 2,
 		},
 		{
 			name:           "ica_failure",
 			isICA:          true,
 			ack:            channeltypes.NewErrorAcknowledgement(exampleAckError),
-			expectedStatus: icacallbacktypes.AckResponseStatus_FAILURE,
+			expectedStatus: icacallbacktypes.AckResponseStatusFailure,
 			packetError:    exampleAckError.Error(),
 		},
 		{

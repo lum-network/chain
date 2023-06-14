@@ -71,7 +71,7 @@ func (k Keeper) SetupPoolICA(ctx sdk.Context, poolID uint64) (*types.Pool, error
 // OnPoolICASetupCompleted Acknowledge the ICA account creation on the native chain
 // then moves to SetupPoolWithdrawalAddress once all ICA accounts have been created
 // TODO: error management based on the callback response.
-func (k Keeper) OnSetupPoolICACompleted(ctx sdk.Context, poolID uint64, icaType string, icaAddress string) (*types.Pool, error) {
+func (k Keeper) OnSetupPoolICACompleted(ctx sdk.Context, poolID uint64, icaType, icaAddress string) (*types.Pool, error) {
 	logger := k.Logger(ctx).With("ctx", "pool_on_setup_ica_completed")
 
 	// Grab our local pool instance
@@ -659,7 +659,7 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType
 	return sequence, nil
 }
 
-func (k Keeper) QueryBalance(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
+func (k Keeper) QueryBalance(ctx sdk.Context, poolID, drawID uint64) (*types.Draw, error) {
 	logger := k.Logger(ctx).With("ctx", "pool_query_balance")
 
 	// Acquire our pool instance

@@ -293,6 +293,7 @@ func (suite *KeeperTestSuite) TestPool_DepositorsCountAndTVL() {
 	// Remove all deposits from all accounts
 	deposits := app.MillionsKeeper.ListAccountPoolDeposits(ctx, suite.addrs[0], pool.PoolId)
 	for i, d := range deposits {
+		d := d
 		app.MillionsKeeper.RemoveDeposit(ctx, &d)
 		pool, err = app.MillionsKeeper.GetPool(ctx, pool.PoolId)
 		suite.Require().NoError(err)
@@ -306,6 +307,7 @@ func (suite *KeeperTestSuite) TestPool_DepositorsCountAndTVL() {
 
 	deposits = app.MillionsKeeper.ListAccountPoolDeposits(ctx, suite.addrs[1], pool.PoolId)
 	for i, d := range deposits {
+		d := d
 		app.MillionsKeeper.RemoveDeposit(ctx, &d)
 		pool, err = app.MillionsKeeper.GetPool(ctx, pool.PoolId)
 		suite.Require().NoError(err)
@@ -319,6 +321,7 @@ func (suite *KeeperTestSuite) TestPool_DepositorsCountAndTVL() {
 
 	deposits = app.MillionsKeeper.ListAccountPoolDeposits(ctx, suite.addrs[1], pool.PoolId)
 	for i, d := range deposits {
+		d := d
 		app.MillionsKeeper.RemoveDeposit(ctx, &d)
 		pool, err = app.MillionsKeeper.GetPool(ctx, pool.PoolId)
 		suite.Require().NoError(err)

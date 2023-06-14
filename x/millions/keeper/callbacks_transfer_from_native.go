@@ -45,9 +45,9 @@ func TransferFromNativeCallback(k Keeper, ctx sdk.Context, packet channeltypes.P
 
 	// If the response status is a timeout, that's not an "error" since the relayer will retry then fail or succeed.
 	// We just log it out and return no error
-	if ackResponse.Status == icacallbackstypes.AckResponseStatus_TIMEOUT {
+	if ackResponse.Status == icacallbackstypes.AckResponseStatusTimeout {
 		k.Logger(ctx).Debug("Received timeout for a transfer from native packet")
-	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
+	} else if ackResponse.Status == icacallbackstypes.AckResponseStatusFailure {
 		k.Logger(ctx).Debug("Received failure for a transfer from native packet")
 		if transferCallback.Type == types.TransferType_Claim {
 			_, err := k.OnTransferRewardsToLocalChainCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetDrawId(), true)
@@ -55,7 +55,7 @@ func TransferFromNativeCallback(k Keeper, ctx sdk.Context, packet channeltypes.P
 		} else if transferCallback.Type == types.TransferType_Withdraw {
 			return k.OnTransferWithdrawalToLocalChainCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetWithdrawalId(), true)
 		}
-	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
+	} else if ackResponse.Status == icacallbackstypes.AckResponseStatusSuccess {
 		k.Logger(ctx).Debug("Received success for a transfer from native packet")
 		if transferCallback.Type == types.TransferType_Claim {
 			_, err := k.OnTransferRewardsToLocalChainCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetDrawId(), false)

@@ -80,7 +80,7 @@ func (k Keeper) LaunchNewDraw(ctx sdk.Context, poolID uint64) (*types.Draw, erro
 // ClaimRewardsOnNativeChain Claim staking rewards from the native chain validators
 // - wait for the ICA callback to move to OnClaimRewardsOnNativeChainCompleted
 // - or go to OnClaimRewardsOnNativeChainCompleted directly upon claim rewards success if local zone.
-func (k Keeper) ClaimRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
+func (k Keeper) ClaimRewardsOnNativeChain(ctx sdk.Context, poolID, drawID uint64) (*types.Draw, error) {
 	logger := k.Logger(ctx).With("func", "draw_claim_rewards")
 
 	// Acquire pool config
@@ -161,7 +161,7 @@ func (k Keeper) ClaimRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID
 }
 
 // OnClaimRewardsOnNativeChainCompleted Acknowledge the ICA claim rewards from the native chain validators response and trigger an ICQ if success.
-func (k Keeper) OnClaimRewardsOnNativeChainCompleted(ctx sdk.Context, poolID uint64, drawID uint64, isError bool) (*types.Draw, error) {
+func (k Keeper) OnClaimRewardsOnNativeChainCompleted(ctx sdk.Context, poolID, drawID uint64, isError bool) (*types.Draw, error) {
 	// Acquire pool config
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
@@ -203,7 +203,7 @@ func (k Keeper) OnClaimRewardsOnNativeChainCompleted(ctx sdk.Context, poolID uin
 	return k.QueryBalance(ctx, poolID, drawID)
 }
 
-func (k Keeper) OnQueryRewardsOnNativeChainCompleted(ctx sdk.Context, poolID uint64, drawID uint64, coins sdk.Coins, isError bool) (*types.Draw, error) {
+func (k Keeper) OnQueryRewardsOnNativeChainCompleted(ctx sdk.Context, poolID, drawID uint64, coins sdk.Coins, isError bool) (*types.Draw, error) {
 	// Acquire pool config
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
@@ -263,7 +263,7 @@ func (k Keeper) OnQueryRewardsOnNativeChainCompleted(ctx sdk.Context, poolID uin
 // TransferRewardsToLocalChain Transfer the claimed rewards to the local chain
 // - wait for the ICA callback to move to OnTransferRewardsToLocalChainCompleted
 // - or go to OnTransferRewardsToLocalChainCompleted directly if local zone.
-func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
+func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID, drawID uint64) (*types.Draw, error) {
 	logger := k.Logger(ctx).With("ctx", "draw_transfer_rewards")
 
 	// Acquire Pool
@@ -366,7 +366,7 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 
 // OnTransferRewardsToLocalChainCompleted Acknowledge the transfer of the claimed rewards
 // finalises the Draw if success.
-func (k Keeper) OnTransferRewardsToLocalChainCompleted(ctx sdk.Context, poolID uint64, drawID uint64, isError bool) (*types.Draw, error) {
+func (k Keeper) OnTransferRewardsToLocalChainCompleted(ctx sdk.Context, poolID, drawID uint64, isError bool) (*types.Draw, error) {
 	logger := k.Logger(ctx).With("ctx", "draw_finalise")
 
 	// Acquire Pool
@@ -439,7 +439,7 @@ func (k Keeper) OnTransferRewardsToLocalChainCompleted(ctx sdk.Context, poolID u
 // ExecuteDraw completes the draw phases by effectively drawing prizes
 // This is the last phase of a Draw
 // WARNING: this method can eventually commit critical partial store updates if the caller does not return on error.
-func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
+func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID, drawID uint64) (*types.Draw, error) {
 	// Acquire Pool
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
@@ -580,7 +580,7 @@ func (k Keeper) OnExecuteDrawCompeleted(ctx sdk.Context, pool *types.Pool, draw 
 
 // ComputeDepositsTWB takes deposits and computes the weight based on their deposit time and the draw duration
 // It essentially compute the Time Weighted Balance of each deposit for the DrawPrizes phase.
-func (k Keeper) ComputeDepositsTWB(ctx sdk.Context, depositStartAt time.Time, drawAt time.Time, deposits []types.Deposit) []DepositTWB {
+func (k Keeper) ComputeDepositsTWB(ctx sdk.Context, depositStartAt, drawAt time.Time, deposits []types.Deposit) []DepositTWB {
 	params := k.GetParams(ctx)
 
 	totalElapsed := drawAt.Unix() - depositStartAt.Unix()
@@ -787,7 +787,7 @@ func (k Keeper) DistributePrizes(ctx sdk.Context, fc feeCollector, dRes DrawResu
 }
 
 // HasPoolDraw Returns a boolean that indicates if the given poolID and drawID combination exists in the KVStore or not.
-func (k Keeper) HasPoolDraw(ctx sdk.Context, poolID uint64, drawID uint64) bool {
+func (k Keeper) HasPoolDraw(ctx sdk.Context, poolID, drawID uint64) bool {
 	store := ctx.KVStore(k.storeKey)
 	return store.Has(types.GetPoolDrawIDKey(poolID, drawID))
 }
@@ -800,7 +800,7 @@ func (k Keeper) SetPoolDraw(ctx sdk.Context, draw types.Draw) {
 }
 
 // GetPoolDraw Returns a draw instance for the given poolID and drawID combination.
-func (k Keeper) GetPoolDraw(ctx sdk.Context, poolID uint64, drawID uint64) (types.Draw, error) {
+func (k Keeper) GetPoolDraw(ctx sdk.Context, poolID, drawID uint64) (types.Draw, error) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetPoolDrawIDKey(poolID, drawID))
 	if bz == nil {

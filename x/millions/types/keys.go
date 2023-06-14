@@ -90,7 +90,7 @@ func GetDepositsKey() []byte {
 	return PoolDepositPrefix
 }
 
-func GetPoolDepositKey(poolID uint64, depositID uint64) []byte {
+func GetPoolDepositKey(poolID, depositID uint64) []byte {
 	return CombineKeys(PoolDepositPrefix, strconv.AppendUint([]byte{}, poolID, 10), strconv.AppendUint([]byte{}, depositID, 10))
 }
 
@@ -98,7 +98,7 @@ func GetPoolDepositsKey(poolID uint64) []byte {
 	return CombineKeys(PoolDepositPrefix, strconv.AppendUint([]byte{}, poolID, 10))
 }
 
-func GetAccountPoolDepositKey(addr sdk.Address, poolID uint64, depositID uint64) []byte {
+func GetAccountPoolDepositKey(addr sdk.Address, poolID, depositID uint64) []byte {
 	return CombineKeys(AccountPoolDepositPrefix, addr.Bytes(), strconv.AppendUint([]byte{}, poolID, 10), strconv.AppendUint([]byte{}, depositID, 10))
 }
 
@@ -120,11 +120,11 @@ func GetPoolPrizesKey(poolID uint64) []byte {
 	return CombineKeys(PoolPrizePrefix, strconv.AppendUint([]byte{}, poolID, 10))
 }
 
-func GetPoolDrawPrizesKey(poolID uint64, drawID uint64) []byte {
+func GetPoolDrawPrizesKey(poolID, drawID uint64) []byte {
 	return CombineKeys(PoolPrizePrefix, strconv.AppendUint([]byte{}, poolID, 10), strconv.AppendUint([]byte{}, drawID, 10))
 }
 
-func GetPoolDrawPrizeKey(poolID uint64, drawID uint64, prizeID uint64) []byte {
+func GetPoolDrawPrizeKey(poolID, drawID, prizeID uint64) []byte {
 	return CombineKeys(PoolPrizePrefix, strconv.AppendUint([]byte{}, poolID, 10), strconv.AppendUint([]byte{}, drawID, 10), strconv.AppendUint([]byte{}, prizeID, 10))
 }
 
@@ -136,11 +136,11 @@ func GetAccountPoolPrizesKey(addr sdk.Address, poolID uint64) []byte {
 	return CombineKeys(AccountPoolPrizePrefix, addr.Bytes(), strconv.AppendUint([]byte{}, poolID, 10))
 }
 
-func GetAccountPoolDrawPrizesKey(addr sdk.Address, poolID uint64, drawID uint64) []byte {
+func GetAccountPoolDrawPrizesKey(addr sdk.Address, poolID, drawID uint64) []byte {
 	return CombineKeys(AccountPoolPrizePrefix, addr.Bytes(), strconv.AppendUint([]byte{}, poolID, 10), strconv.AppendUint([]byte{}, drawID, 10))
 }
 
-func GetAccountPoolDrawPrizeKey(addr sdk.Address, poolID uint64, drawID uint64, prizeID uint64) []byte {
+func GetAccountPoolDrawPrizeKey(addr sdk.Address, poolID, drawID, prizeID uint64) []byte {
 	return CombineKeys(AccountPoolPrizePrefix, addr.Bytes(), strconv.AppendUint([]byte{}, poolID, 10), strconv.AppendUint([]byte{}, drawID, 10), strconv.AppendUint([]byte{}, prizeID, 10))
 }
 
@@ -154,7 +154,7 @@ func GetPoolDrawsKey(poolID uint64) []byte {
 	return CombineKeys(DrawPrefix, strconv.AppendUint([]byte{}, poolID, 10))
 }
 
-func GetPoolDrawIDKey(poolID uint64, drawID uint64) []byte {
+func GetPoolDrawIDKey(poolID, drawID uint64) []byte {
 	return CombineKeys(DrawPrefix, strconv.AppendUint([]byte{}, poolID, 10), strconv.AppendUint([]byte{}, drawID, 10))
 }
 
@@ -164,7 +164,7 @@ func GetWithdrawalsKey() []byte {
 	return PoolWithdrawalPrefix
 }
 
-func GetPoolWithdrawalKey(poolID uint64, withdrawalID uint64) []byte {
+func GetPoolWithdrawalKey(poolID, withdrawalID uint64) []byte {
 	return CombineKeys(PoolWithdrawalPrefix, strconv.AppendUint([]byte{}, poolID, 10), strconv.AppendUint([]byte{}, withdrawalID, 10))
 }
 
@@ -172,7 +172,7 @@ func GetPoolWithdrawalsKey(poolID uint64) []byte {
 	return CombineKeys(PoolWithdrawalPrefix, strconv.AppendUint([]byte{}, poolID, 10))
 }
 
-func GetAccountPoolWithdrawalKey(addr sdk.Address, poolID uint64, withdrawalID uint64) []byte {
+func GetAccountPoolWithdrawalKey(addr sdk.Address, poolID, withdrawalID uint64) []byte {
 	return CombineKeys(AccountPoolWithdrawalPrefix, addr.Bytes(), strconv.AppendUint([]byte{}, poolID, 10), strconv.AppendUint([]byte{}, withdrawalID, 10))
 }
 

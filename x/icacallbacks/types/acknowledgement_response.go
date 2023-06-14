@@ -3,9 +3,9 @@ package types
 type AckResponseStatus int
 
 const (
-	AckResponseStatus_SUCCESS AckResponseStatus = iota
-	AckResponseStatus_TIMEOUT
-	AckResponseStatus_FAILURE
+	AckResponseStatusSuccess AckResponseStatus = iota
+	AckResponseStatusTimeout
+	AckResponseStatusFailure
 )
 
 type AcknowledgementResponse struct {

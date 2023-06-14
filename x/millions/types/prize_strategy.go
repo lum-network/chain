@@ -38,7 +38,7 @@ func (ps PrizeStrategy) Validate(params Params) error {
 // ComputePrizesProbs computes final prizes probs list based on each prizeBatch configuration
 // always sort the prizes by most valuable to least valuable
 // error triggered if the prizeStrategy does not pass its internal validation function.
-func (ps PrizeStrategy) ComputePrizesProbs(prizePool sdk.Coin) (prizesProbs []PrizeProb, usedAmount math.Int, remainingAmount math.Int, err error) {
+func (ps PrizeStrategy) ComputePrizesProbs(prizePool sdk.Coin) (prizesProbs []PrizeProb, usedAmount, remainingAmount math.Int, err error) {
 	usedAmount = sdk.ZeroInt()
 	remainingAmount = prizePool.Amount
 	sortedBatches := append([]PrizeBatch{}, ps.PrizeBatches...)

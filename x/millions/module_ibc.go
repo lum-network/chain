@@ -33,7 +33,7 @@ func NewIBCModule(k keeper.Keeper) IBCModule {
 }
 
 // OnChanOpenInit implements the IBCModule interface.
-func (im IBCModule) OnChanOpenInit(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string) (string, error) {
+func (im IBCModule) OnChanOpenInit(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string) (string, error) {
 	im.keeper.Logger(ctx).Debug(fmt.Sprintf("OnChanOpenInit: portID %s, channelID %s", portID, channelID))
 	return version, im.keeper.ClaimCapability(ctx, channelCap, host.ChannelCapabilityPath(portID, channelID))
 }
@@ -44,7 +44,7 @@ func (im IBCModule) OnChanOpenTry(ctx sdk.Context, order channeltypes.Order, con
 }
 
 // OnChanOpenAck implements the IBCModule interface.
-func (im IBCModule) OnChanOpenAck(ctx sdk.Context, portID, channelID string, counterpartyChannelID string, counterpartyVersion string) error {
+func (im IBCModule) OnChanOpenAck(ctx sdk.Context, portID, channelID, counterpartyChannelID, counterpartyVersion string) error {
 	im.keeper.Logger(ctx).Debug(fmt.Sprintf("OnChanOpenAck: portID %s, channelID %s, counterpartyChannelID %s, counterpartyVersion %s", portID, channelID, counterpartyChannelID, counterpartyVersion))
 
 	// Grab the controller connection ID for the port
@@ -149,7 +149,7 @@ func (im IBCModule) OnTimeoutPacket(ctx sdk.Context, modulePacket channeltypes.P
 	im.keeper.Logger(ctx).Debug(fmt.Sprintf("OnTimeoutPacket: packet %v, relayer %v", modulePacket, relayer))
 
 	// Construct the timeout response
-	ackResponse := icacallbacktypes.AcknowledgementResponse{Status: icacallbacktypes.AckResponseStatus_TIMEOUT}
+	ackResponse := icacallbacktypes.AcknowledgementResponse{Status: icacallbacktypes.AckResponseStatusTimeout}
 
 	// Notify the callbacks
 	err := im.keeper.ICACallbacksKeeper.CallRegisteredICACallback(ctx, modulePacket, &ackResponse)
@@ -159,6 +159,6 @@ func (im IBCModule) OnTimeoutPacket(ctx sdk.Context, modulePacket channeltypes.P
 	return nil
 }
 
-func (im IBCModule) NegotiateAppVersion(ctx sdk.Context, order channeltypes.Order, connectionID string, portID string, counterparty channeltypes.Counterparty, proposedVersion string) (version string, err error) {
+func (im IBCModule) NegotiateAppVersion(ctx sdk.Context, order channeltypes.Order, connectionID, portID string, counterparty channeltypes.Counterparty, proposedVersion string) (version string, err error) {
 	return proposedVersion, nil
 }

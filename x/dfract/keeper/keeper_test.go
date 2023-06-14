@@ -214,7 +214,7 @@ func (suite *KeeperTestSuite) TestMintAccuracy() {
 
 	// Iterate over the array of deposit denoms
 	for _, denom := range params.DepositDenoms {
-		testAccuracy := func(depositor sdk.AccAddress, depositAmount int64, microMintRate int64, expectedMintedAmount int64) {
+		testAccuracy := func(depositor sdk.AccAddress, depositAmount, microMintRate, expectedMintedAmount int64) {
 			balanceBeforeMint := app.BankKeeper.GetBalance(ctx, depositor, types.MintDenom)
 			app.DFractKeeper.SetDepositPendingMint(ctx, depositor, types.Deposit{
 				DepositorAddress: depositor.String(),

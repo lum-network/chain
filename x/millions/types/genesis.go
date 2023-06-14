@@ -1,6 +1,6 @@
 package types
 
-func NewGenesisState(params Params, nextPoolID uint64, nextDepositID uint64, nextPrizeID uint64, nexWithdrawalID uint64) *GenesisState {
+func NewGenesisState(params Params, nextPoolID, nextDepositID, nextPrizeID, nexWithdrawalID uint64) *GenesisState {
 	return &GenesisState{
 		Params:           params,
 		NextPoolId:       nextPoolID,

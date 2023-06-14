@@ -14,7 +14,7 @@ import (
 // TransferDepositToNativeChain Transfer a deposit to a native chain
 // - wait for the ICA callback to move to OnTransferDepositToNativeChainCompleted
 // - or go to OnTransferDepositToNativeChainCompleted directly if local zone.
-func (k Keeper) TransferDepositToNativeChain(ctx sdk.Context, poolID uint64, depositID uint64) error {
+func (k Keeper) TransferDepositToNativeChain(ctx sdk.Context, poolID, depositID uint64) error {
 	logger := k.Logger(ctx).With("ctx", "deposit_transfer")
 
 	// Acquire pool config
@@ -82,7 +82,7 @@ func (k Keeper) TransferDepositToNativeChain(ctx sdk.Context, poolID uint64, dep
 
 // OnTransferDepositToNativeChainCompleted Acknowledge the IBC transfer to the native chain response
 // then moves to DelegateDepositOnNativeChain in case of success.
-func (k Keeper) OnTransferDepositToNativeChainCompleted(ctx sdk.Context, poolID uint64, depositID uint64, isError bool) error {
+func (k Keeper) OnTransferDepositToNativeChainCompleted(ctx sdk.Context, poolID, depositID uint64, isError bool) error {
 	// Acquire the deposit
 	deposit, err := k.GetPoolDeposit(ctx, poolID, depositID)
 	if err != nil {
@@ -106,7 +106,7 @@ func (k Keeper) OnTransferDepositToNativeChainCompleted(ctx sdk.Context, poolID 
 // DelegateDepositOnNativeChain Delegates a deposit to the native chain validators
 // - wait for the ICA callback to move to OnDelegateDepositOnNativeChainCompleted
 // - or go to OnDelegateDepositOnNativeChainCompleted directly if local zone.
-func (k Keeper) DelegateDepositOnNativeChain(ctx sdk.Context, poolID uint64, depositID uint64) error {
+func (k Keeper) DelegateDepositOnNativeChain(ctx sdk.Context, poolID, depositID uint64) error {
 	logger := k.Logger(ctx).With("ctx", "deposit_delegate")
 
 	pool, err := k.GetPool(ctx, poolID)
@@ -201,7 +201,7 @@ func (k Keeper) DelegateDepositOnNativeChain(ctx sdk.Context, poolID uint64, dep
 }
 
 // OnDelegateDepositOnNativeChainCompleted Acknowledge the ICA delegate to the native chain validators response.
-func (k Keeper) OnDelegateDepositOnNativeChainCompleted(ctx sdk.Context, poolID uint64, depositID uint64, splits []*types.SplitDelegation, isError bool) error {
+func (k Keeper) OnDelegateDepositOnNativeChainCompleted(ctx sdk.Context, poolID, depositID uint64, splits []*types.SplitDelegation, isError bool) error {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err
@@ -256,7 +256,7 @@ func (k Keeper) SetNextDepositID(ctx sdk.Context, depositId uint64) {
 }
 
 // GetPoolDeposit returns a deposit by ID for a given poolID.
-func (k Keeper) GetPoolDeposit(ctx sdk.Context, poolID uint64, depositID uint64) (types.Deposit, error) {
+func (k Keeper) GetPoolDeposit(ctx sdk.Context, poolID, depositID uint64) (types.Deposit, error) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetPoolDepositKey(poolID, depositID))
 	if bz == nil {
@@ -351,7 +351,7 @@ func (k Keeper) RemoveDeposit(ctx sdk.Context, deposit *types.Deposit) {
 }
 
 // UpdateDepositStatus Update a given deposit status by its ID.
-func (k Keeper) UpdateDepositStatus(ctx sdk.Context, poolID uint64, depositID uint64, status types.DepositState, isError bool) {
+func (k Keeper) UpdateDepositStatus(ctx sdk.Context, poolID, depositID uint64, status types.DepositState, isError bool) {
 	deposit, err := k.GetPoolDeposit(ctx, poolID, depositID)
 	if err != nil {
 		panic(err)

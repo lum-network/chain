@@ -24,7 +24,7 @@ func (k queryServer) Deposits(goCtx context.Context, req *types.QueryDepositsReq
 
 	// Make the paginated query
 	var deposits []types.Deposit
-	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key, value []byte) error {
 		var deposit types.Deposit
 		if err := k.cdc.Unmarshal(value, &deposit); err != nil {
 			return err
@@ -57,7 +57,7 @@ func (k queryServer) PoolDeposits(goCtx context.Context, req *types.QueryPoolDep
 
 	// Make the paginated query
 	var deposits []types.Deposit
-	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key, value []byte) error {
 		var deposit types.Deposit
 		if err := k.cdc.Unmarshal(value, &deposit); err != nil {
 			return err
@@ -108,7 +108,7 @@ func (k queryServer) AccountDeposits(goCtx context.Context, req *types.QueryAcco
 
 	// Make the paginated query
 	var deposits []types.Deposit
-	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key, value []byte) error {
 		var deposit types.Deposit
 		if err := k.cdc.Unmarshal(value, &deposit); err != nil {
 			return err
@@ -147,7 +147,7 @@ func (k queryServer) AccountPoolDeposits(goCtx context.Context, req *types.Query
 
 	// Make the paginated query
 	var deposits []types.Deposit
-	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key, value []byte) error {
 		var deposit types.Deposit
 		if err := k.cdc.Unmarshal(value, &deposit); err != nil {
 			return err

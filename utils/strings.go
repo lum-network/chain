@@ -26,7 +26,7 @@ func GenerateHashFromString(secret string) []byte {
 }
 
 // CompareHashAndString is used to verify that a string matches a provided hash.
-func CompareHashAndString(hash string, secret string) bool {
+func CompareHashAndString(hash, secret string) bool {
 	hashedStr := GenerateHashFromString(secret)
 	return hex.EncodeToString(hashedStr) == hash
 }

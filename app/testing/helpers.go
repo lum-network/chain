@@ -113,7 +113,7 @@ func InitAccountWithCoins(app *app.App, ctx sdk.Context, addr sdk.AccAddress, co
 	}
 }
 
-func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
+func TestAddr(addr, bech string) (sdk.AccAddress, error) {
 	res, err := sdk.AccAddressFromHexUnsafe(addr)
 	if err != nil {
 		return nil, err

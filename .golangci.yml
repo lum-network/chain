@@ -89,3 +89,18 @@ linters:
     - usestdlibvars
     - whitespace
     - zerologlint
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+linters-settings:
+  gofumpt:
+    # Deprecated: use the global `run.go` instead.
+    lang-version: '1.20'
+    # Module path which contains the source code being formatted.
+    # Default: ""
+    module-path: github.com/lum-network/chain
+    # Choose whether to use the extra rules.
+    # Default: false
+    extra-rules: true

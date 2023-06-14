@@ -30,7 +30,7 @@ func NewIBCMiddleware(k keeper.Keeper, app porttypes.IBCModule) IBCMiddleware {
 }
 
 // OnChanOpenInit implements the IBCModule interface.
-func (im IBCMiddleware) OnChanOpenInit(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string) (string, error) {
+func (im IBCMiddleware) OnChanOpenInit(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string) (string, error) {
 	return im.app.OnChanOpenInit(
 		ctx,
 		order,
@@ -58,7 +58,7 @@ func (im IBCMiddleware) OnChanOpenTry(ctx sdk.Context, order channeltypes.Order,
 }
 
 // OnChanOpenAck implements the IBCModule interface.
-func (im IBCMiddleware) OnChanOpenAck(ctx sdk.Context, portID, channelID string, counterpartyChannelID string, counterpartyVersion string) error {
+func (im IBCMiddleware) OnChanOpenAck(ctx sdk.Context, portID, channelID, counterpartyChannelID, counterpartyVersion string) error {
 	return im.app.OnChanOpenAck(ctx, portID, channelID, counterpartyChannelID, counterpartyVersion)
 }
 
@@ -126,7 +126,7 @@ func (im IBCMiddleware) OnTimeoutPacket(ctx sdk.Context, modulePacket channeltyp
 	im.keeper.Logger(ctx).Debug(fmt.Sprintf("OnTimeoutPacket: packet %v, relayer %v", modulePacket, relayer))
 
 	// Construct the timeout response
-	ackResponse := icacallbacktypes.AcknowledgementResponse{Status: icacallbacktypes.AckResponseStatus_TIMEOUT}
+	ackResponse := icacallbacktypes.AcknowledgementResponse{Status: icacallbacktypes.AckResponseStatusTimeout}
 
 	// Notify the callbacks
 	err := im.keeper.ICACallbacksKeeper.CallRegisteredICACallback(ctx, modulePacket, &ackResponse)
@@ -136,6 +136,6 @@ func (im IBCMiddleware) OnTimeoutPacket(ctx sdk.Context, modulePacket channeltyp
 	return im.app.OnTimeoutPacket(ctx, modulePacket, relayer)
 }
 
-func (im IBCMiddleware) NegotiateAppVersion(ctx sdk.Context, order channeltypes.Order, connectionID string, portID string, counterparty channeltypes.Counterparty, proposedVersion string) (version string, err error) {
+func (im IBCMiddleware) NegotiateAppVersion(ctx sdk.Context, order channeltypes.Order, connectionID, portID string, counterparty channeltypes.Counterparty, proposedVersion string) (version string, err error) {
 	return proposedVersion, nil
 }

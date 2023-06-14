@@ -17,7 +17,7 @@ import (
 // UndelegateWithdrawalOnNativeChain Undelegates a withdrawal from the native chain validators
 // - go to OnUndelegateWithdrawalOnNativeChainCompleted directly upon undelegate success if local zone
 // - or wait for the ICA callback to move to OnUndelegateWithdrawalOnNativeChainCompleted.
-func (k Keeper) UndelegateWithdrawalOnNativeChain(ctx sdk.Context, poolID uint64, withdrawalID uint64) error {
+func (k Keeper) UndelegateWithdrawalOnNativeChain(ctx sdk.Context, poolID, withdrawalID uint64) error {
 	logger := k.Logger(ctx).With("ctx", "withdrawal_undelegate")
 
 	pool, err := k.GetPool(ctx, poolID)
@@ -127,7 +127,7 @@ func (k Keeper) UndelegateWithdrawalOnNativeChain(ctx sdk.Context, poolID uint64
 
 // OnUndelegateWithdrawalOnNativeChainCompleted Acknowledge the ICA undelegate from the native chain validators response
 // once unbonding ends one can call TransferWithdrawalToLocalChain to transfer the withdrawn amount to the requested account.
-func (k Keeper) OnUndelegateWithdrawalOnNativeChainCompleted(ctx sdk.Context, poolID uint64, withdrawalID uint64, splits []*types.SplitDelegation, unbondingEndsAt *time.Time, isError bool) error {
+func (k Keeper) OnUndelegateWithdrawalOnNativeChainCompleted(ctx sdk.Context, poolID, withdrawalID uint64, splits []*types.SplitDelegation, unbondingEndsAt *time.Time, isError bool) error {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err
@@ -160,7 +160,7 @@ func (k Keeper) OnUndelegateWithdrawalOnNativeChainCompleted(ctx sdk.Context, po
 // TransferWithdrawalToLocalChain Transfer a withdrawal from the native chain to the local chain
 // - wait for the ICA callback to move to OnTransferWithdrawalToLocalChainCompleted
 // - or go to OnTransferWithdrawalToLocalChainCompleted directly if local zone already.
-func (k Keeper) TransferWithdrawalToLocalChain(ctx sdk.Context, poolID uint64, withdrawalID uint64) error {
+func (k Keeper) TransferWithdrawalToLocalChain(ctx sdk.Context, poolID, withdrawalID uint64) error {
 	logger := k.Logger(ctx).With("ctx", "withdrawal_transfer")
 
 	pool, err := k.GetPool(ctx, poolID)
@@ -250,7 +250,7 @@ func (k Keeper) TransferWithdrawalToLocalChain(ctx sdk.Context, poolID uint64, w
 }
 
 // OnTransferWithdrawalToLocalChainCompleted Acknowledge the IBC transfer to the local chain response.
-func (k Keeper) OnTransferWithdrawalToLocalChainCompleted(ctx sdk.Context, poolID uint64, withdrawalID uint64, isError bool) error {
+func (k Keeper) OnTransferWithdrawalToLocalChainCompleted(ctx sdk.Context, poolID, withdrawalID uint64, isError bool) error {
 	withdrawal, err := k.GetPoolWithdrawal(ctx, poolID, withdrawalID)
 	if err != nil {
 		return err
@@ -299,7 +299,7 @@ func (k Keeper) SetNextWithdrawalID(ctx sdk.Context, withdrawalID uint64) {
 }
 
 // GetPoolWithdrawal returns a withdrawal by poolID, withdrawalID.
-func (k Keeper) GetPoolWithdrawal(ctx sdk.Context, poolID uint64, withdrawalID uint64) (types.Withdrawal, error) {
+func (k Keeper) GetPoolWithdrawal(ctx sdk.Context, poolID, withdrawalID uint64) (types.Withdrawal, error) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetPoolWithdrawalKey(poolID, withdrawalID))
 	if bz == nil {
@@ -340,7 +340,7 @@ func (k Keeper) RemoveWithdrawal(ctx sdk.Context, withdrawal types.Withdrawal) e
 }
 
 // UpdateWithdrawalStatus Update a given withdrawal status by its ID.
-func (k Keeper) UpdateWithdrawalStatus(ctx sdk.Context, poolID uint64, withdrawalID uint64, status types.WithdrawalState, unbondingEndsAt *time.Time, isError bool) {
+func (k Keeper) UpdateWithdrawalStatus(ctx sdk.Context, poolID, withdrawalID uint64, status types.WithdrawalState, unbondingEndsAt *time.Time, isError bool) {
 	withdrawal, err := k.GetPoolWithdrawal(ctx, poolID, withdrawalID)
 	if err != nil {
 		panic(err)

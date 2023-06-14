@@ -43,7 +43,7 @@ func (pb PrizeBatch) GetPrizeAmount(prizePool sdk.Coin) math.Int {
 // Returns as much prize up to quantity as possible, until the total batch amount has been fully consumed or is
 // not enough to create another prize
 // Each prize is identical and the usedAmount and remainingAmount are returned upon computation.
-func (pb PrizeBatch) ComputePrizesProbs(prizePool sdk.Coin) (prizesProbs []PrizeProb, usedAmount math.Int, remainingAmount math.Int) {
+func (pb PrizeBatch) ComputePrizesProbs(prizePool sdk.Coin) (prizesProbs []PrizeProb, usedAmount, remainingAmount math.Int) {
 	usedAmount = math.ZeroInt()
 	remainingAmount = pb.GetTotalPrizesAmount(prizePool)
 	prizeAmount := pb.GetPrizeAmount(prizePool)

@@ -61,7 +61,7 @@ func (k Keeper) FetchDeposits(c context.Context, req *types.QueryFetchDepositsRe
 	}
 
 	var deposits []types.Deposit
-	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(depositStore, req.Pagination, func(key, value []byte) error {
 		var deposit types.Deposit
 		if err := k.cdc.Unmarshal(value, &deposit); err != nil {
 			return err

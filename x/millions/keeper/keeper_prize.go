@@ -11,7 +11,7 @@ import (
 )
 
 // ClawBackPrize claw backs a prize by adding its amount to the clawback prize pool.
-func (k Keeper) ClawBackPrize(ctx sdk.Context, poolID uint64, drawID uint64, prizeID uint64) error {
+func (k Keeper) ClawBackPrize(ctx sdk.Context, poolID, drawID, prizeID uint64) error {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err
@@ -91,7 +91,7 @@ func (k Keeper) SetNextPrizeID(ctx sdk.Context, prizeID uint64) {
 }
 
 // GetPoolDrawPrize returns a prize by poolID, drawID, prizeID.
-func (k Keeper) GetPoolDrawPrize(ctx sdk.Context, poolID uint64, drawID uint64, prizeID uint64) (types.Prize, error) {
+func (k Keeper) GetPoolDrawPrize(ctx sdk.Context, poolID, drawID, prizeID uint64) (types.Prize, error) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetPoolDrawPrizeKey(poolID, drawID, prizeID))
 	if bz == nil {
@@ -240,7 +240,7 @@ func (k Keeper) ListAccountPrizes(ctx sdk.Context, addr sdk.Address) (prizes []t
 
 // ListPoolDrawPrizes return all the prizes for a pool draw
 // Warning: expensive operation.
-func (k Keeper) ListPoolDrawPrizes(ctx sdk.Context, poolID uint64, drawID uint64) (prizes []types.Prize) {
+func (k Keeper) ListPoolDrawPrizes(ctx sdk.Context, poolID, drawID uint64) (prizes []types.Prize) {
 	prizeStore := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(prizeStore, types.GetPoolDrawPrizesKey(poolID, drawID))
 	defer iterator.Close()

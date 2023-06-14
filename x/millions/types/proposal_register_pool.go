@@ -21,7 +21,7 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeRegisterPool)
 }
 
-func NewRegisterPoolProposal(title, description, chainID string, denom string, nativeDenom string, connectionId string, bech32PrefixAccAddr string, bech32PrefixValAddr string, validators []string, minDepositAmount math.Int, prizeStrategy PrizeStrategy, drawSchedule DrawSchedule) govtypes.Content {
+func NewRegisterPoolProposal(title, description, chainID, denom, nativeDenom, connectionId, bech32PrefixAccAddr, bech32PrefixValAddr string, validators []string, minDepositAmount math.Int, prizeStrategy PrizeStrategy, drawSchedule DrawSchedule) govtypes.Content {
 	return &ProposalRegisterPool{
 		Title:               title,
 		Description:         description,

@@ -24,7 +24,7 @@ func (k queryServer) Prizes(goCtx context.Context, req *types.QueryPrizesRequest
 
 	// Make the paginated query
 	var prizes []types.Prize
-	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key, value []byte) error {
 		var prize types.Prize
 		if err := k.cdc.Unmarshal(value, &prize); err != nil {
 			return err
@@ -57,7 +57,7 @@ func (k queryServer) PoolPrizes(goCtx context.Context, req *types.QueryPoolPrize
 
 	// Make the paginated query
 	var prizes []types.Prize
-	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key, value []byte) error {
 		var prize types.Prize
 		if err := k.cdc.Unmarshal(value, &prize); err != nil {
 			return err
@@ -91,7 +91,7 @@ func (k queryServer) PoolDrawPrizes(goCtx context.Context, req *types.QueryPoolD
 
 	// Make the paginated query
 	var prizes []types.Prize
-	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key, value []byte) error {
 		var prize types.Prize
 		if err := k.cdc.Unmarshal(value, &prize); err != nil {
 			return err
@@ -142,7 +142,7 @@ func (k queryServer) AccountPrizes(goCtx context.Context, req *types.QueryAccoun
 
 	// Make the paginated query
 	var prizes []types.Prize
-	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key, value []byte) error {
 		var prize types.Prize
 		if err := k.cdc.Unmarshal(value, &prize); err != nil {
 			return err
@@ -181,7 +181,7 @@ func (k queryServer) AccountPoolPrizes(goCtx context.Context, req *types.QueryAc
 
 	// Make the paginated query
 	var prizes []types.Prize
-	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key, value []byte) error {
 		var prize types.Prize
 		if err := k.cdc.Unmarshal(value, &prize); err != nil {
 			return err
@@ -220,7 +220,7 @@ func (k queryServer) AccountPoolDrawPrizes(goCtx context.Context, req *types.Que
 
 	// Make the paginated query
 	var prizes []types.Prize
-	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(prizeStore, req.Pagination, func(key, value []byte) error {
 		var prize types.Prize
 		if err := k.cdc.Unmarshal(value, &prize); err != nil {
 			return err

@@ -24,7 +24,7 @@ func (k queryServer) Draws(goCtx context.Context, req *types.QueryDrawsRequest) 
 
 	// Make the paginated query
 	var draws []types.Draw
-	pageRes, err := query.Paginate(drawStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(drawStore, req.Pagination, func(key, value []byte) error {
 		var draw types.Draw
 		if err := k.cdc.Unmarshal(value, &draw); err != nil {
 			return err
@@ -58,7 +58,7 @@ func (k queryServer) PoolDraws(goCtx context.Context, req *types.QueryPoolDrawsR
 
 	// Make the paginated query
 	var draws []types.Draw
-	pageRes, err := query.Paginate(drawStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(drawStore, req.Pagination, func(key, value []byte) error {
 		var draw types.Draw
 		if err := k.cdc.Unmarshal(value, &draw); err != nil {
 			return err

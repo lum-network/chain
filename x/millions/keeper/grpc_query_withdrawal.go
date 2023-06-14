@@ -24,7 +24,7 @@ func (k queryServer) Withdrawals(goCtx context.Context, req *types.QueryWithdraw
 
 	// Make the paginated query
 	var withdrawals []types.Withdrawal
-	pageRes, err := query.Paginate(withdrawalStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(withdrawalStore, req.Pagination, func(key, value []byte) error {
 		var withdrawal types.Withdrawal
 		if err := k.cdc.Unmarshal(value, &withdrawal); err != nil {
 			return err
@@ -57,7 +57,7 @@ func (k queryServer) PoolWithdrawals(goCtx context.Context, req *types.QueryPool
 
 	// Make the paginated query
 	var withdrawals []types.Withdrawal
-	pageRes, err := query.Paginate(withdrawalStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(withdrawalStore, req.Pagination, func(key, value []byte) error {
 		var withdrawal types.Withdrawal
 		if err := k.cdc.Unmarshal(value, &withdrawal); err != nil {
 			return err
@@ -110,7 +110,7 @@ func (k queryServer) AccountWithdrawals(goCtx context.Context, req *types.QueryA
 
 	// Make the paginated query
 	var withdrawals []types.Withdrawal
-	pageRes, err := query.Paginate(withdrawalStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(withdrawalStore, req.Pagination, func(key, value []byte) error {
 		var withdrawal types.Withdrawal
 		if err := k.cdc.Unmarshal(value, &withdrawal); err != nil {
 			return err
@@ -147,7 +147,7 @@ func (k queryServer) AccountPoolWithdrawals(goCtx context.Context, req *types.Qu
 
 	// Make the paginated query
 	var withdrawals []types.Withdrawal
-	pageRes, err := query.Paginate(withdrawalStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(withdrawalStore, req.Pagination, func(key, value []byte) error {
 		var withdrawal types.Withdrawal
 		if err := k.cdc.Unmarshal(value, &withdrawal); err != nil {
 			return err

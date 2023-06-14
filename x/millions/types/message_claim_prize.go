@@ -6,7 +6,7 @@ import (
 
 var _ sdk.Msg = &MsgClaimPrize{}
 
-func NewMsgMsgClaimPrize(winnerAddress string, poolID uint64, drawID uint64, prizeID uint64) *MsgClaimPrize {
+func NewMsgMsgClaimPrize(winnerAddress string, poolID, drawID, prizeID uint64) *MsgClaimPrize {
 	return &MsgClaimPrize{
 		PoolId:        poolID,
 		DrawId:        drawID,

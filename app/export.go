@@ -108,6 +108,7 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 
 		//nolint:errcheck
 		app.DistrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
+
 		return false
 	})
 

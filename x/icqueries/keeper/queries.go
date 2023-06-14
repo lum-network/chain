@@ -14,12 +14,12 @@ import (
 )
 
 // GenerateQueryHash Serialize the query parameters into a hash to give to the relayer.
-func GenerateQueryHash(connectionId string, chainId string, extraId string, queryType string, request []byte, module string, callbackId string) string {
+func GenerateQueryHash(connectionId, chainId, extraId, queryType string, request []byte, module, callbackId string) string {
 	return fmt.Sprintf("%x", crypto.Sha256(append([]byte(module+connectionId+chainId+extraId+queryType+callbackId), request...)))
 }
 
 // NewQuery Build a new query structure.
-func (k *Keeper) NewQuery(ctx sdk.Context, module string, callbackId string, chainId string, connectionId string, extraId string, queryType string, request []byte, ttl uint64) *types.Query {
+func (k *Keeper) NewQuery(ctx sdk.Context, module, callbackId, chainId, connectionId, extraId, queryType string, request []byte, ttl uint64) *types.Query {
 	return &types.Query{
 		Id:           GenerateQueryHash(connectionId, chainId, extraId, queryType, request, module, callbackId),
 		ConnectionId: connectionId,

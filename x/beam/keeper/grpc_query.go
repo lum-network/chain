@@ -36,7 +36,7 @@ func (k Keeper) Beams(c context.Context, req *types.QueryFetchBeamsRequest) (*ty
 
 	// Make the paginated query
 	var beams []*types.Beam
-	pageRes, err := query.Paginate(beamStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(beamStore, req.Pagination, func(key, value []byte) error {
 		var beam types.Beam
 		if err := k.cdc.Unmarshal(value, &beam); err != nil {
 			return err
@@ -82,7 +82,7 @@ func (k Keeper) BeamsOpenQueue(c context.Context, req *types.QueryFetchBeamsOpen
 
 	// Make the paginated query
 	var ids []string
-	pageRes, err := query.Paginate(beamStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(beamStore, req.Pagination, func(key, value []byte) error {
 		id := strings.Split(types.BytesKeyToString(value), types.MemStoreQueueSeparator)
 		for _, other := range id {
 			ids = append(ids, other)

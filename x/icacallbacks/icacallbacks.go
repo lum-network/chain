@@ -66,7 +66,7 @@ func UnpackAcknowledgementResponse(ctx sdk.Context, logger log.Logger, ack []byt
 		// If this is an ack from a non-ICA transaction (e.g. an IBC transfer), there is no need to decode the data field
 		if !isICA {
 			logger.Info(fmt.Sprintf("IBC transfer acknowledgement success: %+v", response))
-			return &types.AcknowledgementResponse{Status: types.AckResponseStatus_SUCCESS}, nil
+			return &types.AcknowledgementResponse{Status: types.AckResponseStatusSuccess}, nil
 		}
 
 		// Otherwise, if this ack is from an ICA, unmarshal the message data from within the ack
@@ -74,11 +74,11 @@ func UnpackAcknowledgementResponse(ctx sdk.Context, logger log.Logger, ack []byt
 		if err != nil {
 			return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot parse TxMsgData from ICA acknowledgement packet: %s", err.Error())
 		}
-		return &types.AcknowledgementResponse{Status: types.AckResponseStatus_SUCCESS, MsgResponses: msgResponses}, nil
+		return &types.AcknowledgementResponse{Status: types.AckResponseStatusSuccess, MsgResponses: msgResponses}, nil
 
 	case *channeltypes.Acknowledgement_Error:
 		logger.Error(fmt.Sprintf("acknowledgement error: %s", response.Error))
-		return &types.AcknowledgementResponse{Status: types.AckResponseStatus_FAILURE, Error: response.Error}, nil
+		return &types.AcknowledgementResponse{Status: types.AckResponseStatusFailure, Error: response.Error}, nil
 	default:
 		return nil, errorsmod.Wrapf(channeltypes.ErrInvalidAcknowledgement, "unsupported acknowledgement response field type %T", response)
 	}

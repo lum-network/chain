@@ -6,7 +6,7 @@ import (
 
 var _ sdk.Msg = &MsgWithdrawDeposit{}
 
-func NewMsgWithdrawDeposit(depositor string, toAddress string, poolID uint64, depositID uint64) *MsgWithdrawDeposit {
+func NewMsgWithdrawDeposit(depositor, toAddress string, poolID, depositID uint64) *MsgWithdrawDeposit {
 	return &MsgWithdrawDeposit{
 		PoolId:           poolID,
 		DepositId:        depositID,
