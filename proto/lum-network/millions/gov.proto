@@ -9,6 +9,7 @@ import "cosmos/base/v1beta1/coin.proto";
 
 import "lum-network/millions/draw_schedule.proto";
 import "lum-network/millions/prize_strategy.proto";
+import "lum-network/millions/pool.proto";
 
 option go_package = "github.com/lum-network/chain/x/millions/types";
 
@@ -42,6 +43,7 @@ message ProposalUpdatePool {
   string min_deposit_amount = 5 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = true ];
   DrawSchedule draw_schedule = 6 [ (gogoproto.nullable) = true ];
   PrizeStrategy prize_strategy = 7 [ (gogoproto.nullable) = true ];
+  PoolState state = 8;
 }
 
 message ProposalUpdateParams {

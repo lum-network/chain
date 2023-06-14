@@ -30,10 +30,12 @@ Please also make sure to have a look to the [contributing guidelines](https://gi
 
 Information related to the Lum Network mainnet `lum-network-1` can be found in the [mainnet repository](https://github.com/lum-network/mainnet).
 
-### v1.4.1 - 2023-05-30 - Block [#7740000](https://www.mintscan.io/lum/blocks/7740000)
+### ~~v1.4.1~~ v1.4.2 - 2023-05-30 - Block [#7740000](https://www.mintscan.io/lum/blocks/7740000)
 Fix IBC Huckleberry vulnerability and pruning issues.
 
 [Upgrade guide here](https://github.com/lum-network/mainnet/blob/master/upgrades/v1.4.1/guide.md).
+
+Version v1.4.1 has been replaced by **v1.4.2** (as decribed in the upgrade guide above) due to a chain halt on block #7799476.
 
 ### v1.4.0 - 2023-05-24 - Block [#7652000](https://www.mintscan.io/lum/blocks/7652000)
 Introduce new Millions module.

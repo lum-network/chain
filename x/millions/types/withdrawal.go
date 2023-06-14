@@ -25,15 +25,3 @@ func (withdrawal *Withdrawal) ValidateBasic() error {
 
 	return nil
 }
-
-// ValidateWithdrawDepositRetryBasic validates the incoming message for a withdraw deposit retry
-func (msg *MsgWithdrawDepositRetry) ValidateWithdrawDepositRetryBasic() error {
-	if msg.PoolId == UnknownID {
-		return errorsmod.Wrapf(ErrInvalidID, "pool ID")
-	}
-	if msg.WithdrawalId == UnknownID {
-		return errorsmod.Wrapf(ErrInvalidID, "withdrawal ID")
-	}
-
-	return nil
-}

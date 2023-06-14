@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 
+	"cosmossdk.io/math"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -57,6 +58,57 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsBasics() {
 		BondedAmount:    sdk.ZeroInt(),
 	}}
 	suite.Require().NoError(pool.ValidateBasic(params))
+}
+
+func (suite *KeeperTestSuite) TestPool_Helpers() {
+	poolLocal := millionstypes.Pool{Bech32PrefixAccAddr: sdk.GetConfig().GetBech32AccountAddrPrefix()}
+	cases := []struct {
+		address        string
+		isLocalAddress bool
+		expectError    bool
+	}{
+		{address: "", isLocalAddress: false, expectError: true},
+		{address: "not-an-address", isLocalAddress: false, expectError: true},
+		{address: cosmosIcaDepositAddress, isLocalAddress: true, expectError: true},
+		{address: suite.valAddrs[0].String(), isLocalAddress: false, expectError: true},
+		{address: suite.addrs[0].String(), isLocalAddress: true, expectError: false},
+		{address: suite.moduleAddrs[0].String(), isLocalAddress: true, expectError: false},
+	}
+	for i, c := range cases {
+		isLocalAddress, addr, err := poolLocal.AccAddressFromBech32(c.address)
+		if c.expectError {
+			suite.Require().Error(err, "case %d", i)
+			suite.Require().Nil(addr, "case %d", i)
+		} else {
+			suite.Require().Equal(c.isLocalAddress, isLocalAddress, "case %d", i)
+			suite.Require().NotNil(addr, "case %d", i)
+		}
+	}
+
+	poolRemote := millionstypes.Pool{Bech32PrefixAccAddr: "cosmos"}
+	cases = []struct {
+		address        string
+		isLocalAddress bool
+		expectError    bool
+	}{
+		{address: "", isLocalAddress: false, expectError: true},
+		{address: "not-an-address", isLocalAddress: false, expectError: true},
+		{address: suite.valAddrs[0].String(), isLocalAddress: false, expectError: true},
+		{address: "osmo1clpqr4nrk4khgkxj78fcwwh6dl3uw4epasmvnj", isLocalAddress: false, expectError: true},
+		{address: cosmosIcaDepositAddress, isLocalAddress: false, expectError: false},
+		{address: suite.addrs[0].String(), isLocalAddress: true, expectError: false},
+		{address: suite.moduleAddrs[0].String(), isLocalAddress: true, expectError: false},
+	}
+	for i, c := range cases {
+		isLocalAddress, addr, err := poolRemote.AccAddressFromBech32(c.address)
+		if c.expectError {
+			suite.Require().Error(err, "case %d", i)
+			suite.Require().Nil(addr, "case %d", i)
+		} else {
+			suite.Require().Equal(c.isLocalAddress, isLocalAddress, "case %d", i)
+			suite.Require().NotNil(addr, "case %d", i)
+		}
+	}
 }
 
 // TestPool_DrawSchedule validates draw schedule configuration and implementation
@@ -963,7 +1015,7 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 	// Deposit to trigger delegation for local pool
 	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
 		DepositorAddress: suite.addrs[0].String(),
-		PoolId:           uint64(1),
+		PoolId:           pool.PoolId,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(9_000_000)),
 	})
 	suite.Require().NoError(err)
@@ -1152,4 +1204,169 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 	suite.Require().Equal(sdk.NewInt(1_250_000), pool.Validators[2].BondedAmount)
 	suite.Require().Equal(sdk.NewInt(1_250_000), pool.Validators[3].BondedAmount)
 	suite.Require().Equal(sdk.NewInt(1_250_000), pool.Validators[4].BondedAmount)
+}
+
+// TestPool_UpdatePool tests the different conditions for a proposal pool update
+func (suite *KeeperTestSuite) TestPool_UpdatePool() {
+	app := suite.app
+	ctx := suite.ctx
+
+	goCtx := sdk.WrapSDKContext(ctx)
+	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
+
+	privKeys := make([]cryptotypes.PubKey, 4)
+	addrs := make([]sdk.AccAddress, 4)
+	validators := make([]stakingtypes.Validator, 4)
+	// create 4 validators
+	for i := 0; i < 4; i++ {
+		privKey := ed25519.GenPrivKey().PubKey()
+		privKeys[i] = privKey
+		addrs[i] = sdk.AccAddress(privKey.Address())
+
+		validator, err := stakingtypes.NewValidator(sdk.ValAddress(addrs[i]), privKeys[i], stakingtypes.Description{})
+		suite.Require().NoError(err)
+		validator = stakingkeeper.TestingUpdateValidator(*suite.app.StakingKeeper, suite.ctx, validator, false)
+		err = app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator.GetOperator())
+		suite.Require().NoError(err)
+
+		validators[i] = validator
+		validators = append(validators, validator)
+	}
+
+	drawDelta1 := 1 * time.Hour
+	newDrawSchedule := millionstypes.DrawSchedule{
+		InitialDrawAt: ctx.BlockTime().Add(2 * time.Hour),
+		DrawDelta:     drawDelta1,
+	}
+	newPrizeStrategy := millionstypes.PrizeStrategy{
+		PrizeBatches: []millionstypes.PrizeBatch{
+			{PoolPercent: 90, DrawProbability: sdk.NewDec(1), Quantity: 10},
+			{PoolPercent: 10, DrawProbability: sdk.NewDec(1), Quantity: 10},
+		},
+	}
+
+	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
+		PoolId: 1,
+		PrizeStrategy: millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
+			},
+		},
+		DrawSchedule: millionstypes.DrawSchedule{
+			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
+			DrawDelta:     drawDelta1,
+		},
+		AvailablePrizePool: sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
+		State:              millionstypes.PoolState_Ready,
+		MinDepositAmount:   sdk.NewInt(1_000_000),
+		Validators: []millionstypes.PoolValidator{
+			{
+				OperatorAddress: validators[0].OperatorAddress,
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+				Redelegate: &millionstypes.Redelegate{
+					ErrorState: millionstypes.RedelegateState_Unspecified,
+				},
+			},
+			{
+				OperatorAddress: validators[1].OperatorAddress,
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+				Redelegate: &millionstypes.Redelegate{
+					ErrorState: millionstypes.RedelegateState_Unspecified,
+				},
+			},
+			{
+				OperatorAddress: validators[2].OperatorAddress,
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+				Redelegate: &millionstypes.Redelegate{
+					ErrorState: millionstypes.RedelegateState_Unspecified,
+				},
+			},
+			{
+				OperatorAddress: validators[3].OperatorAddress,
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+				Redelegate: &millionstypes.Redelegate{
+					ErrorState: millionstypes.RedelegateState_Unspecified,
+				},
+			},
+		},
+	}))
+
+	pool, err := app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+
+	fullValidatorSet := []string{pool.Validators[0].OperatorAddress, pool.Validators[1].OperatorAddress, pool.Validators[2].OperatorAddress, pool.Validators[3].OperatorAddress}
+	validValidatorSet := []string{pool.Validators[0].OperatorAddress, pool.Validators[2].OperatorAddress}
+
+	// Deposit to trigger delegation for local pool
+	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
+		DepositorAddress: suite.addrs[0].String(),
+		PoolId:           pool.PoolId,
+		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(8_000_000)),
+	})
+	suite.Require().NoError(err)
+
+	// State should be unchanged as status ready and incoming state is killed
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, validValidatorSet, &pool.MinDepositAmount, &pool.DrawSchedule, &pool.PrizeStrategy, millionstypes.PoolState_Killed)
+	suite.Require().ErrorIs(err, millionstypes.ErrPoolStateChangeNotAllowed)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Ready, pool.State)
+
+	// State should be updated to status to PoolState_Paused
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &pool.MinDepositAmount, &pool.DrawSchedule, &pool.PrizeStrategy, millionstypes.PoolState_Paused)
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Paused, pool.State)
+
+	// State should remain to PoolState_Paused
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, nil, nil, nil, millionstypes.PoolState_Unspecified)
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Paused, pool.State)
+
+	// State should remain to PoolState_Paused
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, nil, nil, nil, millionstypes.PoolState_Created)
+	suite.Require().ErrorIs(err, millionstypes.ErrPoolStateChangeNotAllowed)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Paused, pool.State)
+
+	// Test that the same pool can be ready again
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &pool.MinDepositAmount, &pool.DrawSchedule, &pool.PrizeStrategy, millionstypes.PoolState_Ready)
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Ready, pool.State)
+
+	// Test new drawSchedule
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &pool.MinDepositAmount, &newDrawSchedule, &pool.PrizeStrategy, millionstypes.PoolState_Paused)
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(newDrawSchedule, pool.DrawSchedule)
+
+	// Test new prizeStrategy
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &pool.MinDepositAmount, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Ready)
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(newPrizeStrategy, pool.PrizeStrategy)
+
+	// Test new valSet
+	// - Same valSet should not be possible
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, fullValidatorSet, &pool.MinDepositAmount, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Paused)
+	suite.Require().ErrorIs(err, millionstypes.ErrNoDisabledValidator)
+	// - Diff valSet should disable and redelegate the non included val
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, validValidatorSet, &pool.MinDepositAmount, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Ready)
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.ZeroInt(), pool.Validators[1].BondedAmount)
+	suite.Require().Equal(millionstypes.RedelegateState_Success, pool.Validators[1].Redelegate.State)
 }
