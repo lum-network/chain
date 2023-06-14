@@ -15,7 +15,7 @@ func NewMigrator(keeper keeper2.Keeper) Migrator {
 	return Migrator{keeper: keeper}
 }
 
-// Migrate1To2 migrates from version 1 to 2
+// Migrate1To2 migrates from version 1 to 2.
 func (m Migrator) Migrate1To2(ctx sdk.Context) error {
 	return v110.MigrateBeamQueues(ctx, m.keeper)
 }

@@ -111,7 +111,7 @@ func (p *Pool) BondedValidators() (activeVals, inactiveVals []PoolValidator) {
 // amount is divided evenly to all active validators.
 func (p *Pool) ComputeSplitDelegations(ctx sdk.Context, amount math.Int) (splits []*SplitDelegation) {
 	activeValidators := p.ActiveValidators()
-	if len(activeValidators) <= 0 {
+	if len(activeValidators) == 0 {
 		return nil
 	}
 	used := math.ZeroInt()
@@ -151,7 +151,7 @@ func (p *Pool) ComputeSplitDelegations(ctx sdk.Context, amount math.Int) (splits
 // disabled validators are prioritized and remaining amount is divided evenly between all validators.
 func (p *Pool) ComputeSplitUndelegations(ctx sdk.Context, amount math.Int) (splits []*SplitDelegation) {
 	bondedActiveVals, bondedInactiveVals := p.BondedValidators()
-	if len(bondedActiveVals) <= 0 && len(bondedInactiveVals) <= 0 {
+	if len(bondedActiveVals) == 0 && len(bondedInactiveVals) == 0 {
 		return nil
 	}
 	used := math.ZeroInt()

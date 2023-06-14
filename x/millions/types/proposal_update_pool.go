@@ -51,7 +51,7 @@ func (p *ProposalUpdatePool) ValidateBasic() error {
 		}
 	}
 	if p.PrizeStrategy != nil {
-		if len(p.PrizeStrategy.PrizeBatches) <= 0 {
+		if len(p.PrizeStrategy.PrizeBatches) == 0 {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "at least one prize strategy batch is required")
 		}
 	}

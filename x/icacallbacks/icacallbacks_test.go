@@ -21,7 +21,7 @@ import (
 	icacallbacktypes "github.com/lum-network/chain/x/icacallbacks/types"
 )
 
-// Constructs an ICA Packet Acknowledgement compatible with ibc-go v5+
+// Constructs an ICA Packet Acknowledgement compatible with ibc-go v5+.
 func ICAPacketAcknowledgement(t *testing.T, msgType string, msgResponses []proto.Message) channeltypes.Acknowledgement {
 	txMsgData := &sdk.TxMsgData{
 		MsgResponses: make([]*codectypes.Any, len(msgResponses)),
@@ -45,7 +45,7 @@ func ICAPacketAcknowledgement(t *testing.T, msgType string, msgResponses []proto
 	return ack
 }
 
-// Constructs an legacy ICA Packet Acknowledgement compatible with ibc-go version v4 and lower
+// Constructs an legacy ICA Packet Acknowledgement compatible with ibc-go version v4 and lower.
 func ICAPacketAcknowledgementLegacy(t *testing.T, msgType string, msgResponses []proto.Message) channeltypes.Acknowledgement {
 	txMsgData := &sdk.TxMsgData{
 		Data: make([]*sdk.MsgData, len(msgResponses)), //nolint:staticcheck
@@ -226,7 +226,7 @@ func TestUnwrapAcknowledgement(t *testing.T) {
 			// Call unpack ack response and check error
 			ackResponse, err := icacallbacks.UnpackAcknowledgementResponse(sdk.Context{}, log.NewNopLogger(), ackBz, tc.isICA)
 			if tc.functionError != "" {
-				require.ErrorContains(t, err, tc.functionError, "unpacking acknowledgement reponse should have resulted in a function error")
+				require.ErrorContains(t, err, tc.functionError, "unpacking acknowledgement response should have resulted in a function error")
 				return
 			}
 			require.NoError(t, err, "no error expected when unpacking ack")

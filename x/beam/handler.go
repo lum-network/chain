@@ -9,7 +9,7 @@ import (
 	"github.com/lum-network/chain/x/beam/types"
 )
 
-// NewHandler new handler for the beam module
+// NewHandler new handler for the beam module.
 func NewHandler(k keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())

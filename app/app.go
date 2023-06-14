@@ -106,7 +106,7 @@ import (
 )
 
 var (
-	// DefaultNodeHome default home directories for the application daemon
+	// DefaultNodeHome default home directories for the application daemon.
 	DefaultNodeHome string
 
 	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
@@ -152,7 +152,7 @@ var (
 		millions.AppModuleBasic{},
 	)
 
-	// module account permissions
+	// module account permissions.
 	maccPerms = map[string][]string{
 		authtypes.FeeCollectorName:     nil,
 		distrtypes.ModuleName:          nil,
@@ -279,7 +279,7 @@ func New(
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
 	// we prefer to be more strict in what arguments the modules expect.
-	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
+	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
@@ -463,10 +463,10 @@ func New(
 	return app
 }
 
-// Name returns the name of the App
+// Name returns the name of the App.
 func (app *App) Name() string { return app.BaseApp.Name() }
 
-// GetBaseApp returns the base app of the application
+// GetBaseApp returns the base app of the application.
 func (app *App) GetBaseApp() *baseapp.BaseApp { return app.BaseApp }
 
 // GetStakingKeeper implements the TestingApp interface.
@@ -495,17 +495,17 @@ func (app *App) GetTxConfig() client.TxConfig {
 	return cfg.TxConfig
 }
 
-// BeginBlocker application updates every begin block
+// BeginBlocker application updates every begin block.
 func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
 }
 
-// EndBlocker application updates every end block
+// EndBlocker application updates every end block.
 func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	return app.mm.EndBlock(ctx, req)
 }
 
-// InitChainer application update at chain initialization
+// InitChainer application update at chain initialization.
 func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
@@ -515,7 +515,7 @@ func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.Res
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
-// LoadHeight loads a particular height
+// LoadHeight loads a particular height.
 func (app *App) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
@@ -530,7 +530,7 @@ func (app *App) ModuleAccountAddrs() map[string]bool {
 	return modAccAddrs
 }
 
-// BlockedModuleAccountAddrs returns all the app's blocked module account addresses
+// BlockedModuleAccountAddrs returns all the app's blocked module account addresses.
 func (app *App) BlockedModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	return modAccAddrs
@@ -546,7 +546,7 @@ func (app *App) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
-// InterfaceRegistry returns Gaia's InterfaceRegistry
+// InterfaceRegistry returns Gaia's InterfaceRegistry.
 func (app *App) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }
@@ -611,7 +611,7 @@ func (app *App) RegisterNodeService(clientCtx client.Context) {
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
 }
 
-// RegisterSwaggerAPI registers swagger route with API Server
+// RegisterSwaggerAPI registers swagger route with API Server.
 func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
 	statikFS, err := fs.New()
 	if err != nil {

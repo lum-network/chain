@@ -27,7 +27,7 @@ type KeeperTestSuite struct {
 	addrs       []sdk.AccAddress
 }
 
-// SetupTest Create our testing app, and make sure everything is correctly usable
+// SetupTest Create our testing app, and make sure everything is correctly usable.
 func (suite *KeeperTestSuite) SetupTest() {
 	app := apptypes.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -42,7 +42,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.addrs = apptesting.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
 }
 
-// TestClaimNewBeam Try to create a beam and claim it using another account
+// TestClaimNewBeam Try to create a beam and claim it using another account.
 func (suite *KeeperTestSuite) TestClaimOpenBeam() {
 	app := suite.app
 	ctx := suite.ctx
@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) TestClaimOpenBeam() {
 	suite.Require().Equal(beam.GetStatus(), types.BeamState_StateOpen)
 }
 
-// TestClaimClosedBeam Test to claim a closed beam and make sure funds were transfered
+// TestClaimClosedBeam Test to claim a closed beam and make sure funds were transfered.
 func (suite *KeeperTestSuite) TestClaimClosedBeam() {
 	app := suite.app
 	ctx := suite.ctx
@@ -184,11 +184,11 @@ func (suite *KeeperTestSuite) TestClaimClosedBeam() {
 	))
 	suite.Require().Error(err)
 
-	// Now the funds should've been transfered
+	// Now the funds should've been transferred
 	suite.Require().Equal(claimerFunds.Add(beam.GetAmount()), app.BankKeeper.GetBalance(ctx, claimer, apptypes.CoinBondDenom))
 }
 
-// Test to cancel a beam and make sure funds were returned to the sender
+// Test to cancel a beam and make sure funds were returned to the sender.
 func (suite *KeeperTestSuite) TestCancelBeam() {
 	app := suite.app
 	ctx := suite.ctx
@@ -364,7 +364,7 @@ func (suite *KeeperTestSuite) TestOpenCloseIterators() {
 	closedIterator.Close()
 }
 
-// TestUnknownBeam Make sure we cannot get an unknown beam
+// TestUnknownBeam Make sure we cannot get an unknown beam.
 func (suite *KeeperTestSuite) TestUnknownBeam() {
 	app := suite.app
 	ctx := suite.ctx
@@ -373,7 +373,7 @@ func (suite *KeeperTestSuite) TestUnknownBeam() {
 	suite.Require().Error(err)
 }
 
-// TestOpenNewBeam Try to create a new beam and make sure the stored entity matches the original one
+// TestOpenNewBeam Try to create a new beam and make sure the stored entity matches the original one.
 func (suite *KeeperTestSuite) TestOpenNewBeam() {
 	app := suite.app
 	ctx := suite.ctx
@@ -421,10 +421,9 @@ func (suite *KeeperTestSuite) TestOpenNewBeam() {
 }
 
 func (suite *KeeperTestSuite) TestOpenAutoCloseBeam() {
-
 }
 
-// TestFetchBeams Open a new beam and try to fetch it through the list
+// TestFetchBeams Open a new beam and try to fetch it through the list.
 func (suite *KeeperTestSuite) TestFetchBeams() {
 	app := suite.app
 	ctx := suite.ctx
@@ -461,7 +460,7 @@ func (suite *KeeperTestSuite) TestFetchBeams() {
 	suite.Require().Equal(beam.GetId(), msg.GetId())
 }
 
-// TestIncorrectBeamId A beam id that contains a comma must be refused
+// TestIncorrectBeamId A beam id that contains a comma must be refused.
 func (suite *KeeperTestSuite) TestIncorrectBeamId() {
 	app := suite.app
 	ctx := suite.ctx
@@ -489,7 +488,7 @@ func (suite *KeeperTestSuite) TestIncorrectBeamId() {
 	suite.Require().False(app.BeamKeeper.HasBeam(ctx, msg.GetId()))
 }
 
-// TestKeeperSuite Main entry point for the testing suite
+// TestKeeperSuite Main entry point for the testing suite.
 func TestKeeperSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }

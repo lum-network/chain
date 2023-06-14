@@ -81,12 +81,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 	})
 }
 
-// floatToDec simple helper to create sdk.Dec with a precision of 6
+// floatToDec simple helper to create sdk.Dec with a precision of 6.
 func floatToDec(v float64) sdk.Dec {
 	return sdk.NewDecWithPrec(int64(v*1_000_000), 6)
 }
 
-// newValidPool fills up missing params to the pool to make it valid in order to ease testing
+// newValidPool fills up missing params to the pool to make it valid in order to ease testing.
 func newValidPool(suite *KeeperTestSuite, pool millionstypes.Pool) *millionstypes.Pool {
 	params := suite.app.MillionsKeeper.GetParams(suite.ctx)
 

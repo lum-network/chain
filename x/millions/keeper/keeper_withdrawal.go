@@ -454,7 +454,7 @@ func (k Keeper) MaturedWithdrawalQueueIterator(ctx sdk.Context, endTime time.Tim
 	return withdrawalStore.Iterator(types.WithdrawalMaturationTimePrefix, append(types.GetMaturedWithdrawalTimeKey(endTime), byte(0x00)))
 }
 
-// DequeueMaturedWithdrawalQueue return all the Matured Withdrawals that can be transfered and can be removed from the queue.
+// DequeueMaturedWithdrawalQueue return all the Matured Withdrawals that can be transferred and can be removed from the queue.
 func (k Keeper) DequeueMaturedWithdrawalQueue(ctx sdk.Context, endTime time.Time) (withdrawalsIDs []types.WithdrawalIDs) {
 	withdrawalStore := ctx.KVStore(k.storeKey)
 

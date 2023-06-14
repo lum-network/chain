@@ -18,45 +18,47 @@ import (
 	"github.com/lum-network/chain/x/airdrop/types"
 )
 
-var now = time.Now().UTC()
-var acc1 = sdk.AccAddress([]byte("addr1---------------"))
-var acc2 = sdk.AccAddress([]byte("addr2---------------"))
-var acc3 = sdk.AccAddress([]byte("addr3---------------"))
-var testGenesis = types.GenesisState{
-	ModuleAccountBalance: sdk.NewInt64Coin(types.DefaultClaimDenom, 15_000),
-	Params: types.Params{
-		AirdropStartTime:   now,
-		DurationUntilDecay: types.DefaultDurationUntilDecay,
-		DurationOfDecay:    types.DefaultDurationOfDecay,
-		ClaimDenom:         types.DefaultClaimDenom, // ulum
-	},
-	ClaimRecords: []types.ClaimRecord{
-		{
-			Address: acc1.String(),
-			InitialClaimableAmount: sdk.Coins{
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 1_000),
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 5_000),
-			},
-			ActionCompleted: []bool{false, false},
+var (
+	now         = time.Now().UTC()
+	acc1        = sdk.AccAddress([]byte("addr1---------------"))
+	acc2        = sdk.AccAddress([]byte("addr2---------------"))
+	acc3        = sdk.AccAddress([]byte("addr3---------------"))
+	testGenesis = types.GenesisState{
+		ModuleAccountBalance: sdk.NewInt64Coin(types.DefaultClaimDenom, 15_000),
+		Params: types.Params{
+			AirdropStartTime:   now,
+			DurationUntilDecay: types.DefaultDurationUntilDecay,
+			DurationOfDecay:    types.DefaultDurationOfDecay,
+			ClaimDenom:         types.DefaultClaimDenom, // ulum
 		},
-		{
-			Address: acc2.String(),
-			InitialClaimableAmount: sdk.Coins{
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 3_000),
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 2_000),
+		ClaimRecords: []types.ClaimRecord{
+			{
+				Address: acc1.String(),
+				InitialClaimableAmount: sdk.Coins{
+					sdk.NewInt64Coin(types.DefaultClaimDenom, 1_000),
+					sdk.NewInt64Coin(types.DefaultClaimDenom, 5_000),
+				},
+				ActionCompleted: []bool{false, false},
 			},
-			ActionCompleted: []bool{false, false},
-		},
-		{
-			Address: acc3.String(),
-			InitialClaimableAmount: sdk.Coins{
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 1_000),
-				sdk.NewInt64Coin(types.DefaultClaimDenom, 3_000),
+			{
+				Address: acc2.String(),
+				InitialClaimableAmount: sdk.Coins{
+					sdk.NewInt64Coin(types.DefaultClaimDenom, 3_000),
+					sdk.NewInt64Coin(types.DefaultClaimDenom, 2_000),
+				},
+				ActionCompleted: []bool{false, false},
 			},
-			ActionCompleted: []bool{false, false},
+			{
+				Address: acc3.String(),
+				InitialClaimableAmount: sdk.Coins{
+					sdk.NewInt64Coin(types.DefaultClaimDenom, 1_000),
+					sdk.NewInt64Coin(types.DefaultClaimDenom, 3_000),
+				},
+				ActionCompleted: []bool{false, false},
+			},
 		},
-	},
-}
+	}
+)
 
 func TestAirdropInitGenesis(t *testing.T) {
 	app := apptypes.SetupForTesting(false)

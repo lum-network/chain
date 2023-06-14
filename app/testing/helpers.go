@@ -15,15 +15,15 @@ import (
 )
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
-// initial balance of accAmt in random order
+// initial balance of accAmt in random order.
 func AddTestAddrsIncremental(app *app.App, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
 	return addTestAddrs(app, ctx, accNum, accAmt, createIncrementalAccounts)
 }
 
-// EmptyAppOptions is a stub implementing AppOptions
+// EmptyAppOptions is a stub implementing AppOptions.
 type EmptyAppOptions struct{}
 
-// Get implements AppOptions
+// Get implements AppOptions.
 func (ao EmptyAppOptions) Get(o string) interface{} {
 	return nil
 }
@@ -69,7 +69,7 @@ func AddTestModuleAccount(app *app.App, ctx sdk.Context, addr sdk.AccAddress) {
 }
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
-// initial balance of accAmt in random order
+// initial balance of accAmt in random order.
 func AddTestAddrs(app *app.App, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
 	return addTestAddrs(app, ctx, accNum, accAmt, createRandomAccounts)
 }
@@ -114,7 +114,7 @@ func InitAccountWithCoins(app *app.App, ctx sdk.Context, addr sdk.AccAddress, co
 	}
 }
 
-func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
+func TestAddr(addr, bech string) (sdk.AccAddress, error) {
 	res, err := sdk.AccAddressFromHexUnsafe(addr)
 	if err != nil {
 		return nil, err

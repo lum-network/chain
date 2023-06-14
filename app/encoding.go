@@ -6,7 +6,7 @@ import (
 	"github.com/lum-network/chain/app/params"
 )
 
-// MakeEncodingConfig creates an EncodingConfig for testing
+// MakeEncodingConfig creates an EncodingConfig for testing.
 func MakeEncodingConfig() params.EncodingConfig {
 	encodingConfig := params.MakeEncodingConfig()
 	std.RegisterLegacyAminoCodec(encodingConfig.Amino)

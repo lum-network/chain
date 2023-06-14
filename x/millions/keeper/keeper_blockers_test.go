@@ -9,7 +9,7 @@ import (
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 
-// TestBlockers_PoolUpdates tests block based pool updates (draw launches)
+// TestBlockers_PoolUpdates tests block based pool updates (draw launches).
 func (suite *KeeperTestSuite) TestBlockers_PoolUpdates() {
 	app := suite.app
 	ctx := suite.ctx.WithBlockHeight(0).WithBlockTime(time.Now().UTC())
@@ -181,7 +181,7 @@ func (suite *KeeperTestSuite) TestBlockers_PoolUpdates() {
 	suite.Require().Len(app.MillionsKeeper.ListDraws(ctx), 4)
 }
 
-// TestBlockers_PrizeUpdates tests block based prizes updates (clawbacks)
+// TestBlockers_PrizeUpdates tests block based prizes updates (clawbacks).
 func (suite *KeeperTestSuite) TestBlockers_PrizeUpdates() {
 	app := suite.app
 	ctx := suite.ctx.WithBlockHeight(0).WithBlockTime(time.Now().UTC())
@@ -261,7 +261,7 @@ func (suite *KeeperTestSuite) TestBlockers_PrizeUpdates() {
 	suite.Require().Equal(0, ec)
 }
 
-// TestBlockers_WithdrawalUpdates tests block based withdrawal updates (unbonding completed)
+// TestBlockers_WithdrawalUpdates tests block based withdrawal updates (unbonding completed).
 func (suite *KeeperTestSuite) TestBlockers_WithdrawalUpdates() {
 	app := suite.app
 	ctx := suite.ctx.WithBlockHeight(0).WithBlockTime(time.Now().UTC())

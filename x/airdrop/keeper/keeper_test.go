@@ -20,9 +20,11 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-var now = time.Now().UTC()
-var defaultClaimDenom = app.CoinBondDenom
-var defaultClaimBalance = int64(1_000_000)
+var (
+	now                 = time.Now().UTC()
+	defaultClaimDenom   = app.CoinBondDenom
+	defaultClaimBalance = int64(1_000_000)
+)
 
 type KeeperTestSuite struct {
 	suite.Suite
@@ -32,7 +34,7 @@ type KeeperTestSuite struct {
 	app         *app.App
 }
 
-// SetupTest Create our testing app, and make sure everything is correctly usable
+// SetupTest Create our testing app, and make sure everything is correctly usable.
 func (suite *KeeperTestSuite) SetupTest() {
 	app := apptypes.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -564,7 +566,7 @@ func (suite *KeeperTestSuite) TestModuleBalance() {
 	suite.Equal(sdk.NewDec(100_000), communityBalance.AmountOf(defaultClaimDenom))
 }
 
-// TestKeeperSuite Main entry point for the testing suite
+// TestKeeperSuite Main entry point for the testing suite.
 func TestKeeperSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }

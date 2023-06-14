@@ -10,7 +10,7 @@ import (
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 
-// TestMsgServer_DrawRetry runs draw retry related tests
+// TestMsgServer_DrawRetry runs draw retry related tests.
 func (suite *KeeperTestSuite) TestMsgServer_DrawRetry() {
 	// Set the app context
 	app := suite.app
@@ -198,7 +198,7 @@ func (suite *KeeperTestSuite) TestMsgServer_DrawRetry() {
 	suite.Require().ErrorIs(err, millionstypes.ErrInvalidDrawState)
 }
 
-// TestMsgServer_Deposit runs deposit related tests
+// TestMsgServer_Deposit runs deposit related tests.
 func (suite *KeeperTestSuite) TestMsgServer_Deposit() {
 	app := suite.app
 	ctx := suite.ctx
@@ -358,7 +358,7 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit() {
 	suite.Require().Equal(sdk.NewInt(int64(5_000_000)), pool.SponsorshipAmount)
 }
 
-// TestMsgServer_DepositRetry tests the retry of a failed deposit
+// TestMsgServer_DepositRetry tests the retry of a failed deposit.
 func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 	// Set the app context
 	app := suite.app
@@ -510,7 +510,7 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 	suite.Require().ErrorIs(err, millionstypes.ErrInvalidDepositState)
 }
 
-// TestMsgServer_WithdrawDeposit runs withdrawal deposit related tests
+// TestMsgServer_WithdrawDeposit runs withdrawal deposit related tests.
 func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 	// Set the app context
 	app := suite.app
@@ -669,7 +669,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 	suite.Require().Len(deposits, 1)
 }
 
-// TestMsgServer_WithdrawDepositRetry runs withdrawal retry related tests
+// TestMsgServer_WithdrawDepositRetry runs withdrawal retry related tests.
 func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 	// Set the app context
 	app := suite.app
@@ -677,7 +677,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 	drawDelta1 := 1 * time.Hour
-	var now = time.Now().UTC()
+	now := time.Now().UTC()
 
 	pool := newValidPool(suite, millionstypes.Pool{
 		PoolId:      uint64(1),
@@ -817,7 +817,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 	suite.Require().Len(withdrawals, 0)
 }
 
-// TestMsgServer_ClaimPrize runs prize claim related tests
+// TestMsgServer_ClaimPrize runs prize claim related tests.
 func (suite *KeeperTestSuite) TestMsgServer_ClaimPrize() {
 	app := suite.app
 	ctx := suite.ctx

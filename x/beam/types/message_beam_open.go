@@ -50,7 +50,7 @@ func (msg *MsgOpenBeam) GetSignBytes() []byte {
 
 // ValidateBasic Validate the message payload before dispatching to the local kv store.
 func (msg *MsgOpenBeam) ValidateBasic() error {
-	if len(msg.Id) <= 0 {
+	if len(msg.Id) == 0 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "Invalid id supplied (%d)", len(msg.Id))
 	}
 
@@ -61,7 +61,7 @@ func (msg *MsgOpenBeam) ValidateBasic() error {
 	}
 
 	// Validate the secret
-	if len(msg.Secret) <= 0 {
+	if len(msg.Secret) == 0 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "Invalid secret supplied")
 	}
 

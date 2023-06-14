@@ -50,7 +50,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterCodec(cdc)
 }
 
-// RegisterInterfaces registers the module's interface types
+// RegisterInterfaces registers the module's interface types.
 func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
 }
@@ -152,7 +152,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 	return []abci.ValidatorUpdate{}
 }
 
-// ConsensusVersion returns the current module store definitions version
+// ConsensusVersion returns the current module store definitions version.
 func (am AppModule) ConsensusVersion() uint64 {
 	return types.ModuleVersion
 }

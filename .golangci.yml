@@ -1,5 +1,6 @@
 run:
   tests: true
+  allow-parallel-runners: true
 
 linters:
   # Disable all linters.

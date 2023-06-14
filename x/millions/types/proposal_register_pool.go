@@ -52,7 +52,7 @@ func (p *ProposalRegisterPool) ValidateBasic() error {
 	}
 
 	// Validate payload
-	if len(strings.TrimSpace(p.ChainId)) <= 0 {
+	if len(strings.TrimSpace(p.ChainId)) == 0 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "Chain ID is required")
 	}
 	if err := sdk.ValidateDenom(p.Denom); err != nil {
@@ -61,19 +61,19 @@ func (p *ProposalRegisterPool) ValidateBasic() error {
 	if err := sdk.ValidateDenom(p.NativeDenom); err != nil {
 		return errorsmod.Wrapf(err, "a valid native_denom is required")
 	}
-	if len(p.Validators) <= 0 {
+	if len(p.Validators) == 0 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "at least one validator is required")
 	}
 	if p.MinDepositAmount.IsNil() || p.MinDepositAmount.LT(sdk.NewInt(MinAcceptableDepositAmount)) {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "min deposit denom must be gte %d", MinAcceptableDepositAmount)
 	}
-	if len(strings.TrimSpace(p.Bech32PrefixAccAddr)) <= 0 {
+	if len(strings.TrimSpace(p.Bech32PrefixAccAddr)) == 0 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "bech32 acc prefix is required")
 	}
-	if len(strings.TrimSpace(p.Bech32PrefixValAddr)) <= 0 {
+	if len(strings.TrimSpace(p.Bech32PrefixValAddr)) == 0 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "bech32 val prefix is required")
 	}
-	if len(p.PrizeStrategy.PrizeBatches) <= 0 {
+	if len(p.PrizeStrategy.PrizeBatches) == 0 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "at least one prize strategy batch is required")
 	}
 	if p.DrawSchedule.DrawDelta < MinAcceptableDrawDelta {

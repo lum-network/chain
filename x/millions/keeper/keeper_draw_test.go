@@ -15,7 +15,7 @@ import (
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 
-// TestDraw_NoPrizeToWin tests cases where no prize can be computed and therefore no winner
+// TestDraw_NoPrizeToWin tests cases where no prize can be computed and therefore no winner.
 func (suite *KeeperTestSuite) TestDraw_NoPrizeToWin() {
 	app := suite.app
 	ctx := suite.ctx
@@ -82,7 +82,7 @@ func (suite *KeeperTestSuite) TestDraw_NoPrizeToWin() {
 	suite.Require().Len(result.PrizeDraws, 3)
 }
 
-// TestDraw_NoPrizesWon tests the outcome of winnable prizes without winners
+// TestDraw_NoPrizesWon tests the outcome of winnable prizes without winners.
 func (suite *KeeperTestSuite) TestDraw_NoPrizesWon() {
 	app := suite.app
 	ctx := suite.ctx
@@ -137,7 +137,7 @@ func (suite *KeeperTestSuite) TestDraw_NoPrizesWon() {
 	}
 }
 
-// TestDraw_PrizeComputation tests rounding approximation on prizes computations
+// TestDraw_PrizeComputation tests rounding approximation on prizes computations.
 func (suite *KeeperTestSuite) TestDraw_PrizeComputation() {
 	app := suite.app
 	ctx := suite.ctx
@@ -222,7 +222,7 @@ func (suite *KeeperTestSuite) TestDraw_PrizeComputation() {
 	suite.Require().Equal(int64(0), remainingAmount.Int64())
 }
 
-// TestDraw_UnusualPrizeCases tests if unusual cases lead to predictable behaviours
+// TestDraw_UnusualPrizeCases tests if unusual cases lead to predictable behaviours.
 func (suite *KeeperTestSuite) TestDraw_UnusualPrizeCases() {
 	app := suite.app
 	ctx := suite.ctx
@@ -341,7 +341,7 @@ func (suite *KeeperTestSuite) TestDraw_UnusualPrizeCases() {
 	suite.Require().Equal(prizePool.Amount.QuoRaw(100).MulRaw(5).Int64(), result.TotalWinAmount.Int64())
 }
 
-// TestDraw_PrizesOrdering tests prizes descending ordering by amount
+// TestDraw_PrizesOrdering tests prizes descending ordering by amount.
 func (suite *KeeperTestSuite) TestDraw_PrizesOrdering() {
 	app := suite.app
 	ctx := suite.ctx
@@ -380,7 +380,7 @@ func (suite *KeeperTestSuite) TestDraw_PrizesOrdering() {
 }
 
 // TestDraw_PrizesDrawDeterminism tests prizes draw determinism using the same input parameters
-// Each draw using the same parameters should be identical (deterministic)
+// Each draw using the same parameters should be identical (deterministic).
 func (suite *KeeperTestSuite) TestDraw_PrizesDrawDeterminism() {
 	app := suite.app
 	ctx := suite.ctx
@@ -393,7 +393,7 @@ func (suite *KeeperTestSuite) TestDraw_PrizesDrawDeterminism() {
 	}
 
 	// Init stable strategy for all draws
-	strat := millionstypes.PrizeStrategy{
+	strategy := millionstypes.PrizeStrategy{
 		PrizeBatches: []millionstypes.PrizeBatch{
 			{PoolPercent: 100, Quantity: 100, DrawProbability: floatToDec(1.0)},
 		},
@@ -402,7 +402,7 @@ func (suite *KeeperTestSuite) TestDraw_PrizesDrawDeterminism() {
 	seed := int64(42)
 	firstDraw, err := app.MillionsKeeper.RunDrawPrizes(ctx,
 		prizePool,
-		strat,
+		strategy,
 		depositors,
 		seed,
 	)
@@ -411,7 +411,7 @@ func (suite *KeeperTestSuite) TestDraw_PrizesDrawDeterminism() {
 	for i := 0; i < 100; i++ {
 		draw, err := app.MillionsKeeper.RunDrawPrizes(ctx,
 			prizePool,
-			strat,
+			strategy,
 			depositors,
 			seed,
 		)
@@ -431,7 +431,7 @@ func (suite *KeeperTestSuite) TestDraw_PrizesDrawDeterminism() {
 	}
 }
 
-// TestDraw_PrizePoolPersistence tests propagation of prize pool sources (fresh, clawback, remains) for subsequent draws
+// TestDraw_PrizePoolPersistence tests propagation of prize pool sources (fresh, clawback, remains) for subsequent draws.
 func (suite *KeeperTestSuite) TestDraw_PrizePoolPersistence() {
 	app := suite.app
 	ctx := suite.ctx
@@ -641,7 +641,7 @@ func (suite *KeeperTestSuite) TestDraw_PrizePoolPersistence() {
 	suite.Require().Equal(uint64(2), draws2[1].DrawId)
 }
 
-// TestDraw_TimeWeightedBalance tests TWB enforcement at draw level
+// TestDraw_TimeWeightedBalance tests TWB enforcement at draw level.
 func (suite *KeeperTestSuite) TestDraw_TimeWeightedBalance() {
 	app := suite.app
 	ctx := suite.ctx
@@ -723,7 +723,7 @@ func (suite *KeeperTestSuite) TestDraw_TimeWeightedBalance() {
 	suite.Require().Equal("8", depositsTWB[8].Address)
 }
 
-// TestDraw_PrizeDistribution tests draw prize distribution phase
+// TestDraw_PrizeDistribution tests draw prize distribution phase.
 func (suite *KeeperTestSuite) TestDraw_PrizeDistribution() {
 	app := suite.app
 	ctx := suite.ctx
@@ -790,10 +790,9 @@ func (suite *KeeperTestSuite) TestDraw_PrizeDistribution() {
 			suite.Require().GreaterOrEqual(len(draw.PrizesRefs), 1)
 		}
 	}
-
 }
 
-// TestDraw_TriggerAndPrizePool tests draw triggered by block updates and prize pool computation
+// TestDraw_TriggerAndPrizePool tests draw triggered by block updates and prize pool computation.
 func (suite *KeeperTestSuite) TestDraw_TriggerAndPrizePool() {
 	app := suite.app
 	ctx := suite.ctx
@@ -859,7 +858,7 @@ func (suite *KeeperTestSuite) TestDraw_TriggerAndPrizePool() {
 
 // TestDraw_EvenPrizeDistributionLLN tests if the prize distribution abides by the law of large numbers
 // A large number of draws should converge to the expected drawing probabilities
-// In this case an even distribution for depositors with similar amounts
+// In this case an even distribution for depositors with similar amounts.
 func (suite *KeeperTestSuite) TestDraw_EvenPrizeDistributionLLN() {
 	app := suite.app
 	ctx := suite.ctx
@@ -887,7 +886,7 @@ func (suite *KeeperTestSuite) TestDraw_EvenPrizeDistributionLLN() {
 	}
 
 	// Init stable strategy for all draws
-	strat := millionstypes.PrizeStrategy{
+	strategy := millionstypes.PrizeStrategy{
 		PrizeBatches: []millionstypes.PrizeBatch{
 			{PoolPercent: 100, Quantity: 100, DrawProbability: floatToDec(1.0)},
 		},
@@ -914,7 +913,7 @@ func (suite *KeeperTestSuite) TestDraw_EvenPrizeDistributionLLN() {
 		// DrawPrizes and save results
 		results, err := app.MillionsKeeper.RunDrawPrizes(ctx,
 			sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), prizePool),
-			strat,
+			strategy,
 			depositors,
 			seed,
 		)
@@ -932,7 +931,7 @@ func (suite *KeeperTestSuite) TestDraw_EvenPrizeDistributionLLN() {
 
 	// Number of wins should be close to probabilities (less than 0.01% difference)
 	probaTotalWinners := float64(0)
-	for _, pb := range strat.PrizeBatches {
+	for _, pb := range strategy.PrizeBatches {
 		drawProb, err := pb.DrawProbability.Float64()
 		suite.Require().NoError(err)
 		probaTotalWinners += float64(pb.Quantity) * drawProb * float64(drawCount)
@@ -955,7 +954,7 @@ func (suite *KeeperTestSuite) TestDraw_EvenPrizeDistributionLLN() {
 
 // TestDraw_WeightedPrizeDistributionLLN tests if the prize distribution abides by the law of large numbers
 // A large number of draws should converge to the expected drawing probabilities
-// In this case a weighted distribution based on each depositor stakes
+// In this case a weighted distribution based on each depositor stakes.
 func (suite *KeeperTestSuite) TestDraw_WeightedPrizeDistributionLLN() {
 	app := suite.app
 	ctx := suite.ctx
@@ -998,7 +997,7 @@ func (suite *KeeperTestSuite) TestDraw_WeightedPrizeDistributionLLN() {
 	}
 
 	// Init stable strategy for all draws
-	strat := millionstypes.PrizeStrategy{
+	strategy := millionstypes.PrizeStrategy{
 		PrizeBatches: []millionstypes.PrizeBatch{
 			{PoolPercent: 100, Quantity: 200, DrawProbability: floatToDec(0.80)},
 		},
@@ -1025,7 +1024,7 @@ func (suite *KeeperTestSuite) TestDraw_WeightedPrizeDistributionLLN() {
 		// DrawPrizes and save results
 		results, err := app.MillionsKeeper.RunDrawPrizes(ctx,
 			sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), prizePool),
-			strat,
+			strategy,
 			depositors,
 			seed,
 		)
@@ -1043,7 +1042,7 @@ func (suite *KeeperTestSuite) TestDraw_WeightedPrizeDistributionLLN() {
 
 	// Number of wins should be close to probabilities (less than 0.01% difference)
 	probaTotalWinners := float64(0)
-	for _, pb := range strat.PrizeBatches {
+	for _, pb := range strategy.PrizeBatches {
 		drawProb, err := pb.DrawProbability.Float64()
 		suite.Require().NoError(err)
 		probaTotalWinners += float64(pb.Quantity) * drawProb * float64(drawCount)
@@ -1066,7 +1065,7 @@ func (suite *KeeperTestSuite) TestDraw_WeightedPrizeDistributionLLN() {
 	}
 }
 
-// TestDraw_IDsGeneration test that drawID is always incremented for a new draw
+// TestDraw_IDsGeneration test that drawID is always incremented for a new draw.
 func (suite *KeeperTestSuite) TestDraw_IDsGeneration() {
 	app := suite.app
 	ctx := suite.ctx
@@ -1090,7 +1089,7 @@ func (suite *KeeperTestSuite) TestDraw_IDsGeneration() {
 	}
 }
 
-// TestDraw_SetPoolDraw tests that a draw result is set in the KVStore for a given poolID and drawID
+// TestDraw_SetPoolDraw tests that a draw result is set in the KVStore for a given poolID and drawID.
 func (suite *KeeperTestSuite) TestDraw_SetPoolDraw() {
 	app := suite.app
 	ctx := suite.ctx
@@ -1167,7 +1166,7 @@ func (suite *KeeperTestSuite) TestDraw_SetPoolDraw() {
 	suite.Require().Len(draws, 3)
 }
 
-// TestDraw_ClaimRewardsOnNativeChain tests claim of staking rewards from the native chain validators
+// TestDraw_ClaimRewardsOnNativeChain tests claim of staking rewards from the native chain validators.
 func (suite *KeeperTestSuite) TestDraw_ClaimRewardsOnNativeChain() {
 	app := suite.app
 	ctx := suite.ctx
@@ -1251,7 +1250,7 @@ func (suite *KeeperTestSuite) TestDraw_ClaimRewardsOnNativeChain() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(millionstypes.DrawState_IcqBalance, draw.State)
 	suite.Require().Equal(millionstypes.DrawState_Unspecified, draw.ErrorState)
-	// Simulate succesful ICQ callback
+	// Simulate successful ICQ callback
 	// Should complete the Draw since no coins was found by the simulated callback (skip transfer phase)
 	_, err = app.MillionsKeeper.OnQueryRewardsOnNativeChainCompleted(ctx, draw.PoolId, draw.DrawId, sdk.NewCoins(), false)
 	suite.Require().NoError(err)
@@ -1315,7 +1314,7 @@ func (suite *KeeperTestSuite) TestDraw_ClaimRewardsOnNativeChain() {
 	suite.Require().Equal(millionstypes.DrawState_Unspecified, draw.ErrorState)
 }
 
-// TestDraw_TransferRewardsToLocalChain tests the transfer of the claimed rewards to the local chain
+// TestDraw_TransferRewardsToLocalChain tests the transfer of the claimed rewards to the local chain.
 func (suite *KeeperTestSuite) TestDraw_TransferRewardsToLocalChain() {
 	app := suite.app
 	ctx := suite.ctx
@@ -1457,7 +1456,7 @@ func (suite *KeeperTestSuite) TestDraw_TransferRewardsToLocalChain() {
 	suite.Require().Equal(millionstypes.DrawState_Unspecified, draw.ErrorState)
 }
 
-// TestDraw_ExecuteDraw test the last draw phases by drawing prizes
+// TestDraw_ExecuteDraw test the last draw phases by drawing prizes.
 func (suite *KeeperTestSuite) TestDraw_ExecuteDraw() {
 	app := suite.app
 	ctx := suite.ctx

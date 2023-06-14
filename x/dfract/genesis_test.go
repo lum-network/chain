@@ -13,10 +13,12 @@ import (
 	"github.com/lum-network/chain/x/dfract/types"
 )
 
-var now = time.Now().UTC()
-var acc1 = sdk.AccAddress([]byte("addr1---------------"))
-var acc2 = sdk.AccAddress([]byte("addr2---------------"))
-var acc3 = sdk.AccAddress([]byte("addr3---------------"))
+var (
+	now  = time.Now().UTC()
+	acc1 = sdk.AccAddress([]byte("addr1---------------"))
+	acc2 = sdk.AccAddress([]byte("addr2---------------"))
+	acc3 = sdk.AccAddress([]byte("addr3---------------"))
+)
 
 const mintDenom = "udfr"
 

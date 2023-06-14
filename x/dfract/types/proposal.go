@@ -58,7 +58,7 @@ func (prop *WithdrawAndMintProposal) ValidateBasic() error {
 	}
 
 	// Make sure we have an address
-	if len(prop.GetWithdrawalAddress()) <= 0 {
+	if len(prop.GetWithdrawalAddress()) == 0 {
 		return ErrEmptyWithdrawalAddress
 	}
 

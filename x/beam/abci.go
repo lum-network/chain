@@ -11,7 +11,7 @@ import (
 	"github.com/lum-network/chain/x/beam/types"
 )
 
-// EndBlocker Called every block, process the beam expiration and auto close
+// EndBlocker Called every block, process the beam expiration and auto close.
 func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	// Notify the telemetry module
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)

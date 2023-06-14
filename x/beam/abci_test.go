@@ -30,7 +30,7 @@ type ABCITestSuite struct {
 	addrs       []sdk.AccAddress
 }
 
-// SetupTest Create our testing app, and make sure everything is correctly usable
+// SetupTest Create our testing app, and make sure everything is correctly usable.
 func (suite *ABCITestSuite) SetupTest() {
 	app := apptypes.SetupForTesting(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})

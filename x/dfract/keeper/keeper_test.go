@@ -40,7 +40,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	for _, denom := range params.DepositDenoms {
 		suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 6, sdk.NewInt(300000000), denom)
 	}
-
 }
 
 func (suite *KeeperTestSuite) TestInvalidParams() {
@@ -125,7 +124,6 @@ func (suite *KeeperTestSuite) TestInvalidAmountDeposit() {
 		suite.Require().Error(err)
 		suite.Require().Equal(err, types.ErrInsufficientDepositAmount)
 	}
-
 }
 
 func (suite *KeeperTestSuite) TestDoubleDeposit() {
@@ -157,7 +155,6 @@ func (suite *KeeperTestSuite) TestDoubleDeposit() {
 		suite.Require().True(found)
 		suite.Require().Equal(deposit.Amount, sdk.NewCoin(denom, sdk.NewInt(200000000)))
 	}
-
 }
 
 func (suite *KeeperTestSuite) TestValidDeposit() {
@@ -218,7 +215,7 @@ func (suite *KeeperTestSuite) TestMintAccuracy() {
 
 	// Iterate over the array of deposit denoms
 	for _, denom := range params.DepositDenoms {
-		testAccuracy := func(depositor sdk.AccAddress, depositAmount int64, microMintRate int64, expectedMintedAmount int64) {
+		testAccuracy := func(depositor sdk.AccAddress, depositAmount, microMintRate, expectedMintedAmount int64) {
 			balanceBeforeMint := app.BankKeeper.GetBalance(ctx, depositor, types.MintDenom)
 			app.DFractKeeper.SetDepositPendingMint(ctx, depositor, types.Deposit{
 				DepositorAddress: depositor.String(),
