@@ -431,15 +431,9 @@ func (k Keeper) UpdatePool(
 	// Commit the pool to the KVStore
 	k.updatePool(ctx, &pool)
 
-	// Redelegate validator(s) after pool update in case there is a new ValSet with disabled validators
-	if len(vals) > 0 {
-		disabledValidators, err := pool.GetDisabledValidators(ctx)
-		if err != nil {
-			return err
-		}
-		if err := k.Redelegate(ctx, pool.PoolId, disabledValidators); err != nil {
-			return err
-		}
+	// Trigger rebalance distribution
+	if err := k.RebalanceValidatorsBondings(ctx, poolID); err != nil {
+		return err
 	}
 
 	// Emit event
@@ -458,8 +452,31 @@ func (k Keeper) UpdatePool(
 	return nil
 }
 
-// Redelegate redistribute the bondedAmount of the disabled validators to the active valitator set of the pool
-func (k Keeper) Redelegate(ctx sdk.Context, poolID uint64, disabledValidators []types.PoolValidator) error {
+// RebalanceValidatorsBondings allows rebalancing of validators bonded assets
+// Current implementation:
+// - Initiate an even redelegate distribution from inactive bonded validators to active validators
+
+// Later implementation:
+// - Add params to allow different rebalancing strategy
+// - Add params for pool type
+func (k Keeper) RebalanceValidatorsBondings(ctx sdk.Context, poolID uint64) error {
+	pool, err := k.GetPool(ctx, poolID)
+	if err != nil {
+		return err
+	}
+
+	_, bondedInactiveVals := pool.BondedValidators()
+	if len(bondedInactiveVals) > 0 {
+		if err := k.Redelegate(ctx, pool.PoolId, bondedInactiveVals); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Redelegate redistribute evenly the bondedAmount from the bonded inactive to the active valitator set of the pool
+func (k Keeper) Redelegate(ctx sdk.Context, poolID uint64, bondedInactiveVals []types.PoolValidator) error {
 	logger := k.Logger(ctx).With("ctx", "pool_redelegate")
 
 	pool, err := k.GetPool(ctx, poolID)
@@ -472,22 +489,18 @@ func (k Keeper) Redelegate(ctx sdk.Context, poolID uint64, disabledValidators []
 		return types.ErrPoolNotReady
 	}
 
-	for _, dv := range disabledValidators {
-		// Generate splits for active validators based on the bonded amount from incoming disabled validator
-		splits := pool.ComputeSplitDelegations(ctx, dv.BondedAmount)
+	for _, biv := range bondedInactiveVals {
+		// Generate splits for active validators based on the bonded amount from incoming inactive validator
+		splits := pool.ComputeSplitDelegations(ctx, biv.BondedAmount)
 		if len(splits) == 0 {
 			return types.ErrPoolEmptySplitDelegations
-		}
-
-		if err := k.UpdateRedelegateStatus(ctx, pool.PoolId, types.RedelegateState_IcaRedelegate, dv.GetOperatorAddress(), false, false); err != nil {
-			return err
 		}
 
 		// If pool is local, we just process operation in place
 		// Otherwise we trigger ICA transactions
 		if pool.IsLocalZone(ctx) {
 			modAddr := sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress())
-			valSrcAddr, err := sdk.ValAddressFromBech32(dv.GetOperatorAddress())
+			valSrcAddr, err := sdk.ValAddressFromBech32(biv.GetOperatorAddress())
 			if err != nil {
 				return err
 			}
@@ -514,7 +527,7 @@ func (k Keeper) Redelegate(ctx sdk.Context, poolID uint64, disabledValidators []
 					return errorsmod.Wrapf(err, "%s", valDstAddr.String())
 				}
 			}
-			err = k.OnRedelegateOnNativeChainCompleted(ctx, pool.PoolId, dv.GetOperatorAddress(), splits, false)
+			err = k.OnRedelegateToRemoteZoneCompleted(ctx, pool.PoolId, biv.GetOperatorAddress(), splits)
 			if err != nil {
 				return err
 			}
@@ -524,7 +537,7 @@ func (k Keeper) Redelegate(ctx sdk.Context, poolID uint64, disabledValidators []
 		// Construct our callback data
 		callbackData := types.RedelegateCallback{
 			PoolId:           poolID,
-			OperatorAddress:  dv.GetOperatorAddress(),
+			OperatorAddress:  biv.GetOperatorAddress(),
 			SplitDelegations: splits,
 		}
 		marshalledCallbackData, err := k.MarshalRedelegateCallbackArgs(ctx, callbackData)
@@ -537,7 +550,7 @@ func (k Keeper) Redelegate(ctx sdk.Context, poolID uint64, disabledValidators []
 		for _, split := range splits {
 			msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{
 				DelegatorAddress:    pool.GetIcaDepositAddress(),
-				ValidatorSrcAddress: dv.GetOperatorAddress(),
+				ValidatorSrcAddress: biv.GetOperatorAddress(),
 				ValidatorDstAddress: split.ValidatorAddress,
 				Amount:              sdk.NewCoin(pool.NativeDenom, split.Amount),
 			})
@@ -565,8 +578,8 @@ func (k Keeper) Redelegate(ctx sdk.Context, poolID uint64, disabledValidators []
 	return nil
 }
 
-// OnRedelegateOnNativeChainCompleted Acknowledged a redelegation of a disabled validator's bondedAmount
-func (k Keeper) OnRedelegateOnNativeChainCompleted(ctx sdk.Context, poolID uint64, operatorAddress string, splits []*types.SplitDelegation, isError bool) error {
+// OnRedelegateToRemoteZoneCompleted Acknowledged a redelegation of an inactive validator's bondedAmount
+func (k Keeper) OnRedelegateToRemoteZoneCompleted(ctx sdk.Context, poolID uint64, operatorAddress string, splits []*types.SplitDelegation) error {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err
@@ -584,23 +597,8 @@ func (k Keeper) OnRedelegateOnNativeChainCompleted(ctx sdk.Context, poolID uint6
 		return errorsmod.Wrapf(types.ErrValidatorNotFound, "%s", operatorAddress)
 	}
 
-	if pool.Validators[index].Redelegate.State != types.RedelegateState_IcaRedelegate {
-		return errorsmod.Wrapf(types.ErrIllegalStateOperation, "state should be %s but is %s", types.RedelegateState_IcaRedelegate.String(), pool.Validators[index].Redelegate.State.String())
-	}
-
-	// Keep internal tracking when an ICA callback fails to allow new gov prop
-	if isError {
-		if err := k.UpdateRedelegateStatus(ctx, pool.PoolId, types.RedelegateState_IcaRedelegate, pool.Validators[index].GetOperatorAddress(), true, true); err != nil {
-			return err
-		}
-		return nil
-	}
-
 	pool.ApplySplitRedelegate(ctx, splits, pool.Validators[index].GetOperatorAddress())
 	k.updatePool(ctx, &pool)
-	if err := k.UpdateRedelegateStatus(ctx, pool.PoolId, types.RedelegateState_Success, pool.Validators[index].GetOperatorAddress(), false, false); err != nil {
-		return err
-	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -617,37 +615,24 @@ func (k Keeper) OnRedelegateOnNativeChainCompleted(ctx sdk.Context, poolID uint6
 	return nil
 }
 
-// UpdateRedelegateStatus is a utils function to update redelegated validators
-func (k Keeper) UpdateRedelegateStatus(ctx sdk.Context, poolID uint64, status types.RedelegateState, operatorAddress string, isEnabled bool, isError bool) error {
+// UpdateRedelegatePoolValidator is an internal utils function to update a pool validator set
+// Warning: used for testing purposes
+func (k Keeper) UpdateRedelegatePoolValidator(ctx sdk.Context, poolID uint64, operatorAddress string, isEnabled bool) error {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err
 	}
 
-	// Make sure pool is ready
-	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
-		return types.ErrPoolNotReady
-	}
-
-	// Get validator
+	// Get the validator
 	valIdx := pool.GetValidatorsMapIndex()
 	index, found := valIdx[operatorAddress]
 	if !found {
 		return errorsmod.Wrapf(types.ErrValidatorNotFound, "%s", operatorAddress)
 	}
 
-	if isError {
-		pool.Validators[index].IsEnabled = isEnabled
-		pool.Validators[index].Redelegate.ErrorState = status
-		pool.Validators[index].Redelegate.State = types.RedelegateState_Failure
-		k.updatePool(ctx, &pool)
-		return nil
-	}
-
 	pool.Validators[index].IsEnabled = isEnabled
-	pool.Validators[index].Redelegate.State = status
-	pool.Validators[index].Redelegate.ErrorState = types.RedelegateState_Unspecified
 	k.updatePool(ctx, &pool)
+
 	return nil
 }
 

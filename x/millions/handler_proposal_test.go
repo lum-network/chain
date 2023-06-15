@@ -86,33 +86,21 @@ func (suite *HandlerTestSuite) SetupTest() {
 				OperatorAddress: validators[0].OperatorAddress,
 				BondedAmount:    sdk.NewInt(0),
 				IsEnabled:       true,
-				Redelegate: &millionstypes.Redelegate{
-					ErrorState: millionstypes.RedelegateState_Unspecified,
-				},
 			},
 			{
 				OperatorAddress: validators[1].OperatorAddress,
 				BondedAmount:    sdk.NewInt(0),
 				IsEnabled:       true,
-				Redelegate: &millionstypes.Redelegate{
-					ErrorState: millionstypes.RedelegateState_Unspecified,
-				},
 			},
 			{
 				OperatorAddress: validators[2].OperatorAddress,
 				BondedAmount:    sdk.NewInt(0),
 				IsEnabled:       true,
-				Redelegate: &millionstypes.Redelegate{
-					ErrorState: millionstypes.RedelegateState_Unspecified,
-				},
 			},
 			{
 				OperatorAddress: validators[3].OperatorAddress,
 				BondedAmount:    sdk.NewInt(0),
 				IsEnabled:       true,
-				Redelegate: &millionstypes.Redelegate{
-					ErrorState: millionstypes.RedelegateState_Unspecified,
-				},
 			},
 		},
 		IcaDepositAddress: suite.moduleAddrs[0].String(),
@@ -303,7 +291,6 @@ func (suite *HandlerTestSuite) TestProposal_UpdatePool() {
 		InitialDrawAt: time.Time{},
 	}
 
-	fullValidatorSet := []string{suite.pool.Validators[0].OperatorAddress, suite.pool.Validators[1].OperatorAddress, suite.pool.Validators[2].OperatorAddress, suite.pool.Validators[3].OperatorAddress}
 	validValidatorSet := []string{suite.pool.Validators[0].OperatorAddress, suite.pool.Validators[2].OperatorAddress}
 	invalidValidatorSet := []string{"lumvaloper16rlynj5wvzw"}
 
@@ -369,20 +356,14 @@ func (suite *HandlerTestSuite) TestProposal_UpdatePool() {
 			true,
 		},
 		{
-			"Cannot update with the same validator set",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), fullValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateUnspecified),
+			"Partial should be fine",
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, nil, nil, nil, poolStateUnspecified),
 			false,
-			true,
+			false,
 		},
 		{
 			"Fine should be fine",
 			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused),
-			false,
-			false,
-		},
-		{
-			"Partial should be fine",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, nil, nil, nil, poolStateReady),
 			false,
 			false,
 		},

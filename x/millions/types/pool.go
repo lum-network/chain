@@ -254,24 +254,6 @@ func (p *Pool) ApplySplitRedelegate(ctx sdk.Context, splits []*SplitDelegation, 
 	}
 }
 
-// GetDisabledValidators returns all disabled validators from the pool
-func (p *Pool) GetDisabledValidators(ctx sdk.Context) ([]PoolValidator, error) {
-	var disabledValidators []PoolValidator
-
-	valIdx := p.GetValidatorsMapIndex()
-	for _, index := range valIdx {
-		if !p.Validators[index].IsEnabled {
-			disabledValidators = append(disabledValidators, p.Validators[index])
-		}
-	}
-
-	if len(disabledValidators) == 0 {
-		return []PoolValidator{}, ErrNoDisabledValidator
-	}
-
-	return disabledValidators, nil
-}
-
 // AccAddressFromBech32 custom implementation of sdk.AccAddressFromBech32 to handle pool bech32 prefix
 // Returns if address is local (= to sdk.GetConfig().GetBech32AccountAddrPrefix()):
 // Error in cases:

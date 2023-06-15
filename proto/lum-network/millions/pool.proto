@@ -10,17 +10,14 @@ import "cosmos_proto/cosmos.proto";
 import "lum-network/millions/draw.proto";
 import "lum-network/millions/draw_schedule.proto";
 import "lum-network/millions/prize_strategy.proto";
-import "lum-network/millions/redelegate.proto";
-
 option go_package = "github.com/lum-network/chain/x/millions/types";
 
 // PoolState the state of a Pool
 // Deposits are only accepted for Pools in a Ready state
 // 
 // TODO:
-// Pool states PAUSED and KILLED are not available in the current implementation
+// Pool states KILLED are not available in the current implementation
 // Introduce the capability to:
-// - Pause a Pool in case of Interchain issues or via Governance proposal
 // - Kill a Pool and withdraw or migrate all deposits to another Pool via Governance proposal
 enum PoolState {
   option (gogoproto.goproto_enum_prefix) = true;
@@ -82,5 +79,4 @@ message PoolValidator {
   string operator_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   bool is_enabled = 2;
   string bonded_amount = 3 [ (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false ];
-  Redelegate redelegate = 4 [ (gogoproto.nullable) = true ];
 }
