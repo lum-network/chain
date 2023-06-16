@@ -540,7 +540,7 @@ func (k Keeper) Redelegate(ctx sdk.Context, poolID uint64, bondedInactiveVal typ
 		pool.ApplySplitRedelegate(ctx, splits, inactiveVal.GetOperatorAddress())
 		k.updatePool(ctx, &pool)
 
-		return k.OnRedelegateToRemoteZoneCompleted(ctx, pool.PoolId, bondedInactiveVal.GetOperatorAddress(), splits, false)
+		return k.OnRedelegateToRemoteZoneCompleted(ctx, pool.PoolId, inactiveVal.GetOperatorAddress(), splits, false)
 	}
 
 	// Construct our callback data
