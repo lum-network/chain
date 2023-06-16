@@ -937,8 +937,8 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	suite.Require().Equal(sdk.ZeroInt(), pool.Validators[0].BondedAmount)
 }
 
-// TestPool_Redelegate tests the redelegate process from an inactive to an active validator
-func (suite *KeeperTestSuite) TestPool_Redelegate() {
+// TestPool_RebalanceValidatorsBondings tests the redelegate process from inactive to an active validators
+func (suite *KeeperTestSuite) TestPool_RebalanceValidatorsBondings() {
 	app := suite.app
 	ctx := suite.ctx
 	goCtx := sdk.WrapSDKContext(ctx)
@@ -1016,37 +1016,31 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 	suite.Require().Equal(sdk.NewInt(1_800_000), pool.Validators[1].BondedAmount)
 	suite.Require().Equal(sdk.NewInt(1_800_000), pool.Validators[2].BondedAmount)
 	suite.Require().Equal(sdk.NewInt(1_800_000), pool.Validators[3].BondedAmount)
+	suite.Require().Equal(sdk.NewInt(1_800_000), pool.Validators[4].BondedAmount)
 
 	// Simulate that 2 validators are bonded but inactive in the poolSet
 	// - Validator 2 and 4 are being removed
-	app.MillionsKeeper.UpdateRedelegatePoolValidator(ctx, pool.PoolId, pool.Validators[1].GetOperatorAddress(), false)
-	suite.Require().NoError(err)
-	app.MillionsKeeper.UpdateRedelegatePoolValidator(ctx, pool.PoolId, pool.Validators[3].GetOperatorAddress(), false)
+	app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{pool.Validators[0].GetOperatorAddress(), pool.Validators[2].GetOperatorAddress(), pool.Validators[4].GetOperatorAddress()}, nil, nil, nil, millionstypes.PoolState_Unspecified)
 	suite.Require().NoError(err)
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
 
 	// Redelegate inactive validators evenly to active validators
-	_, bondedInactiveVals := pool.BondedValidators()
-	err = app.MillionsKeeper.Redelegate(ctx, pool.PoolId, bondedInactiveVals)
+	err = app.MillionsKeeper.RebalanceValidatorsBondings(ctx, pool.PoolId)
 	suite.Require().NoError(err)
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
 
 	// The remaining pool amount of 9_000_000 should be divided by 3 among the remaining active validators
 	suite.Require().Equal(sdk.NewInt(3_000_000), pool.Validators[0].BondedAmount)
-	suite.Require().Equal(true, pool.Validators[0].IsEnabled)
-
 	suite.Require().Equal(sdk.NewInt(0), pool.Validators[1].BondedAmount)
-	suite.Require().Equal(false, pool.Validators[1].IsEnabled)
-
 	suite.Require().Equal(sdk.NewInt(3_000_000), pool.Validators[2].BondedAmount)
-	suite.Require().Equal(true, pool.Validators[2].IsEnabled)
-
 	suite.Require().Equal(sdk.NewInt(0), pool.Validators[3].BondedAmount)
-	suite.Require().Equal(false, pool.Validators[3].IsEnabled)
-
 	suite.Require().Equal(sdk.NewInt(3_000_000), pool.Validators[4].BondedAmount)
+	suite.Require().Equal(true, pool.Validators[0].IsEnabled)
+	suite.Require().Equal(false, pool.Validators[1].IsEnabled)
+	suite.Require().Equal(true, pool.Validators[2].IsEnabled)
+	suite.Require().Equal(false, pool.Validators[3].IsEnabled)
 	suite.Require().Equal(true, pool.Validators[4].IsEnabled)
 
 	// Create remote pool with 5 remote valAddreses
@@ -1127,20 +1121,9 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[3].BondedAmount)
 	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[4].BondedAmount)
 
-	pool, err = app.MillionsKeeper.GetPool(ctx, 2)
-	suite.Require().NoError(err)
-	// simulate that the pool got updated with 1 inactive validator (first validator in the pool set)
-	bondedInactiveAmount := pool.Validators[0].BondedAmount
-	// Disable the target validator
-	pool.Validators[0].IsEnabled = false
-
-	// ComputeSplitDelegations to ease the simulation of Redelegate for remote pool
-	splits = pool.ComputeSplitDelegations(ctx, bondedInactiveAmount)
-	suite.Require().Len(splits, 4)
-
-	// Simulate successfull redelegation for remote pools
-	err = app.MillionsKeeper.OnRedelegateToRemoteZoneCompleted(ctx, 2, valAddrsRemote[0], splits)
-	suite.Require().NoError(err)
+	// Simulate validator 1 that gets removed from the valSet
+	app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{pool.Validators[1].GetOperatorAddress(), pool.Validators[2].GetOperatorAddress(), pool.Validators[3].GetOperatorAddress(), pool.Validators[4].GetOperatorAddress()}, nil, nil, nil, millionstypes.PoolState_Unspecified)
+	// No active channel for this owner
 	pool, err = app.MillionsKeeper.GetPool(ctx, 2)
 	suite.Require().NoError(err)
 
@@ -1150,6 +1133,31 @@ func (suite *KeeperTestSuite) TestPool_Redelegate() {
 	suite.Require().Equal(sdk.NewInt(1_250_000), pool.Validators[2].BondedAmount)
 	suite.Require().Equal(sdk.NewInt(1_250_000), pool.Validators[3].BondedAmount)
 	suite.Require().Equal(sdk.NewInt(1_250_000), pool.Validators[4].BondedAmount)
+	suite.Require().Equal(false, pool.Validators[0].IsEnabled)
+	suite.Require().Equal(true, pool.Validators[1].IsEnabled)
+	suite.Require().Equal(true, pool.Validators[2].IsEnabled)
+	suite.Require().Equal(true, pool.Validators[3].IsEnabled)
+	suite.Require().Equal(true, pool.Validators[4].IsEnabled)
+
+	// Simulate failed ICA callback
+	// The initial splits amount for the inactive validator 1 was 1_000_000
+	splits = pool.ComputeSplitDelegations(ctx, sdk.NewInt(1_000_000))
+	err = app.MillionsKeeper.OnRedelegateToRemoteZoneCompleted(ctx, pool.PoolId, pool.Validators[0].GetOperatorAddress(), splits, true)
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 2)
+	suite.Require().NoError(err)
+
+	// The BondedAmount should be back to normal as for pre-op Redelegate
+	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[0].BondedAmount)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[1].BondedAmount)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[2].BondedAmount)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[3].BondedAmount)
+	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[4].BondedAmount)
+	suite.Require().Equal(false, pool.Validators[0].IsEnabled)
+	suite.Require().Equal(true, pool.Validators[1].IsEnabled)
+	suite.Require().Equal(true, pool.Validators[2].IsEnabled)
+	suite.Require().Equal(true, pool.Validators[3].IsEnabled)
+	suite.Require().Equal(true, pool.Validators[4].IsEnabled)
 }
 
 // TestPool_UpdatePool tests the different conditions for a proposal pool update
@@ -1267,9 +1275,11 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 
 	// We simulate validators that are bonded but inactivated (prior to redelegation) and are still in the pool valSet
 	// - Validators 5 and 6
-	err = app.MillionsKeeper.UpdateRedelegatePoolValidator(ctx, pool.PoolId, validators[4].OperatorAddress, false)
+	app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{validators[4].String()}, nil, nil, nil, millionstypes.PoolState_Unspecified)
 	suite.Require().NoError(err)
-	err = app.MillionsKeeper.UpdateRedelegatePoolValidator(ctx, pool.PoolId, validators[5].OperatorAddress, false)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{validators[5].String()}, nil, nil, nil, millionstypes.PoolState_Unspecified)
 	suite.Require().NoError(err)
 
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)

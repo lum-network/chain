@@ -245,10 +245,23 @@ func (p *Pool) ApplySplitRedelegate(ctx sdk.Context, splits []*SplitDelegation, 
 	for _, split := range splits {
 		// Add the split amount to the active validator's bonded amount
 		p.Validators[valIdx[split.ValidatorAddress]].BondedAmount = p.Validators[valIdx[split.ValidatorAddress]].BondedAmount.Add(split.Amount)
-
-		// Substract from the disabled validator
+		// Substract from the inactive validator
 		p.Validators[valIdx[operatorAddress]].BondedAmount = p.Validators[valIdx[operatorAddress]].BondedAmount.Sub(split.Amount)
 		if p.Validators[valIdx[operatorAddress]].BondedAmount.LT(sdk.ZeroInt()) {
+			panic(ErrPoolInvalidSplit)
+		}
+	}
+}
+
+// RevertSplitRedelegate reverts an initial ApplySplitRedelegate
+func (p *Pool) RevertSplitRedelegate(ctx sdk.Context, splits []*SplitDelegation, operatorAddress string) {
+	valIdx := p.GetValidatorsMapIndex()
+	for _, split := range splits {
+		// Add BondedAmount back to the previously inactive bonded validator
+		p.Validators[valIdx[operatorAddress]].BondedAmount = p.Validators[valIdx[operatorAddress]].BondedAmount.Add(split.Amount)
+		// Substract from the active bonded validator
+		p.Validators[valIdx[split.ValidatorAddress]].BondedAmount = p.Validators[valIdx[split.ValidatorAddress]].BondedAmount.Sub(split.Amount)
+		if p.Validators[valIdx[split.ValidatorAddress]].BondedAmount.LT(sdk.ZeroInt()) {
 			panic(ErrPoolInvalidSplit)
 		}
 	}

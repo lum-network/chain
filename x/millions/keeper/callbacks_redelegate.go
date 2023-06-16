@@ -49,10 +49,11 @@ func RedelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, a
 	if ackResponse.Status == icacallbackstypes.AckResponseStatus_TIMEOUT {
 		k.Logger(ctx).Debug("Received timeout for a redelegate packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
-		k.Logger(ctx).Error("Received failure for a redelegate packet", ackResponse.Error)
+		k.Logger(ctx).Debug("Received failure for a redelegate packet")
+		return k.OnRedelegateToRemoteZoneCompleted(ctx, redelegateCallback.GetPoolId(), redelegateCallback.GetOperatorAddress(), redelegateCallback.GetSplitDelegations(), true)
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
 		k.Logger(ctx).Debug("Received success for a redelegate packet")
-		return k.OnRedelegateToRemoteZoneCompleted(ctx, redelegateCallback.GetPoolId(), redelegateCallback.GetOperatorAddress(), redelegateCallback.GetSplitDelegations())
+		return k.OnRedelegateToRemoteZoneCompleted(ctx, redelegateCallback.GetPoolId(), redelegateCallback.GetOperatorAddress(), redelegateCallback.GetSplitDelegations(), false)
 	}
 	return nil
 }

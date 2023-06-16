@@ -16,7 +16,7 @@ option go_package = "github.com/lum-network/chain/x/millions/types";
 // Deposits are only accepted for Pools in a Ready state
 // 
 // TODO:
-// Pool states KILLED are not available in the current implementation
+// Pool state KILLED is not available in the current implementation
 // Introduce the capability to:
 // - Kill a Pool and withdraw or migrate all deposits to another Pool via Governance proposal
 enum PoolState {
