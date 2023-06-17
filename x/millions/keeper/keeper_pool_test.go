@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 
-	"cosmossdk.io/math"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -937,8 +936,8 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	suite.Require().Equal(sdk.ZeroInt(), pool.Validators[0].BondedAmount)
 }
 
-// TestPool_RebalanceValidatorsBondings tests the redelegate process from inactive to an active validators
-func (suite *KeeperTestSuite) TestPool_RebalanceValidatorsBondings() {
+// TestPool_UpdatePool tests the different conditions for a proposal pool update
+func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 	app := suite.app
 	ctx := suite.ctx
 	goCtx := sdk.WrapSDKContext(ctx)
@@ -947,6 +946,19 @@ func (suite *KeeperTestSuite) TestPool_RebalanceValidatorsBondings() {
 	privKeys := make([]cryptotypes.PubKey, 5)
 	addrs := make([]sdk.AccAddress, 5)
 	validators := make([]stakingtypes.Validator, 5)
+
+	drawDelta1 := 1 * time.Hour
+	newDrawSchedule := millionstypes.DrawSchedule{
+		InitialDrawAt: ctx.BlockTime().Add(2 * time.Hour),
+		DrawDelta:     drawDelta1,
+	}
+	newDepositAmount := sdk.NewInt(2_000_000)
+	newPrizeStrategy := millionstypes.PrizeStrategy{
+		PrizeBatches: []millionstypes.PrizeBatch{
+			{PoolPercent: 90, DrawProbability: sdk.NewDec(1), Quantity: 10},
+			{PoolPercent: 10, DrawProbability: sdk.NewDec(1), Quantity: 10},
+		},
+	}
 
 	// create 5 validators
 	for i := 0; i < 5; i++ {
@@ -1025,12 +1037,6 @@ func (suite *KeeperTestSuite) TestPool_RebalanceValidatorsBondings() {
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
 
-	// Redelegate inactive validators evenly to active validators
-	err = app.MillionsKeeper.RebalanceValidatorsBondings(ctx, pool.PoolId)
-	suite.Require().NoError(err)
-	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
-	suite.Require().NoError(err)
-
 	// The remaining pool amount of 9_000_000 should be divided by 3 among the remaining active validators
 	suite.Require().Equal(sdk.NewInt(3_000_000), pool.Validators[0].BondedAmount)
 	suite.Require().Equal(sdk.NewInt(0), pool.Validators[1].BondedAmount)
@@ -1042,6 +1048,45 @@ func (suite *KeeperTestSuite) TestPool_RebalanceValidatorsBondings() {
 	suite.Require().Equal(true, pool.Validators[2].IsEnabled)
 	suite.Require().Equal(false, pool.Validators[3].IsEnabled)
 	suite.Require().Equal(true, pool.Validators[4].IsEnabled)
+
+	// UpdatePool with new params
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Paused)
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	// New Deposit amount should be 2_000_000
+	suite.Require().Equal(newDepositAmount, pool.MinDepositAmount)
+	// PoolState should be paused
+	suite.Require().Equal(millionstypes.PoolState_Paused, pool.State)
+	// New prize strategy applied
+	suite.Require().Equal(newPrizeStrategy, pool.PrizeStrategy)
+	// New draw schedule applied
+	suite.Require().Equal(newDrawSchedule, pool.DrawSchedule)
+
+	// UpdatePool with invalid pool_state -> PoolState_Killed
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Killed)
+	suite.Require().ErrorIs(err, millionstypes.ErrPoolStateChangeNotAllowed)
+	// Grab fresh pool instance
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Paused, pool.State)
+
+	// UpdatePool with invalid pool_state -> PoolState_Unspecified
+	// Should remain with the current poolState
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Unspecified)
+	suite.Require().NoError(err)
+	// Grab fresh pool instance
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Paused, pool.State)
+
+	// UpdatePool with valid pool_state -> PoolState_Ready
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Ready)
+	suite.Require().NoError(err)
+	// Grab fresh pool instance
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Ready, pool.State)
 
 	// Create remote pool with 5 remote valAddreses
 	valAddrsRemote := []string{
@@ -1158,177 +1203,4 @@ func (suite *KeeperTestSuite) TestPool_RebalanceValidatorsBondings() {
 	suite.Require().Equal(true, pool.Validators[2].IsEnabled)
 	suite.Require().Equal(true, pool.Validators[3].IsEnabled)
 	suite.Require().Equal(true, pool.Validators[4].IsEnabled)
-}
-
-// TestPool_UpdatePool tests the different conditions for a proposal pool update
-func (suite *KeeperTestSuite) TestPool_UpdatePool() {
-	app := suite.app
-	ctx := suite.ctx
-
-	goCtx := sdk.WrapSDKContext(ctx)
-	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
-
-	privKeys := make([]cryptotypes.PubKey, 6)
-	addrs := make([]sdk.AccAddress, 6)
-	validators := make([]stakingtypes.Validator, 6)
-	// create 6 validators
-	for i := 0; i < 6; i++ {
-		privKey := ed25519.GenPrivKey().PubKey()
-		privKeys[i] = privKey
-		addrs[i] = sdk.AccAddress(privKey.Address())
-
-		validator, err := stakingtypes.NewValidator(sdk.ValAddress(addrs[i]), privKeys[i], stakingtypes.Description{})
-		suite.Require().NoError(err)
-		validator = stakingkeeper.TestingUpdateValidator(*suite.app.StakingKeeper, suite.ctx, validator, false)
-		err = app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator.GetOperator())
-		suite.Require().NoError(err)
-
-		validators[i] = validator
-		validators = append(validators, validator)
-	}
-
-	drawDelta1 := 1 * time.Hour
-	newDrawSchedule := millionstypes.DrawSchedule{
-		InitialDrawAt: ctx.BlockTime().Add(2 * time.Hour),
-		DrawDelta:     drawDelta1,
-	}
-	newDepositAmount := sdk.NewInt(2_000_000)
-	newPrizeStrategy := millionstypes.PrizeStrategy{
-		PrizeBatches: []millionstypes.PrizeBatch{
-			{PoolPercent: 90, DrawProbability: sdk.NewDec(1), Quantity: 10},
-			{PoolPercent: 10, DrawProbability: sdk.NewDec(1), Quantity: 10},
-		},
-	}
-
-	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
-		PoolId: 1,
-		PrizeStrategy: millionstypes.PrizeStrategy{
-			PrizeBatches: []millionstypes.PrizeBatch{
-				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
-			},
-		},
-		DrawSchedule: millionstypes.DrawSchedule{
-			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
-			DrawDelta:     drawDelta1,
-		},
-		AvailablePrizePool: sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
-		State:              millionstypes.PoolState_Ready,
-		MinDepositAmount:   sdk.NewInt(1_000_000),
-		IcaDepositAddress:  suite.moduleAddrs[0].String(),
-		Validators: []millionstypes.PoolValidator{
-			{
-				OperatorAddress: validators[0].OperatorAddress,
-				BondedAmount:    sdk.NewInt(0),
-				IsEnabled:       true,
-			},
-			{
-				OperatorAddress: validators[1].OperatorAddress,
-				BondedAmount:    sdk.NewInt(0),
-				IsEnabled:       true,
-			},
-			{
-				OperatorAddress: validators[2].OperatorAddress,
-				BondedAmount:    sdk.NewInt(0),
-				IsEnabled:       true,
-			},
-			{
-				OperatorAddress: validators[3].OperatorAddress,
-				BondedAmount:    sdk.NewInt(0),
-				IsEnabled:       true,
-			},
-			{
-				OperatorAddress: validators[4].OperatorAddress,
-				BondedAmount:    sdk.NewInt(0),
-				IsEnabled:       true,
-			},
-			{
-				OperatorAddress: validators[5].OperatorAddress,
-				BondedAmount:    sdk.NewInt(0),
-				IsEnabled:       true,
-			},
-		},
-	}))
-
-	pool, err := app.MillionsKeeper.GetPool(ctx, 1)
-	suite.Require().NoError(err)
-
-	// Deposit to trigger delegation for local pool
-	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
-		DepositorAddress: suite.addrs[0].String(),
-		PoolId:           pool.PoolId,
-		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(9_000_000)),
-	})
-	suite.Require().NoError(err)
-
-	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
-	suite.Require().NoError(err)
-
-	// Verify the current BondedAmount
-	suite.Require().Equal(sdk.NewInt(1_500_000), pool.Validators[0].BondedAmount)
-	suite.Require().Equal(sdk.NewInt(1_500_000), pool.Validators[1].BondedAmount)
-	suite.Require().Equal(sdk.NewInt(1_500_000), pool.Validators[2].BondedAmount)
-	suite.Require().Equal(sdk.NewInt(1_500_000), pool.Validators[3].BondedAmount)
-	suite.Require().Equal(sdk.NewInt(1_500_000), pool.Validators[4].BondedAmount)
-	suite.Require().Equal(sdk.NewInt(1_500_000), pool.Validators[5].BondedAmount)
-
-	newValidatorSet := []string{pool.Validators[0].OperatorAddress, pool.Validators[1].OperatorAddress, pool.Validators[2].OperatorAddress}
-
-	// We simulate validators that are bonded but inactivated (prior to redelegation) and are still in the pool valSet
-	// - Validators 5 and 6
-	app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{validators[4].String()}, nil, nil, nil, millionstypes.PoolState_Unspecified)
-	suite.Require().NoError(err)
-	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
-	suite.Require().NoError(err)
-	app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{validators[5].String()}, nil, nil, nil, millionstypes.PoolState_Unspecified)
-	suite.Require().NoError(err)
-
-	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
-	suite.Require().NoError(err)
-
-	// UpdatePool with new params
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, newValidatorSet, &newDepositAmount, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Paused)
-	suite.Require().NoError(err)
-	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
-	suite.Require().NoError(err)
-	// New Deposit amount should be 2_000_000
-	suite.Require().Equal(newDepositAmount, pool.MinDepositAmount)
-	// PoolState should be paused
-	suite.Require().Equal(millionstypes.PoolState_Paused, pool.State)
-	// New prize strategy applied
-	suite.Require().Equal(newPrizeStrategy, pool.PrizeStrategy)
-	// New draw schedule applied
-	suite.Require().Equal(newDrawSchedule, pool.DrawSchedule)
-	// New valSet does not include validator 4
-	// Current BondedActiveVals (1-2-3) should receive redelegation from older BondedInactiveVals (vals 5-6) and new Inactive val (val 4)
-	suite.Require().Equal(sdk.NewInt(3_000_000), pool.Validators[0].BondedAmount)
-	suite.Require().Equal(sdk.NewInt(3_000_000), pool.Validators[1].BondedAmount)
-	suite.Require().Equal(sdk.NewInt(3_000_000), pool.Validators[2].BondedAmount)
-	suite.Require().Equal(sdk.NewInt(0), pool.Validators[3].BondedAmount)
-	suite.Require().Equal(sdk.NewInt(0), pool.Validators[4].BondedAmount)
-	suite.Require().Equal(sdk.NewInt(0), pool.Validators[5].BondedAmount)
-
-	// UpdatePool with invalid pool_state -> PoolState_Killed
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Killed)
-	suite.Require().ErrorIs(err, millionstypes.ErrPoolStateChangeNotAllowed)
-	// Grab fresh pool instance
-	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
-	suite.Require().NoError(err)
-	suite.Require().Equal(millionstypes.PoolState_Paused, pool.State)
-
-	// UpdatePool with invalid pool_state -> PoolState_Unspecified
-	// Should remain with the current poolState
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Unspecified)
-	suite.Require().NoError(err)
-	// Grab fresh pool instance
-	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
-	suite.Require().NoError(err)
-	suite.Require().Equal(millionstypes.PoolState_Paused, pool.State)
-
-	// UpdatePool with valid pool_state -> PoolState_Ready
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Ready)
-	suite.Require().NoError(err)
-	// Grab fresh pool instance
-	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
-	suite.Require().NoError(err)
-	suite.Require().Equal(millionstypes.PoolState_Ready, pool.State)
 }
