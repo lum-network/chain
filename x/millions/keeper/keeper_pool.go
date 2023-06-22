@@ -432,8 +432,10 @@ func (k Keeper) UpdatePool(
 	k.updatePool(ctx, &pool)
 
 	// Trigger rebalance distribution
-	if err := k.RebalanceValidatorsBondings(ctx, poolID); err != nil {
-		return err
+	if pool.State == types.PoolState_Ready || pool.State == types.PoolState_Paused {
+		if err := k.RebalanceValidatorsBondings(ctx, pool.PoolId); err != nil {
+			return err
+		}
 	}
 
 	// Emit event
@@ -466,18 +468,21 @@ func (k Keeper) RebalanceValidatorsBondings(ctx sdk.Context, poolID uint64) erro
 		return types.ErrPoolNotReady
 	}
 
-	_, bondedInactiveVals := pool.BondedValidators()
-	for _, biv := range bondedInactiveVals {
-		if err := k.Redelegate(ctx, pool.PoolId, biv); err != nil {
-			return err
+	_, valsSrc := pool.BondedValidators()
+	for _, valSrc := range valsSrc {
+		// Double check that valSrc is inactive
+		if !valSrc.IsEnabled {
+			if err := k.RedelegateToActiveValidators(ctx, pool.PoolId, valSrc.GetOperatorAddress()); err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
 }
 
-// Redelegate redistribute evenly the bondedAmount from the bonded inactive to the active valitator set of the pool
-func (k Keeper) Redelegate(ctx sdk.Context, poolID uint64, bondedInactiveVal types.PoolValidator) error {
+// RedelegateToActiveValidators redistribute evenly the bondedAmount from the bonded inactive to the active valitator set of the pool
+func (k Keeper) RedelegateToActiveValidators(ctx sdk.Context, poolID uint64, valSrcAddr string) error {
 	logger := k.Logger(ctx).With("ctx", "pool_redelegate")
 
 	pool, err := k.GetPool(ctx, poolID)
@@ -492,11 +497,20 @@ func (k Keeper) Redelegate(ctx sdk.Context, poolID uint64, bondedInactiveVal typ
 
 	// Get the validator to redelegate
 	valIdx := pool.GetValidatorsMapIndex()
-	index, found := valIdx[bondedInactiveVal.GetOperatorAddress()]
+	index, found := valIdx[valSrcAddr]
 	if !found {
-		return errorsmod.Wrapf(types.ErrValidatorNotFound, "%s", bondedInactiveVal.GetOperatorAddress())
+		return errorsmod.Wrapf(types.ErrValidatorNotFound, "%s", valSrcAddr)
 	}
 	inactiveVal := pool.Validators[index]
+
+	// Check that the validator is inactive
+	if inactiveVal.IsEnabled {
+		return errorsmod.Wrapf(
+			types.ErrInvalidValidatorEnablementStatus,
+			"status is %t instead of %t",
+			inactiveVal.IsEnabled, !inactiveVal.IsEnabled,
+		)
+	}
 
 	// Generate splits for active validators based on the bonded amount from incoming inactive validator
 	splits := pool.ComputeSplitDelegations(ctx, inactiveVal.BondedAmount)
@@ -537,7 +551,7 @@ func (k Keeper) Redelegate(ctx sdk.Context, poolID uint64, bondedInactiveVal typ
 		}
 
 		// ApplySplitRedelegate to pool validator set
-		pool.ApplySplitRedelegate(ctx, splits, inactiveVal.GetOperatorAddress())
+		pool.ApplySplitRedelegate(ctx, inactiveVal.GetOperatorAddress(), splits)
 		k.updatePool(ctx, &pool)
 
 		return k.OnRedelegateToRemoteZoneCompleted(ctx, pool.PoolId, inactiveVal.GetOperatorAddress(), splits, false)
@@ -566,7 +580,7 @@ func (k Keeper) Redelegate(ctx sdk.Context, poolID uint64, bondedInactiveVal typ
 	}
 
 	// ApplySplitRedelegate to pool validator set
-	pool.ApplySplitRedelegate(ctx, splits, inactiveVal.GetOperatorAddress())
+	pool.ApplySplitRedelegate(ctx, inactiveVal.GetOperatorAddress(), splits)
 	k.updatePool(ctx, &pool)
 
 	// Dispatch our message with a timeout of 30 minutes in nanos
@@ -592,7 +606,7 @@ func (k Keeper) Redelegate(ctx sdk.Context, poolID uint64, bondedInactiveVal typ
 }
 
 // OnRedelegateToRemoteZoneCompleted Acknowledged a redelegation of an inactive validator's bondedAmount
-func (k Keeper) OnRedelegateToRemoteZoneCompleted(ctx sdk.Context, poolID uint64, operatorAddress string, splits []*types.SplitDelegation, isError bool) error {
+func (k Keeper) OnRedelegateToRemoteZoneCompleted(ctx sdk.Context, poolID uint64, valSrcAddr string, splits []*types.SplitDelegation, isError bool) error {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err
@@ -605,15 +619,15 @@ func (k Keeper) OnRedelegateToRemoteZoneCompleted(ctx sdk.Context, poolID uint64
 
 	// Get the validator
 	valIdx := pool.GetValidatorsMapIndex()
-	index, found := valIdx[operatorAddress]
+	index, found := valIdx[valSrcAddr]
 	if !found {
-		return errorsmod.Wrapf(types.ErrValidatorNotFound, "%s", operatorAddress)
+		return errorsmod.Wrapf(types.ErrValidatorNotFound, "%s", valSrcAddr)
 	}
 	inactiveVal := pool.Validators[index]
 
 	// RevertSplitRedelegate in case of failure
 	if isError {
-		pool.RevertSplitRedelegate(ctx, splits, inactiveVal.GetOperatorAddress())
+		pool.RevertSplitRedelegate(ctx, inactiveVal.GetOperatorAddress(), splits)
 		k.updatePool(ctx, &pool)
 		return nil
 	}

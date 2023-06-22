@@ -240,25 +240,25 @@ func (p *Pool) ApplySplitUndelegate(ctx sdk.Context, splits []*SplitDelegation) 
 }
 
 // ApplySplitRedelegate serves as internal tracking to redelegate the bonded amount from the inactive to the active validators
-func (p *Pool) ApplySplitRedelegate(ctx sdk.Context, splits []*SplitDelegation, operatorAddress string) {
+func (p *Pool) ApplySplitRedelegate(ctx sdk.Context, valSrcAddr string, splits []*SplitDelegation) {
 	valIdx := p.GetValidatorsMapIndex()
 	for _, split := range splits {
 		// Add the split amount to the active validator's bonded amount
 		p.Validators[valIdx[split.ValidatorAddress]].BondedAmount = p.Validators[valIdx[split.ValidatorAddress]].BondedAmount.Add(split.Amount)
 		// Substract from the inactive validator
-		p.Validators[valIdx[operatorAddress]].BondedAmount = p.Validators[valIdx[operatorAddress]].BondedAmount.Sub(split.Amount)
-		if p.Validators[valIdx[operatorAddress]].BondedAmount.LT(sdk.ZeroInt()) {
+		p.Validators[valIdx[valSrcAddr]].BondedAmount = p.Validators[valIdx[valSrcAddr]].BondedAmount.Sub(split.Amount)
+		if p.Validators[valIdx[valSrcAddr]].BondedAmount.LT(sdk.ZeroInt()) {
 			panic(ErrPoolInvalidSplit)
 		}
 	}
 }
 
 // RevertSplitRedelegate reverts an initial ApplySplitRedelegate
-func (p *Pool) RevertSplitRedelegate(ctx sdk.Context, splits []*SplitDelegation, operatorAddress string) {
+func (p *Pool) RevertSplitRedelegate(ctx sdk.Context, valSrcAddr string, splits []*SplitDelegation) {
 	valIdx := p.GetValidatorsMapIndex()
 	for _, split := range splits {
 		// Add BondedAmount back to the previously inactive bonded validator
-		p.Validators[valIdx[operatorAddress]].BondedAmount = p.Validators[valIdx[operatorAddress]].BondedAmount.Add(split.Amount)
+		p.Validators[valIdx[valSrcAddr]].BondedAmount = p.Validators[valIdx[valSrcAddr]].BondedAmount.Add(split.Amount)
 		// Substract from the active bonded validator
 		p.Validators[valIdx[split.ValidatorAddress]].BondedAmount = p.Validators[valIdx[split.ValidatorAddress]].BondedAmount.Sub(split.Amount)
 		if p.Validators[valIdx[split.ValidatorAddress]].BondedAmount.LT(sdk.ZeroInt()) {
