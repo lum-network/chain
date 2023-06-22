@@ -537,7 +537,7 @@ func (k Keeper) RedelegateToActiveValidators(ctx sdk.Context, poolID uint64, val
 			sharesAmount, err := k.StakingKeeper.ValidateUnbondAmount(
 				ctx,
 				delAddr,
-				valDstAddr,
+				valSrcAddr,
 				split.Amount,
 			)
 			if err != nil {
