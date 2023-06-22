@@ -8,10 +8,11 @@ import (
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/stretchr/testify/suite"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
 	"github.com/lum-network/chain/x/dfract"
-	"github.com/lum-network/chain/x/dfract/types"
+	dfracttypes "github.com/lum-network/chain/x/dfract/types"
 )
 
 type HandlerTestSuite struct {
@@ -34,33 +35,45 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 2, sdk.NewInt(300000000), "ulum")
 }
 
-func generateWithdrawAndMintProposal(withdrawalAddress string, microMintRate int64) *types.WithdrawAndMintProposal {
-	return types.NewWithdrawAndMintProposal("title", "description", withdrawalAddress, microMintRate)
-}
+func (suite *HandlerTestSuite) TestProposal_UpdateParams() {
 
-func (suite *HandlerTestSuite) TestWithdrawAndMintProposal() {
 	cases := []struct {
-		name        string
-		proposal    *types.WithdrawAndMintProposal
-		expectError bool
+		name            string
+		proposal        govtypesv1beta1.Content
+		expectPreError  bool
+		expectPostError bool
 	}{
 		{
-			"micro mint rate cannot be negative",
-			generateWithdrawAndMintProposal(suite.addrs[0].String(), -1),
-			true,
+			"Partial update nil deposit enablement should be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", nil),
+			false,
+			false,
 		},
 		{
-			"invalid address",
-			generateWithdrawAndMintProposal("test", 0),
-			true,
+			"Partial update with empty management address should be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "", &gogotypes.BoolValue{Value: false}),
+			false,
+			false,
+		},
+		{
+			"Full update should be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", &gogotypes.BoolValue{Value: false}),
+			false,
+			false,
 		},
 	}
 
 	for _, tc := range cases {
 		tc := tc
 		suite.Run(tc.name, func() {
+			preError := tc.proposal.ValidateBasic()
+			if tc.expectPreError {
+				suite.Require().Error(preError)
+			} else {
+				suite.Require().NoError(preError)
+			}
 			err := suite.handler(suite.ctx, tc.proposal)
-			if tc.expectError {
+			if tc.expectPostError {
 				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)

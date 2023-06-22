@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -18,8 +19,10 @@ var DefaultDenoms = []string{DefaultDenom}
 
 // Parameter store keys.
 var (
-	KeyDepositDenom     = []byte("DepositDenom")
-	KeyMinDepositAmount = []byte("MinDepositAmount")
+	KeyDepositDenom      = []byte("DepositDenom")
+	KeyMinDepositAmount  = []byte("MinDepositAmount")
+	KeyManagementAddress = []byte("ManagementAddress")
+	keyIsDepositEnabled  = []byte("IsDepositEnabled")
 )
 
 // ParamKeyTable for dfract module.
@@ -32,10 +35,11 @@ func DefaultParams() Params {
 	return Params{
 		DepositDenoms:    DefaultDenoms,
 		MinDepositAmount: DefaultMinDepositAmount,
+		IsDepositEnabled: true,
 	}
 }
 
-func (p *Params) Validate() error {
+func (p *Params) ValidateBasics() error {
 	if err := validateDepositDenom(p.DepositDenoms); err != nil {
 		return err
 	}
@@ -43,6 +47,15 @@ func (p *Params) Validate() error {
 	if err := validateMinDepositAmount(p.MinDepositAmount); err != nil {
 		return err
 	}
+
+	if _, err := sdk.AccAddressFromBech32(p.GetManagementAddress()); err != nil {
+		return ErrInvalidManagementAddress
+	}
+
+	if err := validateDepositEnablement(p.IsDepositEnabled); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -50,6 +63,8 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyDepositDenom, &p.DepositDenoms, validateDepositDenom),
 		paramtypes.NewParamSetPair(KeyMinDepositAmount, &p.MinDepositAmount, validateMinDepositAmount),
+		paramtypes.NewParamSetPair(KeyManagementAddress, &p.ManagementAddress, validateManagementAddress),
+		paramtypes.NewParamSetPair(keyIsDepositEnabled, &p.IsDepositEnabled, validateDepositEnablement),
 	}
 }
 
@@ -79,5 +94,23 @@ func validateMinDepositAmount(i interface{}) error {
 	if v <= 0 {
 		return ErrInvalidMinDepositAmount
 	}
+	return nil
+}
+
+func validateManagementAddress(i interface{}) error {
+	_, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}
+
+func validateDepositEnablement(i interface{}) error {
+	_, ok := i.(bool)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
 	return nil
 }

@@ -3,10 +3,14 @@ package lumnetwork.dfract;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/lum-network/chain/x/dfract/types";
 
-service Msg { rpc Deposit(MsgDeposit) returns (MsgDepositResponse); }
+service Msg {
+  rpc Deposit(MsgDeposit) returns (MsgDepositResponse);
+  rpc WithdrawAndMint(MsgWithdrawAndMint) returns (MsgWithdrawAndMintResponse);
+}
 
 message MsgDeposit {
   string depositor_address = 1;
@@ -14,3 +18,10 @@ message MsgDeposit {
 }
 
 message MsgDepositResponse {}
+
+message MsgWithdrawAndMint {
+  string address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  int64 micro_mint_rate = 2;
+}
+
+message MsgWithdrawAndMintResponse {}
