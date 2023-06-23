@@ -1,6 +1,7 @@
 package app
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -73,6 +74,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
+	icacontrollermigrations "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/migrations/v6"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
@@ -83,6 +85,7 @@ import (
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	ibcconnectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
+	"github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibchost "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
@@ -771,6 +774,25 @@ func (app *App) registerUpgradeHandlers() {
 	})
 
 	app.UpgradeKeeper.SetUpgradeHandler("v1.5.0", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		app.Logger().Info("Starting v1.5.0 upgrade")
+
+		// Migrate ICA channel capabilities from IBC V5 to IBC V6
+		if err := icacontrollermigrations.MigrateICS27ChannelCapability(
+			ctx,
+			app.appCodec,
+			app.keys[capabilitytypes.ModuleName],
+			app.CapabilityKeeper,
+			millionstypes.ModuleName,
+		); err != nil {
+			return nil, errorsmod.Wrapf(err, "unable to migrate ICA channel capabilities")
+		}
+
+		// Migrate clients, and add the localhost type
+		params := app.IBCKeeper.ClientKeeper.GetParams(ctx)
+		params.AllowedClients = append(params.AllowedClients, exported.Localhost)
+		app.IBCKeeper.ClientKeeper.SetParams(ctx, params)
+
+		// Final steps
 		app.Logger().Info("v1.5.0 upgrade applied")
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
