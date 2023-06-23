@@ -382,8 +382,8 @@ func (app *App) InitNormalKeepers() {
 	// - Millions IBC Module
 	// - ICAController IBC Middleware
 	// - base app
-	millionsIBCModule := millions.NewIBCModule(*app.MillionsKeeper)
-	icaControllerIBCModule := icacontroller.NewIBCMiddleware(millionsIBCModule, *app.ICAControllerKeeper)
+	var millionsIBCStack porttypes.IBCModule = millions.NewIBCModule(*app.MillionsKeeper)
+	millionsIBCStack = icacontroller.NewIBCMiddleware(millionsIBCStack, *app.ICAControllerKeeper)
 
 	// Register our ICACallbacks handlers
 	err := app.ICACallbacksKeeper.SetICACallbackHandler(millionstypes.ModuleName, app.MillionsKeeper.ICACallbackHandler())
@@ -401,8 +401,7 @@ func (app *App) InitNormalKeepers() {
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
-		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
-		AddRoute(millionstypes.ModuleName, icaControllerIBCModule).
+		AddRoute(icacontrollertypes.SubModuleName, millionsIBCStack).
 		AddRoute(ibctransfertypes.ModuleName, transferStack)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
