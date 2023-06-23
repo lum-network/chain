@@ -43,8 +43,6 @@ import (
 	icahost "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
-	ibcfeekeeper "github.com/cosmos/ibc-go/v7/modules/apps/29-fee/keeper"
-	ibcfeetypes "github.com/cosmos/ibc-go/v7/modules/apps/29-fee/types"
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
@@ -82,9 +80,7 @@ type AppKeepers struct {
 	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
 	ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
-	ScopedICACallbacksKeeper  capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
-	ScopedMillionsKeeper      capabilitykeeper.ScopedKeeper
 
 	// Normal Keepers
 	AccountKeeper       *authkeeper.AccountKeeper
@@ -94,7 +90,6 @@ type AppKeepers struct {
 	DistrKeeper         *distrkeeper.Keeper
 	SlashingKeeper      *slashingkeeper.Keeper
 	IBCKeeper           *ibckeeper.Keeper
-	IBCFeeKeeper        *ibcfeekeeper.Keeper
 	ICAHostKeeper       *icahostkeeper.Keeper
 	ICAControllerKeeper *icacontrollerkeeper.Keeper
 	TransferKeeper      *ibctransferkeeper.Keeper
@@ -141,9 +136,7 @@ func (app *App) InitSpecialKeepers(
 	app.ScopedIBCKeeper = app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	app.ScopedICAControllerKeeper = app.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	app.ScopedICAHostKeeper = app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
-	app.ScopedICACallbacksKeeper = app.CapabilityKeeper.ScopeToModule(icacallbackstypes.ModuleName)
 	app.ScopedTransferKeeper = app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
-	app.ScopedMillionsKeeper = app.CapabilityKeeper.ScopeToModule(millionstypes.ModuleName)
 	app.CapabilityKeeper.Seal()
 
 	// Init the crisis keeper
@@ -243,18 +236,6 @@ func (app *App) InitNormalKeepers() {
 		app.ScopedIBCKeeper,
 	)
 
-	// Initialize the IBC Fee keeper
-	ibcFeeKeeper := ibcfeekeeper.NewKeeper(
-		appCodec,
-		app.keys[ibcfeetypes.StoreKey],
-		app.IBCKeeper.ChannelKeeper, // may be replaced with IBC middleware
-		app.IBCKeeper.ChannelKeeper,
-		&app.IBCKeeper.PortKeeper,
-		app.AccountKeeper,
-		app.BankKeeper,
-	)
-	app.IBCFeeKeeper = &ibcFeeKeeper
-
 	// Initialize the IBC transfer keeper
 	transferKeeper := ibctransferkeeper.NewKeeper(
 		appCodec,
@@ -274,7 +255,7 @@ func (app *App) InitNormalKeepers() {
 	icaControllerKeeper := icacontrollerkeeper.NewKeeper(
 		appCodec, keys[ICAControllerCustomStoreKey],
 		app.GetSubspace(icacontrollertypes.SubModuleName),
-		app.IBCFeeKeeper,
+		app.IBCKeeper.ChannelKeeper,
 		app.IBCKeeper.ChannelKeeper,
 		&app.IBCKeeper.PortKeeper,
 		app.ScopedICAControllerKeeper,
@@ -284,9 +265,10 @@ func (app *App) InitNormalKeepers() {
 
 	// Initialize the ICA host keeper
 	icaHostKeeper := icahostkeeper.NewKeeper(
-		appCodec, keys[icahosttypes.StoreKey],
+		appCodec,
+		keys[icahosttypes.StoreKey],
 		app.GetSubspace(icahosttypes.SubModuleName),
-		app.IBCFeeKeeper,
+		app.IBCKeeper.ChannelKeeper,
 		app.IBCKeeper.ChannelKeeper,
 		&app.IBCKeeper.PortKeeper,
 		app.AccountKeeper,
@@ -329,7 +311,6 @@ func (app *App) InitNormalKeepers() {
 		keys[icacallbackstypes.StoreKey],
 		keys[icacallbackstypes.MemStoreKey],
 		app.GetSubspace(icacallbackstypes.ModuleName),
-		app.ScopedICACallbacksKeeper,
 		*app.IBCKeeper,
 		*app.ICAControllerKeeper,
 	)
@@ -374,7 +355,6 @@ func (app *App) InitNormalKeepers() {
 		appCodec,
 		keys[millionstypes.StoreKey],
 		app.GetSubspace(millionstypes.ModuleName),
-		app.ScopedMillionsKeeper,
 		*app.AccountKeeper,
 		*app.IBCKeeper,
 		*app.TransferKeeper,
