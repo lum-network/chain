@@ -784,7 +784,7 @@ func (app *App) registerUpgradeHandlers() {
 		if err := icacontrollermigrations.MigrateICS27ChannelCapability(
 			ctx,
 			app.appCodec,
-			app.keys[capabilitytypes.ModuleName],
+			app.keys[capabilitytypes.StoreKey],
 			app.CapabilityKeeper,
 			millionstypes.ModuleName,
 		); err != nil {
