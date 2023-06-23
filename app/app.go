@@ -88,6 +88,7 @@ import (
 	"github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibchost "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	ibctmmigrations "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint/migrations"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
 
@@ -791,6 +792,11 @@ func (app *App) registerUpgradeHandlers() {
 		params := app.IBCKeeper.ClientKeeper.GetParams(ctx)
 		params.AllowedClients = append(params.AllowedClients, exported.Localhost)
 		app.IBCKeeper.ClientKeeper.SetParams(ctx, params)
+
+		// Prune expired client states
+		if _, err := ibctmmigrations.PruneExpiredConsensusStates(ctx, app.appCodec, app.IBCKeeper.ClientKeeper); err != nil {
+			return nil, errorsmod.Wrapf(err, "unable to prune expired consensus states")
+		}
 
 		// Final steps
 		app.Logger().Info("v1.5.0 upgrade applied")
