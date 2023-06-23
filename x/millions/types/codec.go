@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,8 +15,8 @@ var (
 	ModuleCdc = codec.NewAminoCodec(amino)
 )
 
-// Registercodec Register the codec for the message passing
-func Registercodec(cdc *codec.LegacyAmino) {
+// RegisterLegacyAminoCodec Register the codec for the message passing
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	// Messages
 	cdc.RegisterConcrete(&MsgDeposit{}, "lum-network/millions/MsgDeposit", nil)
 	cdc.RegisterConcrete(&MsgDepositRetry{}, "lum-network/millions/MsgDepositRetry", nil)
@@ -51,7 +52,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 }
 
 func init() {
-	Registercodec(amino)
+	RegisterLegacyAminoCodec(amino)
 	cryptocodec.RegisterCrypto(amino)
-	sdk.RegisterLegacyAminoCodec(amino)
+	amino.Seal()
+
+	RegisterLegacyAminoCodec(legacy.Cdc)
 }
