@@ -82,5 +82,5 @@ services:
         echo $OSMOSIS_MNEMONIC > osmosis.txt
         hermes keys add --key-name hrly3 --chain osmosis-devnet --mnemonic-file osmosis.txt --overwrite
         echo $LUM_MNEMONIC > lum.txt
-        hermes keys add --key-name hrly4 --chain lum-network-testnet-2--mnemonic-file lum.txt --overwrite --hd-path "m/44'/880'/0'/0/0"
+        hermes keys add --key-name hrly4 --chain lum-network-dev-43 --mnemonic-file lum.txt --overwrite --hd-path "m/44'/880'/0'/0/0"
         hermes start

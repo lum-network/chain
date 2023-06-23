@@ -24,9 +24,9 @@ Once inside, you can type the following to create the links (repeat for each cha
 
 ### Create link for Gaia <=> Lum
 
-`hermes create connection --a-chain lum-millions-1 --b-chain gaia-devnet`
+`hermes create connection --a-chain lum-network-dev-43 --b-chain gaia-devnet`
 
-`hermes create channel --a-chain lum-millions-1 --a-connection connection-0 --a-port transfer --b-port transfer`
+`hermes create channel --a-chain lum-network-dev-43 --a-connection connection-0 --a-port transfer --b-port transfer`
 
 Transactions may fail but will succeed at some point.
 

@@ -48,7 +48,7 @@ trust_threshold = { numerator = '1', denominator = '3' }
 address_type = { derivation = 'cosmos' }
 
 [[chains]]
-id = 'lum-network-testnet-2'
+id = 'lum-network-dev-43'
 rpc_addr = 'http://host.docker.internal:26657'
 grpc_addr = 'http://host.docker.internal:9090'
 websocket_addr = 'ws://host.docker.internal:26657/websocket'
