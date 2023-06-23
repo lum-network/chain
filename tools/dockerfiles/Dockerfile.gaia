@@ -2,7 +2,7 @@ FROM golang:1.18-alpine3.15 AS builder
 
 WORKDIR /opt
 
-RUN apk add --update curl make git libc-dev bash gcc linux-headers eudev-dev python3
+RUN apk add --update curl make git libc-dev bash gcc linux-headers eudev-dev python3 nano
 
 ENV COMMIT_HASH=v9.0.1
 
