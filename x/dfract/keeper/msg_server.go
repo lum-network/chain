@@ -88,7 +88,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types
 	return &types.MsgDepositResponse{}, nil
 }
 
-// WithdrawAndMint process the withdraw and mint based on the
+// WithdrawAndMint process the withdraw and mint based on the MicroMintRate
 func (k msgServer) WithdrawAndMint(goCtx context.Context, msg *types.MsgWithdrawAndMint) (*types.MsgWithdrawAndMintResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Acquire the parameters to get the denoms
