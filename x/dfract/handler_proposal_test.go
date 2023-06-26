@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
+
 	"github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
 	"github.com/lum-network/chain/x/dfract"

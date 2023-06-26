@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	gogotypes "github.com/cosmos/gogoproto/types"
+
 	dfracttypes "github.com/lum-network/chain/x/dfract/types"
 )
 
@@ -56,14 +57,16 @@ func (suite *KeeperTestSuite) TestParams_Update() {
 	suite.Require().Equal("", params.ManagementAddress)
 	suite.Require().Equal(true, params.IsDepositEnabled)
 
-	app.DFractKeeper.UpdateParams(ctx, "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", nil)
+	err := app.DFractKeeper.UpdateParams(ctx, "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", nil)
+	suite.Require().NoError(err)
 	// Update params with management address but no deposit enablement
 	params = app.DFractKeeper.GetParams(ctx)
 	suite.Require().Equal("lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", params.ManagementAddress)
 	suite.Require().Equal(true, params.IsDepositEnabled)
 
 	// Update with no management address but deposit enablement set to false
-	app.DFractKeeper.UpdateParams(ctx, "", &gogotypes.BoolValue{Value: false})
+	err = app.DFractKeeper.UpdateParams(ctx, "", &gogotypes.BoolValue{Value: false})
+	suite.Require().NoError(err)
 	params = app.DFractKeeper.GetParams(ctx)
 	suite.Require().Equal("lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", params.ManagementAddress)
 	suite.Require().Equal(false, params.IsDepositEnabled)

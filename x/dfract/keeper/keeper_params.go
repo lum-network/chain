@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
+
 	"github.com/lum-network/chain/x/dfract/types"
 )
 

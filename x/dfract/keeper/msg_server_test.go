@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
+
 	dFractKeeper "github.com/lum-network/chain/x/dfract/keeper"
 	dfracttypes "github.com/lum-network/chain/x/dfract/types"
 )
@@ -16,20 +17,21 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositEnablement() {
 	ctx := suite.ctx
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := dFractKeeper.NewMsgServerImpl(*app.DFractKeeper)
-	params := app.DFractKeeper.GetParams(ctx)
 	// Obtain the required accounts
 	depositor := suite.addrs[0]
 	// Simulate that the deposit mode is not enabled
-	app.DFractKeeper.UpdateParams(ctx, depositor.String(), &gogotypes.BoolValue{Value: false})
-	params = app.DFractKeeper.GetParams(ctx)
+	err := app.DFractKeeper.UpdateParams(ctx, depositor.String(), &gogotypes.BoolValue{Value: false})
+	suite.Require().NoError(err)
+	params := app.DFractKeeper.GetParams(ctx)
 
-	_, err := msgServer.Deposit(goCtx, &dfracttypes.MsgDeposit{
+	_, err = msgServer.Deposit(goCtx, &dfracttypes.MsgDeposit{
 		DepositorAddress: depositor.String(),
 		Amount:           sdk.NewCoin(params.DepositDenoms[0], sdk.NewInt(100000000)),
 	})
 	suite.Require().ErrorIs(err, dfracttypes.ErrDepositNotEnabled)
 
-	app.DFractKeeper.UpdateParams(ctx, "", &gogotypes.BoolValue{Value: true})
+	err = app.DFractKeeper.UpdateParams(ctx, "", &gogotypes.BoolValue{Value: true})
+	suite.Require().NoError(err)
 
 	_, err = msgServer.Deposit(goCtx, &dfracttypes.MsgDeposit{
 		DepositorAddress: depositor.String(),
@@ -242,7 +244,8 @@ func (suite *KeeperTestSuite) TestMsgServer_ChainedFullProcess() {
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := dFractKeeper.NewMsgServerImpl(*app.DFractKeeper)
 	// Simulate that the address management is set
-	app.DFractKeeper.UpdateParams(ctx, suite.addrs[0].String(), &gogotypes.BoolValue{Value: true})
+	err := app.DFractKeeper.UpdateParams(ctx, suite.addrs[0].String(), &gogotypes.BoolValue{Value: true})
+	suite.Require().NoError(err)
 	params := app.DFractKeeper.GetParams(ctx)
 	withdrawAddr := params.ManagementAddress
 	moduleAddr := app.DFractKeeper.GetModuleAccount(ctx).String()
