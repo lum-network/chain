@@ -51,10 +51,22 @@ func (suite *HandlerTestSuite) TestProposal_UpdateParams() {
 			false,
 		},
 		{
+			"Partial update nil deposit enablement should be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", nil),
+			false,
+			false,
+		},
+		{
 			"Partial update with empty management address should be fine",
 			dfracttypes.NewUpdateParamsProposal("Test", "Test", "", &gogotypes.BoolValue{Value: false}),
 			false,
 			false,
+		},
+		{
+			"Partial update should with invalid address should not be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "lum1qx", &gogotypes.BoolValue{Value: false}),
+			true,
+			true,
 		},
 		{
 			"Full update should be fine",

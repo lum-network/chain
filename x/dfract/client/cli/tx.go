@@ -71,10 +71,10 @@ func CmdDeposit() *cobra.Command {
 
 func CmdWithdrawAndMint() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "withdraw-and-mint <micro_min_rate>",
+		Use:   "withdraw-and-mint <micro_mint_rate>",
 		Short: "Withdraw and mint udfr",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Withdraw and mint udfr based on the micro min rate.
+			fmt.Sprintf(`Withdraw and mint udfr based on the micro mint rate.
 
 Examples:
 To create a withdraw-and-mint tx
@@ -96,13 +96,13 @@ $ %s tx %s withdraw-and-mint <micro_min_rate>
 			}
 			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			microMinRate, err := strconv.ParseInt(args[0], 10, 64)
+			microMintRate, err := strconv.ParseInt(args[0], 10, 64)
 			if err != nil {
 				return err
 			}
 
 			// Build the message
-			msg := types.NewMsgWithdrawAndMint(clientCtx.GetFromAddress().String(), microMinRate)
+			msg := types.NewMsgWithdrawAndMint(clientCtx.GetFromAddress().String(), microMintRate)
 
 			// Generate the transaction
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
