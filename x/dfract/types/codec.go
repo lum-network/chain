@@ -18,10 +18,10 @@ var (
 // RegisterLegacyAminoCodec Register the codec for the message passing
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	// Messages
-	cdc.RegisterConcrete(&MsgDeposit{}, "lum-network/dfract/MsgDeposit", nil)
-	cdc.RegisterConcrete(&MsgWithdrawAndMint{}, "lum-network/dfract/MsgWithdrawAndMint", nil)
+	cdc.RegisterConcrete(&MsgDeposit{}, "lum-network/MsgDeposit", nil)
+	cdc.RegisterConcrete(&MsgWithdrawAndMint{}, "lum-network/MsgWithdrawAndMint", nil)
 	// Proposals
-	cdc.RegisterConcrete(&ProposalUpdateParams{}, "lum-network/dfract/ProposalUpdateParams", nil)
+	cdc.RegisterConcrete(&ProposalUpdateParams{}, "lum-network/ProposalUpdateParams", nil)
 }
 
 // RegisterInterfaces Register the implementations for the given codecs
