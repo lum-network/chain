@@ -1,6 +1,0 @@
-syntax = "proto3";
-package lumnetwork.airdrop;
-
-option go_package = "github.com/lum-network/chain/x/airdrop/types";
-
-service Msg {}

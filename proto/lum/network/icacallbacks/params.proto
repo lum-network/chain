@@ -1,0 +1,8 @@
+syntax = "proto3";
+package lum.network.icacallbacks;
+
+option go_package = "github.com/lum-network/chain/x/icacallbacks/types";
+import "gogoproto/gogo.proto";
+
+// Params defines the parameters for the module.
+message Params { option (gogoproto.goproto_stringer) = false; }
