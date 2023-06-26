@@ -410,6 +410,7 @@ func (app *App) InitNormalKeepers() {
 	ibcRouter.
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
 		AddRoute(icacontrollertypes.SubModuleName, millionsIBCStack).
+		AddRoute(millionstypes.ModuleName, millionsIBCStack).
 		AddRoute(ibctransfertypes.ModuleName, transferStack)
 	app.IBCKeeper.SetRouter(ibcRouter)
 

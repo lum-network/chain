@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	fmt "fmt"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	"sort"
 	"strings"
 
@@ -265,4 +266,14 @@ func (p *Pool) AccAddressFromBech32(address string) (isLocalAddress bool, addr s
 	}
 
 	return hrp == configBech32Prefix, sdk.AccAddress(bz), nil
+}
+
+func (p *Pool) GetIcaDepositPortIdWithPrefix() string {
+	portID, _ := icatypes.NewControllerPortID(p.GetIcaDepositPortId())
+	return portID
+}
+
+func (p *Pool) GetIcaPrizepoolPortIdWithPrefix() string {
+	portID, _ := icatypes.NewControllerPortID(p.GetIcaPrizepoolPortId())
+	return portID
 }
