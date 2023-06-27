@@ -1,12 +1,13 @@
 package app
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"

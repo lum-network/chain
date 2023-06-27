@@ -3,9 +3,10 @@ package types
 import (
 	"errors"
 	fmt "fmt"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	"sort"
 	"strings"
+
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
