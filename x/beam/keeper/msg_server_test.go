@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	apptypes "github.com/lum-network/chain/app"
 	"github.com/lum-network/chain/utils"
 	"github.com/lum-network/chain/x/beam/types"
