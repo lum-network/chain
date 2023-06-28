@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -94,8 +95,13 @@ func (k msgServer) WithdrawAndMint(goCtx context.Context, msg *types.MsgWithdraw
 	// Acquire the parameters to get the denoms
 	params := k.GetParams(ctx)
 
+	// Verify that we have a withdrawal address
+	if len(strings.TrimSpace(params.GetWithdrawalAddress())) == 0 {
+		return nil, types.ErrEmptyWithdrawalAddress
+	}
+
 	// make sure the signer is the management address
-	if msg.GetAddress() != params.GetManagementAddress() {
+	if msg.GetAddress() != params.GetWithdrawalAddress() {
 		return nil, types.ErrInvalidSignerAddress
 	}
 
@@ -110,7 +116,7 @@ func (k msgServer) WithdrawAndMint(goCtx context.Context, msg *types.MsgWithdraw
 
 		// Withdrawal the coins from the pending withdrawal deposits using the module account
 		if balance.Amount.IsPositive() {
-			destinationAddress, err := sdk.AccAddressFromBech32(params.GetManagementAddress())
+			destinationAddress, err := sdk.AccAddressFromBech32(params.GetWithdrawalAddress())
 			if err != nil {
 				return nil, sdkerrors.ErrInvalidAddress
 			}

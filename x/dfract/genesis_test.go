@@ -28,7 +28,7 @@ var testGenesis = types.GenesisState{
 		DepositDenoms:     []string{sdk.DefaultBondDenom},
 		MinDepositAmount:  1_000,
 		IsDepositEnabled:  true,
-		ManagementAddress: "",
+		WithdrawalAddress: "",
 	},
 	DepositsMinted: []*types.Deposit{
 		{

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -21,7 +22,7 @@ var DefaultDenoms = []string{DefaultDenom}
 var (
 	KeyDepositDenom      = []byte("DepositDenom")
 	KeyMinDepositAmount  = []byte("MinDepositAmount")
-	KeyManagementAddress = []byte("ManagementAddress")
+	KeyWithdrawalAddress = []byte("WithdrawalAddress")
 	keyIsDepositEnabled  = []byte("IsDepositEnabled")
 )
 
@@ -44,12 +45,12 @@ func (p *Params) ValidateBasics() error {
 		return err
 	}
 
-	if err := validateMinDepositAmount(p.MinDepositAmount); err != nil {
-		return err
+	if p.MinDepositAmount < DefaultMinDepositAmount {
+		return errorsmod.Wrapf(ErrInvalidParams, "min deposit amount cannot be lower than default minimum amount, got: %d", p.MinDepositAmount)
 	}
 
-	if _, err := sdk.AccAddressFromBech32(p.GetManagementAddress()); err != nil {
-		return ErrInvalidManagementAddress
+	if _, err := sdk.AccAddressFromBech32(p.GetWithdrawalAddress()); err != nil {
+		return ErrInvalidWithdrawalAddress
 	}
 
 	if err := validateDepositEnablement(p.IsDepositEnabled); err != nil {
@@ -63,7 +64,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyDepositDenom, &p.DepositDenoms, validateDepositDenom),
 		paramtypes.NewParamSetPair(KeyMinDepositAmount, &p.MinDepositAmount, validateMinDepositAmount),
-		paramtypes.NewParamSetPair(KeyManagementAddress, &p.ManagementAddress, validateManagementAddress),
+		paramtypes.NewParamSetPair(KeyWithdrawalAddress, &p.WithdrawalAddress, validateWithdrawalAddress),
 		paramtypes.NewParamSetPair(keyIsDepositEnabled, &p.IsDepositEnabled, validateDepositEnablement),
 	}
 }
@@ -97,7 +98,7 @@ func validateMinDepositAmount(i interface{}) error {
 	return nil
 }
 
-func validateManagementAddress(i interface{}) error {
+func validateWithdrawalAddress(i interface{}) error {
 	_, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

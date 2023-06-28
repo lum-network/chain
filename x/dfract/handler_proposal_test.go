@@ -5,7 +5,7 @@ import (
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/stretchr/testify/suite"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -23,7 +23,7 @@ type HandlerTestSuite struct {
 	ctx   sdk.Context
 	addrs []sdk.AccAddress
 
-	handler govtypesv1beta1.Handler
+	handler govtypes.Handler
 }
 
 func (suite *HandlerTestSuite) SetupTest() {
@@ -37,40 +37,56 @@ func (suite *HandlerTestSuite) SetupTest() {
 }
 
 func (suite *HandlerTestSuite) TestProposal_UpdateParams() {
+	var emptyDenpositDenoms []string
+	validDepositDenoms := []string{dfracttypes.DefaultDenom, "udfr"}
+	invalidDepositAmount := sdk.NewInt(500000)
+	newMinDeposit := sdk.NewInt(2000000)
 
 	cases := []struct {
 		name            string
-		proposal        govtypesv1beta1.Content
+		proposal        govtypes.Content
 		expectPreError  bool
 		expectPostError bool
 	}{
 		{
 			"Partial update nil deposit enablement should be fine",
-			dfracttypes.NewUpdateParamsProposal("Test", "Test", "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", nil),
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", nil, emptyDenpositDenoms, nil),
 			false,
 			false,
 		},
 		{
 			"Partial update nil deposit enablement should be fine",
-			dfracttypes.NewUpdateParamsProposal("Test", "Test", "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", nil),
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", nil, emptyDenpositDenoms, nil),
 			false,
 			false,
 		},
 		{
 			"Partial update with empty management address should be fine",
-			dfracttypes.NewUpdateParamsProposal("Test", "Test", "", &gogotypes.BoolValue{Value: false}),
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "", &gogotypes.BoolValue{Value: false}, emptyDenpositDenoms, nil),
 			false,
 			false,
 		},
 		{
-			"Partial update should with invalid address should not be fine",
-			dfracttypes.NewUpdateParamsProposal("Test", "Test", "lum1qx", &gogotypes.BoolValue{Value: false}),
+			"Partial update with invalid address should not be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "lum1qx", nil, emptyDenpositDenoms, nil),
+			true,
+			true,
+		},
+		{
+			"Partial update with valid deposit denoms should be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "", nil, validDepositDenoms, nil),
+			false,
+			false,
+		},
+		{
+			"Partial update with invalid min deposit amount should not be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "", nil, validDepositDenoms, &invalidDepositAmount),
 			true,
 			true,
 		},
 		{
 			"Full update should be fine",
-			dfracttypes.NewUpdateParamsProposal("Test", "Test", "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", &gogotypes.BoolValue{Value: false}),
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", &gogotypes.BoolValue{Value: false}, validDepositDenoms, &newMinDeposit),
 			false,
 			false,
 		},

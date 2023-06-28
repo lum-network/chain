@@ -43,10 +43,12 @@ $ %s tx gov submit-legacy-proposal dfract-update-params <path/to/proposal.json> 
 
 Where proposal.json contains:
 {
-    "title": "Update dfract params",
-    "description": "Update management address and deposit enablement",
-    "management_address": "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj",
-	"is_deposit_enabled": false
+  "title": "Update dfract params",
+  "description": "Update management address and deposit enablement",
+  "withdrawal_address": "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj",
+  "is_deposit_enabled": false,
+  "deposit_denoms": ["udfr"],
+  "min_deposit_amount": "1"
 }
 `, version.AppName),
 		),
@@ -84,10 +86,6 @@ Where proposal.json contains:
 
 			msg, err := govtypes.NewMsgSubmitProposal(&proposal, deposit, from)
 			if err != nil {
-				return err
-			}
-
-			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 

@@ -74,7 +74,7 @@ func CmdWithdrawAndMint() *cobra.Command {
 		Use:   "withdraw-and-mint <micro_mint_rate>",
 		Short: "Withdraw and mint udfr",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Withdraw and mint udfr based on the micro mint rate.
+			fmt.Sprintf(`The withdrawal address specified in the dFract module parameters is the one authorized to withdraw and mint udfr tokens based on the micro mint rate.
 
 Examples:
 To create a withdraw-and-mint tx

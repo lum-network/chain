@@ -40,7 +40,7 @@ func (msg *MsgWithdrawAndMint) ValidateBasic() error {
 	}
 
 	// Check the micro min rate
-	if msg.MicroMintRate < 0 {
+	if msg.MicroMintRate <= 0 {
 		return ErrEmptyMicroMintRate
 	}
 

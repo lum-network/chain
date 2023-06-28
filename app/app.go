@@ -134,7 +134,7 @@ var (
 				upgradeclient.LegacyCancelProposalHandler,
 				ibcclientclient.UpdateClientProposalHandler,
 				ibcclientclient.UpgradeProposalHandler,
-				dfractclient.ProposalHandler,
+				dfractclient.UpdateParamsProposalHandler,
 				millionsclient.RegisterPoolProposalHandler,
 				millionsclient.UpdatePoolProposalHandler,
 				millionsclient.UpdateParamsProposalHandler,

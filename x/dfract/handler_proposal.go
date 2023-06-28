@@ -15,7 +15,7 @@ func NewDFractProposalHandler(k keeper.Keeper) govtypes.Handler {
 		switch c := content.(type) {
 		case *types.ProposalUpdateParams:
 			{
-				return k.UpdateParams(ctx, c.GetManagementAddress(), c.IsDepositEnabled)
+				return k.UpdateParams(ctx, c.GetWithdrawalAddress(), c.IsDepositEnabled, c.DepositDenoms, c.MinDepositAmount)
 			}
 
 		default:
