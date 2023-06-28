@@ -14,8 +14,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distribtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
-	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
@@ -58,12 +56,11 @@ func (k Keeper) SetupPoolICA(ctx sdk.Context, poolID uint64) (*types.Pool, error
 	// Register the accounts deposit account first
 	// Wait for this account to be setup to register the prize pool account
 	// This is done to avoid race conditions for the last setup step (SetWithdrawAddress)
-	icaDepositPortName := string(types.NewPoolName(pool.GetPoolId(), types.ICATypeDeposit))
-	pool.IcaDepositPortId, err = icatypes.NewControllerPortID(icaDepositPortName)
+	pool.IcaDepositPortId = string(types.NewPoolName(pool.GetPoolId(), types.ICATypeDeposit))
 	if err != nil {
 		return &pool, errorsmod.Wrapf(types.ErrFailedToRegisterPool, fmt.Sprintf("Unable to create deposit account port id, err: %s", err.Error()))
 	}
-	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, pool.GetConnectionId(), icaDepositPortName, appVersion); err != nil {
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, pool.GetConnectionId(), pool.GetIcaDepositPortId(), appVersion); err != nil {
 		return &pool, errorsmod.Wrapf(types.ErrFailedToRegisterPool, fmt.Sprintf("Unable to trigger deposit account registration, err: %s", err.Error()))
 	}
 
@@ -105,12 +102,11 @@ func (k Keeper) OnSetupPoolICACompleted(ctx sdk.Context, poolID uint64, icaType 
 			if err != nil {
 				return &pool, errorsmod.Wrapf(types.ErrFailedToRegisterPool, err.Error())
 			}
-			icaPrizePoolPortName := string(types.NewPoolName(pool.GetPoolId(), types.ICATypePrizePool))
-			pool.IcaPrizepoolPortId, err = icatypes.NewControllerPortID(icaPrizePoolPortName)
+			pool.IcaPrizepoolPortId = string(types.NewPoolName(pool.GetPoolId(), types.ICATypePrizePool))
 			if err != nil {
 				return &pool, errorsmod.Wrapf(types.ErrFailedToRegisterPool, fmt.Sprintf("Unable to create prizepool account port id, err: %s", err.Error()))
 			}
-			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, pool.GetConnectionId(), icaPrizePoolPortName, appVersion); err != nil {
+			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, pool.GetConnectionId(), pool.GetIcaPrizepoolPortId(), appVersion); err != nil {
 				logger.Error("Unable to trigger prizepool account registration, err: %s", err.Error())
 			}
 		}
@@ -526,7 +522,7 @@ func (k Keeper) GetPoolForControllerPortID(ctx sdk.Context, controllerPortID str
 	var pool = types.Pool{}
 	found := false
 	k.IteratePools(ctx, func(p types.Pool) bool {
-		if p.GetIcaDepositPortId() == controllerPortID || p.GetIcaPrizepoolPortId() == controllerPortID {
+		if p.GetIcaDepositPortIdWithPrefix() == controllerPortID || p.GetIcaPrizepoolPortIdWithPrefix() == controllerPortID {
 			pool = p
 			found = true
 			return true
@@ -625,15 +621,15 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType
 	// Compute the port ID
 	var portID string
 	if accountType == types.ICATypeDeposit {
-		portID = pool.GetIcaDepositPortId()
+		portID = pool.GetIcaDepositPortIdWithPrefix()
 	} else if accountType == types.ICATypePrizePool {
-		portID = pool.GetIcaPrizepoolPortId()
+		portID = pool.GetIcaPrizepoolPortIdWithPrefix()
 	}
 
 	// Acquire the channel capacities
-	channelID, found := k.ICAControllerKeeper.GetOpenActiveChannel(ctx, pool.GetConnectionId(), portID)
+	channelID, found := k.ICAControllerKeeper.GetActiveChannelID(ctx, pool.GetConnectionId(), portID)
 	if !found {
-		return 0, errorsmod.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve open active channel for port %s", portID)
+		return 0, errorsmod.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve open active channel for port %s (%s / %s) on connection %s", portID, pool.GetIcaDepositPortId(), pool.GetIcaPrizepoolPortId(), pool.GetConnectionId())
 	}
 
 	// Serialize the data and construct the packet to send
@@ -652,9 +648,9 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType
 	}
 
 	// Broadcast the messages
-	msg := icacontrollertypes.NewMsgSendTx(portID, pool.GetConnectionId(), timeoutNanos, packetData)
-	msgServer := icacontrollerkeeper.NewMsgServerImpl(&k.ICAControllerKeeper)
-	res, err := msgServer.SendTx(ctx, msg)
+	// TODO: switch to MsgServer once they fixes their shit. Switch timestamp
+	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTimeoutNanos
+	sequence, err := k.ICAControllerKeeper.SendTx(ctx, nil, pool.GetConnectionId(), portID, packetData, timeoutTimestamp) // nolint:staticcheck
 	if err != nil {
 		return 0, err
 	}
@@ -662,18 +658,18 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType
 	// Store the callback data
 	if callbackId != "" && callbackArgs != nil {
 		callback := icacallbackstypes.CallbackData{
-			CallbackKey:  icacallbackstypes.PacketID(portID, channelID, res.Sequence),
+			CallbackKey:  icacallbackstypes.PacketID(portID, channelID, sequence),
 			PortId:       portID,
 			ChannelId:    channelID,
-			Sequence:     res.Sequence,
+			Sequence:     sequence,
 			CallbackId:   callbackId,
 			CallbackArgs: callbackArgs,
 		}
 		k.ICACallbacksKeeper.SetCallbackData(ctx, callback)
 	}
 
-	k.Logger(ctx).Debug(fmt.Sprintf("Broadcasted ICA messages with sequence %d", res.Sequence))
-	return res.Sequence, nil
+	k.Logger(ctx).Debug(fmt.Sprintf("Broadcasted ICA messages with sequence %d", sequence))
+	return sequence, nil
 }
 
 func (k Keeper) QueryBalance(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {

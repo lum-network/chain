@@ -120,6 +120,7 @@ func (a AppModule) QuerierRoute() string {
 
 func (a AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServerImpl(a.keeper))
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(a.keeper))
 }
 
 func (a AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {

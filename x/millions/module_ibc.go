@@ -69,13 +69,10 @@ func (im IBCModule) OnChanOpenAck(ctx sdk.Context, portID, channelID string, cou
 	}
 
 	// Handle which of the ICA addresses has been initialized
-	depositAddressPortID := pool.GetIcaDepositPortId()
-	prizePoolAddressPortID := pool.GetIcaPrizepoolPortId()
-
 	var accountType string
-	if portID == depositAddressPortID {
+	if portID == pool.GetIcaDepositPortIdWithPrefix() {
 		accountType = types.ICATypeDeposit
-	} else if portID == prizePoolAddressPortID {
+	} else if portID == pool.GetIcaPrizepoolPortIdWithPrefix() {
 		accountType = types.ICATypePrizePool
 	}
 

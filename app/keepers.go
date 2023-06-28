@@ -385,18 +385,6 @@ func (app *App) InitNormalKeepers() {
 	var millionsIBCStack porttypes.IBCModule = millions.NewIBCModule(*app.MillionsKeeper)
 	millionsIBCStack = icacontroller.NewIBCMiddleware(millionsIBCStack, *app.ICAControllerKeeper)
 
-	// Register our ICACallbacks handlers
-	err := app.ICACallbacksKeeper.SetICACallbackHandler(millionstypes.ModuleName, app.MillionsKeeper.ICACallbackHandler())
-	if err != nil {
-		panic(err)
-	}
-
-	// Register our ICQueries handlers
-	err = app.ICQueriesKeeper.SetCallbackHandler(millionstypes.ModuleName, app.MillionsKeeper.ICQCallbackHandler())
-	if err != nil {
-		panic(err)
-	}
-
 	// Create static IBC router, add transfer route, then set and seal it
 	// Two routes are included for the ICAController because of the following procedure when registering an ICA
 	//     1. RegisterInterchainAccount binds the new portId to the icacontroller module and initiates a channel opening
@@ -410,8 +398,27 @@ func (app *App) InitNormalKeepers() {
 	ibcRouter.
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
 		AddRoute(icacontrollertypes.SubModuleName, millionsIBCStack).
+		AddRoute(millionstypes.ModuleName, millionsIBCStack).
 		AddRoute(ibctransfertypes.ModuleName, transferStack)
 	app.IBCKeeper.SetRouter(ibcRouter)
+
+	// Register our ICACallbacks handlers
+	// Since IBC V6, the ICAController module owns the channel, we have to route ICAController / IBC Transfer types to Millions.
+	// Consequence is that we can't have more than one module with ICA callbacks capability. Refactor is probably required in the future.
+	if err := app.ICACallbacksKeeper.SetICACallbackHandler(millionstypes.ModuleName, app.MillionsKeeper.ICACallbackHandler()); err != nil {
+		panic(err)
+	}
+	if err := app.ICACallbacksKeeper.SetICACallbackHandler(icacontrollertypes.SubModuleName, app.MillionsKeeper.ICACallbackHandler()); err != nil {
+		panic(err)
+	}
+	if err := app.ICACallbacksKeeper.SetICACallbackHandler(ibctransfertypes.ModuleName, app.MillionsKeeper.ICACallbackHandler()); err != nil {
+		panic(err)
+	}
+
+	// Register our ICQueries handlers
+	if err := app.ICQueriesKeeper.SetCallbackHandler(millionstypes.ModuleName, app.MillionsKeeper.ICQCallbackHandler()); err != nil {
+		panic(err)
+	}
 
 	// Initialize the governance router
 	govRouter := govtypesv1beta1.NewRouter()
