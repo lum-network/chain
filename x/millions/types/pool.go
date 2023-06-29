@@ -241,6 +241,34 @@ func (p *Pool) ApplySplitUndelegate(ctx sdk.Context, splits []*SplitDelegation) 
 	}
 }
 
+// ApplySplitRedelegate serves as internal tracking to redelegate the bonded amount from the inactive to the active validators
+func (p *Pool) ApplySplitRedelegate(ctx sdk.Context, valSrcAddr string, splits []*SplitDelegation) {
+	valIdx := p.GetValidatorsMapIndex()
+	for _, split := range splits {
+		// Add the split amount to the active validator's bonded amount
+		p.Validators[valIdx[split.ValidatorAddress]].BondedAmount = p.Validators[valIdx[split.ValidatorAddress]].BondedAmount.Add(split.Amount)
+		// Substract from the inactive validator
+		p.Validators[valIdx[valSrcAddr]].BondedAmount = p.Validators[valIdx[valSrcAddr]].BondedAmount.Sub(split.Amount)
+		if p.Validators[valIdx[valSrcAddr]].BondedAmount.LT(sdk.ZeroInt()) {
+			panic(ErrPoolInvalidSplit)
+		}
+	}
+}
+
+// RevertSplitRedelegate reverts an initial ApplySplitRedelegate
+func (p *Pool) RevertSplitRedelegate(ctx sdk.Context, valSrcAddr string, splits []*SplitDelegation) {
+	valIdx := p.GetValidatorsMapIndex()
+	for _, split := range splits {
+		// Add BondedAmount back to the previously inactive bonded validator
+		p.Validators[valIdx[valSrcAddr]].BondedAmount = p.Validators[valIdx[valSrcAddr]].BondedAmount.Add(split.Amount)
+		// Substract from the active bonded validator
+		p.Validators[valIdx[split.ValidatorAddress]].BondedAmount = p.Validators[valIdx[split.ValidatorAddress]].BondedAmount.Sub(split.Amount)
+		if p.Validators[valIdx[split.ValidatorAddress]].BondedAmount.LT(sdk.ZeroInt()) {
+			panic(ErrPoolInvalidSplit)
+		}
+	}
+}
+
 // AccAddressFromBech32 custom implementation of sdk.AccAddressFromBech32 to handle pool bech32 prefix
 // Returns if address is local (= to sdk.GetConfig().GetBech32AccountAddrPrefix()):
 // Error in cases:

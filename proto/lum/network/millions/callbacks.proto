@@ -2,6 +2,7 @@ syntax = "proto3";
 package lum.network.millions;
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/lum-network/chain/x/millions/types";
 
@@ -36,7 +37,9 @@ message UndelegateCallback {
 
 message RedelegateCallback {
   uint64 pool_id = 1;
-  SplitDelegation split_delegation = 2;
+  string operator_address = 2
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  repeated SplitDelegation split_delegations = 3;
 }
 
 message ClaimRewardsCallback {
