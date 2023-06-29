@@ -38,6 +38,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 
 func (suite *HandlerTestSuite) TestProposal_UpdateParams() {
 	var emptyDenpositDenoms []string
+	invalidDepositDenoms := []string{""}
 	validDepositDenoms := []string{dfracttypes.DefaultDenom, "udfr"}
 	invalidDepositAmount := sdk.NewInt(500000)
 	newMinDeposit := sdk.NewInt(2000000)
@@ -77,6 +78,12 @@ func (suite *HandlerTestSuite) TestProposal_UpdateParams() {
 			dfracttypes.NewUpdateParamsProposal("Test", "Test", "", nil, validDepositDenoms, nil),
 			false,
 			false,
+		},
+		{
+			"Partial update with invalid deposit denoms should not be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "", nil, invalidDepositDenoms, nil),
+			true,
+			true,
 		},
 		{
 			"Partial update with invalid min deposit amount should not be fine",
