@@ -24,7 +24,11 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Legacy proposal
+// DEPRECATED:
+// For easier management, we moved the WithdrawAndMintProposal to tx based based
+// minting. The withdrawal address specified in the dFract module parameters is
+// the one authorized to withdraw and mint udfr tokens based on the
+// MicroMintRate
 type WithdrawAndMintProposal struct {
 	Title             string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description       string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`

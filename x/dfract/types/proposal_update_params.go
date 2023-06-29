@@ -2,11 +2,8 @@ package types
 
 import (
 	"fmt"
-	"strings"
 
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	gogotypes "github.com/cosmos/gogoproto/types"
 )
@@ -47,28 +44,24 @@ func (p *ProposalUpdateParams) ValidateBasic() error {
 		return err
 	}
 
+	params := DefaultParams()
 	if p.GetWithdrawalAddress() != "" {
-		_, err = sdk.AccAddressFromBech32(p.GetWithdrawalAddress())
-		if err != nil {
-			return errorsmod.Wrapf(ErrInvalidWithdrawalAddress, err.Error())
-		}
+		params.WithdrawalAddress = p.WithdrawalAddress
 	}
 
-	if p.MinDepositAmount != nil {
-		if p.MinDepositAmount.IsNil() || p.MinDepositAmount.LT(sdk.NewInt(DefaultMinDepositAmount)) {
-			return errorsmod.Wrapf(ErrInvalidParams, "min deposit amount cannot be lower than default minimum amount, got: %d", p.MinDepositAmount)
-		}
+	if p.IsDepositEnabled != nil {
+		params.IsDepositEnabled = p.IsDepositEnabled.Value
 	}
 
 	if len(p.DepositDenoms) > 0 {
-		for _, denom := range p.DepositDenoms {
-			if strings.TrimSpace(denom) == "" {
-				return ErrInvalidDepositDenom
-			}
-		}
+		params.DepositDenoms = p.DepositDenoms
 	}
 
-	return nil
+	if p.MinDepositAmount != nil {
+		params.MinDepositAmount = uint32(p.MinDepositAmount.Int64())
+	}
+
+	return params.ValidateBasics()
 }
 
 func (p ProposalUpdateParams) String() string {

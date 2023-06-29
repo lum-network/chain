@@ -18,15 +18,6 @@ func init() {
 	govtypesv1beta1.RegisterProposalType(ProposalTypeWithdrawAndMint)
 }
 
-func LegacyWithdrawAndMintProposal(title string, description string, withdrawalAddress string, microMintRate int64) *WithdrawAndMintProposal {
-	return &WithdrawAndMintProposal{
-		Title:             title,
-		Description:       description,
-		WithdrawalAddress: withdrawalAddress,
-		MicroMintRate:     microMintRate,
-	}
-}
-
 func (prop *WithdrawAndMintProposal) GetTitle() string {
 	return prop.Title
 }

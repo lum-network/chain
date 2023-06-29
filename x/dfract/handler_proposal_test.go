@@ -56,7 +56,7 @@ func (suite *HandlerTestSuite) TestProposal_UpdateParams() {
 			false,
 		},
 		{
-			"Partial update nil deposit enablement should be fine",
+			"Partial update with valid address should be fine",
 			dfracttypes.NewUpdateParamsProposal("Test", "Test", "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", nil, emptyDenpositDenoms, nil),
 			false,
 			false,

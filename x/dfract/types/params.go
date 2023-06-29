@@ -41,20 +41,26 @@ func DefaultParams() Params {
 }
 
 func (p *Params) ValidateBasics() error {
-	if err := validateDepositDenom(p.DepositDenoms); err != nil {
-		return err
+	if p.GetWithdrawalAddress() != "" {
+		if _, err := sdk.AccAddressFromBech32(p.GetWithdrawalAddress()); err != nil {
+			return ErrInvalidWithdrawalAddress
+		}
+	}
+
+	if _, ok := interface{}(p.IsDepositEnabled).(bool); !ok {
+		return errorsmod.Wrapf(ErrInvalidParams, "IsDepositEnabled must be a bool, got: %v", p.IsDepositEnabled)
+	}
+
+	if len(p.DepositDenoms) > 0 {
+		for _, denom := range p.DepositDenoms {
+			if strings.TrimSpace(denom) == "" {
+				return ErrInvalidDepositDenom
+			}
+		}
 	}
 
 	if p.MinDepositAmount < DefaultMinDepositAmount {
 		return errorsmod.Wrapf(ErrInvalidParams, "min deposit amount cannot be lower than default minimum amount, got: %d", p.MinDepositAmount)
-	}
-
-	if _, err := sdk.AccAddressFromBech32(p.GetWithdrawalAddress()); err != nil {
-		return ErrInvalidWithdrawalAddress
-	}
-
-	if err := validateDepositEnablement(p.IsDepositEnabled); err != nil {
-		return err
 	}
 
 	return nil
