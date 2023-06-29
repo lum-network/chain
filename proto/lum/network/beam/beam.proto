@@ -1,0 +1,154 @@
+syntax = "proto3";
+
+package lum.network.beam;
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/lum-network/chain/x/beam/types";
+
+enum BeamState {
+  UNSPECIFIED = 0 [ (gogoproto.enumvalue_customname) = "StateUnspecified" ];
+  OPEN = 1 [ (gogoproto.enumvalue_customname) = "StateOpen" ];
+  CANCELED = 2 [ (gogoproto.enumvalue_customname) = "StateCanceled" ];
+  CLOSED = 3 [ (gogoproto.enumvalue_customname) = "StateClosed" ];
+}
+
+message BeamMedia {
+  string mimetype = 1;
+  string url = 2;
+  string thumbnail_url = 3;
+}
+
+message BeamReviewer {
+  string reviewer_id = 1;
+  string name = 2;
+  bool is_anonymous = 3;
+}
+
+message BeamVerifier {
+  string name = 1;
+  string url = 2;
+  string signature = 3;
+}
+
+message BeamReward {
+  message BeamRewardDetails {
+    string type = 1;
+    float amount = 2;
+    float max_amount = 3;
+    string status = 4;
+  }
+
+  string trigger = 1;
+
+  float amount = 2;
+  float max_amount = 3;
+
+  string currency = 4;
+  string status = 5;
+
+  repeated BeamRewardDetails details = 6;
+}
+
+message BeamMerchantReview {
+  message BeamMerchantReviewRating {
+    float overall = 1;
+    float customer_service = 2;
+    float nps = 3;
+  }
+
+  message BeamMerchantReviewContent {
+    string overall = 1;
+    string customer_service = 2;
+  }
+
+  string order_id = 1;
+  string review_id = 2;
+  string merchant_url = 3;
+  string rating_url = 4;
+  string review_url = 5;
+  string collection_method = 6;
+  string timestamp = 7;
+
+  BeamMerchantReviewRating ratings = 8;
+
+  string title = 9;
+  BeamMerchantReviewContent content = 10;
+}
+
+message BeamProductReview {
+  message BeamProductReviewRating {
+    float overall = 1;
+    float quality = 2;
+  }
+
+  message BeamProductReviewContent {
+    string overall = 1;
+    string pros = 2;
+    string cons = 3;
+  }
+
+  message BeamProduct {
+    message BeamProductIds {
+      repeated string gtins = 1;
+      repeated string mpns = 2;
+      repeated string skus = 3;
+      repeated string asins = 4;
+    }
+    string name = 1;
+    string url = 2;
+    repeated string urls = 3;
+    BeamProductIds ids = 4;
+  }
+
+  string order_id = 1;
+  string review_id = 2;
+  string rating_url = 3;
+  string review_url = 4;
+  string collection_method = 5;
+  string timestamp = 6;
+
+  BeamProductReviewRating ratings = 7;
+
+  string title = 8;
+  BeamProductReviewContent content = 9;
+
+  repeated BeamMedia medias = 10;
+  repeated BeamProduct products = 11;
+}
+
+message BeamData {
+  BeamReward reward = 1;
+  BeamVerifier verifier = 2;
+  BeamReviewer reviewer = 3;
+  BeamMerchantReview merchant_review = 4;
+  repeated BeamProductReview products_reviews = 5;
+}
+
+message Beam {
+  string creator_address = 1;
+  string id = 2;
+  cosmos.base.v1beta1.Coin amount = 3 [ (gogoproto.nullable) = false ];
+  BeamState status = 4;
+  string secret = 5;
+  string claim_address = 6;
+
+  bool funds_withdrawn = 7;
+  bool claimed = 8;
+
+  string cancel_reason = 9;
+  bool hide_content = 10;
+
+  string schema = 11;
+
+  BeamData data = 12;
+
+  int32 claim_expires_at_block = 13;
+  int32 closes_at_block = 14;
+
+  google.protobuf.Timestamp created_at = 15
+      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+  google.protobuf.Timestamp closed_at = 16
+      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+}

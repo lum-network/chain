@@ -53,7 +53,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = ctx.WithChainID(testChainID).WithBlockTime(time.Now().UTC())
 
 	// Setup test account addresses
-	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 6, sdk.NewInt(1_000_0000_000), app.StakingKeeper.BondDenom(ctx))
+	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 6, sdk.NewInt(10_000_000_000), app.StakingKeeper.BondDenom(ctx))
 	for i := 0; i < 6; i++ {
 		poolAddress := millionstypes.NewPoolAddress(uint64(i+1), "unused-in-test")
 		apptesting.AddTestModuleAccount(app, ctx, poolAddress)

@@ -543,6 +543,80 @@ func (suite *KeeperTestSuite) TestDeposit_UpdateDepositStatus() {
 	}
 }
 
+// TestDeposit_EditDeposit tests the logic of editing a deposit's winnerAddr and sponsor
+func (suite *KeeperTestSuite) TestDeposit_EditDeposit() {
+	// Set the app context
+	app := suite.app
+	ctx := suite.ctx
+
+	// Set the denom
+	denom := app.StakingKeeper.BondDenom(ctx)
+
+	// Add 5 deposits
+	for i := 0; i < 5; i++ {
+		poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
+		drawDelta1 := 1 * time.Hour
+		app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
+			PoolId: poolID,
+			PrizeStrategy: millionstypes.PrizeStrategy{
+				PrizeBatches: []millionstypes.PrizeBatch{
+					{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
+				},
+			},
+			DrawSchedule: millionstypes.DrawSchedule{
+				InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
+				DrawDelta:     drawDelta1,
+			},
+			AvailablePrizePool: sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), math.NewInt(1000)),
+		}))
+		// Retrieve the pool from the state
+		pool, err := app.MillionsKeeper.GetPool(ctx, poolID)
+		suite.Require().NoError(err)
+
+		// Create a new deposit and add it to the state
+		app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
+			PoolId:           pool.PoolId,
+			DepositorAddress: suite.addrs[0].String(),
+			WinnerAddress:    suite.addrs[0].String(),
+			State:            millionstypes.DepositState_IbcTransfer,
+			Amount:           sdk.NewCoin(denom, sdk.NewInt(1_000_000)),
+		})
+	}
+
+	// Test Error Management
+	// - Trigger err on wrong poolID
+	_, err := app.MillionsKeeper.GetPoolDeposit(ctx, uint64(10), uint64(5))
+	suite.Require().Error(err)
+	// - Trigger err on wrong depositID
+	_, err = app.MillionsKeeper.GetPoolDeposit(ctx, uint64(5), uint64(10))
+	suite.Require().Error(err)
+
+	deposits := app.MillionsKeeper.ListDeposits(ctx)
+	// Retrieve the pool from the state
+	pools := app.MillionsKeeper.ListPools(ctx)
+	for i, pool := range pools {
+		err = app.MillionsKeeper.EditDeposit(ctx, pool.PoolId, deposits[i].DepositId, suite.addrs[1], true)
+		suite.Require().NoError(err)
+		deposit, err := app.MillionsKeeper.GetPoolDeposit(ctx, pool.PoolId, deposits[i].DepositId)
+		suite.Require().NoError(err)
+		pool, err := app.MillionsKeeper.GetPool(ctx, deposit.PoolId)
+		suite.Require().NoError(err)
+		suite.Require().NotNil(deposit, "Not nil")
+		suite.Require().Equal(suite.addrs[1].String(), deposit.WinnerAddress)
+		suite.Require().Equal(true, deposit.IsSponsor)
+		suite.Require().Equal(int64(1_000_000), pool.SponsorshipAmount.Int64())
+	}
+
+	// pool SponsorshipAmount should be sub in case user does not want to sponsor anymore
+	pool, err := app.MillionsKeeper.GetPool(ctx, deposits[0].PoolId)
+	suite.Require().NoError(err)
+	err = app.MillionsKeeper.EditDeposit(ctx, pool.PoolId, deposits[0].DepositId, suite.addrs[1], false)
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, deposits[0].PoolId)
+	suite.Require().NoError(err)
+	suite.Require().Equal(int64(0), pool.SponsorshipAmount.Int64())
+}
+
 // TestDeposit_TransferDeposit tests the full flow from the transfer till the delegation point
 func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 	// Set the app context

@@ -9,7 +9,6 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
-	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 
 	"github.com/lum-network/chain/x/icacallbacks"
@@ -36,7 +35,7 @@ func NewIBCModule(k keeper.Keeper) IBCModule {
 // OnChanOpenInit implements the IBCModule interface
 func (im IBCModule) OnChanOpenInit(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string) (string, error) {
 	im.keeper.Logger(ctx).Debug(fmt.Sprintf("OnChanOpenInit: portID %s, channelID %s", portID, channelID))
-	return version, im.keeper.ClaimCapability(ctx, channelCap, host.ChannelCapabilityPath(portID, channelID))
+	return version, nil
 }
 
 // OnChanOpenTry implements the IBCModule interface
@@ -70,13 +69,10 @@ func (im IBCModule) OnChanOpenAck(ctx sdk.Context, portID, channelID string, cou
 	}
 
 	// Handle which of the ICA addresses has been initialized
-	depositAddressPortID := pool.GetIcaDepositPortId()
-	prizePoolAddressPortID := pool.GetIcaPrizepoolPortId()
-
 	var accountType string
-	if portID == depositAddressPortID {
+	if portID == pool.GetIcaDepositPortIdWithPrefix() {
 		accountType = types.ICATypeDeposit
-	} else if portID == prizePoolAddressPortID {
+	} else if portID == pool.GetIcaPrizepoolPortIdWithPrefix() {
 		accountType = types.ICATypePrizePool
 	}
 

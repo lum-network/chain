@@ -1,0 +1,9 @@
+syntax = "proto3";
+package lum.network.dfract;
+
+option go_package = "github.com/lum-network/chain/x/dfract/types";
+
+message Params {
+  repeated string deposit_denoms = 1;
+  uint32 min_deposit_amount = 2;
+}

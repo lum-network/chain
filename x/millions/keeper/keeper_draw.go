@@ -791,7 +791,7 @@ func (k Keeper) RunDrawPrizes(ctx sdk.Context, prizePool sdk.Coin, prizeStrat ty
 }
 
 // DistributePrizes distributes the prizes if they have a winner
-func (k Keeper) DistributePrizes(ctx sdk.Context, fc feeCollector, dRes DrawResult, draw types.Draw) error {
+func (k Keeper) DistributePrizes(ctx sdk.Context, fc *feeCollector, dRes DrawResult, draw types.Draw) error {
 	var prizeRefs []types.PrizeRef
 	for _, pd := range dRes.PrizeDraws {
 		if pd.Winner != nil {
