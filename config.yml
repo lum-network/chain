@@ -25,10 +25,9 @@ genesis:
       params:
         bond_denom: "ulum"
     gov:
-      deposit_params:
+      params:
         min_deposit: [{ "amount": "10000", "denom": "ulum" }]
         max_deposit_period: "180s"
-      voting_params:
         voting_period: "180s"
     dfract:
       params:

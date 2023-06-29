@@ -6,6 +6,8 @@ import (
 	"sort"
 	"strings"
 
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -293,4 +295,14 @@ func (p *Pool) AccAddressFromBech32(address string) (isLocalAddress bool, addr s
 	}
 
 	return hrp == configBech32Prefix, sdk.AccAddress(bz), nil
+}
+
+func (p *Pool) GetIcaDepositPortIdWithPrefix() string {
+	portID, _ := icatypes.NewControllerPortID(p.GetIcaDepositPortId())
+	return portID
+}
+
+func (p *Pool) GetIcaPrizepoolPortIdWithPrefix() string {
+	portID, _ := icatypes.NewControllerPortID(p.GetIcaPrizepoolPortId())
+	return portID
 }

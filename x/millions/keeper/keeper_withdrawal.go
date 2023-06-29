@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"time"
 
-	gogotypes "github.com/gogo/protobuf/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
 	"github.com/lum-network/chain/x/millions/types"
 )
@@ -105,8 +105,7 @@ func (k Keeper) UndelegateWithdrawalOnNativeChain(ctx sdk.Context, poolID uint64
 	k.updatePool(ctx, &pool)
 
 	// Dispatch our message with a timeout of 30 minutes in nanos
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
-	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, timeoutTimestamp, ICACallbackID_Undelegate, marshalledCallbackData)
+	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Undelegate, marshalledCallbackData)
 	if err != nil {
 		// Return with error here since it is the first operation and nothing needs to be saved to state
 		logger.Error(
@@ -215,7 +214,6 @@ func (k Keeper) TransferWithdrawalToDestAddr(ctx sdk.Context, poolID uint64, wit
 
 	// Converts the local ibc Denom into the native chain Denom
 	amount := sdk.NewCoin(pool.NativeDenom, withdrawal.Amount.Amount)
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
 
 	if isLocalToAddress {
 		// ICA transfer from remote zone to local zone
@@ -239,7 +237,8 @@ func (k Keeper) TransferWithdrawalToDestAddr(ctx sdk.Context, poolID uint64, wit
 			pool.GetIcaDepositAddress(),
 			withdrawal.GetToAddress(),
 			clienttypes.Height{},
-			timeoutTimestamp,
+			uint64(ctx.BlockTime().UnixNano())+types.IBCTimeoutNanos,
+			"Cosmos Millions",
 		))
 	} else {
 		// ICA bank send from remote to remote
@@ -262,7 +261,7 @@ func (k Keeper) TransferWithdrawalToDestAddr(ctx sdk.Context, poolID uint64, wit
 	}
 
 	// Dispatch message
-	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, timeoutTimestamp, callbackID, marshalledCallbackData)
+	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, callbackID, marshalledCallbackData)
 	if err != nil {
 		// Return with error here and let the caller manage the state changes if needed
 		logger.Error(

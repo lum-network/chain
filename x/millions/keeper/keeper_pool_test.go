@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
@@ -968,8 +969,8 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 
 		validator, err := stakingtypes.NewValidator(sdk.ValAddress(addrs[i]), privKeys[i], stakingtypes.Description{})
 		suite.Require().NoError(err)
-		validator = stakingkeeper.TestingUpdateValidator(*suite.app.StakingKeeper, suite.ctx, validator, false)
-		err = app.StakingKeeper.AfterValidatorCreated(suite.ctx, validator.GetOperator())
+		validator = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validator, false)
+		err = app.StakingKeeper.Hooks().AfterValidatorCreated(suite.ctx, validator.GetOperator())
 		suite.Require().NoError(err)
 
 		validators[i] = validator
@@ -1032,7 +1033,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 
 	// Simulate that 2 validators are bonded but inactive in the poolSet
 	// - Validator 2 and 4 are being removed
-	app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{pool.Validators[0].GetOperatorAddress(), pool.Validators[2].GetOperatorAddress(), pool.Validators[4].GetOperatorAddress()}, nil, nil, nil, millionstypes.PoolState_Unspecified)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{pool.Validators[0].GetOperatorAddress(), pool.Validators[2].GetOperatorAddress(), pool.Validators[4].GetOperatorAddress()}, nil, nil, nil, millionstypes.PoolState_Unspecified)
 	suite.Require().NoError(err)
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
@@ -1167,7 +1168,8 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[4].BondedAmount)
 
 	// Simulate validator 1 that gets removed from the valSet
-	app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{pool.Validators[1].GetOperatorAddress(), pool.Validators[2].GetOperatorAddress(), pool.Validators[3].GetOperatorAddress(), pool.Validators[4].GetOperatorAddress()}, nil, nil, nil, millionstypes.PoolState_Unspecified)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{pool.Validators[1].GetOperatorAddress(), pool.Validators[2].GetOperatorAddress(), pool.Validators[3].GetOperatorAddress(), pool.Validators[4].GetOperatorAddress()}, nil, nil, nil, millionstypes.PoolState_Unspecified)
+	suite.Require().Error(err)
 	// No active channel for this owner
 	pool, err = app.MillionsKeeper.GetPool(ctx, 2)
 	suite.Require().NoError(err)

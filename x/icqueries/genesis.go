@@ -2,6 +2,7 @@ package icqueries
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/lum-network/chain/x/icqueries/keeper"
 	"github.com/lum-network/chain/x/icqueries/types"
 )
