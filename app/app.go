@@ -631,6 +631,7 @@ func RegisterSwaggerAPI(ctx client.Context, rtr *mux.Router) {
 }
 
 func (app *App) registerUpgradeHandlers() {
+	baseAppLegacySS := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 	app.UpgradeKeeper.SetUpgradeHandler("v0.44", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// override versions for _new_ modules as to not skip InitGenesis
 		fromVM[authz.ModuleName] = 0
@@ -779,6 +780,9 @@ func (app *App) registerUpgradeHandlers() {
 
 	app.UpgradeKeeper.SetUpgradeHandler("v1.5.0", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		app.Logger().Info("Starting v1.5.0 upgrade")
+
+		// Migrate the consensus module
+		baseapp.MigrateParams(ctx, baseAppLegacySS, app.ConsensusParamsKeeper)
 
 		// Migrate ICA channel capabilities from IBC V5 to IBC V6
 		if err := icacontrollermigrations.MigrateICS27ChannelCapability(
