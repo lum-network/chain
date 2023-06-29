@@ -11,18 +11,22 @@ import (
 
 // NewHandler new handler for the beam module
 func NewHandler(k keeper.Keeper) sdk.Handler {
+	msgServer := keeper.NewMsgServerImpl(k)
+
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
+		goCtx := sdk.WrapSDKContext(ctx)
 
 		switch msg := msg.(type) {
 		case *types.MsgOpenBeam:
-			return handleMsgOpenBeam(ctx, k, msg)
-
+			res, err := msgServer.OpenBeam(goCtx, msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgUpdateBeam:
-			return handleMsgUpdateBeam(ctx, k, msg)
-
+			res, err := msgServer.UpdateBeam(goCtx, msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgClaimBeam:
-			return handleMsgClaimBeam(ctx, k, msg)
+			res, err := msgServer.ClaimBeam(goCtx, msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 
 		default:
 			return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)

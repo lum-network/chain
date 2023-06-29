@@ -38,7 +38,7 @@ func (suite *StoreMigrationTestSuite) TestDisabledAutoCloseMigration() {
 
 	// Simulate legacy beam entries with auto close disabled (otherwise they would've been added automatically to the new queue)
 	beam1id := utils.GenerateSecureToken(8)
-	err := suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
+	_, err := suite.app.BeamKeeper.OpenBeam(suite.ctx, &types.MsgOpenBeam{
 		Id:                  beam1id,
 		CreatorAddress:      addr1.String(),
 		Secret:              utils.GenerateSecureToken(10),
@@ -49,7 +49,7 @@ func (suite *StoreMigrationTestSuite) TestDisabledAutoCloseMigration() {
 	})
 	suite.Require().NoError(err)
 	beam2id := utils.GenerateSecureToken(8)
-	err = suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
+	_, err = suite.app.BeamKeeper.OpenBeam(suite.ctx, &types.MsgOpenBeam{
 		Id:                  beam2id,
 		CreatorAddress:      addr2.String(),
 		Secret:              utils.GenerateSecureToken(10),
@@ -60,7 +60,7 @@ func (suite *StoreMigrationTestSuite) TestDisabledAutoCloseMigration() {
 	})
 	suite.Require().NoError(err)
 	beam3id := utils.GenerateSecureToken(8)
-	err = suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
+	_, err = suite.app.BeamKeeper.OpenBeam(suite.ctx, &types.MsgOpenBeam{
 		Id:                  beam3id,
 		CreatorAddress:      addr3.String(),
 		Secret:              utils.GenerateSecureToken(10),
@@ -113,7 +113,7 @@ func (suite *StoreMigrationTestSuite) TestEnabledAutoCloseMigration() {
 
 	// Simulate legacy beam entries with auto close disabled (otherwise they would've been added automatically to the new queue)
 	beam1id := utils.GenerateSecureToken(8)
-	err := suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
+	_, err := suite.app.BeamKeeper.OpenBeam(suite.ctx, &types.MsgOpenBeam{
 		Id:                  beam1id,
 		CreatorAddress:      addr1.String(),
 		Secret:              utils.GenerateSecureToken(10),
@@ -124,7 +124,7 @@ func (suite *StoreMigrationTestSuite) TestEnabledAutoCloseMigration() {
 	})
 	suite.Require().NoError(err)
 	beam2id := utils.GenerateSecureToken(8)
-	err = suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
+	_, err = suite.app.BeamKeeper.OpenBeam(suite.ctx, &types.MsgOpenBeam{
 		Id:                  beam2id,
 		CreatorAddress:      addr2.String(),
 		Secret:              utils.GenerateSecureToken(10),
@@ -135,7 +135,7 @@ func (suite *StoreMigrationTestSuite) TestEnabledAutoCloseMigration() {
 	})
 	suite.Require().NoError(err)
 	beam3id := utils.GenerateSecureToken(8)
-	err = suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
+	_, err = suite.app.BeamKeeper.OpenBeam(suite.ctx, &types.MsgOpenBeam{
 		Id:                  beam3id,
 		CreatorAddress:      addr3.String(),
 		Secret:              utils.GenerateSecureToken(10),
