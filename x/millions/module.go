@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/lum-network/chain/x/millions/migrations"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -121,6 +122,13 @@ func (a AppModule) QuerierRoute() string {
 func (a AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServerImpl(a.keeper))
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(a.keeper))
+
+	// Register the migrations
+	migrator := migrations.NewMigrator(a.keeper)
+	err := cfg.RegisterMigration(types.ModuleName, 1, migrator.Migrate1To2)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (a AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {

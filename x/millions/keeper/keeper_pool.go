@@ -661,6 +661,22 @@ func (k Keeper) UnsafeKillPool(ctx sdk.Context, poolID uint64) (types.Pool, erro
 	return pool, nil
 }
 
+// UnsafeUpdatePoolPortIds This method raw update the provided pool port ids.
+// It's heavily unsafe and could break the ICA implementation. It should be used with cautious caution.
+func (k Keeper) UnsafeUpdatePoolPortIds(ctx sdk.Context, poolID uint64, icaDepositPortId, icaPrizePoolPortId string) (types.Pool, error) {
+	// Grab our pool instance
+	pool, err := k.GetPool(ctx, poolID)
+	if err != nil {
+		return types.Pool{}, err
+	}
+
+	// Patch and update our pool entity
+	pool.IcaDepositPortId = icaDepositPortId
+	pool.IcaPrizepoolPortId = icaPrizePoolPortId
+	k.updatePool(ctx, &pool)
+	return pool, nil
+}
+
 func (k Keeper) updatePool(ctx sdk.Context, pool *types.Pool) {
 	pool.UpdatedAt = ctx.BlockTime()
 	pool.UpdatedAtHeight = ctx.BlockHeight()
