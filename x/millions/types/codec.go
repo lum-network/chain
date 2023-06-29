@@ -7,7 +7,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 var (
@@ -46,9 +46,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgRestoreInterchainAccounts{})
 
 	// Proposals
-	registry.RegisterImplementations((*govtypes.Content)(nil), &ProposalUpdateParams{})
-	registry.RegisterImplementations((*govtypes.Content)(nil), &ProposalRegisterPool{})
-	registry.RegisterImplementations((*govtypes.Content)(nil), &ProposalUpdatePool{})
+	registry.RegisterImplementations((*govtypesv1beta1.Content)(nil), &ProposalUpdateParams{})
+	registry.RegisterImplementations((*govtypesv1beta1.Content)(nil), &ProposalRegisterPool{})
+	registry.RegisterImplementations((*govtypesv1beta1.Content)(nil), &ProposalUpdatePool{})
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

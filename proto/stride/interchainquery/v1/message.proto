@@ -1,5 +1,5 @@
 syntax = "proto3";
-package lum.network.icqueries;
+package stride.interchainquery.v1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
@@ -8,7 +8,7 @@ import "tendermint/crypto/proof.proto";
 
 option go_package = "github.com/lum-network/chain/x/icqueries/types";
 
-// Msg defines the icqueries Msg service.
+// Msg defines the interchainquery Msg service.
 service Msg {
   // SubmitQueryResponse defines a method for submit query responses.
   rpc SubmitQueryResponse(MsgSubmitQueryResponse)

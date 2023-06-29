@@ -79,7 +79,7 @@ func (suite *ABCITestSuite) TestTickBeamAutoClose() {
 		10,
 		0,
 	)
-	err := app.BeamKeeper.OpenBeam(ctx, *msg)
+	_, err := app.BeamKeeper.OpenBeam(ctx, msg)
 	suite.Require().NoError(err)
 	suite.Require().True(app.BeamKeeper.HasBeam(ctx, msg.GetId()))
 

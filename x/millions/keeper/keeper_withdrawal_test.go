@@ -838,7 +838,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 	app.MillionsKeeper.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, millionstypes.WithdrawalState_IbcTransfer, withdrawal.UnbondingEndsAt, false)
 
 	// Simulate failed ackResponse AckResponseStatus_FAILURE
-	err = app.MillionsKeeper.OnTransferWithdrawalToLocalChainCompleted(ctx, withdrawal.GetPoolId(), withdrawal.GetWithdrawalId(), true)
+	err = app.MillionsKeeper.OnTransferWithdrawalToDestAddrCompleted(ctx, withdrawal.GetPoolId(), withdrawal.GetWithdrawalId(), true)
 	suite.Require().NoError(err)
 	withdrawals = app.MillionsKeeper.ListAccountWithdrawals(ctx, uatomAddresses[0])
 	withdrawal, err = app.MillionsKeeper.GetPoolWithdrawal(ctx, withdrawals[0].PoolId, withdrawals[0].WithdrawalId)
@@ -852,8 +852,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 	withdrawal, err = app.MillionsKeeper.GetPoolWithdrawal(ctx, withdrawals[0].PoolId, withdrawals[0].WithdrawalId)
 	suite.Require().NoError(err)
 
-	// Simulate failed ackResponse AckResponseStatus_Success
-	err = app.MillionsKeeper.OnTransferWithdrawalToLocalChainCompleted(ctx, withdrawal.GetPoolId(), withdrawal.GetWithdrawalId(), false)
+	// Simulate success ackResponse AckResponseStatus_Success
+	err = app.MillionsKeeper.OnTransferWithdrawalToDestAddrCompleted(ctx, withdrawal.GetPoolId(), withdrawal.GetWithdrawalId(), false)
 	suite.Require().NoError(err)
 	// There should be no more withdrawal if successfully processed
 	withdrawals = app.MillionsKeeper.ListAccountWithdrawals(ctx, uatomAddresses[0])
@@ -935,12 +935,312 @@ func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 	withdrawal, err = app.MillionsKeeper.GetPoolWithdrawal(ctx, withdrawals[0].PoolId, withdrawals[0].DepositId)
 	suite.Require().NoError(err)
 
-	err = app.MillionsKeeper.TransferWithdrawalToLocalChain(ctx, withdrawal.PoolId, withdrawal.WithdrawalId)
+	err = app.MillionsKeeper.TransferWithdrawalToDestAddr(ctx, withdrawal.PoolId, withdrawal.WithdrawalId)
 	suite.Require().NoError(err)
 
 	// There should no more withdrawal if successfully processed
 	withdrawals = app.MillionsKeeper.ListAccountWithdrawals(ctx, suite.addrs[0])
 	suite.Require().Len(withdrawals, 0)
+}
+
+// TestWithdrawal_BankSend tests from the undelegation point the bank send to native is completed
+func (suite *KeeperTestSuite) TestWithdrawal_BankSend() {
+	// Set the app context
+	app := suite.app
+	ctx := suite.ctx
+	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
+	drawDelta1 := 1 * time.Hour
+	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), remotePoolDenom)
+
+	// Remote pool
+	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
+		PoolId:              poolID,
+		Bech32PrefixValAddr: remoteBech32PrefixValAddr,
+		ChainId:             remoteChainId,
+		Denom:               remotePoolDenom,
+		NativeDenom:         remotePoolDenom,
+		ConnectionId:        remoteConnectionId,
+		TransferChannelId:   remoteTransferChannelId,
+		Validators: []millionstypes.PoolValidator{
+			{
+				OperatorAddress: cosmosPoolValidator,
+				BondedAmount:    sdk.NewInt(1_000_000),
+				IsEnabled:       true,
+			},
+		},
+		IcaDepositAddress:   cosmosIcaDepositAddress,
+		IcaPrizepoolAddress: cosmosIcaPrizePoolAddress,
+		PrizeStrategy: millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
+			},
+		},
+		DrawSchedule: millionstypes.DrawSchedule{
+			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
+			DrawDelta:     drawDelta1,
+		},
+		AvailablePrizePool: sdk.NewCoin(remotePoolDenom, math.NewInt(1000)),
+	}))
+
+	// List pools
+	pools := app.MillionsKeeper.ListPools(ctx)
+	suite.Require().Len(pools, 1)
+
+	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
+		PoolId:           pools[0].PoolId,
+		DepositorAddress: uatomAddresses[0].String(),
+		WinnerAddress:    uatomAddresses[0].String(),
+		State:            millionstypes.DepositState_Success,
+		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
+	})
+	err := app.BankKeeper.SendCoins(ctx, uatomAddresses[0], sdk.MustAccAddressFromBech32(pools[0].LocalAddress), sdk.Coins{sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000))})
+	suite.Require().NoError(err)
+
+	deposits := app.MillionsKeeper.ListAccountDeposits(ctx, uatomAddresses[0])
+	deposit, err := app.MillionsKeeper.GetPoolDeposit(ctx, deposits[0].PoolId, deposits[0].DepositId)
+	suite.Require().NoError(err)
+
+	unbondingTime := ctx.BlockTime().Add(-2 * time.Second)
+
+	// Simulate that we reached the unbonding step already (done in previous test)
+	app.MillionsKeeper.AddWithdrawal(ctx, millionstypes.Withdrawal{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: uatomAddresses[0].String(),
+		ToAddress:        cosmosAccAddress,
+		State:            millionstypes.WithdrawalState_IcaUnbonding,
+		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
+		UnbondingEndsAt:  &unbondingTime,
+	})
+
+	withdrawals := app.MillionsKeeper.ListAccountWithdrawals(ctx, uatomAddresses[0])
+	suite.Require().Len(withdrawals, 1)
+
+	app.MillionsKeeper.RemoveDeposit(ctx, &millionstypes.Deposit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: uatomAddresses[0].String(),
+		WinnerAddress:    uatomAddresses[0].String(),
+		State:            millionstypes.DepositState_Success,
+		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
+	})
+
+	deposits = app.MillionsKeeper.ListAccountDeposits(ctx, uatomAddresses[0])
+	suite.Require().Len(deposits, 0)
+
+	withdrawal, err := app.MillionsKeeper.GetPoolWithdrawal(ctx, withdrawals[0].PoolId, withdrawals[0].WithdrawalId)
+	suite.Require().NoError(err)
+
+	// Update status to simulate tx
+	app.MillionsKeeper.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, millionstypes.WithdrawalState_IbcTransfer, withdrawal.UnbondingEndsAt, false)
+
+	// Simulate failed ackResponse AckResponseStatus_FAILURE
+	err = app.MillionsKeeper.OnTransferWithdrawalToDestAddrCompleted(ctx, withdrawal.GetPoolId(), withdrawal.GetWithdrawalId(), true)
+	suite.Require().NoError(err)
+	withdrawals = app.MillionsKeeper.ListAccountWithdrawals(ctx, uatomAddresses[0])
+	withdrawal, err = app.MillionsKeeper.GetPoolWithdrawal(ctx, withdrawals[0].PoolId, withdrawals[0].WithdrawalId)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.WithdrawalState_Failure, withdrawal.State)
+	suite.Require().Equal(millionstypes.WithdrawalState_IbcTransfer, withdrawal.ErrorState)
+
+	// Update status to simulate transfer from to local chain
+	app.MillionsKeeper.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, millionstypes.WithdrawalState_IbcTransfer, withdrawal.UnbondingEndsAt, false)
+	withdrawals = app.MillionsKeeper.ListAccountWithdrawals(ctx, uatomAddresses[0])
+	withdrawal, err = app.MillionsKeeper.GetPoolWithdrawal(ctx, withdrawals[0].PoolId, withdrawals[0].WithdrawalId)
+	suite.Require().NoError(err)
+
+	// Simulate success ackResponse AckResponseStatus_Success
+	err = app.MillionsKeeper.OnTransferWithdrawalToDestAddrCompleted(ctx, withdrawal.GetPoolId(), withdrawal.GetWithdrawalId(), false)
+	suite.Require().NoError(err)
+	// There should be no more withdrawal if successfully processed
+	withdrawals = app.MillionsKeeper.ListAccountWithdrawals(ctx, uatomAddresses[0])
+	suite.Require().Len(withdrawals, 0)
+}
+
+// TestWithdrawal_ProcessWithdrawal tests to process a withdrawal considering the destination address and pool zone tests
+func (suite *KeeperTestSuite) TestWithdrawal_ProcessWithdrawal() {
+	// Set the app context
+	app := suite.app
+	ctx := suite.ctx
+	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
+	drawDelta1 := 1 * time.Hour
+	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), remotePoolDenom)
+
+	// Remote pool
+	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
+		PoolId:              poolID,
+		Bech32PrefixValAddr: remoteBech32PrefixValAddr,
+		Bech32PrefixAccAddr: remoteBech32PrefixAccAddr,
+		ChainId:             remoteChainId,
+		Denom:               remotePoolDenom,
+		NativeDenom:         remotePoolDenom,
+		ConnectionId:        remoteConnectionId,
+		TransferChannelId:   remoteTransferChannelId,
+		Validators: []millionstypes.PoolValidator{
+			{
+				OperatorAddress: cosmosPoolValidator,
+				BondedAmount:    sdk.NewInt(1_000_000),
+				IsEnabled:       true,
+			},
+		},
+		IcaDepositAddress:   cosmosIcaDepositAddress,
+		IcaPrizepoolAddress: cosmosIcaPrizePoolAddress,
+		PrizeStrategy: millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
+			},
+		},
+		DrawSchedule: millionstypes.DrawSchedule{
+			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
+			DrawDelta:     drawDelta1,
+		},
+		AvailablePrizePool: sdk.NewCoin(remotePoolDenom, math.NewInt(1000)),
+	}))
+
+	// List pools
+	pools := app.MillionsKeeper.ListPools(ctx)
+	suite.Require().Len(pools, 1)
+
+	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
+		PoolId:           pools[0].PoolId,
+		DepositorAddress: uatomAddresses[0].String(),
+		WinnerAddress:    uatomAddresses[0].String(),
+		State:            millionstypes.DepositState_Success,
+		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
+	})
+	err := app.BankKeeper.SendCoins(ctx, uatomAddresses[0], sdk.MustAccAddressFromBech32(pools[0].LocalAddress), sdk.Coins{sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000))})
+	suite.Require().NoError(err)
+
+	deposits := app.MillionsKeeper.ListAccountDeposits(ctx, uatomAddresses[0])
+	deposit, err := app.MillionsKeeper.GetPoolDeposit(ctx, deposits[0].PoolId, deposits[0].DepositId)
+	suite.Require().NoError(err)
+
+	unbondingTime := ctx.BlockTime().Add(-2 * time.Second)
+
+	// Add withdrawal with native pool toAddress
+	app.MillionsKeeper.AddWithdrawal(ctx, millionstypes.Withdrawal{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: uatomAddresses[0].String(),
+		ToAddress:        cosmosAccAddress,
+		State:            millionstypes.WithdrawalState_IcaUnbonding,
+		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
+		UnbondingEndsAt:  &unbondingTime,
+	})
+
+	withdrawals := app.MillionsKeeper.ListAccountWithdrawals(ctx, uatomAddresses[0])
+	suite.Require().Len(withdrawals, 1)
+
+	app.MillionsKeeper.RemoveDeposit(ctx, &millionstypes.Deposit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: uatomAddresses[0].String(),
+		WinnerAddress:    uatomAddresses[0].String(),
+		State:            millionstypes.DepositState_Success,
+		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
+	})
+
+	deposits = app.MillionsKeeper.ListAccountDeposits(ctx, uatomAddresses[0])
+	suite.Require().Len(deposits, 0)
+
+	withdrawal, err := app.MillionsKeeper.GetPoolWithdrawal(ctx, withdrawals[0].PoolId, withdrawals[0].WithdrawalId)
+	suite.Require().NoError(err)
+
+	// Update status to simulate transfer from to local chain
+	app.MillionsKeeper.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, millionstypes.WithdrawalState_IbcTransfer, withdrawal.UnbondingEndsAt, false)
+
+	withdrawal, err = app.MillionsKeeper.GetPoolWithdrawal(ctx, withdrawals[0].PoolId, withdrawals[0].WithdrawalId)
+	suite.Require().NoError(err)
+	pools = app.MillionsKeeper.ListPools(ctx)
+	// Error is triggered as failed to retrieve open active channel port (intended error)
+	// Hence BankSendFromNativeChain is triggered
+	err = app.MillionsKeeper.TransferWithdrawalToDestAddr(ctx, withdrawal.PoolId, withdrawal.WithdrawalId)
+	suite.Require().Error(err)
+	isLocalToAddress, _, err := pools[0].AccAddressFromBech32(withdrawal.ToAddress)
+	suite.Require().NoError(err)
+	suite.Require().Equal(isLocalToAddress, false)
+
+	// Test local pool
+	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
+		PoolId:      app.MillionsKeeper.GetNextPoolID(ctx),
+		Denom:       localPoolDenom,
+		NativeDenom: localPoolDenom,
+		Validators: []millionstypes.PoolValidator{
+			{
+				OperatorAddress: suite.valAddrs[0].String(),
+				BondedAmount:    sdk.NewInt(1_000_000),
+				IsEnabled:       true,
+			},
+		},
+		PrizeStrategy: millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
+			},
+		},
+		DrawSchedule: millionstypes.DrawSchedule{
+			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
+			DrawDelta:     drawDelta1,
+		},
+		AvailablePrizePool: sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
+	}))
+	pools = app.MillionsKeeper.ListPools(ctx)
+	suite.Require().Len(pools, 2)
+
+	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
+		PoolId:           pools[1].PoolId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[0].String(),
+		State:            millionstypes.DepositState_Success,
+		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+	})
+	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[1].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
+	suite.Require().NoError(err)
+	deposits = app.MillionsKeeper.ListAccountDeposits(ctx, suite.addrs[0])
+
+	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, deposits[0].PoolId, deposits[0].DepositId)
+	suite.Require().NoError(err)
+
+	// Add withdrawal
+	app.MillionsKeeper.AddWithdrawal(ctx, millionstypes.Withdrawal{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		ToAddress:        suite.addrs[0].String(),
+		State:            millionstypes.WithdrawalState_IcaUnbonding,
+		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+		UnbondingEndsAt:  &unbondingTime,
+	})
+
+	withdrawals = app.MillionsKeeper.ListAccountWithdrawals(ctx, suite.addrs[0])
+	suite.Require().Len(withdrawals, 1)
+
+	// Remove deposit to respect the flow
+	app.MillionsKeeper.RemoveDeposit(ctx, &millionstypes.Deposit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[0].String(),
+		State:            millionstypes.DepositState_Success,
+		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+	})
+
+	// There should be no more deposits
+	deposits = app.MillionsKeeper.ListAccountDeposits(ctx, suite.addrs[0])
+	suite.Require().Len(deposits, 0)
+
+	withdrawal, err = app.MillionsKeeper.GetPoolWithdrawal(ctx, withdrawals[0].PoolId, withdrawals[0].DepositId)
+	suite.Require().NoError(err)
+	app.MillionsKeeper.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, millionstypes.WithdrawalState_IbcTransfer, withdrawal.UnbondingEndsAt, false)
+	withdrawal, err = app.MillionsKeeper.GetPoolWithdrawal(ctx, withdrawals[0].PoolId, withdrawals[0].DepositId)
+	suite.Require().NoError(err)
+
+	// No Error should be triggered
+	// Hence TransferToLocalChain is triggered for a local pool with local address
+	err = app.MillionsKeeper.TransferWithdrawalToDestAddr(ctx, withdrawal.PoolId, withdrawal.WithdrawalId)
+	suite.Require().NoError(err)
+	isLocalToAddress, _, err = pools[1].AccAddressFromBech32(withdrawal.ToAddress)
+	suite.Require().NoError(err)
+	suite.Require().Equal(isLocalToAddress, true)
 }
 
 // TestWithdrawal_DequeueMaturedWithdrawal tests the dequeue process of matured withdrawals
@@ -1113,7 +1413,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_BalanceWithdrawal() {
 	// Dequeue matured withdrawals and trigger the transfer to the local chain
 	for i, mw := range maturedWithdrawals {
 		app.MillionsKeeper.UpdateWithdrawalStatus(ctx, mw.GetPoolId(), mw.GetWithdrawalId(), millionstypes.WithdrawalState_IbcTransfer, withdrawals[i].UnbondingEndsAt, false)
-		err = app.MillionsKeeper.TransferWithdrawalToLocalChain(ctx, mw.GetPoolId(), mw.GetWithdrawalId())
+		err = app.MillionsKeeper.TransferWithdrawalToDestAddr(ctx, mw.GetPoolId(), mw.GetWithdrawalId())
 		// Test that there should be no error
 		suite.Require().NoError(err)
 	}
@@ -1273,7 +1573,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_FullWithdrawalProcess() {
 	// Dequeue matured withdrawals and trigger the transfer to the local chain
 	for i, mw := range maturedWithdrawals {
 		app.MillionsKeeper.UpdateWithdrawalStatus(ctx, mw.GetPoolId(), mw.GetWithdrawalId(), millionstypes.WithdrawalState_IbcTransfer, withdrawals[i].UnbondingEndsAt, false)
-		err = app.MillionsKeeper.TransferWithdrawalToLocalChain(ctx, mw.GetPoolId(), mw.GetWithdrawalId())
+		err = app.MillionsKeeper.TransferWithdrawalToDestAddr(ctx, mw.GetPoolId(), mw.GetWithdrawalId())
 		suite.Require().NoError(err)
 	}
 

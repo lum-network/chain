@@ -1,7 +1,7 @@
 syntax = "proto3";
-package lum.network.icqueries;
+package stride.interchainquery.v1;
 
-import "lum/network/icqueries/genesis.proto";
+import "stride/interchainquery/v1/genesis.proto";
 import "google/api/annotations.proto";
 import "gogoproto/gogo.proto";
 

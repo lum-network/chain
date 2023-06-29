@@ -4,6 +4,7 @@ package lum.network.millions;
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 
+import "lum/network/millions/pool.proto";
 import "lum/network/millions/draw_schedule.proto";
 import "lum/network/millions/prize_strategy.proto";
 
@@ -45,6 +46,7 @@ message ProposalUpdatePool {
   ];
   DrawSchedule draw_schedule = 6 [ (gogoproto.nullable) = true ];
   PrizeStrategy prize_strategy = 7 [ (gogoproto.nullable) = true ];
+  PoolState state = 8;
 }
 
 message ProposalUpdateParams {

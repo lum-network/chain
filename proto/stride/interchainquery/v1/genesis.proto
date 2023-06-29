@@ -1,5 +1,5 @@
 syntax = "proto3";
-package lum.network.icqueries;
+package stride.interchainquery.v1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
