@@ -12,6 +12,7 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	consensusparamstypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
@@ -127,8 +128,8 @@ func (app *App) InitSpecialKeepers(
 	app.ParamsKeeper = &paramsKeeper
 
 	// Set the BaseApp's parameter store
-	consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, keys[upgradetypes.StoreKey], govModuleAddr)
-	app.ConsensusParamsKeeper = &consensusParamsKeeper
+	consensusParamKeeper := consensusparamkeeper.NewKeeper(appCodec, keys[consensusparamstypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	app.ConsensusParamsKeeper = &consensusParamKeeper
 	baseApp.SetParamStore(app.ConsensusParamsKeeper)
 
 	// Add capability keeper and ScopeToModule for ibc module

@@ -7,6 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/cosmos/cosmos-sdk/x/consensus"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/gorilla/mux"
@@ -149,6 +152,7 @@ var (
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
+		consensus.AppModuleBasic{},
 		authzmodule.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		tendermintlightclient.AppModuleBasic{},
@@ -260,7 +264,7 @@ func New(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, ICAControllerCustomStoreKey, icahosttypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
-		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey, crisistypes.StoreKey,
+		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey, crisistypes.StoreKey, consensusparamtypes.StoreKey,
 		icacallbackstypes.StoreKey, icqueriestypes.StoreKey,
 		beamtypes.StoreKey, airdroptypes.StoreKey, dfracttypes.StoreKey, millionstypes.StoreKey,
 	)
@@ -310,6 +314,7 @@ func New(
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
+		consensus.NewAppModule(appCodec, *app.ConsensusParamsKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
 		app.transferModule,
@@ -353,6 +358,7 @@ func New(
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
 		millionstypes.ModuleName,
+		consensusparamtypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -381,6 +387,7 @@ func New(
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
 		millionstypes.ModuleName,
+		consensusparamtypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -414,6 +421,7 @@ func New(
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
 		millionstypes.ModuleName,
+		consensusparamtypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
@@ -780,6 +788,10 @@ func (app *App) registerUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler("v1.5.0", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		app.Logger().Info("Starting v1.5.0 upgrade")
 
+		// Migrate the consensus module params
+		legacyParamSubspace := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
+		baseapp.MigrateParams(ctx, legacyParamSubspace, app.ConsensusParamsKeeper)
+
 		// Migrate ICA channel capabilities from IBC V5 to IBC V6
 		if err := icacontrollermigrations.MigrateICS27ChannelCapability(
 			ctx,
@@ -871,7 +883,7 @@ func (app *App) registerUpgradeHandlers() {
 	if upgradeInfo.Name == "v1.5.0" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		// We create 1 new module: Crisis
 		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{crisistypes.StoreKey},
+			Added: []string{crisistypes.StoreKey, consensusparamtypes.StoreKey},
 		}
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
