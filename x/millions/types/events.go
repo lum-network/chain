@@ -7,6 +7,7 @@ const (
 	EventTypeDrawSuccess          = "draw_success"
 	EventTypeDeposit              = "deposit"
 	EventTypeDepositRetry         = "deposit_retry"
+	EventTypeDepositEdit          = "deposit_edit"
 	EventTypeNewPrize             = "prize_new"
 	EventTypeClaimPrize           = "prize_claim"
 	EventTypeClawbackPrize        = "prize_clawback"
@@ -27,4 +28,5 @@ const (
 	AttributeKeyPrizePool       = "prize_pool"
 	AttributeKeyTotalWinners    = "total_winners"
 	AttributeKeyTotalWinAmount  = "total_win_amount"
+	AttributeKeySponsor         = "sponsor"
 )

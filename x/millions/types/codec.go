@@ -20,6 +20,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	// Messages
 	cdc.RegisterConcrete(&MsgDeposit{}, "lum-network/millions/MsgDeposit", nil)
 	cdc.RegisterConcrete(&MsgDepositRetry{}, "lum-network/millions/MsgDepositRetry", nil)
+	cdc.RegisterConcrete(&MsgDepositEdit{}, "lum-network/millions/MsgDepositEdit", nil)
 	cdc.RegisterConcrete(&MsgClaimPrize{}, "lum-network/millions/MsgClaimPrize", nil)
 	cdc.RegisterConcrete(&MsgDrawRetry{}, "lum-network/millions/MsgDrawRetry", nil)
 	cdc.RegisterConcrete(&MsgWithdrawDeposit{}, "lum-network/millions/MsgWithdrawDeposit", nil)
@@ -37,6 +38,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	// Messages
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgDeposit{})
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgDepositRetry{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgDepositEdit{})
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgClaimPrize{})
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgDrawRetry{})
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgWithdrawDeposit{})
