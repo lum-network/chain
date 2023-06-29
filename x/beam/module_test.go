@@ -1,11 +1,15 @@
 package beam_test
 
 import (
-	apptypes "github.com/lum-network/chain/app"
-	"github.com/lum-network/chain/x/beam/types"
-	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
+	apptypes "github.com/lum-network/chain/app"
+
+	"github.com/lum-network/chain/x/beam/types"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {

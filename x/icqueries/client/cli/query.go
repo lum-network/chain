@@ -3,12 +3,14 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/lum-network/chain/x/icqueries/types"
 	"github.com/spf13/cobra"
-	"strings"
+
+	"github.com/lum-network/chain/x/icqueries/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.

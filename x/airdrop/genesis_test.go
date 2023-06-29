@@ -4,14 +4,18 @@ import (
 	"testing"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+
 	apptypes "github.com/lum-network/chain/app"
+
+	"github.com/stretchr/testify/require"
+
 	"github.com/lum-network/chain/x/airdrop"
 	"github.com/lum-network/chain/x/airdrop/types"
-	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 var now = time.Now().UTC()
@@ -100,19 +104,19 @@ func TestAirdropExportGenesis(t *testing.T) {
 		ActionCompleted: []bool{false, false},
 	})
 
-	claimableFreeAmount, claimableVestedAmount, err := app.AirdropKeeper.GetClaimableAmountForAction(ctx, acc1, types.ActionVote)
+	claimableFreeAmount, claimableVestedAmount, err := app.AirdropKeeper.GetClaimableAmountForAction(ctx, acc1, types.ACTION_VOTE)
 	require.NoError(t, err)
 	require.Equal(t, claimableFreeAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 500))
 	require.Equal(t, claimableVestedAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 2_500))
 
 	app.AirdropKeeper.AfterProposalVote(ctx, 12, acc1)
 
-	claimableFreeAmount, claimableVestedAmount, err = app.AirdropKeeper.GetClaimableAmountForAction(ctx, acc1, types.ActionVote)
+	claimableFreeAmount, claimableVestedAmount, err = app.AirdropKeeper.GetClaimableAmountForAction(ctx, acc1, types.ACTION_VOTE)
 	require.NoError(t, err)
 	require.Equal(t, claimableFreeAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 0))
 	require.Equal(t, claimableVestedAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 0))
 
-	claimableFreeAmount, claimableVestedAmount, err = app.AirdropKeeper.GetClaimableAmountForAction(ctx, acc1, types.ActionDelegateStake)
+	claimableFreeAmount, claimableVestedAmount, err = app.AirdropKeeper.GetClaimableAmountForAction(ctx, acc1, types.ACTION_DELEGATE_STAKE)
 	require.NoError(t, err)
 	require.Equal(t, claimableFreeAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 500))
 	require.Equal(t, claimableVestedAmount, sdk.NewInt64Coin(types.DefaultClaimDenom, 2_500))

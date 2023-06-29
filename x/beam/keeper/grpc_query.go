@@ -2,18 +2,30 @@ package keeper
 
 import (
 	"context"
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/lum-network/chain/x/beam/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"strings"
+
+	"github.com/lum-network/chain/x/beam/types"
 )
 
-var _ types.QueryServer = Keeper{}
+type queryServer struct {
+	Keeper
+}
 
-func (k Keeper) Beams(c context.Context, req *types.QueryFetchBeamsRequest) (*types.QueryFetchBeamsResponse, error) {
+// NewQueryServerImpl returns an implementation of the QueryServer interface
+// for the provided Keeper.
+func NewQueryServerImpl(keeper Keeper) types.QueryServer {
+	return queryServer{Keeper: keeper}
+}
+
+var _ types.QueryServer = queryServer{}
+
+func (k queryServer) Beams(c context.Context, req *types.QueryFetchBeamsRequest) (*types.QueryFetchBeamsResponse, error) {
 	// Is the payload valid ?
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -53,7 +65,7 @@ func (k Keeper) Beams(c context.Context, req *types.QueryFetchBeamsRequest) (*ty
 	return &types.QueryFetchBeamsResponse{Beams: beams, Pagination: pageRes}, nil
 }
 
-func (k Keeper) Beam(c context.Context, req *types.QueryGetBeamRequest) (*types.QueryGetBeamResponse, error) {
+func (k queryServer) Beam(c context.Context, req *types.QueryGetBeamRequest) (*types.QueryGetBeamResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -67,7 +79,7 @@ func (k Keeper) Beam(c context.Context, req *types.QueryGetBeamRequest) (*types.
 	return &types.QueryGetBeamResponse{Beam: &beam}, nil
 }
 
-func (k Keeper) BeamsOpenQueue(c context.Context, req *types.QueryFetchBeamsOpenQueueRequest) (*types.QueryFetchBeamsOpenQueueResponse, error) {
+func (k queryServer) BeamsOpenQueue(c context.Context, req *types.QueryFetchBeamsOpenQueueRequest) (*types.QueryFetchBeamsOpenQueueResponse, error) {
 	// Is the payload valid ?
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -84,9 +96,7 @@ func (k Keeper) BeamsOpenQueue(c context.Context, req *types.QueryFetchBeamsOpen
 	var ids []string
 	pageRes, err := query.Paginate(beamStore, req.Pagination, func(key []byte, value []byte) error {
 		id := strings.Split(types.BytesKeyToString(value), types.MemStoreQueueSeparator)
-		for _, other := range id {
-			ids = append(ids, other)
-		}
+		ids = append(ids, id...)
 		return nil
 	})
 

@@ -5,7 +5,8 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+
 	apptesting "github.com/lum-network/chain/app/testing"
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
 	millionstypes "github.com/lum-network/chain/x/millions/types"

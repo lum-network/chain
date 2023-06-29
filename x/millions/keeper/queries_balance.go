@@ -6,6 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	icquerieskeeper "github.com/lum-network/chain/x/icqueries/keeper"
 	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
 	"github.com/lum-network/chain/x/millions/types"
