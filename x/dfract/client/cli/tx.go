@@ -2,12 +2,14 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/lum-network/chain/x/dfract/types"
 	"github.com/spf13/cobra"
+
+	"github.com/lum-network/chain/x/dfract/types"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -37,7 +39,11 @@ func CmdDeposit() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
 			// Acquire the command arguments
 			argsAmount, err := sdk.ParseCoinNormalized(args[0])

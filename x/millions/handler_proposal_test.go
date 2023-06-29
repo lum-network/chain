@@ -7,13 +7,15 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+
 	"github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
 	"github.com/lum-network/chain/x/millions"
+	"github.com/lum-network/chain/x/millions/types"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type HandlerTestSuite struct {
@@ -229,6 +231,10 @@ func (suite *HandlerTestSuite) TestProposal_UpdatePool() {
 	validValidatorSet := []string{"lumvaloper16rlynj5wvzwts5lqep0je5q4m3eaepn5cqj38s"}
 	invalidValidatorSet := []string{"lumvaloper16rlynj5wvzw"}
 
+	poolStatePaused := millionstypes.PoolState_Paused
+	poolStateReady := millionstypes.PoolState_Ready
+	poolStateUnspecified := millionstypes.PoolState_Unspecified
+
 	validMinDepositAmount := millionstypes.DefaultParams().MinDepositAmount
 	invalidMinDepositAmount := sdk.NewInt(millionstypes.MinAcceptableDepositAmount - 1)
 
@@ -240,61 +246,67 @@ func (suite *HandlerTestSuite) TestProposal_UpdatePool() {
 	}{
 		{
 			"Title cannot be empty",
-			millionstypes.NewUpdatePoolProposal("", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateUnspecified),
 			true,
 			false,
 		},
 		{
 			"Description cannot be empty",
-			millionstypes.NewUpdatePoolProposal("Test", "", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused),
 			true,
 			false,
 		},
 		{
 			"Validators list can be empty",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateReady),
 			false,
 			false,
 		},
 		{
 			"Validators list cannot be invalid",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), invalidValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), invalidValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused),
 			false,
 			true,
 		},
 		{
 			"Min deposit amount cannot be less than 1000000 (default params)",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &invalidMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &invalidMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateReady),
 			true,
 			true,
 		},
 		{
 			"Prize strategy cannot be empty",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &emptyPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &emptyPrizeStrategy, &validDrawSchedule, poolStatePaused),
 			true,
 			true,
 		},
 		{
 			"Prize strategy cannot be invalid",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &invalidPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &invalidPrizeStrategy, &validDrawSchedule, poolStateReady),
 			false,
 			true,
 		},
 		{
 			"Draw Schedule cannot be invalid",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &invalidDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &invalidDrawSchedule, poolStatePaused),
 			true,
 			true,
 		},
 		{
+			"State can be unspecified",
+			types.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateUnspecified),
+			false,
+			false,
+		},
+		{
 			"Fine should be fine",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused),
 			false,
 			false,
 		},
 		{
 			"Partial should be fine",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, nil, nil, nil),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, nil, nil, nil, poolStateReady),
 			false,
 			false,
 		},

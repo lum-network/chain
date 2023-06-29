@@ -5,7 +5,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+
 	icacallbackstypes "github.com/lum-network/chain/x/icacallbacks/types"
 
 	"github.com/lum-network/chain/x/millions/types"
@@ -54,7 +55,7 @@ func TransferFromNativeCallback(k Keeper, ctx sdk.Context, packet channeltypes.P
 			_, err := k.OnTransferRewardsToLocalChainCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetDrawId(), true)
 			return err
 		} else if transferCallback.Type == types.TransferType_Withdraw {
-			return k.OnTransferWithdrawalToLocalChainCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetWithdrawalId(), true)
+			return k.OnTransferWithdrawalToDestAddrCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetWithdrawalId(), true)
 		}
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
 		k.Logger(ctx).Debug("Received success for a transfer from native packet")
@@ -62,7 +63,7 @@ func TransferFromNativeCallback(k Keeper, ctx sdk.Context, packet channeltypes.P
 			_, err := k.OnTransferRewardsToLocalChainCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetDrawId(), false)
 			return err
 		} else if transferCallback.Type == types.TransferType_Withdraw {
-			return k.OnTransferWithdrawalToLocalChainCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetWithdrawalId(), false)
+			return k.OnTransferWithdrawalToDestAddrCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetWithdrawalId(), false)
 		}
 	}
 	return nil

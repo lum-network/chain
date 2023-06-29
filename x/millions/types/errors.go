@@ -20,6 +20,8 @@ var (
 	ErrFailedToUpdatePool                = errorsmod.Register(ModuleName, 1107, "Failed to update pool")
 	ErrPoolIsLocal                       = errorsmod.Register(ModuleName, 1108, "Pool is local")
 	ErrFailedToRestorePool               = errorsmod.Register(ModuleName, 1109, "Failed to restore pool")
+	ErrInvalidPoolState                  = errorsmod.Register(ModuleName, 1110, "Invalid pool state")
+	ErrPoolStateChangeNotAllowed         = errorsmod.Register(ModuleName, 1111, "Pool state change not allowed")
 	ErrInvalidDepositAmount              = errorsmod.Register(ModuleName, 1200, "Deposit amount must be positive")
 	ErrInvalidDepositDenom               = errorsmod.Register(ModuleName, 1201, "Invalid deposit denom")
 	ErrInvalidDepositorAddress           = errorsmod.Register(ModuleName, 1202, "Invalid depositor address")

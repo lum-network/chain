@@ -1,12 +1,17 @@
 package types
 
 import (
+	"errors"
+	fmt "fmt"
 	"sort"
 	"strings"
+
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
 // ValidateBasic validates if a pool has a valid configuration
@@ -234,4 +239,42 @@ func (p *Pool) ApplySplitUndelegate(ctx sdk.Context, splits []*SplitDelegation) 
 			panic(ErrPoolInvalidSplit)
 		}
 	}
+}
+
+// AccAddressFromBech32 custom implementation of sdk.AccAddressFromBech32 to handle pool bech32 prefix
+// Returns if address is local (= to sdk.GetConfig().GetBech32AccountAddrPrefix()):
+// Error in cases:
+// - invalid address format
+// - denom != to pool.Bech32PrefixAccAddr && denom != sdk.GetConfig().GetBech32AccountAddrPrefix()
+func (p *Pool) AccAddressFromBech32(address string) (isLocalAddress bool, addr sdk.AccAddress, err error) {
+	if len(strings.TrimSpace(address)) == 0 {
+		return false, nil, errors.New("empty address string is not allowed")
+	}
+
+	hrp, bz, err := bech32.DecodeAndConvert(address)
+	if err != nil {
+		return false, nil, err
+	}
+
+	err = sdk.VerifyAddressFormat(bz)
+	if err != nil {
+		return false, nil, err
+	}
+
+	configBech32Prefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
+	if hrp != configBech32Prefix && hrp != p.Bech32PrefixAccAddr {
+		return false, nil, fmt.Errorf("invalid Bech32 prefix; expected %s or %s, got %s", configBech32Prefix, p.Bech32PrefixAccAddr, hrp)
+	}
+
+	return hrp == configBech32Prefix, sdk.AccAddress(bz), nil
+}
+
+func (p *Pool) GetIcaDepositPortIdWithPrefix() string {
+	portID, _ := icatypes.NewControllerPortID(p.GetIcaDepositPortId())
+	return portID
+}
+
+func (p *Pool) GetIcaPrizepoolPortIdWithPrefix() string {
+	portID, _ := icatypes.NewControllerPortID(p.GetIcaPrizepoolPortId())
+	return portID
 }

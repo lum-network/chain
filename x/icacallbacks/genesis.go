@@ -2,6 +2,7 @@ package icacallbacks
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/lum-network/chain/x/icacallbacks/keeper"
 	"github.com/lum-network/chain/x/icacallbacks/types"
 )

@@ -13,9 +13,9 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
 	"github.com/lum-network/chain/x/millions/types"
 )
@@ -137,8 +137,7 @@ func (k Keeper) ClaimRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID
 		}
 
 		// Dispatch our message with a timeout of 30 minutes in nanos
-		timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
-		sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, timeoutTimestamp, ICACallbackID_Claim, marshalledCallbackData)
+		sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Claim, marshalledCallbackData)
 		if err != nil {
 			// Return with error here since it is the first operation and nothing needs to be saved to state
 			logger.Error(
@@ -318,7 +317,6 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 
 	// Build our array of messages
 	var msgs []sdk.Msg
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
 	// From Remote to Local - use counterparty transfer channel ID
 	msgs = append(msgs, ibctransfertypes.NewMsgTransfer(
 		ibctransfertypes.PortID,
@@ -327,7 +325,8 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 		pool.GetIcaPrizepoolAddress(),
 		pool.GetLocalAddress(),
 		clienttypes.Height{},
-		timeoutTimestamp,
+		uint64(ctx.BlockTime().UnixNano())+types.IBCTimeoutNanos,
+		"Cosmos Millions",
 	))
 
 	// Construct our callback data
@@ -342,7 +341,7 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 	}
 
 	// Dispatch our message with a timeout of 30 minutes in nanos
-	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypePrizePool, msgs, timeoutTimestamp, ICACallbackID_TransferFromNative, marshalledCallbackData)
+	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypePrizePool, msgs, types.IBCTimeoutNanos, ICACallbackID_TransferFromNative, marshalledCallbackData)
 	if err != nil {
 		// Save error state since we cannot simply recover from a failure at this stage
 		// A subsequent call to DrawRetry will be made possible by setting an error state and not returning an error here
