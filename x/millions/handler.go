@@ -25,6 +25,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgDepositRetry:
 			res, err := msgServer.DepositRetry(goCtx, msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgDepositEdit:
+			res, err := msgServer.DepositEdit(goCtx, msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 		case *types.MsgClaimPrize:
 			res, err := msgServer.ClaimPrize(goCtx, msg)
 			return sdk.WrapServiceResult(ctx, res, err)

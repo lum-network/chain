@@ -105,6 +105,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types
 			sdk.NewAttribute(types.AttributeKeyDepositor, deposit.DepositorAddress),
 			sdk.NewAttribute(types.AttributeKeyWinner, deposit.WinnerAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, deposit.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeySponsor, strconv.FormatBool(msg.IsSponsor)),
 		),
 	})
 
@@ -118,7 +119,7 @@ func (k msgServer) DepositRetry(goCtx context.Context, msg *types.MsgDepositRetr
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Ensure msg received is valid
-	if err := msg.ValidateDepositRetryBasic(); err != nil {
+	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
@@ -185,4 +186,74 @@ func (k msgServer) DepositRetry(goCtx context.Context, msg *types.MsgDepositRetr
 	})
 
 	return &types.MsgDepositRetryResponse{}, nil
+}
+
+func (k msgServer) DepositEdit(goCtx context.Context, msg *types.MsgDepositEdit) (*types.MsgDepositEditResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	var isSponsor bool
+
+	// Ensure msg received is valid
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
+	deposit, err := k.GetPoolDeposit(ctx, msg.PoolId, msg.DepositId)
+	if err != nil {
+		return nil, err
+	}
+
+	depositorAddr, err := sdk.AccAddressFromBech32(msg.GetDepositorAddress())
+	if err != nil {
+		return nil, types.ErrInvalidDepositorAddress
+	}
+
+	// Verify that the depositorAddr msg is the same as the entity depositor
+	if depositorAddr.String() != deposit.DepositorAddress {
+		return nil, types.ErrInvalidDepositorAddress
+	}
+
+	winnerAddress, err := sdk.AccAddressFromBech32(deposit.WinnerAddress)
+	if err != nil {
+		return nil, types.ErrInvalidWinnerAddress
+	}
+
+	if strings.TrimSpace(msg.GetWinnerAddress()) != "" {
+		winnerAddress, err = sdk.AccAddressFromBech32(msg.GetWinnerAddress())
+		if err != nil {
+			return nil, types.ErrInvalidWinnerAddress
+		}
+	}
+
+	if msg.IsSponsor != nil {
+		isSponsor = msg.IsSponsor.Value
+	} else {
+		isSponsor = deposit.IsSponsor
+	}
+
+	if !depositorAddr.Equals(winnerAddress) && isSponsor {
+		return nil, types.ErrInvalidSponsorWinnerCombo
+	}
+
+	// Edit deposit
+	if err := k.EditDeposit(ctx, msg.PoolId, deposit.DepositId, winnerAddress, isSponsor); err != nil {
+		return nil, err
+	}
+
+	// Emit event
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+		sdk.NewEvent(
+			types.EventTypeDepositEdit,
+			sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(deposit.PoolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyDepositID, strconv.FormatUint(deposit.DepositId, 10)),
+			sdk.NewAttribute(types.AttributeKeyDepositor, depositorAddr.String()),
+			sdk.NewAttribute(types.AttributeKeyWinner, winnerAddress.String()),
+			sdk.NewAttribute(types.AttributeKeySponsor, strconv.FormatBool(isSponsor)),
+		),
+	})
+
+	return &types.MsgDepositEditResponse{}, nil
 }
