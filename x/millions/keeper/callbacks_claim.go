@@ -45,12 +45,12 @@ func ClaimCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ackRes
 		k.Logger(ctx).Debug("Received timeout for a claim packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
 		k.Logger(ctx).Debug("Received failure for a claim packet")
-		_, err = k.OnClaimRewardsOnNativeChainCompleted(ctx, claimCallback.GetPoolId(), claimCallback.GetDrawId(), true)
+		_, err = k.OnClaimYieldOnRemoteZoneCompleted(ctx, claimCallback.GetPoolId(), claimCallback.GetDrawId(), true)
 		return err
 
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
 		k.Logger(ctx).Debug("Received success for a claim packet")
-		_, err = k.OnClaimRewardsOnNativeChainCompleted(ctx, claimCallback.GetPoolId(), claimCallback.GetDrawId(), false)
+		_, err = k.OnClaimYieldOnRemoteZoneCompleted(ctx, claimCallback.GetPoolId(), claimCallback.GetDrawId(), false)
 		return err
 	}
 	return nil

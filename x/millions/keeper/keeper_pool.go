@@ -68,7 +68,6 @@ func (k Keeper) SetupPoolICA(ctx sdk.Context, poolID uint64) (*types.Pool, error
 
 // OnPoolICASetupCompleted Acknowledge the ICA account creation on the native chain
 // then moves to SetupPoolWithdrawalAddress once all ICA accounts have been created
-// TODO: error management based on the callback response
 func (k Keeper) OnSetupPoolICACompleted(ctx sdk.Context, poolID uint64, icaType string, icaAddress string) (*types.Pool, error) {
 	logger := k.Logger(ctx).With("ctx", "pool_on_setup_ica_completed")
 
@@ -790,6 +789,7 @@ func (k Keeper) ListPoolsToDraw(ctx sdk.Context) (pools []types.Pool) {
 // BroadcastIBCTransfer broadcasts and IBC transfer for the a given amount to the Pool remote zone ICA Deposit account from the Pool Local address
 // Amount denom must be based on pool.Denom
 // Also registers the requested callback
+// This method should not and DOEST NOT update the pool state
 func (k Keeper) BroadcastIBCTransfer(ctx sdk.Context, pool types.Pool, amount sdk.Coin, timeoutNanos uint64, callbackID string, callbackArgs []byte) (uint64, error) {
 	logger := k.Logger(ctx).With("ctx", "pool_broadcast_ibc")
 
@@ -840,6 +840,7 @@ func (k Keeper) BroadcastIBCTransfer(ctx sdk.Context, pool types.Pool, amount sd
 
 // BroadcastICAMessages broadcasts ICA transaction containing the specified Messages
 // Also registers the requested callback
+// This method should not and DOEST NOT update the pool state
 func (k Keeper) BroadcastICAMessages(ctx sdk.Context, pool types.Pool, accountType string, msgs []sdk.Msg, timeoutNanos uint64, callbackID string, callbackArgs []byte) (uint64, error) {
 	logger := k.Logger(ctx).With("ctx", "pool_broadcast_ica")
 
@@ -909,6 +910,7 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, pool types.Pool, accountTy
 
 // BroadcastICQuery broadcasts an ICQ query
 // Also registeres the requested callback
+// This method should not and DOEST NOT update the pool state
 func (k Keeper) BroadcastICQuery(ctx sdk.Context, pool types.Pool, callbackID string, extraID string, queryType string, queryData []byte, timeoutNanos uint64) error {
 	// Pool must be ready to process those kind of operations
 	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {

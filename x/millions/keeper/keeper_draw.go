@@ -78,13 +78,13 @@ func (k Keeper) LaunchNewDraw(ctx sdk.Context, poolID uint64) (*types.Draw, erro
 	pool.LastDrawState = draw.State
 	k.updatePool(ctx, &pool)
 
-	return k.ClaimRewardsOnNativeChain(ctx, poolID, drawID)
+	return k.ClaimYieldOnRemoteZone(ctx, poolID, drawID)
 }
 
-// ClaimRewardsOnNativeChain Claim staking rewards from the native chain validators
-// - wait for the ICA callback to move to OnClaimRewardsOnNativeChainCompleted
-// - or go to OnClaimRewardsOnNativeChainCompleted directly upon claim rewards success if local zone
-func (k Keeper) ClaimRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
+// ClaimYieldOnRemoteZone Claim staking rewards from the native chain validators
+// - wait for the ICA callback to move to OnClaimYieldOnRemoteZoneCompleted
+// - or go to OnClaimYieldOnRemoteZoneCompleted directly upon claim rewards success if local zone
+func (k Keeper) ClaimYieldOnRemoteZone(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
 	logger := k.Logger(ctx).With("func", "draw_claim_rewards")
 
 	// Acquire pool config
@@ -114,7 +114,7 @@ func (k Keeper) ClaimRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID
 				coins = coins.Add(rewardCoins...)
 			}
 		}
-		return k.OnClaimRewardsOnNativeChainCompleted(ctx, poolID, drawID, false)
+		return k.OnClaimYieldOnRemoteZoneCompleted(ctx, poolID, drawID, false)
 	} else {
 		var msgs []sdk.Msg
 		for _, validator := range pool.GetValidators() {
@@ -128,7 +128,7 @@ func (k Keeper) ClaimRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID
 		if len(msgs) == 0 {
 			// Special case - no bonded validator
 			// Does not need to do any ICA call
-			return k.OnClaimRewardsOnNativeChainCompleted(ctx, poolID, drawID, false)
+			return k.OnClaimYieldOnRemoteZoneCompleted(ctx, poolID, drawID, false)
 		}
 		callbackData := types.ClaimRewardsCallback{
 			PoolId: poolID,
@@ -163,8 +163,8 @@ func (k Keeper) ClaimRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID
 	return &draw, nil
 }
 
-// OnClaimRewardsOnNativeChainCompleted Acknowledge the ICA claim rewards from the native chain validators response and trigger an ICQ if success
-func (k Keeper) OnClaimRewardsOnNativeChainCompleted(ctx sdk.Context, poolID uint64, drawID uint64, isError bool) (*types.Draw, error) {
+// OnClaimYieldOnRemoteZoneCompleted Acknowledge the ICA claim rewards from the native chain validators response and trigger an ICQ if success
+func (k Keeper) OnClaimYieldOnRemoteZoneCompleted(ctx sdk.Context, poolID uint64, drawID uint64, isError bool) (*types.Draw, error) {
 	// Acquire pool config
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
@@ -203,13 +203,13 @@ func (k Keeper) OnClaimRewardsOnNativeChainCompleted(ctx sdk.Context, poolID uin
 	k.updatePool(ctx, &pool)
 
 	// Trigger the balance query
-	return k.QueryRewardsOnNativeChain(ctx, poolID, drawID)
+	return k.QueryFreshPrizePoolCoinsOnRemoteZone(ctx, poolID, drawID)
 }
 
-// QueryRewardsOnNativeChain query the available rewards on the remote zone
-// - wait for the ICQ callback to move to OnQueryRewardsOnNativeChainCompleted
-// - or go to OnQueryRewardsOnNativeChainCompleted directly upon query rewards success if local zone
-func (k Keeper) QueryRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
+// QueryFreshPrizePoolCoinsOnRemoteZone query the available rewards on the remote zone
+// - wait for the ICQ callback to move to OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted
+// - or go to OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted directly upon query rewards success if local zone
+func (k Keeper) QueryFreshPrizePoolCoinsOnRemoteZone(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
 	logger := k.Logger(ctx).With("func", "draw_query_rewards")
 
 	// Acquire pool config
@@ -231,7 +231,7 @@ func (k Keeper) QueryRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID
 	if pool.IsLocalZone(ctx) {
 		moduleAccAddress := sdk.MustAccAddressFromBech32(pool.GetIcaPrizepoolAddress())
 		balance := k.BankKeeper.GetBalance(ctx, moduleAccAddress, pool.GetNativeDenom())
-		return k.OnQueryRewardsOnNativeChainCompleted(ctx, poolID, drawID, sdk.NewCoins(balance), false)
+		return k.OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted(ctx, poolID, drawID, sdk.NewCoins(balance), false)
 	}
 
 	// Encode the ica address for query
@@ -260,7 +260,7 @@ func (k Keeper) QueryRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID
 			"draw_id", drawID,
 			"chain_id", pool.GetChainId(),
 		)
-		return k.OnQueryRewardsOnNativeChainCompleted(ctx, poolID, drawID, nil, true)
+		return k.OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted(ctx, poolID, drawID, nil, true)
 	}
 	logger.Debug(
 		"ICQ query balance dispatched",
@@ -271,8 +271,8 @@ func (k Keeper) QueryRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID
 	return &draw, err
 }
 
-// OnQueryRewardsOnNativeChainCompleted Acknowledge the ICQ query rewards from the remote zone and moves to next step
-func (k Keeper) OnQueryRewardsOnNativeChainCompleted(ctx sdk.Context, poolID uint64, drawID uint64, coins sdk.Coins, isError bool) (*types.Draw, error) {
+// OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted Acknowledge the ICQ query rewards from the remote zone and moves to next step
+func (k Keeper) OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted(ctx sdk.Context, poolID uint64, drawID uint64, coins sdk.Coins, isError bool) (*types.Draw, error) {
 	// Acquire pool config
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
@@ -326,13 +326,13 @@ func (k Keeper) OnQueryRewardsOnNativeChainCompleted(ctx sdk.Context, poolID uin
 	pool.LastDrawState = draw.State
 	k.updatePool(ctx, &pool)
 
-	return k.TransferRewardsToLocalChain(ctx, poolID, drawID)
+	return k.TransferFreshPrizePoolCoinsToLocalZone(ctx, poolID, drawID)
 }
 
-// TransferRewardsToLocalChain Transfer the claimed rewards to the local chain
-// - wait for the ICA callback to move to OnTransferRewardsToLocalChainCompleted
-// - or go to OnTransferRewardsToLocalChainCompleted directly if local zone
-func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
+// TransferFreshPrizePoolCoinsToLocalZone Transfer the claimed rewards to the local chain
+// - wait for the ICA callback to move to OnTransferFreshPrizePoolCoinsToLocalZoneCompleted
+// - or go to OnTransferFreshPrizePoolCoinsToLocalZoneCompleted directly if local zone
+func (k Keeper) TransferFreshPrizePoolCoinsToLocalZone(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
 	logger := k.Logger(ctx).With("ctx", "draw_transfer_rewards")
 
 	// Acquire Pool
@@ -351,7 +351,7 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 
 	// Nothing to transfer
 	if draw.PrizePoolFreshAmount.IsZero() {
-		return k.OnTransferRewardsToLocalChainCompleted(ctx, poolID, drawID, false)
+		return k.OnTransferFreshPrizePoolCoinsToLocalZoneCompleted(ctx, poolID, drawID, false)
 	}
 
 	// Converts the local ibc Denom into the native chain Denom
@@ -371,9 +371,9 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 				"pool_id", poolID,
 				"draw_id", drawID,
 			)
-			return k.OnTransferRewardsToLocalChainCompleted(ctx, poolID, drawID, true)
+			return k.OnTransferFreshPrizePoolCoinsToLocalZoneCompleted(ctx, poolID, drawID, true)
 		}
-		return k.OnTransferRewardsToLocalChainCompleted(ctx, poolID, drawID, false)
+		return k.OnTransferFreshPrizePoolCoinsToLocalZoneCompleted(ctx, poolID, drawID, false)
 	}
 
 	// Otherwise, we broadcast an ICA message
@@ -421,7 +421,7 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 			"chain_id", pool.GetChainId(),
 			"sequence", sequence,
 		)
-		return k.OnTransferRewardsToLocalChainCompleted(ctx, poolID, drawID, true)
+		return k.OnTransferFreshPrizePoolCoinsToLocalZoneCompleted(ctx, poolID, drawID, true)
 	}
 	logger.Debug(
 		"ICA transfer dispatched",
@@ -433,9 +433,9 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 	return &draw, nil
 }
 
-// OnTransferRewardsToLocalChainCompleted Acknowledge the transfer of the claimed rewards
+// OnTransferFreshPrizePoolCoinsToLocalZoneCompleted Acknowledge the transfer of the claimed rewards
 // finalises the Draw if success
-func (k Keeper) OnTransferRewardsToLocalChainCompleted(ctx sdk.Context, poolID uint64, drawID uint64, isError bool) (*types.Draw, error) {
+func (k Keeper) OnTransferFreshPrizePoolCoinsToLocalZoneCompleted(ctx sdk.Context, poolID uint64, drawID uint64, isError bool) (*types.Draw, error) {
 	logger := k.Logger(ctx).With("ctx", "draw_finalise")
 
 	// Acquire Pool

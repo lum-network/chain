@@ -86,6 +86,7 @@ func (k Keeper) DelegateDepositOnRemoteZone(ctx sdk.Context, poolID uint64, depo
 	splits, err := poolRunner.DelegateDepositOnRemoteZone(ctx, pool, deposit)
 	if pool.IsLocalZone(ctx) {
 		// Always save state in case of local zone
+		// TODO: we should probably return and error here since it is atomic with the deposit transaction
 		return k.OnDelegateDepositOnRemoteZoneCompleted(ctx, poolID, depositID, splits, err != nil)
 	} else if err != nil {
 		// Only save state in case of error for remote zones (otherwise wait for the callback)

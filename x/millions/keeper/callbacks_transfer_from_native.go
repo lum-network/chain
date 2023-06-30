@@ -52,7 +52,7 @@ func TransferFromNativeCallback(k Keeper, ctx sdk.Context, packet channeltypes.P
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
 		k.Logger(ctx).Debug("Received failure for a transfer from native packet")
 		if transferCallback.Type == types.TransferType_Claim {
-			_, err := k.OnTransferRewardsToLocalChainCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetDrawId(), true)
+			_, err := k.OnTransferFreshPrizePoolCoinsToLocalZoneCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetDrawId(), true)
 			return err
 		} else if transferCallback.Type == types.TransferType_Withdraw {
 			return k.OnTransferWithdrawalToRecipientCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetWithdrawalId(), true)
@@ -60,7 +60,7 @@ func TransferFromNativeCallback(k Keeper, ctx sdk.Context, packet channeltypes.P
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
 		k.Logger(ctx).Debug("Received success for a transfer from native packet")
 		if transferCallback.Type == types.TransferType_Claim {
-			_, err := k.OnTransferRewardsToLocalChainCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetDrawId(), false)
+			_, err := k.OnTransferFreshPrizePoolCoinsToLocalZoneCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetDrawId(), false)
 			return err
 		} else if transferCallback.Type == types.TransferType_Withdraw {
 			return k.OnTransferWithdrawalToRecipientCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetWithdrawalId(), false)
