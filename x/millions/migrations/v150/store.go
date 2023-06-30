@@ -2,11 +2,13 @@ package v150
 
 import (
 	"fmt"
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
-	"strings"
 )
 
 func MigratePoolPortIdsToPortOwnerName(ctx sdk.Context, k millionskeeper.Keeper) error {

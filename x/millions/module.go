@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/lum-network/chain/x/millions/migrations"
 
 	"github.com/gorilla/mux"

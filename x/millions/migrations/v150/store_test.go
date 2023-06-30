@@ -1,11 +1,13 @@
 package v150_test
 
 import (
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
-	apptesting "github.com/lum-network/chain/app/testing"
 	"strings"
 	"testing"
 	"time"
+
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+
+	apptesting "github.com/lum-network/chain/app/testing"
 
 	"github.com/stretchr/testify/suite"
 
