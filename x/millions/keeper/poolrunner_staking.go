@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -105,4 +106,102 @@ func (runner *PoolRunnerStaking) DelegateDepositOnRemoteZone(ctx sdk.Context, po
 		"sequence", sequence,
 	)
 	return splits, nil
+}
+
+func (runner *PoolRunnerStaking) UndelegateWithdrawalOnRemoteZone(ctx sdk.Context, pool types.Pool, withdrawal types.Withdrawal) ([]*types.SplitDelegation, *time.Time, error) {
+	logger := runner.Logger(ctx).With("ctx", "withdrawal_undelegate")
+
+	if pool.IsLocalZone(ctx) {
+		modAddr := sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress())
+		splits := pool.ComputeSplitUndelegations(ctx, withdrawal.GetAmount().Amount)
+		if len(splits) == 0 {
+			return nil, nil, types.ErrPoolEmptySplitDelegations
+		}
+		var unbondingEndsAt *time.Time
+		for _, split := range splits {
+			valAddr, err := sdk.ValAddressFromBech32(split.ValidatorAddress)
+			if err != nil {
+				return splits, unbondingEndsAt, err
+			}
+			shares, err := runner.keeper.StakingKeeper.ValidateUnbondAmount(
+				ctx,
+				modAddr,
+				valAddr,
+				split.Amount,
+			)
+			if err != nil {
+				return splits, unbondingEndsAt, errorsmod.Wrapf(err, "%s", valAddr.String())
+			}
+
+			// Trigger undelegate
+			endsAt, err := runner.keeper.StakingKeeper.Undelegate(ctx, modAddr, valAddr, shares)
+			if err != nil {
+				return splits, unbondingEndsAt, errorsmod.Wrapf(err, "%s", valAddr.String())
+			}
+			if unbondingEndsAt == nil || endsAt.After(*unbondingEndsAt) {
+				unbondingEndsAt = &endsAt
+			}
+		}
+		return splits, unbondingEndsAt, nil
+	}
+
+	// Prepare undelegate split
+	splits := pool.ComputeSplitUndelegations(ctx, withdrawal.GetAmount().Amount)
+	if len(splits) == 0 {
+		return nil, nil, types.ErrPoolEmptySplitDelegations
+	}
+
+	// Construct our callback data
+	callbackData := types.UndelegateCallback{
+		PoolId:           pool.PoolId,
+		WithdrawalId:     withdrawal.WithdrawalId,
+		SplitDelegations: splits,
+	}
+	marshalledCallbackData, err := runner.keeper.MarshalUndelegateCallbackArgs(ctx, callbackData)
+	if err != nil {
+		return splits, nil, err
+	}
+
+	// Build undelegate tx
+	var msgs []sdk.Msg
+	for _, split := range splits {
+		msgs = append(msgs, &stakingtypes.MsgUndelegate{
+			DelegatorAddress: pool.GetIcaDepositAddress(),
+			ValidatorAddress: split.ValidatorAddress,
+			Amount:           sdk.NewCoin(pool.NativeDenom, split.Amount),
+		})
+	}
+
+	// Dispatch our message with a timeout of 30 minutes in nanos
+	sequence, err := runner.keeper.BroadcastICAMessages(ctx, pool, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Undelegate, marshalledCallbackData)
+	if err != nil {
+		logger.Error(
+			fmt.Sprintf("failed to dispatch ICA undelegate: %v", err),
+			"pool_id", pool.PoolId,
+			"withdrawal_id", withdrawal.WithdrawalId,
+			"chain_id", pool.GetChainId(),
+			"sequence", sequence,
+		)
+		return splits, nil, err
+	}
+	logger.Debug(
+		"ICA undelegate dispatched",
+		"pool_id", pool.PoolId,
+		"withdrawal_id", withdrawal.WithdrawalId,
+		"chain_id", pool.GetChainId(),
+		"sequence", sequence,
+	)
+	return splits, nil, nil
+}
+
+func (runner *PoolRunnerStaking) ClaimYieldOnRemoteZone(ctx sdk.Context, pool types.Pool) error {
+	// logger := runner.Logger(ctx).With("ctx", "claim_yield")
+	// TODO: implementation
+	return fmt.Errorf("not implemented yet")
+}
+
+func (runner *PoolRunnerStaking) QueryFreshPrizePoolCoinsOnRemoteZone(ctx sdk.Context, pool types.Pool) error {
+	// logger := runner.Logger(ctx).With("ctx", "query_fresh_prize_pool")
+	// TODO: implementation
+	return fmt.Errorf("not implemented yet")
 }

@@ -75,8 +75,8 @@ func UndelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, a
 		k.Logger(ctx).Debug("Received timeout for an undelegate packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
 		k.Logger(ctx).Debug("Received failure for an undelegate packet")
-		// Failed OnUndelegateWithdrawalOnNativeChainCompleted
-		return k.OnUndelegateWithdrawalOnNativeChainCompleted(
+		// Failed OnUndelegateWithdrawalOnRemoteZoneCompleted
+		return k.OnUndelegateWithdrawalOnRemoteZoneCompleted(
 			ctx,
 			undelegateCallback.GetPoolId(),
 			undelegateCallback.GetWithdrawalId(),
@@ -90,7 +90,7 @@ func UndelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, a
 		if err != nil {
 			return err
 		}
-		return k.OnUndelegateWithdrawalOnNativeChainCompleted(
+		return k.OnUndelegateWithdrawalOnRemoteZoneCompleted(
 			ctx,
 			undelegateCallback.GetPoolId(),
 			undelegateCallback.GetWithdrawalId(),

@@ -55,7 +55,7 @@ func TransferFromNativeCallback(k Keeper, ctx sdk.Context, packet channeltypes.P
 			_, err := k.OnTransferRewardsToLocalChainCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetDrawId(), true)
 			return err
 		} else if transferCallback.Type == types.TransferType_Withdraw {
-			return k.OnTransferWithdrawalToDestAddrCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetWithdrawalId(), true)
+			return k.OnTransferWithdrawalToRecipientCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetWithdrawalId(), true)
 		}
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
 		k.Logger(ctx).Debug("Received success for a transfer from native packet")
@@ -63,7 +63,7 @@ func TransferFromNativeCallback(k Keeper, ctx sdk.Context, packet channeltypes.P
 			_, err := k.OnTransferRewardsToLocalChainCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetDrawId(), false)
 			return err
 		} else if transferCallback.Type == types.TransferType_Withdraw {
-			return k.OnTransferWithdrawalToDestAddrCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetWithdrawalId(), false)
+			return k.OnTransferWithdrawalToRecipientCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetWithdrawalId(), false)
 		}
 	}
 	return nil

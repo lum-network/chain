@@ -29,12 +29,13 @@ func (k Keeper) TransferDepositToRemoteZone(ctx sdk.Context, poolID uint64, depo
 		return errorsmod.Wrapf(types.ErrIllegalStateOperation, "state should be %s but is %s", types.DepositState_IbcTransfer.String(), deposit.State.String())
 	}
 
-	// Return with error (if any) here since it is the first operation and nothing needs to be saved to state
 	poolRunner := k.MustGetPoolRunner(pool.PoolType)
 	if err := poolRunner.TransferDepositToRemoteZone(ctx, pool, deposit); err != nil {
+		// Return with error (if any) here since it is the first operation and nothing needs to be saved to state
 		return err
 	}
 	if pool.IsLocalZone(ctx) {
+		// Move instantly to next stage since local ops don't wait for callbacks
 		return k.OnTransferDepositToRemoteZoneCompleted(ctx, poolID, depositID, false)
 	}
 	return nil
