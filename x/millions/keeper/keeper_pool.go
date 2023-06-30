@@ -378,26 +378,6 @@ func (k Keeper) UpdatePool(
 		return err
 	}
 
-	// Update enabled validators
-	if len(vals) > 0 {
-		for i := range pool.Validators {
-			pool.Validators[i].IsEnabled = false
-		}
-		valIdx := pool.GetValidatorsMapIndex()
-		for _, addr := range vals {
-			if _, exists := valIdx[addr]; exists {
-				pool.Validators[valIdx[addr]].IsEnabled = true
-			} else {
-				pool.Validators = append(pool.Validators, types.PoolValidator{
-					OperatorAddress: addr,
-					IsEnabled:       true,
-					BondedAmount:    sdk.ZeroInt(),
-				})
-				valIdx[addr] = len(pool.Validators) - 1
-			}
-		}
-	}
-
 	// Only a few properties can be updated
 	if minDepositAmount != nil {
 		pool.MinDepositAmount = *minDepositAmount
@@ -424,22 +404,41 @@ func (k Keeper) UpdatePool(
 		return types.ErrPoolStateChangeNotAllowed
 	}
 
+	// Update enabled validators
+	if pool.PoolType == types.PoolType_Staking && len(vals) > 0 {
+		for i := range pool.Validators {
+			pool.Validators[i].IsEnabled = false
+		}
+		valIdx := pool.GetValidatorsMapIndex()
+		for _, addr := range vals {
+			if _, exists := valIdx[addr]; exists {
+				pool.Validators[valIdx[addr]].IsEnabled = true
+			} else {
+				pool.Validators = append(pool.Validators, types.PoolValidator{
+					OperatorAddress: addr,
+					IsEnabled:       true,
+					BondedAmount:    sdk.ZeroInt(),
+				})
+				valIdx[addr] = len(pool.Validators) - 1
+			}
+		}
+	}
+
 	// Validate pool configuration
 	if err := pool.ValidateBasic(k.GetParams(ctx)); err != nil {
 		return errorsmod.Wrapf(types.ErrFailedToUpdatePool, err.Error())
 	}
 	// Validate pool runner exists
-	if _, err = k.GetPoolRunner(pool.PoolType); err != nil {
+	poolRunner, err := k.GetPoolRunner(pool.PoolType)
+	if err != nil {
 		return errorsmod.Wrapf(types.ErrFailedToUpdatePool, err.Error())
 	}
 	// Commit the pool to the KVStore
 	k.updatePool(ctx, &pool)
 
 	// Trigger rebalance distribution
-	if pool.State == types.PoolState_Ready || pool.State == types.PoolState_Paused {
-		if err := k.RebalanceValidatorsBondings(ctx, pool.PoolId); err != nil {
-			return err
-		}
+	if err := poolRunner.OnUpdatePool(ctx, pool); err != nil {
+		return errorsmod.Wrapf(types.ErrFailedToUpdatePool, err.Error())
 	}
 
 	// Emit event

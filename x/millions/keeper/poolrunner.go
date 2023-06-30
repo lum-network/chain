@@ -15,6 +15,8 @@ import (
 type PoolRunner interface {
 	String() string
 	Logger(ctx sdk.Context) log.Logger
+	// OnUpdatePool triggered upon pool update proposal
+	OnUpdatePool(ctx sdk.Context, pool types.Pool) error
 	// SendDepositToPool sends the deposit amount to a local Pool owned address
 	SendDepositToPool(ctx sdk.Context, pool types.Pool, deposit types.Deposit) error
 	// TransferDepositToRemoteZone transfers the deposit amount from a local Pool owned address to a remote Pool owned address

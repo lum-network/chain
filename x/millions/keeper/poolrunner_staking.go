@@ -18,6 +18,15 @@ func (runner *PoolRunnerStaking) String() string {
 	return "PoolRunnerStaking"
 }
 
+func (runner *PoolRunnerStaking) OnUpdatePool(ctx sdk.Context, pool types.Pool) error {
+	if pool.State == types.PoolState_Ready || pool.State == types.PoolState_Paused {
+		if err := runner.keeper.RebalanceValidatorsBondings(ctx, pool.PoolId); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (runner *PoolRunnerStaking) DelegateDepositOnRemoteZone(ctx sdk.Context, pool types.Pool, deposit types.Deposit) ([]*types.SplitDelegation, error) {
 	logger := runner.Logger(ctx).With("ctx", "deposit_delegate")
 
