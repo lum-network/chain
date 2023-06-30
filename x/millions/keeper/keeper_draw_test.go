@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	"time"
 
 	"cosmossdk.io/math"
@@ -1186,8 +1187,8 @@ func (suite *KeeperTestSuite) TestDraw_ClaimRewardsOnNativeChain() {
 		ChainId:             remoteChainId,
 		Denom:               remotePoolDenom,
 		NativeDenom:         remotePoolDenom,
-		ConnectionId:        remoteConnectionId,
-		TransferChannelId:   remoteTransferChannelId,
+		ConnectionId:        ibctesting.FirstConnectionID,
+		TransferChannelId:   ibctesting.FirstChannelID,
 		Validators: []millionstypes.PoolValidator{{
 			OperatorAddress: cosmosPoolValidator,
 			BondedAmount:    sdk.NewInt(1_000_000),
@@ -1334,8 +1335,8 @@ func (suite *KeeperTestSuite) TestDraw_TransferRewardsToLocalChain() {
 		ChainId:             remoteChainId,
 		Denom:               remotePoolDenom,
 		NativeDenom:         remotePoolDenom,
-		ConnectionId:        remoteConnectionId,
-		TransferChannelId:   remoteTransferChannelId,
+		ConnectionId:        ibctesting.FirstConnectionID,
+		TransferChannelId:   ibctesting.FirstChannelID,
 		Validators: []millionstypes.PoolValidator{{
 			OperatorAddress: cosmosPoolValidator,
 			BondedAmount:    sdk.NewInt(1_000_000),

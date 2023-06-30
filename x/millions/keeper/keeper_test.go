@@ -27,8 +27,6 @@ var (
 	remoteBech32PrefixValAddr = "cosmosvaloper"
 	remoteBech32PrefixAccAddr = "cosmos"
 	remoteChainId             = "cosmos"
-	remoteConnectionId        = "connection-id"
-	remoteTransferChannelId   = "transfer"
 )
 
 type KeeperTestSuite struct {

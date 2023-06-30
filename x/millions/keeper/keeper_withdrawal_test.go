@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	"time"
 
 	"cosmossdk.io/math"
@@ -537,8 +538,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawal() {
 		ChainId:             remoteChainId,
 		Denom:               remotePoolDenom,
 		NativeDenom:         remotePoolDenom,
-		ConnectionId:        remoteConnectionId,
-		TransferChannelId:   remoteTransferChannelId,
+		ConnectionId:        ibctesting.FirstConnectionID,
+		TransferChannelId:   ibctesting.FirstChannelID,
 		Validators: []millionstypes.PoolValidator{{
 			OperatorAddress: cosmosPoolValidator,
 			BondedAmount:    sdk.NewInt(1_000_000),
@@ -760,8 +761,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 		ChainId:             remoteChainId,
 		Denom:               remotePoolDenom,
 		NativeDenom:         remotePoolDenom,
-		ConnectionId:        remoteConnectionId,
-		TransferChannelId:   remoteTransferChannelId,
+		ConnectionId:        ibctesting.FirstConnectionID,
+		TransferChannelId:   ibctesting.FirstChannelID,
 		Validators: []millionstypes.PoolValidator{{
 			OperatorAddress: cosmosPoolValidator,
 			BondedAmount:    sdk.NewInt(1_000_000),
@@ -959,8 +960,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_BankSend() {
 		ChainId:             remoteChainId,
 		Denom:               remotePoolDenom,
 		NativeDenom:         remotePoolDenom,
-		ConnectionId:        remoteConnectionId,
-		TransferChannelId:   remoteTransferChannelId,
+		ConnectionId:        ibctesting.FirstConnectionID,
+		TransferChannelId:   ibctesting.FirstChannelID,
 		Validators: []millionstypes.PoolValidator{
 			{
 				OperatorAddress: cosmosPoolValidator,
@@ -1074,8 +1075,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_ProcessWithdrawal() {
 		ChainId:             remoteChainId,
 		Denom:               remotePoolDenom,
 		NativeDenom:         remotePoolDenom,
-		ConnectionId:        remoteConnectionId,
-		TransferChannelId:   remoteTransferChannelId,
+		ConnectionId:        ibctesting.FirstConnectionID,
+		TransferChannelId:   ibctesting.FirstChannelID,
 		Validators: []millionstypes.PoolValidator{
 			{
 				OperatorAddress: cosmosPoolValidator,

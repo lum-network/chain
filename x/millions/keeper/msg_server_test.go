@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	"time"
 
 	"cosmossdk.io/math"
@@ -905,8 +906,8 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 		ChainId:             remoteChainId,
 		Denom:               remotePoolDenom,
 		NativeDenom:         remotePoolDenom,
-		ConnectionId:        remoteConnectionId,
-		TransferChannelId:   remoteTransferChannelId,
+		ConnectionId:        ibctesting.FirstConnectionID,
+		TransferChannelId:   ibctesting.FirstChannelID,
 		Validators: []millionstypes.PoolValidator{
 			{
 				OperatorAddress: cosmosPoolValidator,
