@@ -25,7 +25,7 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // DEPRECATED:
-// For easier management, we moved the WithdrawAndMintProposal to tx based based
+// For easier management, we moved the WithdrawAndMintProposal to tx based
 // minting. The withdrawal address specified in the dFract module parameters is
 // the one authorized to withdraw and mint udfr tokens based on the
 // MicroMintRate
