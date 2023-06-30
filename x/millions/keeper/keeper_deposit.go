@@ -29,12 +29,8 @@ func (k Keeper) TransferDepositToRemoteZone(ctx sdk.Context, poolID uint64, depo
 		return errorsmod.Wrapf(types.ErrIllegalStateOperation, "state should be %s but is %s", types.DepositState_IbcTransfer.String(), deposit.State.String())
 	}
 
-	poolRunner, err := k.GetPoolRunner(pool.PoolType)
-	if err != nil {
-		return errorsmod.Wrapf(types.ErrInvalidPoolType, err.Error())
-	}
-
 	// Return with error (if any) here since it is the first operation and nothing needs to be saved to state
+	poolRunner := k.MustGetPoolRunner(pool.PoolType)
 	if err := poolRunner.TransferDepositToRemoteZone(ctx, pool, deposit); err != nil {
 		return err
 	}
@@ -84,12 +80,8 @@ func (k Keeper) DelegateDepositOnRemoteZone(ctx sdk.Context, poolID uint64, depo
 		return errorsmod.Wrapf(types.ErrIllegalStateOperation, "state should be %s but is %s", types.DepositState_IcaDelegate.String(), deposit.State.String())
 	}
 
-	poolRunner, err := k.GetPoolRunner(pool.PoolType)
-	if err != nil {
-		return errorsmod.Wrapf(types.ErrInvalidPoolType, err.Error())
-	}
-
 	// Return with error (if any) here since it is the first operation and nothing needs to be saved to state
+	poolRunner := k.MustGetPoolRunner(pool.PoolType)
 	splits, err := poolRunner.DelegateDepositOnRemoteZone(ctx, pool, deposit)
 	if pool.IsLocalZone(ctx) {
 		// Always save state in case of local zone

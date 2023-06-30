@@ -245,6 +245,10 @@ func (k Keeper) AddPool(ctx sdk.Context, pool *types.Pool) {
 	if err := pool.ValidateBasic(k.GetParams(ctx)); err != nil {
 		panic(err)
 	}
+	// Ensure runner is valid
+	if _, err := k.GetPoolRunner(pool.PoolType); err != nil {
+		panic(err)
+	}
 	// Ensure we never override an existing entity
 	if k.HasPool(ctx, pool.GetPoolId()) {
 		panic(errorsmod.Wrapf(types.ErrEntityOverride, "ID %d", pool.GetPoolId()))
@@ -314,6 +318,10 @@ func (k Keeper) RegisterPool(
 
 	// Validate pool configuration
 	if err := pool.ValidateBasic(k.GetParams(ctx)); err != nil {
+		return 0, errorsmod.Wrapf(types.ErrFailedToRegisterPool, err.Error())
+	}
+	// Validate pool runner exists
+	if _, err := k.GetPoolRunner(poolType); err != nil {
 		return 0, errorsmod.Wrapf(types.ErrFailedToRegisterPool, err.Error())
 	}
 
@@ -420,7 +428,10 @@ func (k Keeper) UpdatePool(
 	if err := pool.ValidateBasic(k.GetParams(ctx)); err != nil {
 		return errorsmod.Wrapf(types.ErrFailedToUpdatePool, err.Error())
 	}
-
+	// Validate pool runner exists
+	if _, err = k.GetPoolRunner(pool.PoolType); err != nil {
+		return errorsmod.Wrapf(types.ErrFailedToUpdatePool, err.Error())
+	}
 	// Commit the pool to the KVStore
 	k.updatePool(ctx, &pool)
 
@@ -665,6 +676,10 @@ func (k Keeper) updatePool(ctx sdk.Context, pool *types.Pool) {
 	pool.UpdatedAtHeight = ctx.BlockHeight()
 	// Ensure payload is valid
 	if err := pool.ValidateBasic(k.GetParams(ctx)); err != nil {
+		panic(err)
+	}
+	// Validate pool runner exists
+	if _, err := k.GetPoolRunner(pool.PoolType); err != nil {
 		panic(err)
 	}
 	store := ctx.KVStore(k.storeKey)
