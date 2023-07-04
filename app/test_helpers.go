@@ -181,7 +181,7 @@ func (p *TestPackage) Setup() {
 }
 
 // SetupIBC Initialize the IBC configuration for test environment
-func (p *TestPackage) SetupIBC(hostChainID string) {
+func (p *TestPackage) SetupIBC() {
 	p.Coordinator = ibctesting.NewCoordinator(p.T(), 0)
 
 	// Initialize a stride testing app by casting a LumApp -> TestingApp
@@ -195,7 +195,7 @@ func (p *TestPackage) SetupIBC(hostChainID string) {
 	// Update coordinator
 	p.Coordinator.Chains = map[string]*ibctesting.TestChain{
 		LumChainID:  p.LumChain,
-		hostChainID: p.HostChain,
+		HostChainID: p.HostChain,
 	}
 	p.IbcEnabled = true
 }
@@ -244,7 +244,7 @@ func CopyConnectionAndClientToPath(path *ibctesting.Path, pathToCopy *ibctesting
 func (p *TestPackage) CreateTransferChannel(hostChainID string) {
 	// If we have yet to create the host chain, do that here
 	if !p.IbcEnabled {
-		p.SetupIBC(hostChainID)
+		p.SetupIBC()
 	}
 
 	// Make sure the chain IDs are the same
@@ -270,11 +270,11 @@ func (p *TestPackage) CreateTransferChannel(hostChainID string) {
 }
 
 // CreateICAChannel Creates an ICA channel through ibctesting, also creates a transfer channel if it hasn't been done yet
-func (p *TestPackage) CreateICAChannel(hostChainID string, owner string) string {
+func (p *TestPackage) CreateICAChannel(owner string) string {
 	// If we have yet to create a client/connection (through creating a transfer channel), do that here
 	_, transferChannelExists := p.App.IBCKeeper.ChannelKeeper.GetChannel(p.Ctx, ibctesting.TransferPort, ibctesting.FirstChannelID)
 	if !transferChannelExists {
-		p.CreateTransferChannel(hostChainID)
+		p.CreateTransferChannel(HostChainID)
 	}
 
 	// Create ICA Path and then copy over the client and connection from the transfer path
