@@ -1,48 +1,27 @@
 package keeper
 
 import (
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"github.com/lum-network/chain/x/dfract/types"
 )
 
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	k.paramSpace.GetParamSet(ctx, &params)
+func (k Keeper) GetParams(ctx sdk.Context) types.Params {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.ParamsPrefix)
+	if bz == nil {
+		return types.DefaultParams()
+	}
+	var params types.Params
+	k.cdc.MustUnmarshal(bz, &params)
 	return params
 }
 
 // SetParams Set the in-store params
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramSpace.SetParamSet(ctx, &params)
-}
-
-// UpdateParams update the in-store params
-// TODO - Method to use in the upgrade handler (remove comment once added)
-func (k Keeper) UpdateParams(ctx sdk.Context, managementAddr string, isDepositEnabled *gogotypes.BoolValue, depositDenoms []string, minDepositAmount *math.Int) error {
-	params := k.GetParams(ctx)
-
-	if managementAddr != "" {
-		params.WithdrawalAddress = managementAddr
-	}
-
-	if isDepositEnabled != nil {
-		params.IsDepositEnabled = isDepositEnabled.Value
-	}
-
-	if len(depositDenoms) > 0 {
-		params.DepositDenoms = depositDenoms
-	}
-
-	if minDepositAmount != nil {
-		params.MinDepositAmount = uint32(minDepositAmount.Int64())
-	}
-
 	if err := params.ValidateBasics(); err != nil {
-		return err
+		panic(err)
 	}
-	k.SetParams(ctx, params)
-	return nil
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.ParamsPrefix, k.cdc.MustMarshal(&params))
 }

@@ -1,11 +1,10 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	gogotypes "github.com/cosmos/gogoproto/types"
 
 	dFractKeeper "github.com/lum-network/chain/x/dfract/keeper"
 	dfracttypes "github.com/lum-network/chain/x/dfract/types"
@@ -17,26 +16,34 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositEnablement() {
 	ctx := suite.ctx
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := dFractKeeper.NewMsgServerImpl(*app.DFractKeeper)
-	var emptyDepositDenoms []string
-	// Obtain the required accounts
-	depositor := suite.addrs[0]
-	// Simulate that the deposit mode is not enabled
-	err := app.DFractKeeper.UpdateParams(ctx, depositor.String(), &gogotypes.BoolValue{Value: false}, emptyDepositDenoms, nil)
-	suite.Require().NoError(err)
-	params := app.DFractKeeper.GetParams(ctx)
 
-	_, err = msgServer.Deposit(goCtx, &dfracttypes.MsgDeposit{
+	// Required params
+	var emptyDepositDenoms []string
+	depositor := suite.addrs[0]
+
+	// Simulate that the deposit mode is not enabled
+	params := app.DFractKeeper.GetParams(ctx)
+	params.WithdrawalAddress = depositor.String()
+	params.IsDepositEnabled = false
+	params.DepositDenoms = emptyDepositDenoms
+	app.DFractKeeper.SetParams(ctx, params)
+
+	_, err := msgServer.Deposit(goCtx, &dfracttypes.MsgDeposit{
 		DepositorAddress: depositor.String(),
-		Amount:           sdk.NewCoin(params.DepositDenoms[0], sdk.NewInt(100000000)),
+		Amount:           sdk.NewCoin(dfracttypes.DefaultDenom, sdk.NewInt(100000000)),
 	})
 	suite.Require().ErrorIs(err, dfracttypes.ErrDepositNotEnabled)
 
-	err = app.DFractKeeper.UpdateParams(ctx, "", &gogotypes.BoolValue{Value: true}, emptyDepositDenoms, nil)
-	suite.Require().NoError(err)
+	// Update our params to set enabled to true
+	params.WithdrawalAddress = ""
+	params.IsDepositEnabled = true
+	params.DepositDenoms = emptyDepositDenoms
+	app.DFractKeeper.SetParams(ctx, params)
 
+	// Deposit
 	_, err = msgServer.Deposit(goCtx, &dfracttypes.MsgDeposit{
 		DepositorAddress: depositor.String(),
-		Amount:           sdk.NewCoin(params.DepositDenoms[0], sdk.NewInt(100000000)),
+		Amount:           sdk.NewCoin(dfracttypes.DefaultDenom, sdk.NewInt(100000000)),
 	})
 	suite.Require().NoError(err)
 }
@@ -93,7 +100,7 @@ func (suite *KeeperTestSuite) TestMsgServer_InvalidAmountDeposit() {
 		// Try to deposit below the min deposit amount
 		_, err = msgServer.Deposit(goCtx, &dfracttypes.MsgDeposit{
 			DepositorAddress: depositor.String(),
-			Amount:           sdk.NewCoin(denom, sdk.NewInt(int64(params.MinDepositAmount)-1)),
+			Amount:           sdk.NewCoin(denom, params.MinDepositAmount.Sub(math.NewInt(1))),
 		})
 		suite.Require().Error(err)
 		suite.Require().Equal(err, dfracttypes.ErrInsufficientDepositAmount)
@@ -191,10 +198,14 @@ func (suite *KeeperTestSuite) TestMsgServer_MintAccuracy() {
 	ctx := suite.ctx
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := dFractKeeper.NewMsgServerImpl(*app.DFractKeeper)
+
+	// Set the test params
 	var emptyDepositDenoms []string
-	err := app.DFractKeeper.UpdateParams(ctx, suite.addrs[0].String(), &gogotypes.BoolValue{Value: true}, emptyDepositDenoms, nil)
-	suite.Require().NoError(err)
 	params := app.DFractKeeper.GetParams(ctx)
+	params.WithdrawalAddress = suite.addrs[0].String()
+	params.IsDepositEnabled = true
+	params.DepositDenoms = emptyDepositDenoms
+	app.DFractKeeper.SetParams(ctx, params)
 
 	// Iterate over the array of deposit denoms
 	for _, denom := range params.DepositDenoms {
@@ -247,11 +258,15 @@ func (suite *KeeperTestSuite) TestMsgServer_ChainedFullProcess() {
 	ctx := suite.ctx
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := dFractKeeper.NewMsgServerImpl(*app.DFractKeeper)
+
 	// Simulate that the address management is set
 	var emptyDepositDenoms []string
-	err := app.DFractKeeper.UpdateParams(ctx, suite.addrs[0].String(), &gogotypes.BoolValue{Value: true}, emptyDepositDenoms, nil)
-	suite.Require().NoError(err)
 	params := app.DFractKeeper.GetParams(ctx)
+	params.WithdrawalAddress = suite.addrs[0].String()
+	params.IsDepositEnabled = true
+	params.DepositDenoms = emptyDepositDenoms
+	app.DFractKeeper.SetParams(ctx, params)
+
 	withdrawAddr := params.WithdrawalAddress
 	moduleAddr := app.DFractKeeper.GetModuleAccount(ctx).String()
 	depositorsAddrs := []string{suite.addrs[1].String(), suite.addrs[2].String(), suite.addrs[3].String(), suite.addrs[4].String(), suite.addrs[5].String()}

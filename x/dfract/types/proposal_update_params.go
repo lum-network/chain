@@ -58,7 +58,7 @@ func (p *ProposalUpdateParams) ValidateBasic() error {
 	}
 
 	if p.MinDepositAmount != nil {
-		params.MinDepositAmount = uint32(p.MinDepositAmount.Int64())
+		params.MinDepositAmount = *p.MinDepositAmount
 	}
 
 	return params.ValidateBasics()

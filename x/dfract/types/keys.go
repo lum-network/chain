@@ -18,9 +18,6 @@ const (
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName
 
-	// MemStoreKey defines the in-memory store key
-	MemStoreKey = "mem_capability"
-
 	// MintDenom defines the denom of the minted token
 	MintDenom = "udfr"
 )
@@ -29,6 +26,7 @@ var (
 	DepositsPendingWithdrawalPrefix = []byte{0x01}
 	DepositsPendingMintPrefix       = []byte{0x02}
 	DepositsMintedPrefix            = []byte{0x03}
+	ParamsPrefix                    = []byte{0x10}
 )
 
 func GetDepositsPendingWithdrawalKey(depositorAddress sdk.AccAddress) []byte {

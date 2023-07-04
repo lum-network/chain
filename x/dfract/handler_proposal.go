@@ -15,7 +15,24 @@ func NewDFractProposalHandler(k keeper.Keeper) govtypes.Handler {
 		switch c := content.(type) {
 		case *types.ProposalUpdateParams:
 			{
-				return k.UpdateParams(ctx, c.GetWithdrawalAddress(), c.IsDepositEnabled, c.DepositDenoms, c.MinDepositAmount)
+				params := k.GetParams(ctx)
+				if c.GetWithdrawalAddress() != "" {
+					params.WithdrawalAddress = c.GetWithdrawalAddress()
+				}
+				if c.GetIsDepositEnabled() != nil {
+					params.IsDepositEnabled = c.IsDepositEnabled.Value
+				}
+				if len(c.GetDepositDenoms()) > 0 {
+					params.DepositDenoms = c.GetDepositDenoms()
+				}
+				if c.MinDepositAmount != nil {
+					params.MinDepositAmount = *c.MinDepositAmount
+				}
+				if err := params.ValidateBasics(); err != nil {
+					return err
+				}
+				k.SetParams(ctx, params)
+				return nil
 			}
 
 		default:

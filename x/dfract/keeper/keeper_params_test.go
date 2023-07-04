@@ -1,9 +1,8 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gogotypes "github.com/cosmos/gogoproto/types"
-
 	dfracttypes "github.com/lum-network/chain/x/dfract/types"
 )
 
@@ -14,7 +13,7 @@ func (suite *KeeperTestSuite) TestInvalidParams() {
 	panicF := func() {
 		app.DFractKeeper.SetParams(ctx, dfracttypes.Params{
 			DepositDenoms:    []string{""},
-			MinDepositAmount: 0,
+			MinDepositAmount: math.NewInt(0),
 		})
 	}
 	suite.Require().Panics(panicF)
@@ -22,7 +21,7 @@ func (suite *KeeperTestSuite) TestInvalidParams() {
 	panicF = func() {
 		app.DFractKeeper.SetParams(ctx, dfracttypes.Params{
 			DepositDenoms:    []string{""},
-			MinDepositAmount: 1,
+			MinDepositAmount: math.NewInt(1),
 		})
 	}
 	suite.Require().Panics(panicF)
@@ -30,7 +29,7 @@ func (suite *KeeperTestSuite) TestInvalidParams() {
 	panicF = func() {
 		app.DFractKeeper.SetParams(ctx, dfracttypes.Params{
 			DepositDenoms:     []string{""},
-			MinDepositAmount:  10000,
+			MinDepositAmount:  math.NewInt(10000),
 			WithdrawalAddress: "invalidAddress",
 		})
 	}
@@ -39,7 +38,7 @@ func (suite *KeeperTestSuite) TestInvalidParams() {
 	panicF = func() {
 		app.DFractKeeper.SetParams(ctx, dfracttypes.Params{
 			DepositDenoms:     []string{""},
-			MinDepositAmount:  10000,
+			MinDepositAmount:  math.NewInt(10000),
 			WithdrawalAddress: "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj",
 		})
 	}
@@ -56,35 +55,39 @@ func (suite *KeeperTestSuite) TestParams_Update() {
 	validDepositDenoms := []string{dfracttypes.DefaultDenom, "udfr"}
 
 	params := app.DFractKeeper.GetParams(ctx)
-	suite.Require().Equal(dfracttypes.DefaultDenoms, params.DepositDenoms)
-	suite.Require().Equal(uint32(dfracttypes.DefaultMinDepositAmount), params.MinDepositAmount)
+	suite.Require().Equal([]string{dfracttypes.DefaultDenom}, params.DepositDenoms)
+	suite.Require().Equal(math.NewInt(dfracttypes.DefaultMinDepositAmount), params.MinDepositAmount)
 	suite.Require().Equal("", params.WithdrawalAddress)
 	suite.Require().Equal(true, params.IsDepositEnabled)
 
-	err := app.DFractKeeper.UpdateParams(ctx, "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", nil, emptyDepositDenoms, nil)
-	suite.Require().NoError(err)
 	// Update params with management address but no deposit enablement
+	params.WithdrawalAddress = "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj"
+	params.DepositDenoms = emptyDepositDenoms
+	app.DFractKeeper.SetParams(ctx, params)
 	params = app.DFractKeeper.GetParams(ctx)
 	suite.Require().Equal("lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", params.WithdrawalAddress)
 	suite.Require().Equal(true, params.IsDepositEnabled)
 
 	// Update with no management address but deposit enablement set to false
-	err = app.DFractKeeper.UpdateParams(ctx, "", &gogotypes.BoolValue{Value: false}, emptyDepositDenoms, nil)
-	suite.Require().NoError(err)
+	params.IsDepositEnabled = false
+	app.DFractKeeper.SetParams(ctx, params)
 	params = app.DFractKeeper.GetParams(ctx)
 	suite.Require().Equal("lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", params.WithdrawalAddress)
 	suite.Require().Equal(false, params.IsDepositEnabled)
 
-	newMinDepositAmount := sdk.NewInt(2000000)
 	// Update deposit denoms and min deposit amount
-	err = app.DFractKeeper.UpdateParams(ctx, "", nil, validDepositDenoms, &newMinDepositAmount)
-	suite.Require().NoError(err)
+	newMinDepositAmount := sdk.NewInt(2000000)
+	params.MinDepositAmount = newMinDepositAmount
+	params.DepositDenoms = validDepositDenoms
+	app.DFractKeeper.SetParams(ctx, params)
 	params = app.DFractKeeper.GetParams(ctx)
 	suite.Require().Equal(validDepositDenoms, params.DepositDenoms)
-	suite.Require().Equal(uint32(newMinDepositAmount.Uint64()), params.MinDepositAmount)
+	suite.Require().Equal(newMinDepositAmount, params.MinDepositAmount)
 
-	newMinDepositAmount = sdk.NewInt(500000)
 	// Should throw error as below min default amount
-	err = app.DFractKeeper.UpdateParams(ctx, "", nil, validDepositDenoms, &newMinDepositAmount)
-	suite.Require().Error(err)
+	newMinDepositAmount = sdk.NewInt(500000)
+	params.MinDepositAmount = newMinDepositAmount
+	suite.Require().Panics(func() {
+		app.DFractKeeper.SetParams(ctx, params)
+	})
 }

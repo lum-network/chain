@@ -1,6 +1,7 @@
 package dfract_test
 
 import (
+	"cosmossdk.io/math"
 	"testing"
 	"time"
 
@@ -26,7 +27,7 @@ var testGenesis = types.GenesisState{
 	},
 	Params: types.Params{
 		DepositDenoms:     []string{sdk.DefaultBondDenom},
-		MinDepositAmount:  1_000,
+		MinDepositAmount:  math.NewInt(types.DefaultMinDepositAmount),
 		IsDepositEnabled:  true,
 		WithdrawalAddress: "",
 	},

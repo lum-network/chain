@@ -48,7 +48,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types
 	}
 
 	// Make sure the deposit is sufficient
-	if msg.GetAmount().Amount.LT(sdk.NewInt(int64(params.MinDepositAmount))) {
+	if msg.GetAmount().Amount.LT(params.MinDepositAmount) {
 		return nil, types.ErrInsufficientDepositAmount
 	}
 

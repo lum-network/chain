@@ -792,6 +792,9 @@ func (app *App) registerUpgradeHandlers() {
 		legacyParamSubspace := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 		baseapp.MigrateParams(ctx, legacyParamSubspace, app.ConsensusParamsKeeper)
 
+		// Migrate DFract params
+		app.DFractKeeper.SetParams(ctx, dfracttypes.DefaultParams())
+
 		// Migrate ICA channel capabilities from IBC V5 to IBC V6
 		if err := icacontrollermigrations.MigrateICS27ChannelCapability(
 			ctx,

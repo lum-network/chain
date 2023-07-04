@@ -58,11 +58,6 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey storetypes.StoreKey, para
 		panic(fmt.Sprintf("%s module account should have the burner permission", types.ModuleName))
 	}
 
-	// Make sure we have the parameters table
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
-	}
-
 	return &Keeper{
 		cdc:           cdc,
 		storeKey:      storeKey,
