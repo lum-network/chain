@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	dfracttypes "github.com/lum-network/chain/x/dfract/types"
 )
 
