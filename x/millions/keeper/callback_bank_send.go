@@ -11,7 +11,7 @@ import (
 	"github.com/lum-network/chain/x/millions/types"
 )
 
-// MarshalSendBankTransferFromNativeCallbackArgs Marshal SendBankTransferFromNativeCallback arguments
+// MarshalBankSendCallbackArgs Marshal BankSendCallback arguments
 func (k Keeper) MarshalBankSendCallbackArgs(ctx sdk.Context, bankSendCallback types.BankSendCallback) ([]byte, error) {
 	out, err := k.cdc.Marshal(&bankSendCallback)
 	if err != nil {
@@ -21,7 +21,7 @@ func (k Keeper) MarshalBankSendCallbackArgs(ctx sdk.Context, bankSendCallback ty
 	return out, nil
 }
 
-// UnmarshalSendBankTransferFromNativeCallbackArgs Unmarshal SendBankTransferFromNativeCallback arguments
+// UnmarshalBankSendCallbackArgs Unmarshal BankSendCallback arguments
 func (k Keeper) UnmarshalBankSendCallbackArgs(ctx sdk.Context, bankSendCallback []byte) (*types.BankSendCallback, error) {
 	unmarshalledBankSendCallback := types.BankSendCallback{}
 	if err := k.cdc.Unmarshal(bankSendCallback, &unmarshalledBankSendCallback); err != nil {

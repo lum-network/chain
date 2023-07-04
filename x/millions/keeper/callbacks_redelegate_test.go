@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"cosmossdk.io/math"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 
 	icacallbackstypes "github.com/lum-network/chain/x/icacallbacks/types"
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
@@ -12,13 +13,12 @@ func (suite *KeeperTestSuite) TestCallbacks_Redelegates() {
 	pool := newValidPool(suite, millionstypes.Pool{PoolId: 1})
 
 	// Prepare delegations split
-	splits := pool.ComputeSplitDelegations(suite.ctx, math.NewInt(100))
+	splits := pool.ComputeSplitDelegations(suite.Ctx, math.NewInt(100))
 	suite.Require().Greater(len(splits), 0)
 	suite.Require().Equal(uint64(100), splits[0].Amount.Uint64())
 	suite.Require().Greater(len(splits[0].ValidatorAddress), 0)
 
 	portID := "icacontroller-pool1"
-	channelID := "channel-0"
 	sequence := uint64(5)
 
 	// Construct our callback data
@@ -28,26 +28,26 @@ func (suite *KeeperTestSuite) TestCallbacks_Redelegates() {
 	}
 
 	// Serialize our callback
-	marshalledCallbackArgs, err := suite.app.MillionsKeeper.MarshalRedelegateCallbackArgs(suite.ctx, callbackData)
+	marshalledCallbackArgs, err := suite.App.MillionsKeeper.MarshalRedelegateCallbackArgs(suite.Ctx, callbackData)
 	suite.Require().NoError(err)
 
 	// Store inside the local datastore
 	callback := icacallbackstypes.CallbackData{
-		CallbackKey:  icacallbackstypes.PacketID(portID, channelID, sequence),
+		CallbackKey:  icacallbackstypes.PacketID(portID, ibctesting.FirstChannelID, sequence),
 		PortId:       portID,
-		ChannelId:    channelID,
+		ChannelId:    ibctesting.FirstChannelID,
 		Sequence:     sequence,
 		CallbackId:   millionskeeper.ICACallbackID_Redelegate,
 		CallbackArgs: marshalledCallbackArgs,
 	}
-	suite.app.ICACallbacksKeeper.SetCallbackData(suite.ctx, callback)
+	suite.App.ICACallbacksKeeper.SetCallbackData(suite.Ctx, callback)
 
 	// Grab from the local datastore
-	data, found := suite.app.ICACallbacksKeeper.GetCallbackData(suite.ctx, icacallbackstypes.PacketID(portID, channelID, sequence))
+	data, found := suite.App.ICACallbacksKeeper.GetCallbackData(suite.Ctx, icacallbackstypes.PacketID(portID, ibctesting.FirstChannelID, sequence))
 	suite.Require().True(found)
 
 	// Deserialize our callback data
-	unmarshalledCallbackData, err := suite.app.MillionsKeeper.UnmarshalRedelegateCallbackArgs(suite.ctx, data.CallbackArgs)
+	unmarshalledCallbackData, err := suite.App.MillionsKeeper.UnmarshalRedelegateCallbackArgs(suite.Ctx, data.CallbackArgs)
 	suite.Require().NoError(err)
 
 	// Make sure it matches

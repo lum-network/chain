@@ -12,8 +12,8 @@ import (
 
 // TestGRPC_Params runs simple Params GRPCs integration tests
 func (suite *KeeperTestSuite) TestGRPC_Query_Params() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	queryServer := millionskeeper.NewQueryServerImpl(*app.MillionsKeeper)
 
 	// Get ctx params
@@ -33,8 +33,8 @@ func (suite *KeeperTestSuite) TestGRPC_Query_Params() {
 
 // TestGRPC_Query_Pool runs simple integration tests for pools and pool
 func (suite *KeeperTestSuite) TestGRPC_Query_Pool() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	queryServer := millionskeeper.NewQueryServerImpl(*app.MillionsKeeper)
 
 	nbrItems := 4
@@ -83,8 +83,8 @@ func (suite *KeeperTestSuite) TestGRPC_Query_Pool() {
 
 // TestGRPC_Query_Deposit runs simple integration tests for deposits and pools
 func (suite *KeeperTestSuite) TestGRPC_Query_Deposit() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	queryServer := millionskeeper.NewQueryServerImpl(*app.MillionsKeeper)
 
 	nbrItems := 4
@@ -210,8 +210,8 @@ func (suite *KeeperTestSuite) TestGRPC_Query_Deposit() {
 
 // TestGRPC_Query_Draw runs simple integration tests on draws and pools
 func (suite *KeeperTestSuite) TestGRPC_Query_Draw() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	queryServer := millionskeeper.NewQueryServerImpl(*app.MillionsKeeper)
 
 	nbrItems := 4
@@ -312,8 +312,8 @@ func (suite *KeeperTestSuite) TestGRPC_Query_Draw() {
 
 // TestGRPC_Query_Prize runs simple integration tests on prizes, pools and draws
 func (suite *KeeperTestSuite) TestGRPC_Query_Prize() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	queryServer := millionskeeper.NewQueryServerImpl(*app.MillionsKeeper)
 
 	nbrItems := 4
@@ -470,8 +470,8 @@ func (suite *KeeperTestSuite) TestGRPC_Query_Prize() {
 
 // TestGRPC_Query_Withdrawal runs simple integration tests for withdrawals and pools
 func (suite *KeeperTestSuite) TestGRPC_Query_Withdrawal() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	queryServer := millionskeeper.NewQueryServerImpl(*app.MillionsKeeper)
 
 	nbrItems := 4

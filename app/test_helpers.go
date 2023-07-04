@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"strings"
 	"time"
 
 	"github.com/stretchr/testify/suite"
@@ -39,6 +38,7 @@ func (ao EmptyAppOptions) Get(o string) interface{} {
 
 var (
 	LumChainID     = "LUM-NETWORK"
+	HostChainID    = "GAIA-DEVNET"
 	TestIcaVersion = string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
 		Version:                icatypes.Version,
 		ControllerConnectionId: ibctesting.FirstConnectionID,
@@ -171,7 +171,7 @@ type TestPackage struct {
 
 func (p *TestPackage) Setup() {
 	p.App = SetupForTesting(false)
-	p.Ctx = p.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: LumChainID})
+	p.Ctx = p.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: LumChainID}).WithBlockTime(time.Now().UTC())
 	p.QueryHelper = &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: p.App.GRPCQueryRouter(),
 		Ctx:             p.Ctx,
@@ -190,7 +190,7 @@ func (p *TestPackage) SetupIBC(hostChainID string) {
 
 	// Initialize a host testing app using SimApp -> TestingApp
 	ibctesting.DefaultTestingAppInit = ibctesting.SetupTestingApp
-	p.HostChain = ibctesting.NewTestChain(p.T(), p.Coordinator, LumChainID)
+	p.HostChain = ibctesting.NewTestChain(p.T(), p.Coordinator, HostChainID)
 
 	// Update coordinator
 	p.Coordinator.Chains = map[string]*ibctesting.TestChain{
@@ -270,14 +270,10 @@ func (p *TestPackage) CreateTransferChannel(hostChainID string) {
 }
 
 // CreateICAChannel Creates an ICA channel through ibctesting, also creates a transfer channel if it hasn't been done yet
-func (p *TestPackage) CreateICAChannel(owner string) string {
+func (p *TestPackage) CreateICAChannel(hostChainID string, owner string) string {
 	// If we have yet to create a client/connection (through creating a transfer channel), do that here
 	_, transferChannelExists := p.App.IBCKeeper.ChannelKeeper.GetChannel(p.Ctx, ibctesting.TransferPort, ibctesting.FirstChannelID)
 	if !transferChannelExists {
-		ownerSplit := strings.Split(owner, ".")
-		p.Require().Equal(2, len(ownerSplit), "owner should be of the form: {HostZone}.{AccountName}")
-
-		hostChainID := ownerSplit[0]
 		p.CreateTransferChannel(hostChainID)
 	}
 

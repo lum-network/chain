@@ -23,8 +23,8 @@ func splitDelegationSliceToMap(vals []*millionstypes.SplitDelegation) map[string
 }
 
 func (suite *KeeperTestSuite) TestPool_IDsGeneration() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	for i := 0; i < 10; i++ {
 		nextPoolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
@@ -34,7 +34,7 @@ func (suite *KeeperTestSuite) TestPool_IDsGeneration() {
 }
 
 func (suite *KeeperTestSuite) TestPool_ValidatorsBasics() {
-	params := suite.app.MillionsKeeper.GetParams(suite.ctx)
+	params := suite.App.MillionsKeeper.GetParams(suite.Ctx)
 
 	pool := newValidPool(suite, millionstypes.Pool{PoolId: 1})
 
@@ -113,13 +113,13 @@ func (suite *KeeperTestSuite) TestPool_Helpers() {
 
 // TestPool_DrawSchedule validates draw schedule configuration and implementation
 func (suite *KeeperTestSuite) TestPool_DrawScheduleBasics() {
-	ctx := suite.ctx
+	ctx := suite.Ctx
 
 	now := time.Now().UTC()
 	ctx = ctx.WithBlockTime(now)
-	params := suite.app.MillionsKeeper.GetParams(ctx)
+	params := suite.App.MillionsKeeper.GetParams(ctx)
 	params.MinDrawScheduleDelta = 24 * time.Hour
-	suite.app.MillionsKeeper.SetParams(ctx, params)
+	suite.App.MillionsKeeper.SetParams(ctx, params)
 
 	// Draw delta must be >= 24 hours
 	ds := millionstypes.DrawSchedule{InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour), DrawDelta: 0}
@@ -214,7 +214,7 @@ func (suite *KeeperTestSuite) TestPool_DrawScheduleBasics() {
 }
 
 func (suite *KeeperTestSuite) TestPool_PrizeStrategiesBasics() {
-	params := suite.app.MillionsKeeper.GetParams(suite.ctx)
+	params := suite.App.MillionsKeeper.GetParams(suite.Ctx)
 
 	// PoolPercent should sum up to 100
 	err := millionstypes.PrizeStrategy{
@@ -284,8 +284,8 @@ func (suite *KeeperTestSuite) TestPool_PrizeStrategiesBasics() {
 }
 
 func (suite *KeeperTestSuite) TestPool_DepositorsCountAndTVL() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 
@@ -390,8 +390,8 @@ func (suite *KeeperTestSuite) TestPool_DepositorsCountAndTVL() {
 
 // TestPool_ValidatorsSplitDelegate test pool validator set split delegations
 func (suite *KeeperTestSuite) TestPool_ValidatorsSplitDelegate() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	valAddrs := []string{
 		"cosmosvaloper196ax4vc0lwpxndu9dyhvca7jhxp70rmcvrj90c",
@@ -537,8 +537,8 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitDelegate() {
 
 // TestPool_ValidatorsSplitUndelegate test pool validator set split undelegations
 func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	valAddrs := []string{
 		"cosmosvaloper196ax4vc0lwpxndu9dyhvca7jhxp70rmcvrj90c",
@@ -768,8 +768,8 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
 
 // TestPool_ValidatorsSplitConsistency test pool validator set bonded amount consistency and associated race conditions
 func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	valAddr := "cosmosvaloper196ax4vc0lwpxndu9dyhvca7jhxp70rmcvrj90c"
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
@@ -939,8 +939,8 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 
 // TestPool_UpdatePool tests the different conditions for a proposal pool update
 func (suite *KeeperTestSuite) TestPool_UpdatePool() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 
@@ -969,8 +969,8 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 
 		validator, err := stakingtypes.NewValidator(sdk.ValAddress(addrs[i]), privKeys[i], stakingtypes.Description{})
 		suite.Require().NoError(err)
-		validator = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validator, false)
-		err = app.StakingKeeper.Hooks().AfterValidatorCreated(suite.ctx, validator.GetOperator())
+		validator = stakingkeeper.TestingUpdateValidator(suite.App.StakingKeeper, suite.Ctx, validator, false)
+		err = app.StakingKeeper.Hooks().AfterValidatorCreated(suite.Ctx, validator.GetOperator())
 		suite.Require().NoError(err)
 
 		validators[i] = validator

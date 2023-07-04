@@ -13,8 +13,8 @@ import (
 // TestDeposit_IDsGeneration tests that the depositID is properly incremented for each new deposit
 func (suite *KeeperTestSuite) TestDeposit_IDsGeneration() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	// Set the denom
 	denom := app.StakingKeeper.BondDenom(ctx)
@@ -52,8 +52,8 @@ func (suite *KeeperTestSuite) TestDeposit_IDsGeneration() {
 // TestDeposit_AddDeposit tests the logic of adding a deposit to the store
 func (suite *KeeperTestSuite) TestDeposit_AddDeposit() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	// Set the denom
 	denom := app.StakingKeeper.BondDenom(ctx)
@@ -246,8 +246,8 @@ func (suite *KeeperTestSuite) TestDeposit_AddDeposit() {
 // TestDeposit_RemoveDeposit tests the logic of removing a deposit from the store
 func (suite *KeeperTestSuite) TestDeposit_RemoveDeposit() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	// Set the denom
 	denom := app.StakingKeeper.BondDenom(ctx)
@@ -448,8 +448,8 @@ func (suite *KeeperTestSuite) TestDeposit_RemoveDeposit() {
 // TestDeposit_UpdateDepositStatus tests the logic of updating a deposit from the store
 func (suite *KeeperTestSuite) TestDeposit_UpdateDepositStatus() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	// Set the denom
 	denom := app.StakingKeeper.BondDenom(ctx)
@@ -546,8 +546,8 @@ func (suite *KeeperTestSuite) TestDeposit_UpdateDepositStatus() {
 // TestDeposit_EditDeposit tests the logic of editing a deposit's winnerAddr and sponsor
 func (suite *KeeperTestSuite) TestDeposit_EditDeposit() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	// Set the denom
 	denom := app.StakingKeeper.BondDenom(ctx)
@@ -620,8 +620,8 @@ func (suite *KeeperTestSuite) TestDeposit_EditDeposit() {
 // TestDeposit_TransferDeposit tests the full flow from the transfer till the delegation point
 func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
 	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), "uatom")
@@ -774,8 +774,8 @@ func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 // TestDeposit_DelegateDeposit tests the delegate deposit from the transfer point till the final delegation
 func (suite *KeeperTestSuite) TestDeposit_DelegateDeposit() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
 	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), "uatom")
@@ -927,8 +927,8 @@ func (suite *KeeperTestSuite) TestDeposit_DelegateDeposit() {
 // TestDeposit_BalanceDeposit tests the balance in case of success or failed deposit
 func (suite *KeeperTestSuite) TestDeposit_BalanceDeposit() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	drawDelta1 := 1 * time.Hour
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), "uatom")
@@ -1139,8 +1139,8 @@ func (suite *KeeperTestSuite) TestDeposit_BalanceDeposit() {
 // TestDeposit_FullDepositProcess tests the complete logic for deposits for a local pool
 func (suite *KeeperTestSuite) TestDeposit_FullDepositProcess() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	drawDelta1 := 1 * time.Hour
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 

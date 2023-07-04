@@ -13,8 +13,8 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestFees_FeeCollector() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	// Fees should start at 0 and have the pool denom
 	denom := app.StakingKeeper.BondDenom(ctx)
@@ -122,8 +122,8 @@ func (suite *KeeperTestSuite) TestFees_FeeCollector() {
 }
 
 func (suite *KeeperTestSuite) TestFees_DrawPrizesFees() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 

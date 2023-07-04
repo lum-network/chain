@@ -11,8 +11,8 @@ import (
 
 // TestBlockers_PoolUpdates tests block based pool updates (draw launches)
 func (suite *KeeperTestSuite) TestBlockers_PoolUpdates() {
-	app := suite.app
-	ctx := suite.ctx.WithBlockHeight(0).WithBlockTime(time.Now().UTC())
+	app := suite.App
+	ctx := suite.Ctx.WithBlockHeight(0).WithBlockTime(time.Now().UTC())
 
 	// Pool1 should always be able to Draw
 	poolID1 := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
@@ -183,8 +183,8 @@ func (suite *KeeperTestSuite) TestBlockers_PoolUpdates() {
 
 // TestBlockers_PrizeUpdates tests block based prizes updates (clawbacks)
 func (suite *KeeperTestSuite) TestBlockers_PrizeUpdates() {
-	app := suite.app
-	ctx := suite.ctx.WithBlockHeight(0).WithBlockTime(time.Now().UTC())
+	app := suite.App
+	ctx := suite.Ctx.WithBlockHeight(0).WithBlockTime(time.Now().UTC())
 
 	// Add pool with ID 1 to make its prizes work
 	poolID1 := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
@@ -199,7 +199,7 @@ func (suite *KeeperTestSuite) TestBlockers_PrizeUpdates() {
 			app.MillionsKeeper.AddPrize(ctx, millionstypes.Prize{
 				PoolId:        uint64(i + 1),
 				DrawId:        millionstypes.UnknownID + 1,
-				PrizeId:       suite.app.MillionsKeeper.GetNextPrizeIdAndIncrement(ctx),
+				PrizeId:       suite.App.MillionsKeeper.GetNextPrizeIdAndIncrement(ctx),
 				State:         millionstypes.PrizeState_Pending,
 				WinnerAddress: suite.addrs[0].String(),
 				Amount:        sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), math.NewInt(1)),
@@ -263,8 +263,8 @@ func (suite *KeeperTestSuite) TestBlockers_PrizeUpdates() {
 
 // TestBlockers_WithdrawalUpdates tests block based withdrawal updates (unbonding completed)
 func (suite *KeeperTestSuite) TestBlockers_WithdrawalUpdates() {
-	app := suite.app
-	ctx := suite.ctx.WithBlockHeight(0).WithBlockTime(time.Now().UTC())
+	app := suite.App
+	ctx := suite.Ctx.WithBlockHeight(0).WithBlockTime(time.Now().UTC())
 
 	// Add pool with ID 1 to make its withdrawals work
 	p1 := newValidPool(suite, millionstypes.Pool{

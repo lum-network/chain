@@ -7,8 +7,8 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestParams_Validation() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	params := app.MillionsKeeper.GetParams(ctx)
 	suite.Require().NoError(params.ValidateBasics())

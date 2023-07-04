@@ -14,8 +14,8 @@ import (
 // TestWithdrawal_IDsGeneration tests the withdrawal ID generation
 func (suite *KeeperTestSuite) TestWithdrawal_IDsGeneration() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	// Add 10 deposits
 	for i := 0; i < 10; i++ {
@@ -55,8 +55,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_IDsGeneration() {
 // TestWithdrawal_AddWithdrawal tests the logic of adding a withdrawal to the store
 func (suite *KeeperTestSuite) TestWithdrawal_AddWithdrawal() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	// Initialize the pool
 	poolID, err := app.MillionsKeeper.RegisterPool(ctx,
@@ -265,8 +265,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_AddWithdrawal() {
 // TestWithdrawal_RemoveWithdrawal tests the logic of removing a withdrawal from the store
 func (suite *KeeperTestSuite) TestWithdrawal_RemoveWithdrawal() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	// Initialize the withdrawals
 	withdrawalsBefore := app.MillionsKeeper.ListWithdrawals(ctx)
@@ -412,8 +412,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_RemoveWithdrawal() {
 // TestWithdrawal_UpdateWithdrawalStatus test the logic of updating a withdrawal to the store
 func (suite *KeeperTestSuite) TestWithdrawal_UpdateWithdrawalStatus() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	// Generate 5 withdrawals
 	for i := 0; i < 5; i++ {
@@ -525,8 +525,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_UpdateWithdrawalStatus() {
 // TestWithdrawal_UndelegateWithdrawal tests the flow from the undelegation till the transfer
 func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawal() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
 	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), remotePoolDenom)
@@ -748,8 +748,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawal() {
 // TestWithdrawal_TransferWithdrawal tests from the undelegation point till the transfer to Local is completed
 func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
 	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), remotePoolDenom)
@@ -947,8 +947,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 // TestWithdrawal_BankSend tests from the undelegation point the bank send to native is completed
 func (suite *KeeperTestSuite) TestWithdrawal_BankSend() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
 	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), remotePoolDenom)
@@ -1061,8 +1061,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_BankSend() {
 // TestWithdrawal_ProcessWithdrawal tests to process a withdrawal considering the destination address and pool zone tests
 func (suite *KeeperTestSuite) TestWithdrawal_ProcessWithdrawal() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
 	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), remotePoolDenom)
@@ -1247,8 +1247,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_ProcessWithdrawal() {
 // TestWithdrawal_DequeueMaturedWithdrawal tests the dequeue process of matured withdrawals
 func (suite *KeeperTestSuite) TestWithdrawal_DequeueMaturedWithdrawal() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	// Add 4 withdrawals
 	for i := 0; i < 4; i++ {
@@ -1302,8 +1302,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_DequeueMaturedWithdrawal() {
 // TestWithdrawal_BalanceWithdrawal test the depositor balance after a transfer back to local chain
 func (suite *KeeperTestSuite) TestWithdrawal_BalanceWithdrawal() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
 	var now = time.Now().UTC()
@@ -1439,8 +1439,8 @@ func (suite *KeeperTestSuite) TestWithdrawal_BalanceWithdrawal() {
 // TestWithdrawal_FullWithdrawalProcess complete the full from the undelegation till the transfer to the local chain for a local pool
 func (suite *KeeperTestSuite) TestWithdrawal_FullWithdrawalProcess() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
 	var now = time.Now().UTC()

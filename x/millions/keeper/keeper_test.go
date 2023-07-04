@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	apptesting "github.com/lum-network/chain/app/testing"
@@ -15,7 +14,7 @@ import (
 	"github.com/lum-network/chain/app"
 )
 
-const testChainID = "lum-network-devnet-1"
+const testChainID = "LUM-NETWORK"
 
 var (
 	cosmosPoolValidator       = "cosmosvaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4epsluffn"
@@ -30,10 +29,8 @@ var (
 )
 
 type KeeperTestSuite struct {
-	suite.Suite
+	app.TestPackage
 
-	ctx         sdk.Context
-	app         *app.App
 	addrs       []sdk.AccAddress
 	moduleAddrs []sdk.AccAddress
 	valAddrs    []sdk.ValAddress
@@ -44,12 +41,10 @@ func TestKeeperSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	app := app.SetupForTesting(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.Setup()
 
-	// Setup the default application
-	suite.app = app
-	suite.ctx = ctx.WithChainID(testChainID).WithBlockTime(time.Now().UTC())
+	app := suite.App
+	ctx := suite.Ctx
 
 	// Setup test account addresses
 	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 6, sdk.NewInt(10_000_000_000), app.StakingKeeper.BondDenom(ctx))
@@ -69,7 +64,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	}
 
 	// Setup test params
-	suite.app.MillionsKeeper.SetParams(ctx, millionstypes.Params{
+	suite.App.MillionsKeeper.SetParams(ctx, millionstypes.Params{
 		MinDepositAmount:        sdk.NewInt(millionstypes.MinAcceptableDepositAmount),
 		MaxPrizeStrategyBatches: 1_000,
 		MaxPrizeBatchQuantity:   1_000_000,
@@ -88,13 +83,13 @@ func floatToDec(v float64) sdk.Dec {
 
 // newValidPool fills up missing params to the pool to make it valid in order to ease testing
 func newValidPool(suite *KeeperTestSuite, pool millionstypes.Pool) *millionstypes.Pool {
-	params := suite.app.MillionsKeeper.GetParams(suite.ctx)
+	params := suite.App.MillionsKeeper.GetParams(suite.Ctx)
 
 	if pool.Denom == "" {
-		pool.Denom = suite.app.StakingKeeper.BondDenom(suite.ctx)
+		pool.Denom = suite.App.StakingKeeper.BondDenom(suite.Ctx)
 	}
 	if pool.NativeDenom == "" {
-		pool.NativeDenom = suite.app.StakingKeeper.BondDenom(suite.ctx)
+		pool.NativeDenom = suite.App.StakingKeeper.BondDenom(suite.Ctx)
 	}
 	if pool.ChainId == "" {
 		pool.ChainId = testChainID
@@ -148,10 +143,10 @@ func newValidPool(suite *KeeperTestSuite, pool millionstypes.Pool) *millionstype
 		pool.State = millionstypes.PoolState_Ready
 	}
 	if pool.CreatedAt.IsZero() {
-		pool.CreatedAt = suite.ctx.BlockTime()
+		pool.CreatedAt = suite.Ctx.BlockTime()
 	}
 	if pool.UpdatedAt.IsZero() {
-		pool.UpdatedAt = suite.ctx.BlockTime()
+		pool.UpdatedAt = suite.Ctx.BlockTime()
 	}
 	return &pool
 }

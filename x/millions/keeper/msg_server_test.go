@@ -17,8 +17,8 @@ import (
 // TestMsgServer_DrawRetry runs draw retry related tests
 func (suite *KeeperTestSuite) TestMsgServer_DrawRetry() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 
@@ -204,8 +204,8 @@ func (suite *KeeperTestSuite) TestMsgServer_DrawRetry() {
 
 // TestMsgServer_Deposit runs deposit related tests
 func (suite *KeeperTestSuite) TestMsgServer_Deposit() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 
@@ -395,8 +395,8 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit() {
 // TestMsgServer_DepositRetry tests the retry of a failed deposit
 func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 
@@ -547,8 +547,8 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 // TestMsgServer_DepositEdit tests the edition of a winnerAddr and sponsor
 func (suite *KeeperTestSuite) TestMsgServer_DepositEdit() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 
@@ -742,8 +742,8 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositEdit() {
 // TestMsgServer_WithdrawDeposit runs withdrawal deposit related tests
 func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), "uatom")
@@ -970,8 +970,8 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 // TestMsgServer_WithdrawDepositRetry runs withdrawal retry related tests
 func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 	drawDelta1 := 1 * time.Hour
@@ -1117,8 +1117,8 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 
 // TestMsgServer_ClaimPrize runs prize claim related tests
 func (suite *KeeperTestSuite) TestMsgServer_ClaimPrize() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 	params := app.MillionsKeeper.GetParams(ctx)
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)

@@ -12,8 +12,8 @@ import (
 // TestPrize_IDsGeneration runs test related to prizeID generation
 func (suite *KeeperTestSuite) TestPrize_IDsGeneration() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	// Add 10 Prizes
 	for i := 0; i < 10; i++ {
@@ -52,8 +52,8 @@ func (suite *KeeperTestSuite) TestPrize_IDsGeneration() {
 // TestPrize_AddPrize tests the logic of adding a prize to the store
 func (suite *KeeperTestSuite) TestPrize_AddPrize() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	prizesBefore := app.MillionsKeeper.ListPrizes(ctx)
 	suite.Require().Len(prizesBefore, 0)
@@ -201,8 +201,8 @@ func (suite *KeeperTestSuite) TestPrize_AddPrize() {
 // TestPrize_RemovePrize tests the logic of removing a prize from the store
 func (suite *KeeperTestSuite) TestPrize_RemovePrize() {
 	// Set the app context
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	prizesBefore := app.MillionsKeeper.ListPrizes(ctx)
 	suite.Require().Len(prizesBefore, 0)
@@ -355,8 +355,8 @@ func (suite *KeeperTestSuite) TestPrize_RemovePrize() {
 
 // TestPrize_ClawBackPrize test the logic of the prize clawback
 func (suite *KeeperTestSuite) TestPrize_ClawBackPrize() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	pool := newValidPool(suite, millionstypes.Pool{
 		PrizeStrategy: millionstypes.PrizeStrategy{
@@ -437,8 +437,8 @@ func (suite *KeeperTestSuite) TestPrize_ClawBackPrize() {
 
 // TestPrize_ClawbackQueueExpiration tests the Dequeueing of expired prizes
 func (suite *KeeperTestSuite) TestPrize_ClawbackQueueExpiration() {
-	app := suite.app
-	ctx := suite.ctx
+	app := suite.App
+	ctx := suite.Ctx
 
 	pool := newValidPool(suite, millionstypes.Pool{
 		PrizeStrategy: millionstypes.PrizeStrategy{
