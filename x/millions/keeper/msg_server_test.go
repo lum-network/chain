@@ -202,6 +202,43 @@ func (suite *KeeperTestSuite) TestMsgServer_DrawRetry() {
 	suite.Require().ErrorIs(err, millionstypes.ErrInvalidDrawState)
 }
 
+// TestMsgServer_Deposit runs deposit related tests through ICA
+func (suite *KeeperTestSuite) TestMsgServer_Deposit_Remote() {
+	app := suite.App
+	ctx := suite.Ctx
+	// goCtx := sdk.WrapSDKContext(ctx)
+	// msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
+
+	// Create pool ID and ICA channels
+	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
+	icaDepositPortName := string(millionstypes.NewPoolName(poolID, millionstypes.ICATypeDeposit))
+	icaPrizepoolPortName := string(millionstypes.NewPoolName(poolID, millionstypes.ICATypePrizePool))
+	suite.CreateICAChannel(icaDepositPortName)
+	suite.CreateICAChannel(icaPrizepoolPortName)
+	hostChainID := suite.HostChain.ChainID
+
+	// Create pool
+	drawDelta1 := 1 * time.Hour
+	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
+		PoolId:              poolID,
+		ChainId:             hostChainID,
+		IcaDepositPortId:    icaDepositPortName,
+		IcaDepositAddress:   suite.ICAAddresses[icaDepositPortName],
+		IcaPrizepoolPortId:  icaPrizepoolPortName,
+		IcaPrizepoolAddress: suite.ICAAddresses[icaPrizepoolPortName],
+		PrizeStrategy: millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
+			},
+		},
+		DrawSchedule: millionstypes.DrawSchedule{
+			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
+			DrawDelta:     drawDelta1,
+		},
+		AvailablePrizePool: sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
+	}))
+}
+
 // TestMsgServer_Deposit runs deposit related tests
 func (suite *KeeperTestSuite) TestMsgServer_Deposit() {
 	app := suite.App
