@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	ctx := suite.Ctx
 
 	// Setup test account addresses
-	coins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(10_000_000_000)))
+	coins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(10_000_000_000)), sdk.NewCoin(remotePoolDenomIBC, sdk.NewInt(10_000_000_000)))
 	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 6, coins)
 	for i := 0; i < 6; i++ {
 		poolAddress := millionstypes.NewPoolAddress(uint64(i+1), "unused-in-test")
