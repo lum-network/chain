@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
 	"testing"
 	"time"
 
@@ -76,6 +77,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 		FeesStakers:             sdk.ZeroDec(),
 		MinDepositDrawDelta:     millionstypes.MinAcceptableDepositDrawDelta,
 	})
+}
+
+// GetMsgServer Returns a fresh implementation of the message server
+// This must be used everywhere, instead of static msg server acquisition
+// It ensures we always have a working context (depending of IBC / Non IBC testing)
+func (suite *KeeperTestSuite) GetMsgServer() millionstypes.MsgServer {
+	return millionskeeper.NewMsgServerImpl(*suite.App.MillionsKeeper)
 }
 
 // floatToDec simple helper to create sdk.Dec with a precision of 6
