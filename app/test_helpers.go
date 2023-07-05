@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"time"
 
 	"github.com/stretchr/testify/suite"
@@ -333,4 +334,20 @@ func (p *TestPackage) RegisterInterchainAccount(endpoint *ibctesting.Endpoint, o
 	// Update the endpoint object to the newly created port + channel
 	endpoint.ChannelID = channeltypes.FormatChannelIdentifier(channelSequence)
 	endpoint.ChannelConfig.PortID = portID
+}
+
+func (p *TestPackage) FundModuleAccount(moduleName string, amount sdk.Coin) {
+	coins := sdk.NewCoins(amount)
+	err := p.App.BankKeeper.MintCoins(p.Ctx, minttypes.ModuleName, coins)
+	p.Require().NoError(err)
+	err = p.App.BankKeeper.SendCoinsFromModuleToModule(p.Ctx, minttypes.ModuleName, moduleName, coins)
+	p.Require().NoError(err)
+}
+
+func (p *TestPackage) FundAccount(acc sdk.AccAddress, amount sdk.Coin) {
+	coins := sdk.NewCoins(amount)
+	err := p.App.BankKeeper.MintCoins(p.Ctx, minttypes.ModuleName, coins)
+	p.Require().NoError(err)
+	err = p.App.BankKeeper.SendCoinsFromModuleToAccount(p.Ctx, minttypes.ModuleName, acc, coins)
+	p.Require().NoError(err)
 }
