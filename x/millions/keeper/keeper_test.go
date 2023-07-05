@@ -45,20 +45,17 @@ func TestKeeperSuite(t *testing.T) {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 
-	app := suite.App
-	ctx := suite.Ctx
-
 	// Setup test account addresses
-	coins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(10_000_000_000)), sdk.NewCoin(remotePoolDenomIBC, sdk.NewInt(10_000_000_000)))
-	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 6, coins)
+	coins := sdk.NewCoins(sdk.NewCoin(suite.App.StakingKeeper.BondDenom(suite.Ctx), sdk.NewInt(10_000_000_000)), sdk.NewCoin(remotePoolDenomIBC, sdk.NewInt(10_000_000_000)))
+	suite.addrs = apptesting.AddTestAddrsWithDenom(suite.App, suite.Ctx, 6, coins)
 	for i := 0; i < 6; i++ {
 		poolAddress := millionstypes.NewPoolAddress(uint64(i+1), "unused-in-test")
-		apptesting.AddTestModuleAccount(app, ctx, poolAddress)
+		apptesting.AddTestModuleAccount(suite.App, suite.Ctx, poolAddress)
 		suite.moduleAddrs = append(suite.moduleAddrs, poolAddress)
 	}
 
 	// Setup vals for pools
-	vals := app.StakingKeeper.GetAllValidators(ctx)
+	vals := suite.App.StakingKeeper.GetAllValidators(suite.Ctx)
 	suite.valAddrs = []sdk.ValAddress{}
 	for _, v := range vals {
 		addr, err := sdk.ValAddressFromBech32(v.OperatorAddress)
@@ -67,7 +64,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	}
 
 	// Setup test params
-	suite.App.MillionsKeeper.SetParams(ctx, millionstypes.Params{
+	suite.App.MillionsKeeper.SetParams(suite.Ctx, millionstypes.Params{
 		MinDepositAmount:        sdk.NewInt(millionstypes.MinAcceptableDepositAmount),
 		MaxPrizeStrategyBatches: 1_000,
 		MaxPrizeBatchQuantity:   1_000_000,
@@ -81,7 +78,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 // GetMsgServer Returns a fresh implementation of the message server
 // This must be used everywhere, instead of static msg server acquisition
-// It ensures we always have a working context (depending of IBC / Non IBC testing)
+// It ensures we always have a working context (depending on IBC / Non IBC testing)
 func (suite *KeeperTestSuite) GetMsgServer() millionstypes.MsgServer {
 	return millionskeeper.NewMsgServerImpl(*suite.App.MillionsKeeper)
 }

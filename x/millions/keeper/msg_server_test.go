@@ -205,13 +205,8 @@ func (suite *KeeperTestSuite) TestMsgServer_DrawRetry() {
 // TestMsgServer_Deposit runs deposit related tests through ICA
 // This test case is not intended to test deposit process (which is done on another case) but only the fact that it also works through ICA / IBC conditions
 func (suite *KeeperTestSuite) TestMsgServer_Deposit_Remote() {
-	app := suite.App
-	ctx := suite.Ctx
-	goCtx := sdk.WrapSDKContext(ctx)
-	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
-
 	// Create pool ID and ICA channels
-	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
+	poolID := suite.App.MillionsKeeper.GetNextPoolIDAndIncrement(suite.Ctx)
 	icaDepositPortName := string(millionstypes.NewPoolName(poolID, millionstypes.ICATypeDeposit))
 	icaPrizepoolPortName := string(millionstypes.NewPoolName(poolID, millionstypes.ICATypePrizePool))
 	suite.CreateICAChannel(icaDepositPortName)
@@ -220,7 +215,7 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit_Remote() {
 
 	// Create a remote pool entity
 	drawDelta1 := 1 * time.Hour
-	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
+	suite.App.MillionsKeeper.AddPool(suite.Ctx, newValidPool(suite, millionstypes.Pool{
 		PoolId:              poolID,
 		ChainId:             hostChainID,
 		IcaDepositPortId:    icaDepositPortName,
@@ -228,6 +223,8 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit_Remote() {
 		IcaPrizepoolPortId:  icaPrizepoolPortName,
 		NativeDenom:         remotePoolDenom,
 		Denom:               remotePoolDenomIBC,
+		ConnectionId:        suite.TransferPath.EndpointA.ConnectionID,
+		TransferChannelId:   suite.TransferPath.EndpointA.ChannelID,
 		IcaPrizepoolAddress: suite.ICAAddresses[icaPrizepoolPortName],
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
@@ -235,18 +232,20 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit_Remote() {
 			},
 		},
 		DrawSchedule: millionstypes.DrawSchedule{
-			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
+			InitialDrawAt: suite.Ctx.BlockTime().Add(drawDelta1),
 			DrawDelta:     drawDelta1,
 		},
 		AvailablePrizePool: sdk.NewCoin(remotePoolDenomIBC, math.NewInt(1000)),
 	}))
 
 	// Grab our pool entity
-	pool, err := app.MillionsKeeper.GetPool(ctx, poolID)
+	pool, err := suite.App.MillionsKeeper.GetPool(suite.Ctx, poolID)
 	suite.Require().NoError(err)
+	suite.Require().Equal(pool.Denom, remotePoolDenomIBC)
+	suite.Require().Equal(pool.NativeDenom, remotePoolDenom)
 
 	// Make a working deposit and ensure no error
-	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
+	_, err = suite.GetMsgServer().Deposit(sdk.WrapSDKContext(suite.Ctx), &millionstypes.MsgDeposit{
 		PoolId:           pool.GetPoolId(),
 		Amount:           sdk.NewCoin(pool.Denom, sdk.NewInt(int64(1_000_000))),
 		DepositorAddress: suite.addrs[0].String(),
