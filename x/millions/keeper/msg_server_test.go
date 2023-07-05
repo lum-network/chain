@@ -203,11 +203,12 @@ func (suite *KeeperTestSuite) TestMsgServer_DrawRetry() {
 }
 
 // TestMsgServer_Deposit runs deposit related tests through ICA
+// This test case is not intended to test deposit process (which is done on another case) but only the fact that it also works through ICA / IBC conditions
 func (suite *KeeperTestSuite) TestMsgServer_Deposit_Remote() {
 	app := suite.App
 	ctx := suite.Ctx
-	// goCtx := sdk.WrapSDKContext(ctx)
-	// msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
+	goCtx := sdk.WrapSDKContext(ctx)
+	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 
 	// Create pool ID and ICA channels
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
@@ -217,7 +218,7 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit_Remote() {
 	suite.CreateICAChannel(icaPrizepoolPortName)
 	hostChainID := suite.HostChain.ChainID
 
-	// Create pool
+	// Create a remote pool entity
 	drawDelta1 := 1 * time.Hour
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
 		PoolId:              poolID,
@@ -225,6 +226,8 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit_Remote() {
 		IcaDepositPortId:    icaDepositPortName,
 		IcaDepositAddress:   suite.ICAAddresses[icaDepositPortName],
 		IcaPrizepoolPortId:  icaPrizepoolPortName,
+		NativeDenom:         remotePoolDenom,
+		Denom:               remotePoolDenomIBC,
 		IcaPrizepoolAddress: suite.ICAAddresses[icaPrizepoolPortName],
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
@@ -235,8 +238,20 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit_Remote() {
 			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
 			DrawDelta:     drawDelta1,
 		},
-		AvailablePrizePool: sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
+		AvailablePrizePool: sdk.NewCoin(remotePoolDenomIBC, math.NewInt(1000)),
 	}))
+
+	// Grab our pool entity
+	pool, err := app.MillionsKeeper.GetPool(ctx, poolID)
+	suite.Require().NoError(err)
+
+	// Make a working deposit and ensure no error
+	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
+		PoolId:           pool.GetPoolId(),
+		Amount:           sdk.NewCoin(pool.Denom, sdk.NewInt(int64(1_000_000))),
+		DepositorAddress: suite.addrs[0].String(),
+	})
+	suite.Require().NoError(err)
 }
 
 // TestMsgServer_Deposit runs deposit related tests
@@ -783,7 +798,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 	ctx := suite.Ctx
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
-	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), "uatom")
+	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewCoins(sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_0000_000))))
 
 	// Initialize the pool
 	poolID, err := app.MillionsKeeper.RegisterPool(ctx,

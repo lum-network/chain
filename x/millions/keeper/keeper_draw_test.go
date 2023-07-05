@@ -1177,7 +1177,7 @@ func (suite *KeeperTestSuite) TestDraw_ClaimRewardsOnNativeChain() {
 
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
-	uatomAddress7 := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), remotePoolDenom)
+	uatomAddress7 := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewCoins(sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_0000_000))))
 	suite.addrs = append(suite.addrs, uatomAddress7...)
 
 	// Remote pool
@@ -1325,7 +1325,7 @@ func (suite *KeeperTestSuite) TestDraw_TransferRewardsToLocalChain() {
 
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
-	uatomAddress7 := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), remotePoolDenom)
+	uatomAddress7 := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewCoins(sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_0000_000))))
 	suite.addrs = append(suite.addrs, uatomAddress7...)
 
 	// Remote pool

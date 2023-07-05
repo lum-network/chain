@@ -68,23 +68,15 @@ func AddTestModuleAccount(app *app.App, ctx sdk.Context, addr sdk.AccAddress) {
 	app.AccountKeeper.SetAccount(ctx, acc)
 }
 
-// AddTestAddrs constructs and returns accNum amount of accounts with an
-// initial balance of accAmt in random order
-func AddTestAddrs(app *app.App, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
-	return addTestAddrs(app, ctx, accNum, accAmt, createRandomAccounts)
+func AddTestAddrsWithDenom(app *app.App, ctx sdk.Context, accNum int, coins sdk.Coins) []sdk.AccAddress {
+	return addTestAddrsWithDenom(app, ctx, accNum, coins, createRandomAccounts)
 }
 
-func AddTestAddrsWithDenom(app *app.App, ctx sdk.Context, accNum int, accAmt math.Int, denom string) []sdk.AccAddress {
-	return addTestAddrsWithDenom(app, ctx, accNum, accAmt, denom, createRandomAccounts)
-}
-
-func addTestAddrsWithDenom(app *app.App, ctx sdk.Context, accNum int, accAmt math.Int, denom string, strategy GenerateAccountStrategy) []sdk.AccAddress {
+func addTestAddrsWithDenom(app *app.App, ctx sdk.Context, accNum int, coins sdk.Coins, strategy GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
 
-	initCoins := sdk.NewCoins(sdk.NewCoin(denom, accAmt))
-
 	for _, addr := range testAddrs {
-		InitAccountWithCoins(app, ctx, addr, initCoins)
+		InitAccountWithCoins(app, ctx, addr, coins)
 	}
 
 	return testAddrs

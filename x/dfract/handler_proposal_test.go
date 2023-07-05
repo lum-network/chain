@@ -31,7 +31,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.app = app
 	suite.ctx = ctx
 	suite.handler = dfract.NewDFractProposalHandler(*app.DFractKeeper)
-	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 2, sdk.NewInt(300000000), "ulum")
+	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 2, sdk.NewCoins(sdk.NewCoin("ulum", sdk.NewInt(300000000))))
 }
 
 func generateWithdrawAndMintProposal(withdrawalAddress string, microMintRate int64) *types.WithdrawAndMintProposal {

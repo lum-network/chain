@@ -38,7 +38,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	// Iterate over the array of deposit denoms
 	for _, denom := range params.DepositDenoms {
-		suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 6, sdk.NewInt(300000000), denom)
+		suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 6, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(300000000))))
 	}
 
 }

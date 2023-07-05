@@ -41,10 +41,10 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.app = app
 	suite.ctx = ctx
 	suite.handler = millions.NewMillionsProposalHandler(*app.MillionsKeeper)
-	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 2, sdk.NewInt(300000000), "ulum")
+	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 2, sdk.NewCoins(sdk.NewCoin("ulum", sdk.NewInt(300000000))))
 
 	// Initialize module accounts for IcaDeposits
-	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 3, sdk.NewInt(1_000_0000_000), app.StakingKeeper.BondDenom(ctx))
+	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 3, sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(1_000_0000_000))))
 	for i := 0; i < 3; i++ {
 		poolAddress := millionstypes.NewPoolAddress(uint64(i+1), "unused-in-test")
 		apptesting.AddTestModuleAccount(app, ctx, poolAddress)

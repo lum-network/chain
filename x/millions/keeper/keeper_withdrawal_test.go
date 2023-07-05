@@ -529,7 +529,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawal() {
 	ctx := suite.Ctx
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
-	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), remotePoolDenom)
+	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewCoins(sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_0000_000))))
 
 	// Remote pool
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
@@ -752,7 +752,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 	ctx := suite.Ctx
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
-	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), remotePoolDenom)
+	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewCoins(sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_0000_000))))
 
 	// Remote pool
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
@@ -951,7 +951,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_BankSend() {
 	ctx := suite.Ctx
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
-	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), remotePoolDenom)
+	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewCoins(sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_0000_000))))
 
 	// Remote pool
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
@@ -1065,7 +1065,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_ProcessWithdrawal() {
 	ctx := suite.Ctx
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
-	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), remotePoolDenom)
+	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewCoins(sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_0000_000))))
 
 	// Remote pool
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{

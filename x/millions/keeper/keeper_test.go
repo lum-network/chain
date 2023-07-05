@@ -23,6 +23,7 @@ var (
 	cosmosAccAddress          = "cosmos1qggwr7vze9x7ustru9dctf6krhk2285lkf89g7"
 	localPoolDenom            = "ulum"
 	remotePoolDenom           = "uatom"
+	remotePoolDenomIBC        = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
 	remoteBech32PrefixValAddr = "cosmosvaloper"
 	remoteBech32PrefixAccAddr = "cosmos"
 	remoteChainId             = "cosmos"
@@ -47,7 +48,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	ctx := suite.Ctx
 
 	// Setup test account addresses
-	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 6, sdk.NewInt(10_000_000_000), app.StakingKeeper.BondDenom(ctx))
+	coins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(10_000_000_000)))
+	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 6, coins)
 	for i := 0; i < 6; i++ {
 		poolAddress := millionstypes.NewPoolAddress(uint64(i+1), "unused-in-test")
 		apptesting.AddTestModuleAccount(app, ctx, poolAddress)

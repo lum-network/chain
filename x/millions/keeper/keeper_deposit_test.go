@@ -624,7 +624,7 @@ func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 	ctx := suite.Ctx
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
-	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), "uatom")
+	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(1_000_0000_000))))
 
 	// Remote pool
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
@@ -778,7 +778,7 @@ func (suite *KeeperTestSuite) TestDeposit_DelegateDeposit() {
 	ctx := suite.Ctx
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
-	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), "uatom")
+	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(1_000_0000_000))))
 
 	// Remote pool
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
@@ -931,7 +931,7 @@ func (suite *KeeperTestSuite) TestDeposit_BalanceDeposit() {
 	ctx := suite.Ctx
 	drawDelta1 := 1 * time.Hour
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
-	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), "uatom")
+	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(1_000_0000_000))))
 
 	// Remote pool
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
