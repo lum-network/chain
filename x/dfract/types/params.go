@@ -41,7 +41,7 @@ func (p *Params) ValidateBasics() error {
 	}
 
 	if p.MinDepositAmount.LT(math.NewInt(DefaultMinDepositAmount)) {
-		return errorsmod.Wrapf(ErrInvalidParams, "min deposit amount cannot be lower than default minimum amount, got: %d", p.MinDepositAmount)
+		return errorsmod.Wrapf(ErrInvalidParams, "min deposit amount must be gte %d, got: %d", DefaultMinDepositAmount, p.MinDepositAmount.Int64())
 	}
 
 	return nil
