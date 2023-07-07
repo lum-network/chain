@@ -24,10 +24,7 @@ func (msg MsgDeposit) Type() string {
 }
 
 func (msg *MsgDeposit) GetSigners() []sdk.AccAddress {
-	depositor, err := sdk.AccAddressFromBech32(msg.GetDepositorAddress())
-	if err != nil {
-		panic(err)
-	}
+	depositor := sdk.MustAccAddressFromBech32(msg.GetDepositorAddress())
 	return []sdk.AccAddress{depositor}
 }
 

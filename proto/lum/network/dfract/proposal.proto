@@ -5,6 +5,11 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/lum-network/chain/x/dfract/types";
 
+// DEPRECATED:
+// For easier management, we moved the WithdrawAndMintProposal to tx based
+// minting. The withdrawal address specified in the dFract module parameters is
+// the one authorized to withdraw and mint udfr tokens based on the
+// micro mint rate
 message WithdrawAndMintProposal {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_getters) = false;
