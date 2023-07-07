@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"github.com/lum-network/chain/x/millions/types"
 )
@@ -33,6 +34,7 @@ func GetTxCmd() *cobra.Command {
 		CmdTxWithdrawDeposit(),
 		CmdTxWithdrawDepositRetry(),
 		CmdTxRestoreInterchainAccounts(),
+		CmdTxDepositEdit(),
 	)
 	return cmd
 }
@@ -148,6 +150,86 @@ $ %s tx %s deposit-retry <pool_id> <deposit_id>`,
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
 	}
+	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.MarkFlagRequired(flags.FlagFrom)
+	return cmd
+}
+
+func CmdTxDepositEdit() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "deposit-edit <pool_id> <deposit_id> [winner_address] [sponsor]",
+		Short: "Edit a deposit",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Edit a deposit's winnerAddress to redirect the draw prize and/or sponsor mode that waives this deposit draw chances.
+Example:
+To edit a delegated deposit (delegate drawing chances to another address)
+$ %s tx %s deposit-edit <pool_id> <deposit_id> --winner_address=<address>
+To edit a sponsorship deposit (no drawing chances at all)
+$ %s tx %s deposit-edit <pool_id> <deposit_id> --sponsor=true
+To edit a delegated deposit and sponsorship
+$ %s tx %s deposit-edit <pool_id> <deposit_id> --winner_address=<address> --sponsor=true`,
+				version.AppName, types.ModuleName, version.AppName, types.ModuleName, version.AppName, types.ModuleName),
+		),
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Acquire the client context
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			// Acquire the command arguments
+			poolID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			depositID, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			// Acquire optional arguments
+			winnerAddress, err := cmd.Flags().GetString("winner_address")
+			if err != nil {
+				return err
+			}
+
+			isSponsor, err := cmd.Flags().GetString("sponsor")
+			if err != nil {
+				return err
+			}
+
+			// Parse the boolean value from the string
+			var isSponsorWrapper *gogotypes.BoolValue
+			if isSponsor != "" {
+				isSponsorBool, err := strconv.ParseBool(isSponsor)
+				if err != nil {
+					return err
+				}
+				isSponsorWrapper = &gogotypes.BoolValue{
+					Value: isSponsorBool,
+				}
+			}
+
+			// Build the message
+			msg := types.NewMsgDepositEdit(clientCtx.GetFromAddress().String(), poolID, depositID)
+			msg.WinnerAddress = winnerAddress
+			msg.IsSponsor = isSponsorWrapper
+
+			// Generate the transaction
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	cmd.Flags().String("winner_address", "", "(optional) winner address to direct the draw prizes to")
+	cmd.Flags().String("sponsor", "", "(optional) active sponsor mode and waive this deposit draw chances")
 	flags.AddTxFlagsToCmd(cmd)
 	_ = cmd.MarkFlagRequired(flags.FlagFrom)
 	return cmd
