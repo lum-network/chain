@@ -679,6 +679,7 @@ func (k Keeper) RunDrawPrizes(ctx sdk.Context, prizePool sdk.Coin, prizeStrat ty
 	// - winner is depositor B since they own the range from A) to B]
 	i := 0
 	result.PrizeDraws = make([]PrizeDraw, len(prizes))
+	addedPrizesWinner := make(map[string]bool)
 	for _, d := range draws {
 		p := prizes[d.PrizeIdx]
 		nowinner := false
@@ -692,13 +693,18 @@ func (k Keeper) RunDrawPrizes(ctx sdk.Context, prizePool sdk.Coin, prizeStrat ty
 				// winner is the one owning the current portion of the buffer
 				if drawPosition.LTE(drawBuffer[i]) {
 					dep := bufferToDeposit[drawBuffer[i]]
-					result.PrizeDraws[d.PrizeIdx] = PrizeDraw{
-						Amount: prizes[d.PrizeIdx].Amount,
-						Winner: &dep,
+					winnerAddress := dep.Address
+					if _, ok := addedPrizesWinner[winnerAddress]; !ok {
+						result.PrizeDraws[d.PrizeIdx] = PrizeDraw{
+							Amount: prizes[d.PrizeIdx].Amount,
+							Winner: &dep,
+						}
+						result.TotalWinAmount = result.TotalWinAmount.Add(prizes[d.PrizeIdx].Amount)
+						result.TotalWinCount++
+						winner = true
+						addedPrizesWinner[winnerAddress] = true
 					}
-					result.TotalWinAmount = result.TotalWinAmount.Add(prizes[d.PrizeIdx].Amount)
-					result.TotalWinCount++
-					winner = true
+
 					break
 				} else {
 					i++
