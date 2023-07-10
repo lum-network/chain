@@ -24,7 +24,7 @@ var (
 	cosmosAccAddress          = "cosmos1qggwr7vze9x7ustru9dctf6krhk2285lkf89g7"
 	localPoolDenom            = "ulum"
 	remotePoolDenom           = "uatom"
-	remotePoolDenomIBC        = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
+	remotePoolDenomIBC        = "ibc/uatom"
 	remoteBech32PrefixValAddr = "cosmosvaloper"
 	remoteBech32PrefixAccAddr = "cosmos"
 	remoteChainId             = "cosmos"

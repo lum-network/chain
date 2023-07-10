@@ -213,6 +213,10 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit_Remote() {
 	suite.CreateICAChannel(icaPrizepoolPortName)
 	hostChainID := suite.HostChain.ChainID
 
+	// Fund accounts
+	suite.FundAccount(suite.addrs[0], sdk.NewCoin(suite.App.StakingKeeper.BondDenom(suite.Ctx), sdk.NewInt(10_000_000_000)))
+	suite.FundAccount(suite.addrs[0], sdk.NewCoin(remotePoolDenomIBC, sdk.NewInt(10_000_000_000)))
+
 	// Create a remote pool entity
 	drawDelta1 := 1 * time.Hour
 	suite.App.MillionsKeeper.AddPool(suite.Ctx, newValidPool(suite, millionstypes.Pool{
@@ -243,6 +247,9 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit_Remote() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(pool.Denom, remotePoolDenomIBC)
 	suite.Require().Equal(pool.NativeDenom, remotePoolDenom)
+
+	// balance := suite.App.BankKeeper.GetBalance(suite.Ctx, suite.addrs[0], pool.Denom)
+	// suite.Require().Equal(balance.Amount.Int64(), 12)
 
 	// Make a working deposit and ensure no error
 	_, err = suite.GetMsgServer().Deposit(sdk.WrapSDKContext(suite.Ctx), &millionstypes.MsgDeposit{
