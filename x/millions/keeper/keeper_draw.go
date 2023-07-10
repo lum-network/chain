@@ -421,7 +421,7 @@ func (k Keeper) OnTransferRewardsToLocalChainCompleted(ctx sdk.Context, poolID u
 			fDraw = &draw
 		}
 		//nolint:errcheck // error check is not necessary here since we handled it before
-		k.OnExecuteDrawCompeleted(ctx, &pool, fDraw, err)
+		k.OnExecuteDrawCompleted(ctx, &pool, fDraw, err)
 		return fDraw, nil
 	} else {
 		// Commit ExecuteDraw changes in case of success
@@ -492,7 +492,7 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*typ
 		draw.RandSeed,
 	)
 	if err != nil {
-		return k.OnExecuteDrawCompeleted(
+		return k.OnExecuteDrawCompleted(
 			ctx,
 			&pool,
 			&draw,
@@ -513,7 +513,7 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*typ
 	// Distribute prizes and collect fees
 	fc := k.NewFeeCollector(ctx, pool)
 	if err := k.DistributePrizes(ctx, fc, dRes, draw); err != nil {
-		return k.OnExecuteDrawCompeleted(
+		return k.OnExecuteDrawCompleted(
 			ctx,
 			&pool,
 			&draw,
@@ -529,7 +529,7 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*typ
 
 	// Send collected fees
 	if err := fc.SendCollectedFees(ctx); err != nil {
-		return k.OnExecuteDrawCompeleted(
+		return k.OnExecuteDrawCompleted(
 			ctx,
 			&pool,
 			&draw,
@@ -552,12 +552,12 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*typ
 		),
 	})
 
-	return k.OnExecuteDrawCompeleted(ctx, &pool, &draw, nil)
+	return k.OnExecuteDrawCompleted(ctx, &pool, &draw, nil)
 }
 
-// OnExecuteDrawCompeleted wrappers for draw state update upon drawing phase completion
+// OnExecuteDrawCompleted wrappers for draw state update upon drawing phase completion
 // returns the error specified in parameters and does not produce any internal error
-func (k Keeper) OnExecuteDrawCompeleted(ctx sdk.Context, pool *types.Pool, draw *types.Draw, err error) (*types.Draw, error) {
+func (k Keeper) OnExecuteDrawCompleted(ctx sdk.Context, pool *types.Pool, draw *types.Draw, err error) (*types.Draw, error) {
 	if err != nil {
 		draw.State = types.DrawState_Failure
 		draw.ErrorState = types.DrawState_Drawing
