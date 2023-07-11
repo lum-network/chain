@@ -679,35 +679,26 @@ func (k Keeper) RunDrawPrizes(ctx sdk.Context, prizePool sdk.Coin, prizeStrat ty
 	// - winner is depositor B since they own the range from A) to B]
 	i := 0
 	result.PrizeDraws = make([]PrizeDraw, len(prizes))
-	prizeWinners := make(map[string]bool)
-
 	for _, d := range draws {
-		prize := prizes[d.PrizeIdx]
+		p := prizes[d.PrizeIdx]
 		nowinner := false
 		winner := false
-		if totalDeposits.GT(sdk.ZeroInt()) && d.DrawValue.LT(prize.DrawProbability) {
+		if totalDeposits.GT(sdk.ZeroInt()) && d.DrawValue.LT(p.DrawProbability) {
 			// Prize draw has a winner (inside the buffer owned by depositors)
 			// normalize draw position to make it a portion of the depositors owned buffer and ignore the potential extra unassigned buffer part
-			drawPosition := d.DrawValue.Quo(prize.DrawProbability).MulInt(totalDeposits).RoundInt()
+			drawPosition := d.DrawValue.Quo(p.DrawProbability).MulInt(totalDeposits).RoundInt()
 			for i < len(drawBuffer) {
-				// Winner is the one owning the current portion of the buffer
+				// keep iterating in the buffer
+				// winner is the one owning the current portion of the buffer
 				if drawPosition.LTE(drawBuffer[i]) {
 					dep := bufferToDeposit[drawBuffer[i]]
-					winnerAddress := dep.Address
-
-					// Has our user already won a prize? If no, proceed and affect the current prize
-					if _, ok := prizeWinners[winnerAddress]; !ok {
-						result.PrizeDraws[d.PrizeIdx] = PrizeDraw{
-							Amount: prize.Amount,
-							Winner: &dep,
-						}
-						result.TotalWinAmount = result.TotalWinAmount.Add(prize.Amount)
-						result.TotalWinCount++
+					result.PrizeDraws[d.PrizeIdx] = PrizeDraw{
+						Amount: prizes[d.PrizeIdx].Amount,
+						Winner: &dep,
 					}
-
-					// If yes, we don't care. At this point, the user is already a user
+					result.TotalWinAmount = result.TotalWinAmount.Add(prizes[d.PrizeIdx].Amount)
+					result.TotalWinCount++
 					winner = true
-					prizeWinners[winnerAddress] = true
 					break
 				} else {
 					i++
