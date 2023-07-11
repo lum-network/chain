@@ -16,6 +16,7 @@ type PrizeProb struct {
 // - poolPercent must be [0, 100]
 // - quantity must be >= 0
 // - drawProbability must be [0, 1]
+// - if unique, quantity must not be superior to 100
 func (pb PrizeBatch) Validate(params Params) error {
 	if pb.PoolPercent == 0 || pb.PoolPercent > 100 {
 		return fmt.Errorf("prize batch pool percentrage must be gt 0 and lte 100")
@@ -27,6 +28,11 @@ func (pb PrizeBatch) Validate(params Params) error {
 	}
 	if pb.DrawProbability.LT(sdk.NewDec(0)) || pb.DrawProbability.GT(sdk.NewDec(1)) {
 		return fmt.Errorf("prize batch draw probability must be gte 0 and lte 1")
+	}
+	if pb.GetIsUnique() {
+		if pb.Quantity > 100 {
+			return fmt.Errorf("prize batch quantity must be lte 100 when unique mode is enabled")
+		}
 	}
 	return nil
 }
