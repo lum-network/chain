@@ -23,9 +23,8 @@ func (suite *KeeperTestSuite) TestCallbacks_Undelegates() {
 
 	// Construct our callback data
 	callbackData := millionstypes.UndelegateCallback{
-		PoolId:           pool.GetPoolId(),
-		WithdrawalId:     1,
-		SplitDelegations: splits,
+		PoolId:        pool.GetPoolId(),
+		WithdrawalIds: []uint64{1, 2, 3},
 	}
 
 	// Serialize our callback
@@ -53,8 +52,7 @@ func (suite *KeeperTestSuite) TestCallbacks_Undelegates() {
 
 	// Make sure it matches
 	suite.Require().Equal(callbackData.PoolId, unmarshalledCallbackData.PoolId)
-	suite.Require().Equal(callbackData.WithdrawalId, unmarshalledCallbackData.WithdrawalId)
-	suite.Require().Equal(len(callbackData.SplitDelegations), len(unmarshalledCallbackData.SplitDelegations))
-	suite.Require().Equal(callbackData.SplitDelegations[0].ValidatorAddress, unmarshalledCallbackData.SplitDelegations[0].ValidatorAddress)
-	suite.Require().Equal(callbackData.SplitDelegations[0].Amount.Int64(), unmarshalledCallbackData.SplitDelegations[0].Amount.Int64())
+	suite.Require().Equal(callbackData.WithdrawalIds[0], unmarshalledCallbackData.WithdrawalIds[0])
+	suite.Require().Equal(callbackData.WithdrawalIds[1], unmarshalledCallbackData.WithdrawalIds[1])
+	suite.Require().Equal(callbackData.WithdrawalIds[2], unmarshalledCallbackData.WithdrawalIds[2])
 }

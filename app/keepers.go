@@ -67,6 +67,9 @@ import (
 	"github.com/lum-network/chain/x/millions"
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
+
+	epochskeeper "github.com/lum-network/chain/x/epochs/keeper"
+	epochstypes "github.com/lum-network/chain/x/epochs/types"
 )
 
 type AppKeepers struct {
@@ -106,6 +109,7 @@ type AppKeepers struct {
 	BeamKeeper         *beamkeeper.Keeper
 	DFractKeeper       *dfractkeeper.Keeper
 	MillionsKeeper     *millionskeeper.Keeper
+	EpochsKeeper       *epochskeeper.Keeper
 }
 
 // InitSpecialKeepers Init the "special" keepers in the order of definition
@@ -367,6 +371,9 @@ func (app *App) InitNormalKeepers() {
 		app.StakingKeeper,
 	)
 
+	// Initialize custom epochs
+	app.EpochsKeeper = epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
+
 	// First stack contains
 	// - Transfer IBC Module
 	// - Millions IBC middleware
@@ -453,6 +460,8 @@ func (app *App) SetupHooks() {
 	app.GovKeeper.SetHooks(govtypes.NewMultiGovHooks(
 		govtypes.NewMultiGovHooks(app.AirdropKeeper.Hooks()),
 	))
+
+	app.EpochsKeeper.SetHooks(epochstypes.NewMultiEpochHooks(app.MillionsKeeper.Hooks()))
 }
 
 // InitParamsKeeper init params keeper and its subspaces
@@ -481,6 +490,7 @@ func (app *App) InitParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.
 	paramsKeeper.Subspace(beamtypes.ModuleName)
 	paramsKeeper.Subspace(dfracttypes.ModuleName)
 	paramsKeeper.Subspace(millionstypes.ModuleName)
+	paramsKeeper.Subspace(epochstypes.ModuleName)
 
 	return paramsKeeper
 }

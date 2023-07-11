@@ -12,6 +12,7 @@ import "lum/network/millions/params.proto";
 import "lum/network/millions/pool.proto";
 import "lum/network/millions/prize.proto";
 import "lum/network/millions/withdrawal.proto";
+import "lum/network/millions/epoch.proto";
 
 option go_package = "github.com/lum-network/chain/x/millions/types";
 
@@ -128,6 +129,18 @@ service Query {
       returns (QueryWithdrawalsResponse) {
     option (google.api.http).get = "/lum-network/millions/account/"
                                    "{depositor_address}/withdrawals/{pool_id}";
+  }
+
+  rpc EpochUnbondings(QueryEpochUnbondingsRequest)
+      returns (QueryEpochUnbondingsResponse) {
+    option (google.api.http).get =
+        "/lum-network/millions/epoch_unbondings/{epoch_number}";
+  }
+
+  rpc EpochPoolUnbonding(QueryEpochPoolUnbondingRequest)
+      returns (QueryEpochPoolUnbondingResponse) {
+    option (google.api.http).get =
+        "/lum-network/millions/epoch_unbondings/{epoch_number}/{pool_id}";
   }
 }
 
@@ -295,4 +308,23 @@ message QueryAccountPoolWithdrawalsRequest {
   string depositor_address = 1;
   uint64 pool_id = 2;
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryEpochUnbondingsRequest {
+  uint64 epoch_number = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryEpochUnbondingsResponse {
+  repeated EpochUnbonding epoch_unbondings = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryEpochPoolUnbondingRequest {
+  uint64 epoch_number = 1;
+  uint64 pool_id = 2;
+}
+
+message QueryEpochPoolUnbondingResponse {
+  EpochUnbonding epoch_unbonding = 1 [ (gogoproto.nullable) = false ];
 }

@@ -6,9 +6,10 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 
 	apptesting "github.com/lum-network/chain/app/testing"
+	epochstypes "github.com/lum-network/chain/x/epochs/types"
+
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
@@ -870,7 +871,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 	withdrawals := app.MillionsKeeper.ListWithdrawals(ctx)
 	suite.Require().Len(withdrawals, 1)
 	// State should be unbonding
-	suite.Require().Equal(millionstypes.WithdrawalState_IcaUnbonding, withdrawals[0].State)
+	suite.Require().Equal(millionstypes.WithdrawalState_Pending, withdrawals[0].State)
 	suite.Require().Equal(millionstypes.WithdrawalState_Unspecified, withdrawals[0].ErrorState)
 
 	// Two deposits only should remain
@@ -890,7 +891,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 	withdrawals = app.MillionsKeeper.ListWithdrawals(ctx)
 	suite.Require().Len(withdrawals, 2)
 	// State should be unbonding
-	suite.Require().Equal(millionstypes.WithdrawalState_IcaUnbonding, withdrawals[1].State)
+	suite.Require().Equal(millionstypes.WithdrawalState_Pending, withdrawals[1].State)
 	suite.Require().Equal(millionstypes.WithdrawalState_Unspecified, withdrawals[1].ErrorState)
 
 	// One deposit only should remain
@@ -961,9 +962,10 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 		DepositorAddress: suite.addrs[0].String(),
 		ToAddress:        cosmosAccAddress,
 	})
-	// Error is triggered as failed to retrieve open active channel port (intended error)
-	// but we passed all the toAddr validations which is the intention of this test
-	suite.Require().ErrorIs(err, icatypes.ErrActiveChannelNotFound)
+	suite.Require().NoError(err)
+
+	withdrawals = app.MillionsKeeper.ListWithdrawals(ctx)
+	suite.Require().Equal(millionstypes.WithdrawalState_Pending, withdrawals[len(withdrawals)-1].State)
 }
 
 // TestMsgServer_WithdrawDepositRetry runs withdrawal retry related tests
@@ -975,6 +977,10 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 	drawDelta1 := 1 * time.Hour
 	var now = time.Now().UTC()
+	epochInfo, err := TriggerEpochUpdate(suite)
+	suite.Require().NoError(err)
+	epochTracker, err := TriggerEpochTrackerUpdate(suite, epochInfo)
+	suite.Require().NoError(err)
 
 	pool := newValidPool(suite, millionstypes.Pool{
 		PoolId:      uint64(1),
@@ -1005,7 +1011,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 		State:            millionstypes.DepositState_IbcTransfer,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
 	})
-	err := app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
+	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
 	deposits := app.MillionsKeeper.ListDeposits(ctx)
 	// Simulate transfer deposit and delegate to native chain
@@ -1020,8 +1026,8 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 	app.MillionsKeeper.AddWithdrawal(ctx, millionstypes.Withdrawal{
 		PoolId:           deposits[0].PoolId,
 		DepositId:        deposits[0].DepositId,
-		State:            millionstypes.WithdrawalState_Failure,
-		ErrorState:       millionstypes.WithdrawalState_IcaUndelegate,
+		State:            millionstypes.WithdrawalState_Pending,
+		ErrorState:       millionstypes.WithdrawalState_Unspecified,
 		DepositorAddress: suite.addrs[0].String(),
 		ToAddress:        suite.addrs[0].String(),
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(int64(1_000_000))),
@@ -1035,6 +1041,9 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 
 	withdrawals := app.MillionsKeeper.ListWithdrawals(ctx)
 	suite.Require().Len(withdrawals, 1)
+
+	err = app.MillionsKeeper.AddEpochUnbonding(ctx, withdrawals[0], false)
+	suite.Require().NoError(err)
 
 	// Test ValidateWithdrawDepositRetryBasic
 	// Test withdrawal retry with invalid poolID
@@ -1075,15 +1084,21 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 	})
 	suite.Require().ErrorIs(err, millionstypes.ErrInvalidDepositorAddress)
 
-	// Test WithdrawalState_IcaUndelegate ErrorState
-	withdrawals = app.MillionsKeeper.ListWithdrawals(ctx)
-	suite.Require().Len(withdrawals, 1)
+	// Get the millions internal module tracker
+	epochTracker, err = app.MillionsKeeper.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, millionstypes.WithdrawalTrackerType)
+	suite.Require().NoError(err)
 
-	_, err = msgServer.WithdrawDepositRetry(goCtx, &millionstypes.MsgWithdrawDepositRetry{
-		PoolId:           withdrawals[0].PoolId,
-		WithdrawalId:     withdrawals[0].WithdrawalId,
-		DepositorAddress: suite.addrs[0].String(),
-	})
+	// Get epoch unbonding
+	currentEpochUnbonding, err := app.MillionsKeeper.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber, withdrawals[0].PoolId)
+	suite.Require().NoError(err)
+
+	err = app.MillionsKeeper.UndelegateWithdrawalsOnRemoteZone(ctx, currentEpochUnbonding)
+	suite.Require().NoError(err)
+
+	// move 21 days unbonding onwards and force unbonding
+	ctx = ctx.WithBlockTime(now.Add(21 * 24 * time.Hour))
+	goCtx = ctx
+	_, err = app.StakingKeeper.CompleteUnbonding(ctx, sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), suite.valAddrs[0])
 	suite.Require().NoError(err)
 
 	withdrawals = app.MillionsKeeper.ListWithdrawals(ctx)
@@ -1093,13 +1108,8 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 	suite.Require().Equal(millionstypes.WithdrawalState_IcaUnbonding, withdrawals[0].State)
 	suite.Require().Equal(millionstypes.WithdrawalState_Unspecified, withdrawals[0].ErrorState)
 
+	// Update to test the ibc transfer
 	app.MillionsKeeper.UpdateWithdrawalStatus(ctx, withdrawals[0].PoolId, withdrawals[0].WithdrawalId, millionstypes.WithdrawalState_IbcTransfer, withdrawals[0].UnbondingEndsAt, true)
-
-	// move 21 days unbonding onwards and force unbonding
-	ctx = ctx.WithBlockTime(now.Add(21 * 24 * time.Hour))
-	goCtx = ctx
-	_, err = app.StakingKeeper.CompleteUnbonding(ctx, sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), suite.valAddrs[0])
-	suite.Require().NoError(err)
 
 	// Test WithdrawalState_IbcTransfer ErrorState
 	withdrawals = app.MillionsKeeper.ListWithdrawals(ctx)

@@ -17,31 +17,36 @@ import (
 	"github.com/lum-network/chain/x/millions/types"
 )
 
-// UndelegateWithdrawalOnNativeChain Undelegates a withdrawal from the native chain validators
-// - go to OnUndelegateWithdrawalOnNativeChainCompleted directly upon undelegate success if local zone
-// - or wait for the ICA callback to move to OnUndelegateWithdrawalOnNativeChainCompleted
-func (k Keeper) UndelegateWithdrawalOnNativeChain(ctx sdk.Context, poolID uint64, withdrawalID uint64) error {
+// UndelegateWithdrawalsOnRemoteZone Undelegates an epoch unbonding containing withdrawalIDs from the native chain validators
+// - go to OnUndelegateWithdrawalsOnRemoteZoneCompleted directly upon undelegate success if local zone
+// - or wait for the ICA callback to move to OnUndelegateWithdrawalsOnRemoteZoneCompleted
+func (k Keeper) UndelegateWithdrawalsOnRemoteZone(ctx sdk.Context, epochUnbonding types.EpochUnbonding) error {
 	logger := k.Logger(ctx).With("ctx", "withdrawal_undelegate")
 
-	pool, err := k.GetPool(ctx, poolID)
+	pool, err := k.GetPool(ctx, epochUnbonding.PoolId)
 	if err != nil {
 		return err
 	}
 
-	withdrawal, err := k.GetPoolWithdrawal(ctx, poolID, withdrawalID)
-	if err != nil {
-		return err
-	}
-	if withdrawal.State != types.WithdrawalState_IcaUndelegate {
-		return errorsmod.Wrapf(types.ErrIllegalStateOperation, "state should be %s but is %s", types.WithdrawalState_IcaUndelegate.String(), withdrawal.State.String())
+	// Update withdrawal status to Ica_undelegate
+	for _, wid := range epochUnbonding.WithdrawalIds {
+		withdrawal, err := k.GetPoolWithdrawal(ctx, pool.PoolId, wid)
+		if err != nil {
+			return err
+		}
+		if withdrawal.State != types.WithdrawalState_Pending {
+			return errorsmod.Wrapf(types.ErrIllegalStateOperation, "state should be %s but is %s", types.WithdrawalState_Pending.String(), withdrawal.State.String())
+		}
+		k.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, types.WithdrawalState_IcaUndelegate, nil, false)
 	}
 
 	if pool.IsLocalZone(ctx) {
 		modAddr := sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress())
-		splits := pool.ComputeSplitUndelegations(ctx, withdrawal.GetAmount().Amount)
+		splits := pool.ComputeSplitUndelegations(ctx, epochUnbonding.GetTotalAmount().Amount)
 		if len(splits) == 0 {
 			return types.ErrPoolEmptySplitDelegations
 		}
+
 		var unbondingEndsAt *time.Time
 		for _, split := range splits {
 			valAddr, err := sdk.ValAddressFromBech32(split.ValidatorAddress)
@@ -70,20 +75,19 @@ func (k Keeper) UndelegateWithdrawalOnNativeChain(ctx sdk.Context, poolID uint64
 		// Apply undelegate pool validators update
 		pool.ApplySplitUndelegate(ctx, splits)
 		k.updatePool(ctx, &pool)
-		return k.OnUndelegateWithdrawalOnNativeChainCompleted(ctx, poolID, withdrawalID, splits, unbondingEndsAt, false)
+		return k.OnUndelegateWithdrawalsOnRemoteZoneCompleted(ctx, epochUnbonding.PoolId, epochUnbonding.WithdrawalIds, unbondingEndsAt, false)
 	}
 
 	// Prepare undelegate split
-	splits := pool.ComputeSplitUndelegations(ctx, withdrawal.GetAmount().Amount)
+	splits := pool.ComputeSplitUndelegations(ctx, epochUnbonding.GetTotalAmount().Amount)
 	if len(splits) == 0 {
 		return types.ErrPoolEmptySplitDelegations
 	}
 
 	// Construct our callback data
 	callbackData := types.UndelegateCallback{
-		PoolId:           poolID,
-		WithdrawalId:     withdrawalID,
-		SplitDelegations: splits,
+		PoolId:        epochUnbonding.PoolId,
+		WithdrawalIds: epochUnbonding.WithdrawalIds,
 	}
 	marshalledCallbackData, err := k.MarshalUndelegateCallbackArgs(ctx, callbackData)
 	if err != nil {
@@ -105,13 +109,13 @@ func (k Keeper) UndelegateWithdrawalOnNativeChain(ctx sdk.Context, poolID uint64
 	k.updatePool(ctx, &pool)
 
 	// Dispatch our message with a timeout of 30 minutes in nanos
-	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Undelegate, marshalledCallbackData)
+	sequence, err := k.BroadcastICAMessages(ctx, epochUnbonding.PoolId, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Undelegate, marshalledCallbackData)
 	if err != nil {
 		// Return with error here since it is the first operation and nothing needs to be saved to state
 		logger.Error(
 			fmt.Sprintf("failed to dispatch ICA undelegate: %v", err),
-			"pool_id", poolID,
-			"withdrawal_id", withdrawalID,
+			"pool_id", epochUnbonding.PoolId,
+			"epoch_number", epochUnbonding.EpochNumber,
 			"chain_id", pool.GetChainId(),
 			"sequence", sequence,
 		)
@@ -119,43 +123,51 @@ func (k Keeper) UndelegateWithdrawalOnNativeChain(ctx sdk.Context, poolID uint64
 	}
 	logger.Debug(
 		"ICA undelegate dispatched",
-		"pool_id", poolID,
-		"withdrawal_id", withdrawalID,
+		"pool_id", epochUnbonding.PoolId,
+		"epoch_number", epochUnbonding.EpochNumber,
 		"chain_id", pool.GetChainId(),
 		"sequence", sequence,
 	)
 	return nil
 }
 
-// OnUndelegateWithdrawalOnNativeChainCompleted Acknowledge the ICA undelegate from the native chain validators response
-// once unbonding ends one can call TransferWithdrawalToLocalChain to transfer the withdrawn amount to the requested account
-func (k Keeper) OnUndelegateWithdrawalOnNativeChainCompleted(ctx sdk.Context, poolID uint64, withdrawalID uint64, splits []*types.SplitDelegation, unbondingEndsAt *time.Time, isError bool) error {
+// OnUndelegateWithdrawalsOnRemoteZoneCompleted aknowledged the undelegate callback
+// If error occurs send the withdrawal to a new epoch unbonding
+func (k Keeper) OnUndelegateWithdrawalsOnRemoteZoneCompleted(ctx sdk.Context, poolID uint64, withdrawalIDs []uint64, unbondingEndsAt *time.Time, isError bool) error {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err
 	}
-	withdrawal, err := k.GetPoolWithdrawal(ctx, poolID, withdrawalID)
-	if err != nil {
-		return err
+
+	// Update withdrawals
+	for _, wid := range withdrawalIDs {
+		withdrawal, err := k.GetPoolWithdrawal(ctx, pool.PoolId, wid)
+		if err != nil {
+			return err
+		}
+
+		// Check withdrawal state
+		if withdrawal.State != types.WithdrawalState_IcaUndelegate {
+			return errorsmod.Wrapf(types.ErrIllegalStateOperation, "state should be %s but is %s", types.WithdrawalState_IcaUndelegate.String(), withdrawal.State.String())
+		}
+
+		if isError {
+			// Revert undelegate pool validators update
+			splits := pool.ComputeSplitDelegations(ctx, withdrawal.GetAmount().Amount)
+			pool.ApplySplitDelegate(ctx, splits)
+			k.updatePool(ctx, &pool)
+			k.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, types.WithdrawalState_IcaUndelegate, nil, true)
+			// Add failed withdrawals to a fresh epoch unbonding for a retry
+			k.AddEpochUnbonding(ctx, withdrawal, true)
+			continue
+		}
+
+		// Set the unbondingEndsAt and add withdrawal to matured queue
+		withdrawal.UnbondingEndsAt = unbondingEndsAt
+		k.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, types.WithdrawalState_IcaUnbonding, unbondingEndsAt, false)
+		k.addWithdrawalToMaturedQueue(ctx, withdrawal)
 	}
 
-	// Check withdrawal state
-	if withdrawal.State != types.WithdrawalState_IcaUndelegate {
-		return errorsmod.Wrapf(types.ErrIllegalStateOperation, "state should be %s but is %s", types.WithdrawalState_IcaUndelegate.String(), withdrawal.State.String())
-	}
-
-	if isError {
-		// Revert undelegate pool validators update
-		pool.ApplySplitDelegate(ctx, splits)
-		k.updatePool(ctx, &pool)
-		k.UpdateWithdrawalStatus(ctx, poolID, withdrawalID, types.WithdrawalState_IcaUndelegate, nil, true)
-		return nil
-	}
-
-	// Set the unbondingEndsAt and add withdrawal to matured queue
-	withdrawal.UnbondingEndsAt = unbondingEndsAt
-	k.UpdateWithdrawalStatus(ctx, poolID, withdrawalID, types.WithdrawalState_IcaUnbonding, unbondingEndsAt, false)
-	k.addWithdrawalToMaturedQueue(ctx, withdrawal)
 	return nil
 }
 
@@ -423,6 +435,7 @@ func (k Keeper) AddWithdrawal(ctx sdk.Context, withdrawal types.Withdrawal) {
 	k.setPoolWithdrawal(ctx, withdrawal)
 	// Update account withdraw deposit
 	k.setAccountWithdrawal(ctx, withdrawal)
+
 	// Add withdrawal to unbonding queue if needed
 	if withdrawal.State == types.WithdrawalState_IcaUnbonding {
 		k.addWithdrawalToMaturedQueue(ctx, withdrawal)

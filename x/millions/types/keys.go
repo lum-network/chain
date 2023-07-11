@@ -51,6 +51,9 @@ var (
 	NextWithdrawalPrefix           = []byte{0x12}
 	PrizeExpirationTimePrefix      = []byte{0x13}
 	WithdrawalMaturationTimePrefix = []byte{0x14}
+	EpochUnbondingPrefix           = []byte{0x15}
+	EpochTrackerPrefix             = []byte{0x16}
+	EpochUnbondingTimePrefix       = []byte{0x17}
 	ParamsPrefix                   = []byte{0x20}
 	// KeyIndexSeparator separator between combined keys
 	KeyIndexSeparator = []byte{0xFF}
@@ -67,6 +70,10 @@ func CombineStringKeys(keys ...string) string {
 
 func DecombineStringKeys(combined string) []string {
 	return strings.Split(combined, string(KeyIndexSeparator))
+}
+
+func StringKeyToBytes(key string) []byte {
+	return []byte(key)
 }
 
 // Pool
@@ -186,4 +193,18 @@ func GetAccountWithdrawalsKey(addr sdk.Address) []byte {
 
 func GetMaturedWithdrawalTimeKey(timestamp time.Time) []byte {
 	return CombineKeys(WithdrawalMaturationTimePrefix, sdk.FormatTimeBytes(timestamp))
+}
+
+// Epochs
+
+func GetEpochPoolUnbondingKey(epochID uint64, poolID uint64) []byte {
+	return CombineKeys(EpochUnbondingPrefix, strconv.AppendUint([]byte{}, epochID, 10), strconv.AppendUint([]byte{}, poolID, 10))
+}
+
+func GetEpochUnbondingsKey(epochID uint64) []byte {
+	return CombineKeys(EpochUnbondingPrefix, strconv.AppendUint([]byte{}, epochID, 10))
+}
+
+func GetEpochTrackerKey(epochIdentifier string, trackertype string) []byte {
+	return CombineKeys(EpochTrackerPrefix, StringKeyToBytes(epochIdentifier), StringKeyToBytes(trackertype))
 }

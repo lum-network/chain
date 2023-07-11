@@ -29,10 +29,15 @@ message DelegateCallback {
   repeated SplitDelegation split_delegations = 3;
 }
 
-message UndelegateCallback {
+message LegacyUndelegateCallback {
   uint64 pool_id = 1;
   uint64 withdrawal_id = 2;
   repeated SplitDelegation split_delegations = 3;
+}
+
+message UndelegateCallback {
+  uint64 pool_id = 3;
+  repeated uint64 withdrawal_ids = 4;
 }
 
 message RedelegateCallback {

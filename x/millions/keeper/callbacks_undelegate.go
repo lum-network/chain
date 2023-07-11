@@ -34,7 +34,7 @@ func (k Keeper) UnmarshalUndelegateCallbackArgs(ctx sdk.Context, undelegateCallb
 }
 
 // Get the latest completion time across each MsgUndelegate in the ICA transaction
-func (k Keeper) GetLatestUnbondingCompletionTime(ctx sdk.Context, msgResponses [][]byte) (*time.Time, error) {
+func (k Keeper) GetUnbondingCompletionTime(ctx sdk.Context, msgResponses [][]byte) (*time.Time, error) {
 	// Update the completion time using the latest completion time across each message within the transaction
 	latestCompletionTime := time.Time{}
 
@@ -58,13 +58,13 @@ func (k Keeper) GetLatestUnbondingCompletionTime(ctx sdk.Context, msgResponses [
 
 func UndelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
 	// Deserialize the callback args
-	undelegateCallback, err := k.UnmarshalUndelegateCallbackArgs(ctx, args)
+	UndelegateCallback, err := k.UnmarshalUndelegateCallbackArgs(ctx, args)
 	if err != nil {
 		return errorsmod.Wrapf(types.ErrUnmarshalFailure, fmt.Sprintf("Unable to unmarshal undelegate callback args: %s", err.Error()))
 	}
 
 	// Acquire the pool instance from the callback
-	_, err = k.GetPool(ctx, undelegateCallback.GetPoolId())
+	_, err = k.GetPool(ctx, UndelegateCallback.GetPoolId())
 	if err != nil {
 		return err
 	}
@@ -75,26 +75,24 @@ func UndelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, a
 		k.Logger(ctx).Debug("Received timeout for an undelegate packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
 		k.Logger(ctx).Debug("Received failure for an undelegate packet")
-		// Failed OnUndelegateWithdrawalOnNativeChainCompleted
-		return k.OnUndelegateWithdrawalOnNativeChainCompleted(
+		// Failed OnUndelegateEpochUnbondingOnRemoteZoneCompleted
+		return k.OnUndelegateWithdrawalsOnRemoteZoneCompleted(
 			ctx,
-			undelegateCallback.GetPoolId(),
-			undelegateCallback.GetWithdrawalId(),
-			undelegateCallback.GetSplitDelegations(),
+			UndelegateCallback.PoolId,
+			UndelegateCallback.WithdrawalIds,
 			nil,
 			true,
 		)
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
 		k.Logger(ctx).Debug("Received success for an undelegate packet")
-		unbondingEndsAt, err := k.GetLatestUnbondingCompletionTime(ctx, ackResponse.MsgResponses)
+		unbondingEndsAt, err := k.GetUnbondingCompletionTime(ctx, ackResponse.MsgResponses)
 		if err != nil {
 			return err
 		}
-		return k.OnUndelegateWithdrawalOnNativeChainCompleted(
+		return k.OnUndelegateWithdrawalsOnRemoteZoneCompleted(
 			ctx,
-			undelegateCallback.GetPoolId(),
-			undelegateCallback.GetWithdrawalId(),
-			undelegateCallback.GetSplitDelegations(),
+			UndelegateCallback.PoolId,
+			UndelegateCallback.WithdrawalIds,
 			unbondingEndsAt,
 			false,
 		)

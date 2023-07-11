@@ -593,3 +593,80 @@ func (suite *KeeperTestSuite) TestGRPC_Query_Withdrawal() {
 	suite.Require().Len(accountPoolWithdrawalsPaginated.GetWithdrawals(), 1)
 	suite.Require().Equal(accountPoolWithdrawals.GetWithdrawals()[0].WithdrawalId, accountPoolWithdrawalsPaginated.GetWithdrawals()[0].WithdrawalId)
 }
+
+func (suite *KeeperTestSuite) TestGRPC_Query_EpochUnbondings() {
+	app := suite.app
+	ctx := suite.ctx
+	queryServer := millionskeeper.NewQueryServerImpl(*app.MillionsKeeper)
+
+	nbrItems := 4
+	for i := 0; i < nbrItems; i++ {
+		pool := newValidPool(suite, millionstypes.Pool{
+			PrizeStrategy: millionstypes.PrizeStrategy{
+				PrizeBatches: []millionstypes.PrizeBatch{
+					{PoolPercent: 50, Quantity: 1, DrawProbability: floatToDec(1.00)},
+					{PoolPercent: 50, Quantity: 4, DrawProbability: floatToDec(1.00)},
+				},
+			},
+		})
+
+		// Force the available pool prize
+		pool.AvailablePrizePool = sdk.NewCoin(pool.Denom, sdk.NewInt(1_000_000))
+		err := app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pool.IcaPrizepoolAddress), sdk.NewCoins(pool.AvailablePrizePool))
+		suite.Require().NoError(err)
+
+		app.MillionsKeeper.AddPool(ctx, pool)
+
+		// Create deposits
+		for i := 0; i < nbrItems; i++ {
+			app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
+				DepositorAddress: suite.addrs[i].String(),
+				WinnerAddress:    suite.addrs[i].String(),
+				PoolId:           pool.PoolId,
+				Amount:           sdk.NewCoin(pool.Denom, sdk.NewInt(1_000_000)),
+				State:            millionstypes.DepositState_Success,
+			})
+		}
+	}
+
+	// For this test case, we get the deposits and take the first 6 to generate withdrawals
+	deposits := app.MillionsKeeper.ListDeposits(ctx)
+	deposits = deposits[:4]
+	for i, deposit := range deposits {
+		app.MillionsKeeper.AddWithdrawal(ctx, millionstypes.Withdrawal{
+			PoolId:           deposit.PoolId,
+			DepositId:        deposit.DepositId,
+			DepositorAddress: suite.addrs[i].String(),
+			Amount:           sdk.NewCoin(deposit.Amount.Denom, deposit.Amount.Amount),
+			State:            millionstypes.WithdrawalState_Pending,
+		})
+	}
+
+	withdrawals := app.MillionsKeeper.ListWithdrawals(ctx)
+	for _, withdrawal := range withdrawals {
+		err := app.MillionsKeeper.AddEpochUnbonding(ctx, withdrawal, false)
+		suite.Require().NoError(err)
+	}
+
+	// Test EpochUnbondings
+	epochUnbondingsRes, err := queryServer.EpochUnbondings(ctx, &millionstypes.QueryEpochUnbondingsRequest{
+		EpochNumber: 0,
+		Pagination:  &query.PageRequest{Limit: 1},
+	})
+	suite.Require().NoError(err)
+	suite.Require().Len(epochUnbondingsRes.EpochUnbondings, 1)
+
+	epochUnbondingsRes, err = queryServer.EpochUnbondings(ctx, &millionstypes.QueryEpochUnbondingsRequest{
+		EpochNumber: 0,
+	})
+	suite.Require().NoError(err)
+	suite.Require().Len(epochUnbondingsRes.EpochUnbondings, 1)
+	suite.Require().Equal(uint64(4), epochUnbondingsRes.EpochUnbondings[0].WithdrawalIdsCount)
+
+	epochPoolUnbondingsRes, err := queryServer.EpochPoolUnbonding(ctx, &millionstypes.QueryEpochPoolUnbondingRequest{
+		EpochNumber: 0,
+		PoolId:      1,
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal(uint64(4), epochPoolUnbondingsRes.EpochUnbonding.WithdrawalIdsCount)
+}

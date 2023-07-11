@@ -106,6 +106,7 @@ import (
 	"github.com/lum-network/chain/x/dfract"
 	dfractclient "github.com/lum-network/chain/x/dfract/client"
 	dfracttypes "github.com/lum-network/chain/x/dfract/types"
+	"github.com/lum-network/chain/x/epochs"
 	"github.com/lum-network/chain/x/icacallbacks"
 	icacallbackstypes "github.com/lum-network/chain/x/icacallbacks/types"
 	"github.com/lum-network/chain/x/icqueries"
@@ -113,6 +114,8 @@ import (
 	"github.com/lum-network/chain/x/millions"
 	millionsclient "github.com/lum-network/chain/x/millions/client"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
+
+	epochstypes "github.com/lum-network/chain/x/epochs/types"
 )
 
 var (
@@ -162,6 +165,7 @@ var (
 		airdrop.AppModuleBasic{},
 		dfract.AppModuleBasic{},
 		millions.AppModuleBasic{},
+		epochs.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -267,6 +271,7 @@ func New(
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey, crisistypes.StoreKey, consensusparamtypes.StoreKey,
 		icacallbackstypes.StoreKey, icqueriestypes.StoreKey,
 		beamtypes.StoreKey, airdroptypes.StoreKey, dfracttypes.StoreKey, millionstypes.StoreKey,
+		epochstypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -326,6 +331,7 @@ func New(
 		millions.NewAppModule(appCodec, *app.MillionsKeeper),
 		icacallbacks.NewAppModule(appCodec, *app.ICACallbacksKeeper, app.AccountKeeper, app.BankKeeper),
 		icqueries.NewAppModule(appCodec, *app.ICQueriesKeeper),
+		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -358,6 +364,7 @@ func New(
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
 		millionstypes.ModuleName,
+		epochstypes.ModuleName,
 		consensusparamtypes.ModuleName,
 	)
 
@@ -387,6 +394,7 @@ func New(
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
 		millionstypes.ModuleName,
+		epochstypes.ModuleName,
 		consensusparamtypes.ModuleName,
 	)
 
@@ -421,6 +429,7 @@ func New(
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
 		millionstypes.ModuleName,
+		epochstypes.ModuleName,
 		consensusparamtypes.ModuleName,
 	)
 
