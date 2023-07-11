@@ -10,6 +10,7 @@ import (
 type PrizeProb struct {
 	Amount          math.Int
 	DrawProbability sdk.Dec
+	IsUnique        bool
 }
 
 // Validate prizeBatch validation
@@ -65,6 +66,7 @@ func (pb PrizeBatch) ComputePrizesProbs(prizePool sdk.Coin) (prizesProbs []Prize
 		prizesProbs = append(prizesProbs, PrizeProb{
 			Amount:          prizeAmount,
 			DrawProbability: pb.DrawProbability,
+			IsUnique:        pb.IsUnique,
 		})
 		remainingAmount = remainingAmount.Sub(prizeAmount)
 		usedAmount = usedAmount.Add(prizeAmount)
