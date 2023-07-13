@@ -816,6 +816,24 @@ func (app *App) registerUpgradeHandlers() {
 			return nil, errorsmod.Wrapf(err, "unable to prune expired consensus states")
 		}
 
+		// Change the Millions Pool prize strategy
+		// We check if we are able to find the pool with ID 2, but we don't error out in the other case, to allow running on testnet as well
+		pool, err := app.MillionsKeeper.GetPool(ctx, 2)
+		if err == nil {
+			prizeStrategy := millionstypes.PrizeStrategy{
+				PrizeBatches: []millionstypes.PrizeBatch{
+					{PoolPercent: 50, Quantity: 1, IsUnique: true, DrawProbability: sdk.NewDec(20)},
+					{PoolPercent: 25, Quantity: 5, IsUnique: false, DrawProbability: sdk.NewDec(20)},
+					{PoolPercent: 17, Quantity: 25, IsUnique: false, DrawProbability: sdk.NewDec(20)},
+					{PoolPercent: 8, Quantity: 60, IsUnique: false, DrawProbability: sdk.NewDec(90)},
+				},
+			}
+			err = app.MillionsKeeper.UpdatePool(ctx, pool.GetPoolId(), []string{}, nil, nil, &prizeStrategy, millionstypes.PoolState_Ready)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		// Final steps
 		app.Logger().Info("v1.5.0 upgrade applied")
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
