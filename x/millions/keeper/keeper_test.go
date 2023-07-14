@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	apptesting "github.com/lum-network/chain/app/testing"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
@@ -21,9 +21,11 @@ var (
 	cosmosPoolValidator       = "cosmosvaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4epsluffn"
 	cosmosIcaDepositAddress   = "cosmos1clpqr4nrk4khgkxj78fcwwh6dl3uw4ep4tgu9q"
 	cosmosIcaPrizePoolAddress = "cosmos196ax4vc0lwpxndu9dyhvca7jhxp70rmcfhxsrt"
+	cosmosAccAddress          = "cosmos1qggwr7vze9x7ustru9dctf6krhk2285lkf89g7"
 	localPoolDenom            = "ulum"
 	remotePoolDenom           = "uatom"
 	remoteBech32PrefixValAddr = "cosmosvaloper"
+	remoteBech32PrefixAccAddr = "cosmos"
 	remoteChainId             = "cosmos"
 	remoteConnectionId        = "connection-id"
 	remoteTransferChannelId   = "transfer"
@@ -52,7 +54,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.ctx = ctx.WithChainID(testChainID).WithBlockTime(time.Now().UTC())
 
 	// Setup test account addresses
-	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 6, sdk.NewInt(1_000_0000_000), app.StakingKeeper.BondDenom(ctx))
+	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 6, sdk.NewInt(10_000_000_000), app.StakingKeeper.BondDenom(ctx))
 	for i := 0; i < 6; i++ {
 		poolAddress := millionstypes.NewPoolAddress(uint64(i+1), "unused-in-test")
 		apptesting.AddTestModuleAccount(app, ctx, poolAddress)

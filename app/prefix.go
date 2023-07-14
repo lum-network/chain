@@ -7,6 +7,7 @@ import (
 const (
 	AccountAddressPrefix = "lum"
 	CoinBondDenom        = "ulum"
+	CoinPurpose          = 44
 	CoinType             = 880
 )
 
@@ -27,8 +28,7 @@ func SetConfig() {
 	config.SetBech32PrefixForAccount(AccountAddressPrefix, AccountPubKeyPrefix)
 	config.SetBech32PrefixForValidator(ValidatorAddressPrefix, ValidatorPubKeyPrefix)
 	config.SetBech32PrefixForConsensusNode(ConsNodeAddressPrefix, ConsNodePubKeyPrefix)
+	config.SetPurpose(CoinPurpose)
 	config.SetCoinType(CoinType)
-	//nolint:staticcheck
-	config.SetFullFundraiserPath("m/44'/880'/0'/0/0")
 	config.Seal()
 }

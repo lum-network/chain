@@ -1,0 +1,18 @@
+syntax = "proto3";
+package lum.network.dfract;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/lum-network/chain/x/dfract/types";
+
+message Params {
+  repeated string deposit_denoms = 1;
+  string min_deposit_amount = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  string withdrawal_address = 3
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  bool is_deposit_enabled = 4;
+}

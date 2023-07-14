@@ -4,25 +4,23 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
+
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distribtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 
-	gogotypes "github.com/gogo/protobuf/types"
-
-	errorsmod "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	icacallbackstypes "github.com/lum-network/chain/x/icacallbacks/types"
-
+	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
 	"github.com/lum-network/chain/x/millions/types"
 )
 
@@ -59,12 +57,11 @@ func (k Keeper) SetupPoolICA(ctx sdk.Context, poolID uint64) (*types.Pool, error
 	// Register the accounts deposit account first
 	// Wait for this account to be setup to register the prize pool account
 	// This is done to avoid race conditions for the last setup step (SetWithdrawAddress)
-	icaDepositPortName := string(types.NewPoolName(pool.GetPoolId(), types.ICATypeDeposit))
-	pool.IcaDepositPortId, err = icatypes.NewControllerPortID(icaDepositPortName)
+	pool.IcaDepositPortId = string(types.NewPoolName(pool.GetPoolId(), types.ICATypeDeposit))
 	if err != nil {
 		return &pool, errorsmod.Wrapf(types.ErrFailedToRegisterPool, fmt.Sprintf("Unable to create deposit account port id, err: %s", err.Error()))
 	}
-	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, pool.GetConnectionId(), icaDepositPortName, appVersion); err != nil {
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, pool.GetConnectionId(), pool.GetIcaDepositPortId(), appVersion); err != nil {
 		return &pool, errorsmod.Wrapf(types.ErrFailedToRegisterPool, fmt.Sprintf("Unable to trigger deposit account registration, err: %s", err.Error()))
 	}
 
@@ -106,12 +103,11 @@ func (k Keeper) OnSetupPoolICACompleted(ctx sdk.Context, poolID uint64, icaType 
 			if err != nil {
 				return &pool, errorsmod.Wrapf(types.ErrFailedToRegisterPool, err.Error())
 			}
-			icaPrizePoolPortName := string(types.NewPoolName(pool.GetPoolId(), types.ICATypePrizePool))
-			pool.IcaPrizepoolPortId, err = icatypes.NewControllerPortID(icaPrizePoolPortName)
+			pool.IcaPrizepoolPortId = string(types.NewPoolName(pool.GetPoolId(), types.ICATypePrizePool))
 			if err != nil {
 				return &pool, errorsmod.Wrapf(types.ErrFailedToRegisterPool, fmt.Sprintf("Unable to create prizepool account port id, err: %s", err.Error()))
 			}
-			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, pool.GetConnectionId(), icaPrizePoolPortName, appVersion); err != nil {
+			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, pool.GetConnectionId(), pool.GetIcaPrizepoolPortId(), appVersion); err != nil {
 				logger.Error("Unable to trigger prizepool account registration, err: %s", err.Error())
 			}
 		}
@@ -174,8 +170,7 @@ func (k Keeper) SetupPoolWithdrawalAddress(ctx sdk.Context, poolID uint64) (*typ
 		DelegatorAddress: pool.GetIcaDepositAddress(),
 		WithdrawAddress:  pool.GetIcaPrizepoolAddress(),
 	}}
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
-	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, timeoutTimestamp, ICACallbackID_SetWithdrawAddress, marshalledCallbackData)
+	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_SetWithdrawAddress, marshalledCallbackData)
 	if err != nil {
 		logger.Error(
 			fmt.Sprintf("failed to dispatch ICA set withdraw address: %v", err),
@@ -368,6 +363,7 @@ func (k Keeper) UpdatePool(
 	minDepositAmount *math.Int,
 	drawSchedule *types.DrawSchedule,
 	prizeStrategy *types.PrizeStrategy,
+	state types.PoolState,
 ) error {
 	// Acquire and deserialize our pool entity
 	pool, err := k.GetPool(ctx, poolID)
@@ -411,6 +407,16 @@ func (k Keeper) UpdatePool(
 		pool.PrizeStrategy = *prizeStrategy
 	}
 
+	// Update pool state only if current pool state is in paused and incoming state ready
+	// else if current pool state is in ready and incoming state paused
+	if state == types.PoolState_Paused && pool.State == types.PoolState_Ready {
+		pool.State = state
+	} else if state == types.PoolState_Ready && pool.State == types.PoolState_Paused {
+		pool.State = state
+	} else if state != types.PoolState_Unspecified {
+		return types.ErrPoolStateChangeNotAllowed
+	}
+
 	// Validate pool configuration
 	if err := pool.ValidateBasic(k.GetParams(ctx)); err != nil {
 		return errorsmod.Wrapf(types.ErrFailedToUpdatePool, err.Error())
@@ -418,6 +424,13 @@ func (k Keeper) UpdatePool(
 
 	// Commit the pool to the KVStore
 	k.updatePool(ctx, &pool)
+
+	// Trigger rebalance distribution
+	if pool.State == types.PoolState_Ready || pool.State == types.PoolState_Paused {
+		if err := k.RebalanceValidatorsBondings(ctx, pool.PoolId); err != nil {
+			return err
+		}
+	}
 
 	// Emit event
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -429,6 +442,199 @@ func (k Keeper) UpdatePool(
 			types.EventTypeUpdatePool,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 			sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(pool.PoolId, 10)),
+		),
+	})
+
+	return nil
+}
+
+// RebalanceValidatorsBondings allows rebalancing of validators bonded assets
+// Current implementation:
+// - Initiate an even redelegate distribution from inactive bonded validators to active validators
+func (k Keeper) RebalanceValidatorsBondings(ctx sdk.Context, poolID uint64) error {
+	pool, err := k.GetPool(ctx, poolID)
+	if err != nil {
+		return err
+	}
+
+	// Make sure pool is ready
+	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
+		return types.ErrPoolNotReady
+	}
+
+	_, valsSrc := pool.BondedValidators()
+	for _, valSrc := range valsSrc {
+		// Double check that valSrc is inactive
+		if !valSrc.IsEnabled {
+			if err := k.RedelegateToActiveValidators(ctx, pool.PoolId, valSrc.GetOperatorAddress()); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// RedelegateToActiveValidators redistribute evenly the bondedAmount from the bonded inactive to the active valitator set of the pool
+func (k Keeper) RedelegateToActiveValidators(ctx sdk.Context, poolID uint64, valSrcAddr string) error {
+	logger := k.Logger(ctx).With("ctx", "pool_redelegate")
+
+	pool, err := k.GetPool(ctx, poolID)
+	if err != nil {
+		return err
+	}
+
+	// Make sure pool is ready
+	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
+		return types.ErrPoolNotReady
+	}
+
+	// Get the validator to redelegate
+	valIdx := pool.GetValidatorsMapIndex()
+	index, found := valIdx[valSrcAddr]
+	if !found {
+		return errorsmod.Wrapf(types.ErrValidatorNotFound, "%s", valSrcAddr)
+	}
+	inactiveVal := pool.Validators[index]
+
+	// Check that the validator is inactive
+	if inactiveVal.IsEnabled {
+		return errorsmod.Wrapf(
+			types.ErrInvalidValidatorEnablementStatus,
+			"status is %t instead of %t",
+			inactiveVal.IsEnabled, !inactiveVal.IsEnabled,
+		)
+	}
+
+	// Generate splits for active validators based on the bonded amount from incoming inactive validator
+	splits := pool.ComputeSplitDelegations(ctx, inactiveVal.BondedAmount)
+	if len(splits) == 0 {
+		return types.ErrPoolEmptySplitDelegations
+	}
+
+	// If pool is local, we just process operation in place
+	// Otherwise we trigger ICA transactions
+	if pool.IsLocalZone(ctx) {
+		delAddr := sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress())
+		valSrcAddr, err := sdk.ValAddressFromBech32(inactiveVal.GetOperatorAddress())
+		if err != nil {
+			return err
+		}
+
+		for _, split := range splits {
+			valDstAddr, err := sdk.ValAddressFromBech32(split.GetValidatorAddress())
+			if err != nil {
+				return err
+			}
+
+			// Validate the redelegation sharesAmount
+			sharesAmount, err := k.StakingKeeper.ValidateUnbondAmount(
+				ctx,
+				delAddr,
+				valSrcAddr,
+				split.Amount,
+			)
+			if err != nil {
+				return errorsmod.Wrapf(err, "%s", valDstAddr.String())
+			}
+
+			_, err = k.StakingKeeper.BeginRedelegation(ctx, delAddr, valSrcAddr, valDstAddr, sharesAmount)
+			if err != nil {
+				return errorsmod.Wrapf(err, "%s", valDstAddr.String())
+			}
+		}
+
+		// ApplySplitRedelegate to pool validator set
+		pool.ApplySplitRedelegate(ctx, inactiveVal.GetOperatorAddress(), splits)
+		k.updatePool(ctx, &pool)
+
+		return k.OnRedelegateToRemoteZoneCompleted(ctx, pool.PoolId, inactiveVal.GetOperatorAddress(), splits, false)
+	}
+
+	// Construct our callback data
+	callbackData := types.RedelegateCallback{
+		PoolId:           poolID,
+		OperatorAddress:  inactiveVal.GetOperatorAddress(),
+		SplitDelegations: splits,
+	}
+	marshalledCallbackData, err := k.MarshalRedelegateCallbackArgs(ctx, callbackData)
+	if err != nil {
+		return err
+	}
+
+	// Build the MsgBeginRedelegate
+	var msgs []sdk.Msg
+	for _, split := range splits {
+		msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{
+			DelegatorAddress:    pool.GetIcaDepositAddress(),
+			ValidatorSrcAddress: inactiveVal.GetOperatorAddress(),
+			ValidatorDstAddress: split.GetValidatorAddress(),
+			Amount:              sdk.NewCoin(pool.NativeDenom, split.Amount),
+		})
+	}
+
+	// ApplySplitRedelegate to pool validator set
+	pool.ApplySplitRedelegate(ctx, inactiveVal.GetOperatorAddress(), splits)
+	k.updatePool(ctx, &pool)
+
+	// Dispatch our message with a timeout of 30 minutes in nanos
+	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTimeoutNanos
+	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, timeoutTimestamp, ICACallbackID_Redelegate, marshalledCallbackData)
+	if err != nil {
+		logger.Error(
+			fmt.Sprintf("failed to dispatch ICA redelegation: %v", err),
+			"pool_id", poolID,
+			"chain_id", pool.GetChainId(),
+			"sequence", sequence,
+		)
+		return err
+	}
+	logger.Debug(
+		"ICA redelegation dispatched",
+		"pool_id", poolID,
+		"chain_id", pool.GetChainId(),
+		"sequence", sequence,
+	)
+
+	return nil
+}
+
+// OnRedelegateToRemoteZoneCompleted Acknowledged a redelegation of an inactive validator's bondedAmount
+func (k Keeper) OnRedelegateToRemoteZoneCompleted(ctx sdk.Context, poolID uint64, valSrcAddr string, splits []*types.SplitDelegation, isError bool) error {
+	pool, err := k.GetPool(ctx, poolID)
+	if err != nil {
+		return err
+	}
+
+	// Make sure pool is ready
+	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
+		return types.ErrPoolNotReady
+	}
+
+	// Get the validator
+	valIdx := pool.GetValidatorsMapIndex()
+	index, found := valIdx[valSrcAddr]
+	if !found {
+		return errorsmod.Wrapf(types.ErrValidatorNotFound, "%s", valSrcAddr)
+	}
+	inactiveVal := pool.Validators[index]
+
+	// RevertSplitRedelegate in case of failure
+	if isError {
+		pool.RevertSplitRedelegate(ctx, inactiveVal.GetOperatorAddress(), splits)
+		k.updatePool(ctx, &pool)
+		return nil
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+		sdk.NewEvent(
+			types.EventTypeRedelegate,
+			sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(pool.PoolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyOperatorAddress, inactiveVal.GetOperatorAddress()),
 		),
 	})
 
@@ -451,6 +657,22 @@ func (k Keeper) UnsafeKillPool(ctx sdk.Context, poolID uint64) (types.Pool, erro
 
 	// Kill the pool
 	pool.State = types.PoolState_Killed
+	k.updatePool(ctx, &pool)
+	return pool, nil
+}
+
+// UnsafeUpdatePoolPortIds This method raw update the provided pool port ids.
+// It's heavily unsafe and could break the ICA implementation. It should only be used by store migrations.
+func (k Keeper) UnsafeUpdatePoolPortIds(ctx sdk.Context, poolID uint64, icaDepositPortId, icaPrizePoolPortId string) (types.Pool, error) {
+	// Grab our pool instance
+	pool, err := k.GetPool(ctx, poolID)
+	if err != nil {
+		return types.Pool{}, err
+	}
+
+	// Patch and update our pool entity
+	pool.IcaDepositPortId = icaDepositPortId
+	pool.IcaPrizepoolPortId = icaPrizePoolPortId
 	k.updatePool(ctx, &pool)
 	return pool, nil
 }
@@ -517,7 +739,7 @@ func (k Keeper) GetPoolForControllerPortID(ctx sdk.Context, controllerPortID str
 	var pool = types.Pool{}
 	found := false
 	k.IteratePools(ctx, func(p types.Pool) bool {
-		if p.GetIcaDepositPortId() == controllerPortID || p.GetIcaPrizepoolPortId() == controllerPortID {
+		if p.GetIcaDepositPortIdWithPrefix() == controllerPortID || p.GetIcaPrizepoolPortIdWithPrefix() == controllerPortID {
 			pool = p
 			found = true
 			return true
@@ -577,14 +799,14 @@ func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint
 		return nil, nil, err
 	}
 
-	// Pool must be ready to process those kind of operations
-	if pool.GetState() != types.PoolState_Ready {
+	// We always want our pool to have passed the created state and not be unspecified
+	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
 		return nil, nil, types.ErrPoolNotReady
 	}
 
 	// Timeout is now plus 30 minutes in nanoseconds
 	// We use the standard transfer port ID and not the one opened for ICA
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
+	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTimeoutNanos
 	// From Local to Remote - use transfer channel ID
 	msg := ibctransfertypes.NewMsgTransfer(
 		ibctransfertypes.PortID,
@@ -594,6 +816,7 @@ func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint
 		pool.GetIcaDepositAddress(),
 		clienttypes.Height{},
 		timeoutTimestamp,
+		"Cosmos Millions",
 	)
 
 	// Broadcast the transfer
@@ -605,7 +828,7 @@ func (k Keeper) TransferAmountFromPoolToNativeChain(ctx sdk.Context, poolID uint
 	return msg, msgResponse, nil
 }
 
-func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType string, msgs []sdk.Msg, timeoutTimestamp uint64, callbackId string, callbackArgs []byte) (uint64, error) {
+func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType string, msgs []sdk.Msg, timeoutNanos uint64, callbackId string, callbackArgs []byte) (uint64, error) {
 	// Acquire our pool instance
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
@@ -615,23 +838,23 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType
 	// Compute the port ID
 	var portID string
 	if accountType == types.ICATypeDeposit {
-		portID = pool.GetIcaDepositPortId()
+		portID = pool.GetIcaDepositPortIdWithPrefix()
 	} else if accountType == types.ICATypePrizePool {
-		portID = pool.GetIcaPrizepoolPortId()
+		portID = pool.GetIcaPrizepoolPortIdWithPrefix()
 	}
 
 	// Acquire the channel capacities
-	channelID, found := k.ICAControllerKeeper.GetOpenActiveChannel(ctx, pool.GetConnectionId(), portID)
+	channelID, found := k.ICAControllerKeeper.GetActiveChannelID(ctx, pool.GetConnectionId(), portID)
 	if !found {
-		return 0, errorsmod.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve open active channel for port %s", portID)
-	}
-	chanCap, found := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
-	if !found {
-		return 0, errorsmod.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
+		return 0, errorsmod.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve open active channel for port %s (%s / %s) on connection %s", portID, pool.GetIcaDepositPortId(), pool.GetIcaPrizepoolPortId(), pool.GetConnectionId())
 	}
 
 	// Serialize the data and construct the packet to send
-	data, err := icatypes.SerializeCosmosTx(k.cdc, msgs)
+	var protoMsgs []proto.Message
+	for _, msg := range msgs {
+		protoMsgs = append(protoMsgs, msg)
+	}
+	data, err := icatypes.SerializeCosmosTx(k.cdc, protoMsgs)
 	if err != nil {
 		return 0, err
 	}
@@ -642,7 +865,9 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType
 	}
 
 	// Broadcast the messages
-	sequence, err := k.ICAControllerKeeper.SendTx(ctx, chanCap, pool.GetConnectionId(), portID, packetData, timeoutTimestamp)
+	// TODO: switch to MsgServer once they fixes their shit. Switch timestamp
+	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTimeoutNanos
+	sequence, err := k.ICAControllerKeeper.SendTx(ctx, nil, pool.GetConnectionId(), portID, packetData, timeoutTimestamp) // nolint:staticcheck
 	if err != nil {
 		return 0, err
 	}
@@ -674,7 +899,7 @@ func (k Keeper) QueryBalance(ctx sdk.Context, poolID uint64, drawID uint64) (*ty
 	}
 
 	// Pool must be ready to process those kind of operations
-	if pool.GetState() != types.PoolState_Ready {
+	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
 		return nil, types.ErrPoolNotReady
 	}
 
@@ -698,7 +923,7 @@ func (k Keeper) QueryBalance(ctx sdk.Context, poolID uint64, drawID uint64) (*ty
 
 	// Construct the query data and timeout timestamp (now + 30 minutes)
 	queryData := append(banktypes.CreateAccountBalancesPrefix(icaAddressBz), []byte(pool.GetNativeDenom())...)
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
+	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTimeoutNanos
 
 	// Submit the ICQ
 	extraId := types.CombineStringKeys(strconv.FormatUint(poolID, 10), strconv.FormatUint(drawID, 10))

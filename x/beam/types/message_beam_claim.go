@@ -1,6 +1,7 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -46,7 +47,7 @@ func (msg *MsgClaimBeam) ValidateBasic() error {
 	// Ensure the address is correct and that we are able to acquire it
 	_, err := sdk.AccAddressFromBech32(msg.GetClaimerAddress())
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid creator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid creator address (%s)", err)
 	}
 
 	return nil

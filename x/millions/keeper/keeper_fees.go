@@ -16,13 +16,13 @@ type feeCollector struct {
 }
 
 // NewFeeCollector creates a new fee collector for the specified pool
-func (k Keeper) NewFeeCollector(ctx sdk.Context, pool types.Pool) feeCollector {
+func (k Keeper) NewFeeCollector(ctx sdk.Context, pool types.Pool) *feeCollector {
 	params := k.GetParams(ctx)
 	feesStaker := params.FeesStakers
 	if feesStaker.IsNil() {
 		feesStaker = sdk.ZeroDec()
 	}
-	return feeCollector{
+	return &feeCollector{
 		keeper:        k,
 		pool:          pool,
 		feesStakers:   feesStaker,

@@ -3,9 +3,10 @@ package utils
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"math/rand"
 	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GenerateSecureToken Generate a secure random token of the given length and return string

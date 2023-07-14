@@ -7,7 +7,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 var (
@@ -17,14 +17,25 @@ var (
 
 // RegisterLegacyAminoCodec Register the codec for the message passing
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	// Messages
 	cdc.RegisterConcrete(&MsgDeposit{}, "lum-network/MsgDeposit", nil)
+	cdc.RegisterConcrete(&MsgWithdrawAndMint{}, "lum-network/MsgWithdrawAndMint", nil)
+	// Proposals
+	cdc.RegisterConcrete(&ProposalUpdateParams{}, "lum-network/ProposalUpdateParams", nil)
+
+	// Legacy proposals
 	cdc.RegisterConcrete(&WithdrawAndMintProposal{}, "lum-network/MsgWithdrawAndMintProposal", nil)
 }
 
 // RegisterInterfaces Register the implementations for the given codecs
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	// Messages
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgDeposit{})
-	registry.RegisterImplementations((*govtypesv1beta1.Content)(nil), &WithdrawAndMintProposal{})
+	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgWithdrawAndMint{})
+	// Proposals
+	registry.RegisterImplementations((*govtypes.Content)(nil), &ProposalUpdateParams{})
+	// Legacy proposals
+	registry.RegisterImplementations((*govtypes.Content)(nil), &WithdrawAndMintProposal{})
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

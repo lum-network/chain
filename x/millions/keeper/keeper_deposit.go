@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	gogotypes "github.com/gogo/protobuf/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -178,8 +178,7 @@ func (k Keeper) DelegateDepositOnNativeChain(ctx sdk.Context, poolID uint64, dep
 	}
 
 	// Dispatch our message with a timeout of 30 minutes in nanos
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
-	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, timeoutTimestamp, ICACallbackID_Delegate, marshalledCallbackData)
+	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Delegate, marshalledCallbackData)
 	if err != nil {
 		// Save error state since we cannot simply recover from a failure at this stage
 		// A subsequent call to DepositRetry will be made possible by setting an error state and not returning an error here
@@ -371,6 +370,41 @@ func (k Keeper) UpdateDepositStatus(ctx sdk.Context, poolID uint64, depositID ui
 	deposit.UpdatedAt = ctx.BlockTime()
 	k.setAccountDeposit(ctx, &deposit)
 	k.setPoolDeposit(ctx, &deposit)
+}
+
+// EditDeposit edits a deposit winnerAddr and sponsor mode
+func (k Keeper) EditDeposit(ctx sdk.Context, poolID uint64, depositID uint64, winnerAddr sdk.AccAddress, isSponsor bool) error {
+	deposit, err := k.GetPoolDeposit(ctx, poolID, depositID)
+	if err != nil {
+		return err
+	}
+
+	// Get pool to grab SponsorshipAmount
+	pool, err := k.GetPool(ctx, deposit.PoolId)
+	if err != nil {
+		return err
+	}
+
+	// Check incoming sponsor mode against the deposit sponsor
+	if isSponsor != deposit.IsSponsor {
+		if isSponsor {
+			pool.SponsorshipAmount = pool.SponsorshipAmount.Add(deposit.GetAmount().Amount)
+			k.updatePool(ctx, &pool)
+		} else {
+			pool.SponsorshipAmount = pool.SponsorshipAmount.Sub(deposit.GetAmount().Amount)
+			k.updatePool(ctx, &pool)
+		}
+	}
+
+	deposit.WinnerAddress = winnerAddr.String()
+	deposit.IsSponsor = isSponsor
+	deposit.UpdatedAtHeight = ctx.BlockHeight()
+	deposit.UpdatedAt = ctx.BlockTime()
+
+	k.setAccountDeposit(ctx, &deposit)
+	k.setPoolDeposit(ctx, &deposit)
+
+	return nil
 }
 
 // setPoolDeposit sets a deposit to the pool deposit key

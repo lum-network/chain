@@ -7,22 +7,29 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
 	"github.com/lum-network/chain/x/millions"
+	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type HandlerTestSuite struct {
 	suite.Suite
 
-	app   *app.App
-	ctx   sdk.Context
-	addrs []sdk.AccAddress
-	pool  millionstypes.Pool
+	app         *app.App
+	ctx         sdk.Context
+	addrs       []sdk.AccAddress
+	moduleAddrs []sdk.AccAddress
+	pool        millionstypes.Pool
 
 	handler govtypesv1beta1.Handler
 }
@@ -36,6 +43,34 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.handler = millions.NewMillionsProposalHandler(*app.MillionsKeeper)
 	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 2, sdk.NewInt(300000000), "ulum")
 
+	// Initialize module accounts for IcaDeposits
+	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 3, sdk.NewInt(1_000_0000_000), app.StakingKeeper.BondDenom(ctx))
+	for i := 0; i < 3; i++ {
+		poolAddress := millionstypes.NewPoolAddress(uint64(i+1), "unused-in-test")
+		apptesting.AddTestModuleAccount(app, ctx, poolAddress)
+		suite.moduleAddrs = append(suite.moduleAddrs, poolAddress)
+	}
+
+	// Generate validators
+	privKeys := make([]cryptotypes.PubKey, 4)
+	addrs := make([]sdk.AccAddress, 4)
+	validators := make([]stakingtypes.Validator, 4)
+	for i := 0; i < 4; i++ {
+		privKey := ed25519.GenPrivKey().PubKey()
+		privKeys[i] = privKey
+		addrs[i] = sdk.AccAddress(privKey.Address())
+
+		validator, err := stakingtypes.NewValidator(sdk.ValAddress(addrs[i]), privKeys[i], stakingtypes.Description{})
+		suite.Require().NoError(err)
+		validator = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validator, false)
+		err = app.StakingKeeper.Hooks().AfterValidatorCreated(suite.ctx, validator.GetOperator())
+		suite.Require().NoError(err)
+
+		validators[i] = validator
+		validators = append(validators, validator)
+
+	}
+
 	// Initialize dummy pool
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
@@ -45,14 +80,32 @@ func (suite *HandlerTestSuite) SetupTest() {
 		ChainId:             "lum-network-devnet",
 		Bech32PrefixValAddr: "lumvaloper",
 		Bech32PrefixAccAddr: "lum",
-		Validators: []millionstypes.PoolValidator{{
-			OperatorAddress: "lumvaloper16rlynj5wvzwts5lqep0je5q4m3eaepn5cqj38s",
-			IsEnabled:       true,
-			BondedAmount:    sdk.NewInt(10),
-		}},
-		MinDepositAmount: sdk.NewInt(1000000),
-		State:            millionstypes.PoolState_Ready,
-		PoolId:           poolID,
+		Validators: []millionstypes.PoolValidator{
+			{
+				OperatorAddress: validators[0].OperatorAddress,
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+			},
+			{
+				OperatorAddress: validators[1].OperatorAddress,
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+			},
+			{
+				OperatorAddress: validators[2].OperatorAddress,
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+			},
+			{
+				OperatorAddress: validators[3].OperatorAddress,
+				BondedAmount:    sdk.NewInt(0),
+				IsEnabled:       true,
+			},
+		},
+		IcaDepositAddress: suite.moduleAddrs[0].String(),
+		MinDepositAmount:  sdk.NewInt(1000000),
+		State:             millionstypes.PoolState_Ready,
+		PoolId:            poolID,
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
 				{PoolPercent: 100, Quantity: 1, DrawProbability: sdk.NewDecWithPrec(int64(0.00*1_000_000), 6)},
@@ -64,7 +117,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 		},
 		AvailablePrizePool: sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), math.NewInt(1000)),
 	})
-	suite.pool, _ = app.MillionsKeeper.GetPool(suite.ctx, poolID)
+	suite.pool, _ = app.MillionsKeeper.GetPool(ctx, poolID)
 }
 
 func (suite *HandlerTestSuite) TestProposal_RegisterPool() {
@@ -199,6 +252,17 @@ func (suite *HandlerTestSuite) TestProposal_RegisterPool() {
 }
 
 func (suite *HandlerTestSuite) TestProposal_UpdatePool() {
+	msgServer := millionskeeper.NewMsgServerImpl(*suite.app.MillionsKeeper)
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	// Initialize a deposit to trigger delegation to validators
+	_, err := msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
+		DepositorAddress: suite.addrs[0].String(),
+		PoolId:           suite.pool.PoolId,
+		Amount:           sdk.NewCoin("ulum", sdk.NewInt(10_000_000)),
+	})
+	suite.Require().NoError(err)
+
 	validPrizeStrategy := millionstypes.PrizeStrategy{
 		PrizeBatches: []millionstypes.PrizeBatch{
 			{PoolPercent: 90, DrawProbability: sdk.NewDec(1), Quantity: 10},
@@ -226,8 +290,12 @@ func (suite *HandlerTestSuite) TestProposal_UpdatePool() {
 		InitialDrawAt: time.Time{},
 	}
 
-	validValidatorSet := []string{"lumvaloper16rlynj5wvzwts5lqep0je5q4m3eaepn5cqj38s"}
+	validValidatorSet := []string{suite.pool.Validators[0].OperatorAddress, suite.pool.Validators[2].OperatorAddress}
 	invalidValidatorSet := []string{"lumvaloper16rlynj5wvzw"}
+
+	poolStatePaused := millionstypes.PoolState_Paused
+	poolStateReady := millionstypes.PoolState_Ready
+	poolStateUnspecified := millionstypes.PoolState_Unspecified
 
 	validMinDepositAmount := millionstypes.DefaultParams().MinDepositAmount
 	invalidMinDepositAmount := sdk.NewInt(millionstypes.MinAcceptableDepositAmount - 1)
@@ -240,61 +308,61 @@ func (suite *HandlerTestSuite) TestProposal_UpdatePool() {
 	}{
 		{
 			"Title cannot be empty",
-			millionstypes.NewUpdatePoolProposal("", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateUnspecified),
 			true,
 			false,
 		},
 		{
 			"Description cannot be empty",
-			millionstypes.NewUpdatePoolProposal("Test", "", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused),
 			true,
 			false,
 		},
 		{
 			"Validators list can be empty",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateReady),
 			false,
 			false,
 		},
 		{
 			"Validators list cannot be invalid",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), invalidValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), invalidValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused),
 			false,
 			true,
 		},
 		{
 			"Min deposit amount cannot be less than 1000000 (default params)",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &invalidMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &invalidMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateReady),
 			true,
 			true,
 		},
 		{
 			"Prize strategy cannot be empty",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &emptyPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &emptyPrizeStrategy, &validDrawSchedule, poolStatePaused),
 			true,
 			true,
 		},
 		{
 			"Prize strategy cannot be invalid",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &invalidPrizeStrategy, &validDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &invalidPrizeStrategy, &validDrawSchedule, poolStateReady),
 			false,
 			true,
 		},
 		{
 			"Draw Schedule cannot be invalid",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &invalidDrawSchedule),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &invalidDrawSchedule, poolStatePaused),
 			true,
 			true,
-		},
-		{
-			"Fine should be fine",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule),
-			false,
-			false,
 		},
 		{
 			"Partial should be fine",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, nil, nil, nil),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, nil, nil, nil, poolStateUnspecified),
+			false,
+			false,
+		},
+		{
+			"Fine should be fine",
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused),
 			false,
 			false,
 		},
