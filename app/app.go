@@ -828,10 +828,10 @@ func (app *App) registerUpgradeHandlers() {
 		if err == nil {
 			prizeStrategy := millionstypes.PrizeStrategy{
 				PrizeBatches: []millionstypes.PrizeBatch{
-					{PoolPercent: 50, Quantity: 1, IsUnique: true, DrawProbability: sdk.NewDec(20)},
-					{PoolPercent: 25, Quantity: 5, IsUnique: false, DrawProbability: sdk.NewDec(20)},
-					{PoolPercent: 17, Quantity: 25, IsUnique: false, DrawProbability: sdk.NewDec(20)},
-					{PoolPercent: 8, Quantity: 60, IsUnique: false, DrawProbability: sdk.NewDec(90)},
+					{PoolPercent: 50, Quantity: 1, IsUnique: true, DrawProbability: sdk.NewDec(0.20)},
+					{PoolPercent: 25, Quantity: 5, IsUnique: false, DrawProbability: sdk.NewDec(0.20)},
+					{PoolPercent: 17, Quantity: 25, IsUnique: false, DrawProbability: sdk.NewDec(0.20)},
+					{PoolPercent: 8, Quantity: 60, IsUnique: false, DrawProbability: sdk.NewDec(0.90)},
 				},
 			}
 			err = app.MillionsKeeper.UpdatePool(ctx, pool.GetPoolId(), []string{}, nil, nil, &prizeStrategy, millionstypes.PoolState_Unspecified)
