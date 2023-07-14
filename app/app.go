@@ -796,7 +796,7 @@ func (app *App) registerUpgradeHandlers() {
 		// Migrate DFract params, set the first withdrawal address (can be patched later on through proposal)
 		app.Logger().Info("Migrate the DFract params...")
 		dfrParams := dfracttypes.DefaultParams()
-		dfrParams.WithdrawalAddress = "lum1mj4qphzu27qyjjplnjh9v9zn8zzshjec3zr9xd"
+		dfrParams.WithdrawalAddress = "lum1euhszjasgkeskujz6zr42r3lsxv58mfgsmlps0"
 		app.DFractKeeper.SetParams(ctx, dfrParams)
 
 		// Migrate ICA channel capabilities from IBC V5 to IBC V6
@@ -830,10 +830,10 @@ func (app *App) registerUpgradeHandlers() {
 		if err == nil {
 			prizeStrategy := millionstypes.PrizeStrategy{
 				PrizeBatches: []millionstypes.PrizeBatch{
-					{PoolPercent: 50, Quantity: 1, IsUnique: true, DrawProbability: sdk.NewDecWithPrec(int64(0.2*1_000_000), 6)},
-					{PoolPercent: 25, Quantity: 5, IsUnique: false, DrawProbability: sdk.NewDecWithPrec(int64(0.2*1_000_000), 6)},
-					{PoolPercent: 17, Quantity: 25, IsUnique: false, DrawProbability: sdk.NewDecWithPrec(int64(0.2*1_000_000), 6)},
-					{PoolPercent: 8, Quantity: 60, IsUnique: false, DrawProbability: sdk.NewDecWithPrec(int64(0.9*1_000_000), 6)},
+					{PoolPercent: 50, Quantity: 1, IsUnique: true, DrawProbability: sdk.NewDecWithPrec(20, 2)},
+					{PoolPercent: 25, Quantity: 5, IsUnique: false, DrawProbability: sdk.NewDecWithPrec(20, 2)},
+					{PoolPercent: 17, Quantity: 25, IsUnique: false, DrawProbability: sdk.NewDecWithPrec(20, 2)},
+					{PoolPercent: 8, Quantity: 60, IsUnique: false, DrawProbability: sdk.NewDecWithPrec(90, 2)},
 				},
 			}
 			err = app.MillionsKeeper.UpdatePool(ctx, pool.GetPoolId(), []string{}, nil, nil, &prizeStrategy, millionstypes.PoolState_Unspecified)
