@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+
 	"github.com/lum-network/chain/x/millions/keeper"
 	"github.com/lum-network/chain/x/millions/types"
 )
@@ -14,7 +15,7 @@ func NewMillionsProposalHandler(k keeper.Keeper) govtypes.Handler {
 		switch c := content.(type) {
 		case *types.ProposalUpdatePool:
 			{
-				return k.UpdatePool(ctx, c.PoolId, c.Validators, c.MinDepositAmount, c.DrawSchedule, c.PrizeStrategy)
+				return k.UpdatePool(ctx, c.PoolId, c.Validators, c.MinDepositAmount, c.DrawSchedule, c.PrizeStrategy, c.State)
 			}
 		case *types.ProposalRegisterPool:
 			{

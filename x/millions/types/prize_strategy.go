@@ -57,3 +57,13 @@ func (ps PrizeStrategy) ComputePrizesProbs(prizePool sdk.Coin) (prizesProbs []Pr
 
 	return prizesProbs, usedAmount, remainingAmount, nil
 }
+
+// ContainsUniqueBatch returns whether or not at least one batch contains has the IsUnique property set to True
+func (ps PrizeStrategy) ContainsUniqueBatch() bool {
+	for _, b := range ps.PrizeBatches {
+		if b.IsUnique {
+			return true
+		}
+	}
+	return false
+}

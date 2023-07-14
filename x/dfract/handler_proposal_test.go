@@ -3,14 +3,17 @@ package dfract_test
 import (
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/stretchr/testify/suite"
+
+	gogotypes "github.com/cosmos/gogoproto/types"
+
 	"github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
 	"github.com/lum-network/chain/x/dfract"
-	"github.com/lum-network/chain/x/dfract/types"
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	dfracttypes "github.com/lum-network/chain/x/dfract/types"
 )
 
 type HandlerTestSuite struct {
@@ -20,7 +23,7 @@ type HandlerTestSuite struct {
 	ctx   sdk.Context
 	addrs []sdk.AccAddress
 
-	handler govtypesv1beta1.Handler
+	handler govtypes.Handler
 }
 
 func (suite *HandlerTestSuite) SetupTest() {
@@ -33,33 +36,86 @@ func (suite *HandlerTestSuite) SetupTest() {
 	suite.addrs = apptesting.AddTestAddrsWithDenom(app, ctx, 2, sdk.NewInt(300000000), "ulum")
 }
 
-func generateWithdrawAndMintProposal(withdrawalAddress string, microMintRate int64) *types.WithdrawAndMintProposal {
-	return types.NewWithdrawAndMintProposal("title", "description", withdrawalAddress, microMintRate)
-}
+func (suite *HandlerTestSuite) TestProposal_UpdateParams() {
+	var emptyDenpositDenoms []string
+	invalidDepositDenoms := []string{""}
+	validDepositDenoms := []string{dfracttypes.DefaultDenom, "udfr"}
+	invalidMinDepositAmount := sdk.NewInt(500000)
+	validMinDepositAmount := sdk.NewInt(2000000)
 
-func (suite *HandlerTestSuite) TestWithdrawAndMintProposal() {
 	cases := []struct {
-		name        string
-		proposal    *types.WithdrawAndMintProposal
-		expectError bool
+		name            string
+		proposal        govtypes.Content
+		expectPreError  bool
+		expectPostError bool
 	}{
 		{
-			"micro mint rate cannot be negative",
-			generateWithdrawAndMintProposal(suite.addrs[0].String(), -1),
+			"Partial update with valid address should be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", nil, emptyDenpositDenoms, nil),
+			false,
+			false,
+		},
+		{
+			"Partial update with empty management address should be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "", nil, emptyDenpositDenoms, nil),
+			false,
+			false,
+		},
+		{
+			"Partial update with invalid address should not be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "lum1qx", nil, emptyDenpositDenoms, nil),
+			true,
 			true,
 		},
 		{
-			"invalid address",
-			generateWithdrawAndMintProposal("test", 0),
+			"Partial update valid enablement should be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "lum1qx", &gogotypes.BoolValue{Value: false}, emptyDenpositDenoms, nil),
 			true,
+			true,
+		},
+		{
+			"Partial update with valid deposit denoms should be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "", nil, validDepositDenoms, nil),
+			false,
+			false,
+		},
+		{
+			"Partial update with invalid deposit denoms should not be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "", nil, invalidDepositDenoms, nil),
+			true,
+			true,
+		},
+		{
+			"Partial update with valid min deposit amount should be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "", nil, validDepositDenoms, &validMinDepositAmount),
+			false,
+			false,
+		},
+		{
+			"Partial update with invalid min deposit amount should not be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "", nil, validDepositDenoms, &invalidMinDepositAmount),
+			true,
+			true,
+		},
+		{
+			"Full update should be fine",
+			dfracttypes.NewUpdateParamsProposal("Test", "Test", "lum1qx2dts3tglxcu0jh47k7ghstsn4nactukljgyj", &gogotypes.BoolValue{Value: false}, validDepositDenoms, &validMinDepositAmount),
+			false,
+			false,
 		},
 	}
 
 	for _, tc := range cases {
 		tc := tc
 		suite.Run(tc.name, func() {
+			preError := tc.proposal.ValidateBasic()
+			if tc.expectPreError {
+				suite.Require().Error(preError)
+			} else {
+				suite.Require().NoError(preError)
+			}
 			err := suite.handler(suite.ctx, tc.proposal)
-			if tc.expectError {
+			if tc.expectPostError {
 				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)

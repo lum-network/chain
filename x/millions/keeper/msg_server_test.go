@@ -5,6 +5,10 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+
+	apptesting "github.com/lum-network/chain/app/testing"
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
@@ -355,6 +359,36 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit() {
 	suite.Require().Equal(sdk.NewInt(8_000_000), pool.TvlAmount)
 	suite.Require().Equal(uint64(2), pool.DepositorsCount)
 	suite.Require().Equal(sdk.NewInt(int64(5_000_000)), pool.SponsorshipAmount)
+
+	// Test deposit for a pool that is not in ready state
+	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
+		PoolId: 4,
+		PrizeStrategy: millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
+			},
+		},
+		DrawSchedule: millionstypes.DrawSchedule{
+			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
+			DrawDelta:     drawDelta1,
+		},
+		AvailablePrizePool: sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
+		State:              millionstypes.PoolState_Paused,
+	}))
+
+	pool, err = app.MillionsKeeper.GetPool(ctx, 4)
+	suite.Require().NoError(err)
+
+	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
+		PoolId:           pool.PoolId,
+		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(int64(1_000_000))),
+		DepositorAddress: suite.addrs[0].String(),
+	})
+	// Deposit should be allowed for paused pools
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 4)
+	suite.Require().NoError(err)
+	suite.Require().Equal(int64(1_000_000), pool.TvlAmount.Int64())
 }
 
 // TestMsgServer_DepositRetry tests the retry of a failed deposit
@@ -509,6 +543,201 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 	suite.Require().ErrorIs(err, millionstypes.ErrInvalidDepositState)
 }
 
+// TestMsgServer_DepositEdit tests the edition of a winnerAddr and sponsor
+func (suite *KeeperTestSuite) TestMsgServer_DepositEdit() {
+	// Set the app context
+	app := suite.app
+	ctx := suite.ctx
+	goCtx := sdk.WrapSDKContext(ctx)
+	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
+
+	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
+	drawDelta1 := 1 * time.Hour
+	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
+		PoolId: poolID,
+		PrizeStrategy: millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
+			},
+		},
+		DrawSchedule: millionstypes.DrawSchedule{
+			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
+			DrawDelta:     drawDelta1,
+		},
+		AvailablePrizePool: sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
+	}))
+
+	// Retrieve the pool from the state
+	pools := app.MillionsKeeper.ListPools(ctx)
+
+	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
+		PoolId:           pools[0].PoolId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[0].String(),
+		State:            millionstypes.DepositState_Success,
+		ErrorState:       millionstypes.DepositState_Unspecified,
+		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+	})
+	err := app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[0].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
+	suite.Require().NoError(err)
+
+	deposit, err := app.MillionsKeeper.GetPoolDeposit(ctx, 1, 1)
+	suite.Require().NoError(err)
+	// - Test GetPoolDraw with wrong poolID
+	_, err = app.MillionsKeeper.GetPoolDeposit(ctx, uint64(0), deposit.DepositId)
+	suite.Require().ErrorIs(err, millionstypes.ErrDepositNotFound)
+	// - Test GetPoolDraw with wrong drawID
+	_, err = app.MillionsKeeper.GetPoolDeposit(ctx, deposit.PoolId, uint64(0))
+	suite.Require().ErrorIs(err, millionstypes.ErrDepositNotFound)
+
+	// Test validate Basics
+	// - Test unknown poolID
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           uint64(0),
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[0].String(),
+		IsSponsor: &gogotypes.BoolValue{
+			Value: false,
+		},
+	})
+	suite.Require().ErrorIs(err, millionstypes.ErrInvalidID)
+	// - Test unknown depositID
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        uint64(0),
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[0].String(),
+		IsSponsor: &gogotypes.BoolValue{
+			Value: false,
+		},
+	})
+	suite.Require().ErrorIs(err, millionstypes.ErrInvalidID)
+
+	// Should throw error if depositor Addr msg is different than entity msg
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: "different-address",
+		WinnerAddress:    suite.addrs[0].String(),
+		IsSponsor: &gogotypes.BoolValue{
+			Value: false,
+		},
+	})
+	suite.Require().ErrorIs(err, millionstypes.ErrInvalidDepositorAddress)
+
+	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, 1, 1)
+	suite.Require().NoError(err)
+
+	// Should throw error for an invalid winner address
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    "fake-address",
+		IsSponsor: &gogotypes.BoolValue{
+			Value: false,
+		},
+	})
+	suite.Require().Error(err)
+
+	// Should update winnerAddress valid param
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[1].String(),
+		IsSponsor: &gogotypes.BoolValue{
+			Value: false,
+		},
+	})
+	suite.Require().NoError(err)
+	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, 1, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(suite.addrs[1].String(), deposit.WinnerAddress)
+
+	// Sponsor can be nil and default to initial deposit isSponsor
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[1].String(),
+		IsSponsor:        nil,
+	})
+	suite.Require().NoError(err)
+	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, 1, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(false, deposit.IsSponsor)
+	pool, err := app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(int64(0), pool.SponsorshipAmount.Int64())
+
+	// Should update sponsor for deposit and pool SponsorshipAmount for valid sponsor param
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[0].String(),
+		IsSponsor: &gogotypes.BoolValue{
+			Value: true,
+		},
+	})
+	suite.Require().NoError(err)
+	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, 1, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(true, deposit.IsSponsor)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(int64(1_000_000), pool.SponsorshipAmount.Int64())
+
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+
+	// A sponsor cannot designate another winner address
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[1].String(),
+		IsSponsor:        nil,
+	})
+	suite.Require().ErrorIs(err, millionstypes.ErrInvalidSponsorWinnerCombo)
+
+	// Sponsor can be nil and default to initial deposit isSponsor -> In this case true
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[0].String(),
+		IsSponsor:        nil,
+	})
+	suite.Require().NoError(err)
+	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, 1, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(true, deposit.IsSponsor)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(int64(1_000_000), pool.SponsorshipAmount.Int64())
+
+	// Should sub sponsor amount if user is not willing to sponsor anymore
+	_, err = msgServer.DepositEdit(goCtx, &millionstypes.MsgDepositEdit{
+		PoolId:           deposit.PoolId,
+		DepositId:        deposit.DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[1].String(),
+		IsSponsor: &gogotypes.BoolValue{
+			Value: false,
+		},
+	})
+	suite.Require().NoError(err)
+	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, 1, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(false, deposit.IsSponsor)
+	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(int64(0), pool.SponsorshipAmount.Int64())
+}
+
 // TestMsgServer_WithdrawDeposit runs withdrawal deposit related tests
 func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 	// Set the app context
@@ -516,6 +745,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 	ctx := suite.ctx
 	goCtx := sdk.WrapSDKContext(ctx)
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
+	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), "uatom")
 
 	// Initialize the pool
 	poolID, err := app.MillionsKeeper.RegisterPool(ctx,
@@ -666,6 +896,74 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 	// One deposit only should remain
 	deposits = app.MillionsKeeper.ListDeposits(ctx)
 	suite.Require().Len(deposits, 1)
+
+	// Initialize a remote pool
+	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
+		PoolId:              3,
+		Bech32PrefixValAddr: remoteBech32PrefixValAddr,
+		Bech32PrefixAccAddr: remoteBech32PrefixAccAddr,
+		ChainId:             remoteChainId,
+		Denom:               remotePoolDenom,
+		NativeDenom:         remotePoolDenom,
+		ConnectionId:        remoteConnectionId,
+		TransferChannelId:   remoteTransferChannelId,
+		Validators: []millionstypes.PoolValidator{
+			{
+				OperatorAddress: cosmosPoolValidator,
+				BondedAmount:    sdk.NewInt(1_000_000),
+				IsEnabled:       true,
+			},
+		},
+		IcaDepositAddress:   cosmosIcaDepositAddress,
+		IcaPrizepoolAddress: cosmosIcaPrizePoolAddress,
+		PrizeStrategy: millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 100, Quantity: 1, DrawProbability: floatToDec(0.00)},
+			},
+		},
+		DrawSchedule: millionstypes.DrawSchedule{
+			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
+			DrawDelta:     drawDelta1,
+		},
+		AvailablePrizePool: sdk.NewCoin(remotePoolDenom, math.NewInt(1000)),
+	}))
+	pools = app.MillionsKeeper.ListPools(ctx)
+	pool, err = app.MillionsKeeper.GetPool(ctx, pools[2].PoolId)
+	suite.Require().NoError(err)
+
+	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
+		PoolId:           pool.PoolId,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[0].String(),
+		State:            millionstypes.DepositState_Success,
+		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
+	})
+	deposits = app.MillionsKeeper.ListAccountDeposits(ctx, suite.addrs[0])
+	err = app.BankKeeper.SendCoins(ctx, uatomAddresses[0], sdk.MustAccAddressFromBech32(pools[2].LocalAddress), sdk.Coins{sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000))})
+	suite.Require().NoError(err)
+
+	pools = app.MillionsKeeper.ListPools(ctx)
+	pool, err = app.MillionsKeeper.GetPool(ctx, pools[2].PoolId)
+	suite.Require().NoError(err)
+
+	_, err = msgServer.WithdrawDeposit(goCtx, &millionstypes.MsgWithdrawDeposit{
+		PoolId:           deposits[1].PoolId,
+		DepositId:        deposits[1].DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		ToAddress:        "osmo11qggwr7vze9x7ustru9dctf6krhk2285lkf89g7",
+	})
+	// Error is triggered as toAddress does not match pool bech prefix and neither lum AccAddressFromBech32
+	suite.Require().ErrorIs(err, millionstypes.ErrInvalidDestinationAddress)
+
+	_, err = msgServer.WithdrawDeposit(goCtx, &millionstypes.MsgWithdrawDeposit{
+		PoolId:           deposits[1].PoolId,
+		DepositId:        deposits[1].DepositId,
+		DepositorAddress: suite.addrs[0].String(),
+		ToAddress:        cosmosAccAddress,
+	})
+	// Error is triggered as failed to retrieve open active channel port (intended error)
+	// but we passed all the toAddr validations which is the intention of this test
+	suite.Require().ErrorIs(err, icatypes.ErrActiveChannelNotFound)
 }
 
 // TestMsgServer_WithdrawDepositRetry runs withdrawal retry related tests

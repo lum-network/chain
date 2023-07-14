@@ -2,14 +2,13 @@ package dfract
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/lum-network/chain/x/dfract/keeper"
 	"github.com/lum-network/chain/x/dfract/types"
 )
 
 // InitGenesis initializes the dfract module's state from a provided genesis state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) error {
+func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.CreateModuleAccount(ctx, genState.ModuleAccountBalance)
 	k.SetParams(ctx, genState.Params)
 
@@ -17,7 +16,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, deposit := range genState.DepositsMinted {
 		depositorAddress, err := sdk.AccAddressFromBech32(deposit.GetDepositorAddress())
 		if err != nil {
-			return sdkerrors.ErrInvalidAddress
+			panic(err)
 		}
 		k.SetDepositMinted(ctx, depositorAddress, *deposit)
 	}
@@ -26,7 +25,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, deposit := range genState.DepositsPendingMint {
 		depositorAddress, err := sdk.AccAddressFromBech32(deposit.GetDepositorAddress())
 		if err != nil {
-			return sdkerrors.ErrInvalidAddress
+			panic(err)
 		}
 		k.SetDepositPendingMint(ctx, depositorAddress, *deposit)
 	}
@@ -35,12 +34,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, deposit := range genState.DepositsPendingWithdrawal {
 		depositorAddress, err := sdk.AccAddressFromBech32(deposit.GetDepositorAddress())
 		if err != nil {
-			return sdkerrors.ErrInvalidAddress
+			panic(err)
 		}
 		k.SetDepositPendingWithdrawal(ctx, depositorAddress, *deposit)
 	}
-
-	return nil
 }
 
 // ExportGenesis returns the dfract module's exported genesis.

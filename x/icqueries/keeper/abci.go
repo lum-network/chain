@@ -3,8 +3,9 @@ package keeper
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/lum-network/chain/x/icqueries/types"
 	"time"
+
+	"github.com/lum-network/chain/x/icqueries/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"

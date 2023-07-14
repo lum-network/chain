@@ -1,16 +1,18 @@
 package v110_test
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	apptypes "github.com/lum-network/chain/app"
 	"github.com/lum-network/chain/utils"
 	v110 "github.com/lum-network/chain/x/beam/migrations/v110"
 	"github.com/lum-network/chain/x/beam/types"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"testing"
 )
 
 type StoreMigrationTestSuite struct {
@@ -36,7 +38,7 @@ func (suite *StoreMigrationTestSuite) TestDisabledAutoCloseMigration() {
 
 	// Simulate legacy beam entries with auto close disabled (otherwise they would've been added automatically to the new queue)
 	beam1id := utils.GenerateSecureToken(8)
-	suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
+	_, err := suite.app.BeamKeeper.OpenBeam(suite.ctx, &types.MsgOpenBeam{
 		Id:                  beam1id,
 		CreatorAddress:      addr1.String(),
 		Secret:              utils.GenerateSecureToken(10),
@@ -45,8 +47,9 @@ func (suite *StoreMigrationTestSuite) TestDisabledAutoCloseMigration() {
 		ClosesAtBlock:       0,
 		ClaimExpiresAtBlock: 0,
 	})
+	suite.Require().NoError(err)
 	beam2id := utils.GenerateSecureToken(8)
-	suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
+	_, err = suite.app.BeamKeeper.OpenBeam(suite.ctx, &types.MsgOpenBeam{
 		Id:                  beam2id,
 		CreatorAddress:      addr2.String(),
 		Secret:              utils.GenerateSecureToken(10),
@@ -55,8 +58,9 @@ func (suite *StoreMigrationTestSuite) TestDisabledAutoCloseMigration() {
 		ClosesAtBlock:       0,
 		ClaimExpiresAtBlock: 0,
 	})
+	suite.Require().NoError(err)
 	beam3id := utils.GenerateSecureToken(8)
-	suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
+	_, err = suite.app.BeamKeeper.OpenBeam(suite.ctx, &types.MsgOpenBeam{
 		Id:                  beam3id,
 		CreatorAddress:      addr3.String(),
 		Secret:              utils.GenerateSecureToken(10),
@@ -65,11 +69,12 @@ func (suite *StoreMigrationTestSuite) TestDisabledAutoCloseMigration() {
 		ClosesAtBlock:       0,
 		ClaimExpiresAtBlock: 0,
 	})
+	suite.Require().NoError(err)
 
 	// Make sure the open beam iterator is invalid
 	openedIterator := suite.app.BeamKeeper.OpenBeamsQueueIterator(suite.ctx)
-	require.Error(suite.T(), openedIterator.Error())
-	require.False(suite.T(), openedIterator.Valid())
+	suite.Require().Error(openedIterator.Error())
+	suite.Require().False(openedIterator.Valid())
 	openedIterator.Close()
 
 	// Manually append the entries into the old queue system
@@ -79,24 +84,24 @@ func (suite *StoreMigrationTestSuite) TestDisabledAutoCloseMigration() {
 
 	// Make sure the open beam queue is valid
 	openedIterator = suite.app.BeamKeeper.OpenBeamsQueueIterator(suite.ctx)
-	require.NoError(suite.T(), openedIterator.Error())
-	require.True(suite.T(), openedIterator.Valid())
+	suite.Require().NoError(openedIterator.Error())
+	suite.Require().True(openedIterator.Valid())
 	openedIterator.Close()
 
 	// Run the migration
-	err := v110.MigrateBeamQueues(suite.ctx, *suite.app.BeamKeeper)
+	err = v110.MigrateBeamQueues(suite.ctx, *suite.app.BeamKeeper)
 	suite.Require().NoError(err)
 
 	// Make sure the open beam queue is empty and now invalid
 	openedIterator = suite.app.BeamKeeper.OpenBeamsQueueIterator(suite.ctx)
-	require.Error(suite.T(), openedIterator.Error())
-	require.False(suite.T(), openedIterator.Valid())
+	suite.Require().Error(openedIterator.Error())
+	suite.Require().False(openedIterator.Valid())
 	openedIterator.Close()
 
 	// Make sure the open by height queue is invalid
 	openedIterator = suite.app.BeamKeeper.OpenBeamsByBlockQueueIterator(suite.ctx)
-	require.Error(suite.T(), openedIterator.Error())
-	require.False(suite.T(), openedIterator.Valid())
+	suite.Require().Error(openedIterator.Error())
+	suite.Require().False(openedIterator.Valid())
 	openedIterator.Close()
 }
 
@@ -108,7 +113,7 @@ func (suite *StoreMigrationTestSuite) TestEnabledAutoCloseMigration() {
 
 	// Simulate legacy beam entries with auto close disabled (otherwise they would've been added automatically to the new queue)
 	beam1id := utils.GenerateSecureToken(8)
-	suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
+	_, err := suite.app.BeamKeeper.OpenBeam(suite.ctx, &types.MsgOpenBeam{
 		Id:                  beam1id,
 		CreatorAddress:      addr1.String(),
 		Secret:              utils.GenerateSecureToken(10),
@@ -117,8 +122,9 @@ func (suite *StoreMigrationTestSuite) TestEnabledAutoCloseMigration() {
 		ClosesAtBlock:       10,
 		ClaimExpiresAtBlock: 10,
 	})
+	suite.Require().NoError(err)
 	beam2id := utils.GenerateSecureToken(8)
-	suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
+	_, err = suite.app.BeamKeeper.OpenBeam(suite.ctx, &types.MsgOpenBeam{
 		Id:                  beam2id,
 		CreatorAddress:      addr2.String(),
 		Secret:              utils.GenerateSecureToken(10),
@@ -127,8 +133,9 @@ func (suite *StoreMigrationTestSuite) TestEnabledAutoCloseMigration() {
 		ClosesAtBlock:       10,
 		ClaimExpiresAtBlock: 10,
 	})
+	suite.Require().NoError(err)
 	beam3id := utils.GenerateSecureToken(8)
-	suite.app.BeamKeeper.OpenBeam(suite.ctx, types.MsgOpenBeam{
+	_, err = suite.app.BeamKeeper.OpenBeam(suite.ctx, &types.MsgOpenBeam{
 		Id:                  beam3id,
 		CreatorAddress:      addr3.String(),
 		Secret:              utils.GenerateSecureToken(10),
@@ -137,6 +144,7 @@ func (suite *StoreMigrationTestSuite) TestEnabledAutoCloseMigration() {
 		ClosesAtBlock:       10,
 		ClaimExpiresAtBlock: 10,
 	})
+	suite.Require().NoError(err)
 
 	// Manually append the entries into the old queue system
 	suite.app.BeamKeeper.InsertOpenBeamQueue(suite.ctx, beam1id)
@@ -145,7 +153,7 @@ func (suite *StoreMigrationTestSuite) TestEnabledAutoCloseMigration() {
 
 	// Make sure we have three IDs at the height in the new system
 	entries := suite.app.BeamKeeper.GetBeamIDsFromBlockQueue(suite.ctx, 10)
-	require.Equal(suite.T(), 3, len(entries))
+	suite.Require().Equal(3, len(entries))
 
 	// Manually remove the entries from the new system
 	suite.app.BeamKeeper.RemoveFromOpenBeamByBlockQueue(suite.ctx, 10, beam1id)
@@ -153,33 +161,33 @@ func (suite *StoreMigrationTestSuite) TestEnabledAutoCloseMigration() {
 	suite.app.BeamKeeper.RemoveFromOpenBeamByBlockQueue(suite.ctx, 10, beam3id)
 
 	entries = suite.app.BeamKeeper.GetBeamIDsFromBlockQueue(suite.ctx, 10)
-	require.Equal(suite.T(), 0, len(entries))
+	suite.Require().Equal(0, len(entries))
 
 	// Make sure the open beam iterator is valid
 	openedIterator := suite.app.BeamKeeper.OpenBeamsQueueIterator(suite.ctx)
-	require.NoError(suite.T(), openedIterator.Error())
-	require.True(suite.T(), openedIterator.Valid())
+	suite.Require().NoError(openedIterator.Error())
+	suite.Require().True(openedIterator.Valid())
 	openedIterator.Close()
 
 	// Run the migration
-	err := v110.MigrateBeamQueues(suite.ctx, *suite.app.BeamKeeper)
+	err = v110.MigrateBeamQueues(suite.ctx, *suite.app.BeamKeeper)
 	suite.Require().NoError(err)
 
 	// Make sure the legacy open beam iterator is invalid
 	openedIterator = suite.app.BeamKeeper.OpenBeamsQueueIterator(suite.ctx)
-	require.Error(suite.T(), openedIterator.Error())
-	require.False(suite.T(), openedIterator.Valid())
+	suite.Require().Error(openedIterator.Error())
+	suite.Require().False(openedIterator.Valid())
 	openedIterator.Close()
 
 	// Make sure the new open beam by height queue is valid
 	openedIterator = suite.app.BeamKeeper.OpenBeamsByBlockQueueIterator(suite.ctx)
-	require.NoError(suite.T(), openedIterator.Error())
-	require.True(suite.T(), openedIterator.Valid())
+	suite.Require().NoError(openedIterator.Error())
+	suite.Require().True(openedIterator.Valid())
 	openedIterator.Close()
 
 	// Make sure we have three IDs at the height in the new queue
 	entries = suite.app.BeamKeeper.GetBeamIDsFromBlockQueue(suite.ctx, 10)
-	require.Equal(suite.T(), 3, len(entries))
+	suite.Require().Equal(3, len(entries))
 }
 
 func TestKeeperSuite(t *testing.T) {

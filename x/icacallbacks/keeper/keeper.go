@@ -3,24 +3,21 @@ package keeper
 import (
 	"fmt"
 
-	millionstypes "github.com/lum-network/chain/x/millions/types"
-
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+
 	"github.com/lum-network/chain/x/icacallbacks/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 )
 
 type (
@@ -29,7 +26,6 @@ type (
 		storeKey            storetypes.StoreKey
 		memKey              storetypes.StoreKey
 		paramstore          paramtypes.Subspace
-		scopedKeeper        capabilitykeeper.ScopedKeeper
 		icacallbacks        map[string]types.ICACallbackHandler
 		IBCKeeper           ibckeeper.Keeper
 		ICAControllerKeeper icacontrollerkeeper.Keeper
@@ -41,7 +37,6 @@ func NewKeeper(
 	storeKey,
 	memKey storetypes.StoreKey,
 	ps paramtypes.Subspace,
-	scopedKeeper capabilitykeeper.ScopedKeeper,
 	ibcKeeper ibckeeper.Keeper,
 	icacontrollerkeeper icacontrollerkeeper.Keeper,
 ) *Keeper {
@@ -55,7 +50,6 @@ func NewKeeper(
 		storeKey:            storeKey,
 		memKey:              memKey,
 		paramstore:          ps,
-		scopedKeeper:        scopedKeeper,
 		icacallbacks:        make(map[string]types.ICACallbackHandler),
 		IBCKeeper:           ibcKeeper,
 		ICAControllerKeeper: icacontrollerkeeper,
@@ -83,11 +77,6 @@ func (k *Keeper) GetICACallbackHandler(module string) (types.ICACallbackHandler,
 	return callback, nil
 }
 
-// ClaimCapability claims the channel capability passed via the OnOpenChanInit callback
-func (k *Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error {
-	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
-}
-
 func (k Keeper) GetCallbackDataFromPacket(ctx sdk.Context, modulePacket channeltypes.Packet, callbackDataKey string) (cbd *types.CallbackData, found bool) {
 	// get the relevant module from the channel and port
 	portID := modulePacket.GetSourcePort()
@@ -109,13 +98,6 @@ func (k Keeper) GetICACallbackHandlerFromPacket(ctx sdk.Context, modulePacket ch
 		k.Logger(ctx).Error(fmt.Sprintf("error LookupModuleByChannel for portID: %s, channelID: %s, sequence: %d", modulePacket.GetSourcePort(), modulePacket.GetSourceChannel(), modulePacket.Sequence))
 		return nil, err
 	}
-
-	// redirect transfer callbacks to the records module
-	// is there a better way to do this?
-	if module == "transfer" {
-		module = millionstypes.ModuleName
-	}
-
 	// fetch the callback function
 	callbackHandler, err := k.GetICACallbackHandler(module)
 	if err != nil {

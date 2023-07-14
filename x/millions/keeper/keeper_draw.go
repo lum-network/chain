@@ -13,9 +13,9 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
 	"github.com/lum-network/chain/x/millions/types"
 )
@@ -137,8 +137,7 @@ func (k Keeper) ClaimRewardsOnNativeChain(ctx sdk.Context, poolID uint64, drawID
 		}
 
 		// Dispatch our message with a timeout of 30 minutes in nanos
-		timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
-		sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, timeoutTimestamp, ICACallbackID_Claim, marshalledCallbackData)
+		sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Claim, marshalledCallbackData)
 		if err != nil {
 			// Return with error here since it is the first operation and nothing needs to be saved to state
 			logger.Error(
@@ -318,7 +317,6 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 
 	// Build our array of messages
 	var msgs []sdk.Msg
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTransferTimeoutNanos
 	// From Remote to Local - use counterparty transfer channel ID
 	msgs = append(msgs, ibctransfertypes.NewMsgTransfer(
 		ibctransfertypes.PortID,
@@ -327,7 +325,8 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 		pool.GetIcaPrizepoolAddress(),
 		pool.GetLocalAddress(),
 		clienttypes.Height{},
-		timeoutTimestamp,
+		uint64(ctx.BlockTime().UnixNano())+types.IBCTimeoutNanos,
+		"Cosmos Millions",
 	))
 
 	// Construct our callback data
@@ -342,7 +341,7 @@ func (k Keeper) TransferRewardsToLocalChain(ctx sdk.Context, poolID uint64, draw
 	}
 
 	// Dispatch our message with a timeout of 30 minutes in nanos
-	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypePrizePool, msgs, timeoutTimestamp, ICACallbackID_TransferFromNative, marshalledCallbackData)
+	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypePrizePool, msgs, types.IBCTimeoutNanos, ICACallbackID_TransferFromNative, marshalledCallbackData)
 	if err != nil {
 		// Save error state since we cannot simply recover from a failure at this stage
 		// A subsequent call to DrawRetry will be made possible by setting an error state and not returning an error here
@@ -422,7 +421,7 @@ func (k Keeper) OnTransferRewardsToLocalChainCompleted(ctx sdk.Context, poolID u
 			fDraw = &draw
 		}
 		//nolint:errcheck // error check is not necessary here since we handled it before
-		k.OnExecuteDrawCompeleted(ctx, &pool, fDraw, err)
+		k.OnExecuteDrawCompleted(ctx, &pool, fDraw, err)
 		return fDraw, nil
 	} else {
 		// Commit ExecuteDraw changes in case of success
@@ -493,7 +492,7 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*typ
 		draw.RandSeed,
 	)
 	if err != nil {
-		return k.OnExecuteDrawCompeleted(
+		return k.OnExecuteDrawCompleted(
 			ctx,
 			&pool,
 			&draw,
@@ -514,7 +513,7 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*typ
 	// Distribute prizes and collect fees
 	fc := k.NewFeeCollector(ctx, pool)
 	if err := k.DistributePrizes(ctx, fc, dRes, draw); err != nil {
-		return k.OnExecuteDrawCompeleted(
+		return k.OnExecuteDrawCompleted(
 			ctx,
 			&pool,
 			&draw,
@@ -530,7 +529,7 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*typ
 
 	// Send collected fees
 	if err := fc.SendCollectedFees(ctx); err != nil {
-		return k.OnExecuteDrawCompeleted(
+		return k.OnExecuteDrawCompleted(
 			ctx,
 			&pool,
 			&draw,
@@ -553,12 +552,12 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*typ
 		),
 	})
 
-	return k.OnExecuteDrawCompeleted(ctx, &pool, &draw, nil)
+	return k.OnExecuteDrawCompleted(ctx, &pool, &draw, nil)
 }
 
-// OnExecuteDrawCompeleted wrappers for draw state update upon drawing phase completion
+// OnExecuteDrawCompleted wrappers for draw state update upon drawing phase completion
 // returns the error specified in parameters and does not produce any internal error
-func (k Keeper) OnExecuteDrawCompeleted(ctx sdk.Context, pool *types.Pool, draw *types.Draw, err error) (*types.Draw, error) {
+func (k Keeper) OnExecuteDrawCompleted(ctx sdk.Context, pool *types.Pool, draw *types.Draw, err error) (*types.Draw, error) {
 	if err != nil {
 		draw.State = types.DrawState_Failure
 		draw.ErrorState = types.DrawState_Drawing
@@ -621,6 +620,9 @@ func (k Keeper) ComputeDepositsTWB(ctx sdk.Context, depositStartAt time.Time, dr
 // RunDrawPrizes computes available prizes and draws the prizes and their potential winners based on the specified prize strategy
 // this method does not store nor send anything, it only computes the DrawResult
 func (k Keeper) RunDrawPrizes(ctx sdk.Context, prizePool sdk.Coin, prizeStrat types.PrizeStrategy, deposits []DepositTWB, randSeed int64) (result DrawResult, err error) {
+	if prizeStrat.ContainsUniqueBatch() {
+		return k.RunDrawPrizesWithUniques(ctx, prizePool, prizeStrat, deposits, randSeed)
+	}
 	result.TotalWinAmount = sdk.ZeroInt()
 
 	// Compute all prizes probs
@@ -680,24 +682,24 @@ func (k Keeper) RunDrawPrizes(ctx sdk.Context, prizePool sdk.Coin, prizeStrat ty
 	// - winner is depositor B since they own the range from A) to B]
 	i := 0
 	result.PrizeDraws = make([]PrizeDraw, len(prizes))
-	for _, d := range draws {
-		p := prizes[d.PrizeIdx]
+	for _, draw := range draws {
+		prize := prizes[draw.PrizeIdx]
 		nowinner := false
 		winner := false
-		if totalDeposits.GT(sdk.ZeroInt()) && d.DrawValue.LT(p.DrawProbability) {
+		if totalDeposits.GT(sdk.ZeroInt()) && draw.DrawValue.LT(prize.DrawProbability) {
 			// Prize draw has a winner (inside the buffer owned by depositors)
 			// normalize draw position to make it a portion of the depositors owned buffer and ignore the potential extra unassigned buffer part
-			drawPosition := d.DrawValue.Quo(p.DrawProbability).MulInt(totalDeposits).RoundInt()
+			drawPosition := draw.DrawValue.Quo(prize.DrawProbability).MulInt(totalDeposits).RoundInt()
 			for i < len(drawBuffer) {
 				// keep iterating in the buffer
 				// winner is the one owning the current portion of the buffer
 				if drawPosition.LTE(drawBuffer[i]) {
 					dep := bufferToDeposit[drawBuffer[i]]
-					result.PrizeDraws[d.PrizeIdx] = PrizeDraw{
-						Amount: prizes[d.PrizeIdx].Amount,
+					result.PrizeDraws[draw.PrizeIdx] = PrizeDraw{
+						Amount: prize.Amount,
 						Winner: &dep,
 					}
-					result.TotalWinAmount = result.TotalWinAmount.Add(prizes[d.PrizeIdx].Amount)
+					result.TotalWinAmount = result.TotalWinAmount.Add(prize.Amount)
 					result.TotalWinCount++
 					winner = true
 					break
@@ -707,8 +709,116 @@ func (k Keeper) RunDrawPrizes(ctx sdk.Context, prizePool sdk.Coin, prizeStrat ty
 			}
 		} else {
 			// Prize draw has no winner
-			result.PrizeDraws[d.PrizeIdx] = PrizeDraw{
-				Amount: prizes[d.PrizeIdx].Amount,
+			result.PrizeDraws[draw.PrizeIdx] = PrizeDraw{
+				Amount: prize.Amount,
+				Winner: nil,
+			}
+			nowinner = true
+		}
+		if !winner && !nowinner {
+			// This should never happen except in case of algorithm failure
+			return result, fmt.Errorf("failed to find an outcome for prize draw")
+		}
+	}
+
+	return result, err
+}
+
+// RunDrawPrizesWithUniques computes available prizes and draws the prizes and their potential winners based on the specified prize strategy
+// this method does not store nor send anything, it only computes the DrawResult
+// this is a variant of RunDrawPrizes which takes into account unique prize batches (i.e: the kind of prize which prevent a winner to win other prizes)
+func (k Keeper) RunDrawPrizesWithUniques(ctx sdk.Context, prizePool sdk.Coin, prizeStrat types.PrizeStrategy, deposits []DepositTWB, randSeed int64) (result DrawResult, err error) {
+	result.TotalWinAmount = sdk.ZeroInt()
+
+	// Compute all prizes probs
+	prizes, _, _, err := prizeStrat.ComputePrizesProbs(prizePool)
+	if err != nil {
+		return result, err
+	}
+
+	// Create deposits buffer and mapping
+	// - drawBuffer is a representation of the deposits as if we put them on a line with the distance between them being their deposited amount
+	// - bufferToDeposit is the link between the deposit position on the line and the actual deposit
+	// Visual representation:
+	// - drawBuffer = deposits weighted position A(2), B(5), C(3): ..A.....B...C,,,,,
+	// - bufferToDeposit = {2: A, 7: B, 12: C}
+	// - note that the positions marked by commas (,) instead of dots (.) are outside of the depositors owned area (no winner zone)
+	var drawBuffer []sdkmath.Int
+	var bufferToDeposit map[sdkmath.Int]DepositTWB
+	var totalDeposits sdkmath.Int
+	excludedWinnerAddresses := map[string]bool{}
+
+	refreshBuffer := func() {
+		totalDeposits = sdk.ZeroInt()
+		drawBuffer = []sdkmath.Int{}
+		bufferToDeposit = map[sdkmath.Int]DepositTWB{}
+		for _, d := range deposits {
+			if d.Amount.LTE(sdk.ZeroInt()) {
+				// Ignore 0 deposits just in case since it would break the draw logic
+				// can happen due to rounding approximation (TWB)
+				continue
+			}
+			if _, excluded := excludedWinnerAddresses[d.Address]; excluded {
+				// Ingore excluded winner addresses
+				// can happen if the address already won a prize marked as unique
+				continue
+			}
+			totalDeposits = totalDeposits.Add(d.Amount)
+			drawBuffer = append(drawBuffer, totalDeposits)
+			bufferToDeposit[totalDeposits] = d
+		}
+	}
+	refreshBuffer()
+
+	// Initialise rand source
+	rnd := rand.New(rand.NewSource(randSeed))
+
+	// Compute each prize winner based on the price draw and the deposit position in the buffer
+	// - No winner if the drawValue >= drawProbability
+	// Visual representation (no winner case):
+	// - drawBuffer  : ..A.....B...C,,,,,,,,,,
+	// - drawPosition: .............,,,,,,x,,,
+	// - no winner since x is outside the buffer owned by depositors
+	//
+	// Otherwise the winner is the one which owns the position in the buffer
+	// Visual representation (winner case):
+	// - drawBuffer  : ..A.....B...C,,,,,,,,,,
+	// - drawPosition: .....x.......,,,,,,,,,,
+	// - winner is depositor B since they own the range from A) to B]
+	result.PrizeDraws = make([]PrizeDraw, len(prizes))
+	for pIdx, prize := range prizes {
+		nowinner := false
+		winner := false
+		drawValue := sdk.NewDec(rnd.Int63()).QuoInt64(math.MaxInt64)
+		if totalDeposits.GT(sdk.ZeroInt()) && drawValue.LT(prize.DrawProbability) {
+			// Prize draw has a winner (inside the buffer owned by depositors)
+			// normalize draw position to make it a portion of the depositors owned buffer and ignore the potential extra unassigned buffer part
+			drawPosition := drawValue.Quo(prize.DrawProbability).MulInt(totalDeposits).RoundInt()
+			for i := 0; i < len(drawBuffer); i++ {
+				// keep iterating in the buffer
+				// winner is the one owning the current portion of the buffer
+				if drawPosition.LTE(drawBuffer[i]) {
+					dep := bufferToDeposit[drawBuffer[i]]
+					result.PrizeDraws[pIdx] = PrizeDraw{
+						Amount: prize.Amount,
+						Winner: &dep,
+					}
+					result.TotalWinAmount = result.TotalWinAmount.Add(prize.Amount)
+					result.TotalWinCount++
+					winner = true
+					if prize.IsUnique {
+						// Winner gets excluded from winning more prizes
+						// Refresh buffer to remove the winner address from the buffer
+						excludedWinnerAddresses[dep.Address] = true
+						refreshBuffer()
+					}
+					break
+				}
+			}
+		} else {
+			// Prize draw has no winner
+			result.PrizeDraws[pIdx] = PrizeDraw{
+				Amount: prize.Amount,
 				Winner: nil,
 			}
 			nowinner = true
@@ -723,7 +833,7 @@ func (k Keeper) RunDrawPrizes(ctx sdk.Context, prizePool sdk.Coin, prizeStrat ty
 }
 
 // DistributePrizes distributes the prizes if they have a winner
-func (k Keeper) DistributePrizes(ctx sdk.Context, fc feeCollector, dRes DrawResult, draw types.Draw) error {
+func (k Keeper) DistributePrizes(ctx sdk.Context, fc *feeCollector, dRes DrawResult, draw types.Draw) error {
 	var prizeRefs []types.PrizeRef
 	for _, pd := range dRes.PrizeDraws {
 		if pd.Winner != nil {

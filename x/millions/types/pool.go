@@ -1,12 +1,17 @@
 package types
 
 import (
+	"errors"
+	fmt "fmt"
 	"sort"
 	"strings"
+
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
 // ValidateBasic validates if a pool has a valid configuration
@@ -234,4 +239,70 @@ func (p *Pool) ApplySplitUndelegate(ctx sdk.Context, splits []*SplitDelegation) 
 			panic(ErrPoolInvalidSplit)
 		}
 	}
+}
+
+// ApplySplitRedelegate serves as internal tracking to redelegate the bonded amount from the inactive to the active validators
+func (p *Pool) ApplySplitRedelegate(ctx sdk.Context, valSrcAddr string, splits []*SplitDelegation) {
+	valIdx := p.GetValidatorsMapIndex()
+	for _, split := range splits {
+		// Add the split amount to the active validator's bonded amount
+		p.Validators[valIdx[split.ValidatorAddress]].BondedAmount = p.Validators[valIdx[split.ValidatorAddress]].BondedAmount.Add(split.Amount)
+		// Substract from the inactive validator
+		p.Validators[valIdx[valSrcAddr]].BondedAmount = p.Validators[valIdx[valSrcAddr]].BondedAmount.Sub(split.Amount)
+		if p.Validators[valIdx[valSrcAddr]].BondedAmount.LT(sdk.ZeroInt()) {
+			panic(ErrPoolInvalidSplit)
+		}
+	}
+}
+
+// RevertSplitRedelegate reverts an initial ApplySplitRedelegate
+func (p *Pool) RevertSplitRedelegate(ctx sdk.Context, valSrcAddr string, splits []*SplitDelegation) {
+	valIdx := p.GetValidatorsMapIndex()
+	for _, split := range splits {
+		// Add BondedAmount back to the previously inactive bonded validator
+		p.Validators[valIdx[valSrcAddr]].BondedAmount = p.Validators[valIdx[valSrcAddr]].BondedAmount.Add(split.Amount)
+		// Substract from the active bonded validator
+		p.Validators[valIdx[split.ValidatorAddress]].BondedAmount = p.Validators[valIdx[split.ValidatorAddress]].BondedAmount.Sub(split.Amount)
+		if p.Validators[valIdx[split.ValidatorAddress]].BondedAmount.LT(sdk.ZeroInt()) {
+			panic(ErrPoolInvalidSplit)
+		}
+	}
+}
+
+// AccAddressFromBech32 custom implementation of sdk.AccAddressFromBech32 to handle pool bech32 prefix
+// Returns if address is local (= to sdk.GetConfig().GetBech32AccountAddrPrefix()):
+// Error in cases:
+// - invalid address format
+// - denom != to pool.Bech32PrefixAccAddr && denom != sdk.GetConfig().GetBech32AccountAddrPrefix()
+func (p *Pool) AccAddressFromBech32(address string) (isLocalAddress bool, addr sdk.AccAddress, err error) {
+	if len(strings.TrimSpace(address)) == 0 {
+		return false, nil, errors.New("empty address string is not allowed")
+	}
+
+	hrp, bz, err := bech32.DecodeAndConvert(address)
+	if err != nil {
+		return false, nil, err
+	}
+
+	err = sdk.VerifyAddressFormat(bz)
+	if err != nil {
+		return false, nil, err
+	}
+
+	configBech32Prefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
+	if hrp != configBech32Prefix && hrp != p.Bech32PrefixAccAddr {
+		return false, nil, fmt.Errorf("invalid Bech32 prefix; expected %s or %s, got %s", configBech32Prefix, p.Bech32PrefixAccAddr, hrp)
+	}
+
+	return hrp == configBech32Prefix, sdk.AccAddress(bz), nil
+}
+
+func (p *Pool) GetIcaDepositPortIdWithPrefix() string {
+	portID, _ := icatypes.NewControllerPortID(p.GetIcaDepositPortId())
+	return portID
+}
+
+func (p *Pool) GetIcaPrizepoolPortIdWithPrefix() string {
+	portID, _ := icatypes.NewControllerPortID(p.GetIcaPrizepoolPortId())
+	return portID
 }

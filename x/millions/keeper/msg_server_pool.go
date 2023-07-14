@@ -6,7 +6,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 
 	"github.com/lum-network/chain/x/millions/types"
 )
@@ -40,11 +39,7 @@ func (k msgServer) RestoreInterchainAccounts(goCtx context.Context, msg *types.M
 	icaDepositPortName := string(types.NewPoolName(pool.GetPoolId(), types.ICATypeDeposit))
 	if pool.GetIcaDepositPortId() == "" {
 		// Unusual case - no port ID was set at Pool registration time (ex: genesis import without portID)
-		// Basically create a new one
-		pool.IcaDepositPortId, err = icatypes.NewControllerPortID(icaDepositPortName)
-		if err != nil {
-			return nil, errorsmod.Wrapf(types.ErrFailedToRegisterPool, fmt.Sprintf("Unable to create deposit account port id, err: %s", err.Error()))
-		}
+		pool.IcaDepositPortId = icaDepositPortName
 		k.updatePool(ctx, &pool)
 	}
 	_, found := k.ICAControllerKeeper.GetOpenActiveChannel(ctx, pool.GetConnectionId(), pool.GetIcaDepositPortId())
@@ -62,11 +57,7 @@ func (k msgServer) RestoreInterchainAccounts(goCtx context.Context, msg *types.M
 	icaPrizePoolPortName := string(types.NewPoolName(pool.GetPoolId(), types.ICATypePrizePool))
 	if pool.GetIcaPrizepoolPortId() == "" {
 		// Unusual case - no port ID was set at Pool ICA Deposit ACK time
-		// Basically create a new one
-		pool.IcaPrizepoolPortId, err = icatypes.NewControllerPortID(icaPrizePoolPortName)
-		if err != nil {
-			return nil, errorsmod.Wrapf(types.ErrFailedToRegisterPool, fmt.Sprintf("Unable to create prizepool account port id, err: %s", err.Error()))
-		}
+		pool.IcaPrizepoolPortId = icaPrizePoolPortName
 		k.updatePool(ctx, &pool)
 	}
 	_, found = k.ICAControllerKeeper.GetOpenActiveChannel(ctx, pool.GetConnectionId(), pool.GetIcaPrizepoolPortId())

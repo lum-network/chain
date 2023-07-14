@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
 	icacallbackstypes "github.com/lum-network/chain/x/icacallbacks/types"
 )
@@ -15,6 +15,7 @@ const (
 	ICACallbackID_TransferToNative   = "transfer_to_native"
 	ICACallbackID_TransferFromNative = "transfer_from_native"
 	ICACallbackID_SetWithdrawAddress = "set_withdraw_address"
+	ICACallbackID_BankSend           = "bank_send"
 )
 
 // ICACallback wrapper struct for millions keeper
@@ -52,6 +53,7 @@ func (c ICACallbacks) RegisterICACallbacks() icacallbackstypes.ICACallbackHandle
 		AddICACallback(ICACallbackID_Claim, ICACallback(ClaimCallback)).
 		AddICACallback(ICACallbackID_TransferFromNative, ICACallback(TransferFromNativeCallback)).
 		AddICACallback(ICACallbackID_TransferToNative, ICACallback(TransferToNativeCallback)).
-		AddICACallback(ICACallbackID_SetWithdrawAddress, ICACallback(SetWithdrawAddressCallback))
+		AddICACallback(ICACallbackID_SetWithdrawAddress, ICACallback(SetWithdrawAddressCallback)).
+		AddICACallback(ICACallbackID_BankSend, ICACallback(BankSendCallback))
 	return a.(ICACallbacks)
 }

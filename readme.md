@@ -19,6 +19,15 @@ Then just use the following command to generate the protobuf and the chain binar
 
 Please also make sure to have a look to the [contributing guidelines](https://github.com/lum-network/chain/blob/master/CONTRIBUTING.md)
 
+### Dev tools
+
+- Run `bash ./scripts/install_tools.sh` to install dev tools
+- Tools being used:
+    - `gofmt` to format code
+    - `goimports` to organize imports
+    - `golangci-lint` to check for linting issues
+    - `gosec` to check for security issues
+
 ## Useful links
 
 * [Javascript client SDK](https://github.com/lum-network/sdk-javascript)
