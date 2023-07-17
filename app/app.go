@@ -798,13 +798,18 @@ func (app *App) registerUpgradeHandlers() {
 		app.Logger().Info("Starting v1.5.0 upgrade")
 
 		// Migrate the consensus module params
+		app.Logger().Info("Migrate the consensus module params...")
 		legacyParamSubspace := app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 		baseapp.MigrateParams(ctx, legacyParamSubspace, app.ConsensusParamsKeeper)
 
-		// Migrate DFract params
-		app.DFractKeeper.SetParams(ctx, dfracttypes.DefaultParams())
+		// Migrate DFract params, set the first withdrawal address (can be patched later on through proposal)
+		app.Logger().Info("Migrate the DFract params...")
+		dfrParams := dfracttypes.DefaultParams()
+		dfrParams.WithdrawalAddress = "lum1euhszjasgkeskujz6zr42r3lsxv58mfgsmlps0"
+		app.DFractKeeper.SetParams(ctx, dfrParams)
 
 		// Migrate ICA channel capabilities from IBC V5 to IBC V6
+		app.Logger().Info("Migrate the ICS27 channel capabilities...")
 		if err := icacontrollermigrations.MigrateICS27ChannelCapability(
 			ctx,
 			app.appCodec,
@@ -816,13 +821,34 @@ func (app *App) registerUpgradeHandlers() {
 		}
 
 		// Migrate clients, and add the localhost type
+		app.Logger().Info("Migrate the IBC allowed clients...")
 		params := app.IBCKeeper.ClientKeeper.GetParams(ctx)
 		params.AllowedClients = append(params.AllowedClients, exported.Localhost)
 		app.IBCKeeper.ClientKeeper.SetParams(ctx, params)
 
 		// Prune expired client states
+		app.Logger().Info("Prune expired client states...")
 		if _, err := ibctmmigrations.PruneExpiredConsensusStates(ctx, app.appCodec, app.IBCKeeper.ClientKeeper); err != nil {
 			return nil, errorsmod.Wrapf(err, "unable to prune expired consensus states")
+		}
+
+		// Change the Millions Pool prize strategy
+		// We check if we are able to find the pool with ID 2, but we don't error out in the other case, to allow running on testnet as well
+		app.Logger().Info("Patch the Millions prize strategy...")
+		pool, err := app.MillionsKeeper.GetPool(ctx, 2)
+		if err == nil {
+			prizeStrategy := millionstypes.PrizeStrategy{
+				PrizeBatches: []millionstypes.PrizeBatch{
+					{PoolPercent: 50, Quantity: 1, IsUnique: true, DrawProbability: sdk.NewDecWithPrec(20, 2)},
+					{PoolPercent: 25, Quantity: 5, IsUnique: false, DrawProbability: sdk.NewDecWithPrec(20, 2)},
+					{PoolPercent: 17, Quantity: 25, IsUnique: false, DrawProbability: sdk.NewDecWithPrec(20, 2)},
+					{PoolPercent: 8, Quantity: 60, IsUnique: false, DrawProbability: sdk.NewDecWithPrec(90, 2)},
+				},
+			}
+			err = app.MillionsKeeper.UpdatePool(ctx, pool.GetPoolId(), []string{}, nil, nil, &prizeStrategy, millionstypes.PoolState_Unspecified)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		// Final steps
