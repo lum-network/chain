@@ -158,7 +158,9 @@ func (k Keeper) OnUndelegateWithdrawalsOnRemoteZoneCompleted(ctx sdk.Context, po
 			k.updatePool(ctx, &pool)
 			k.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, types.WithdrawalState_IcaUndelegate, nil, true)
 			// Add failed withdrawals to a fresh epoch unbonding for a retry
-			k.AddEpochUnbonding(ctx, withdrawal, true)
+			if err := k.AddEpochUnbonding(ctx, withdrawal, true); err != nil {
+				return err
+			}
 			continue
 		}
 

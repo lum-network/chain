@@ -979,7 +979,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 	var now = time.Now().UTC()
 	epochInfo, err := TriggerEpochUpdate(suite)
 	suite.Require().NoError(err)
-	epochTracker, err := TriggerEpochTrackerUpdate(suite, epochInfo)
+	_, err = TriggerEpochTrackerUpdate(suite, epochInfo)
 	suite.Require().NoError(err)
 
 	pool := newValidPool(suite, millionstypes.Pool{
@@ -1085,7 +1085,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 	suite.Require().ErrorIs(err, millionstypes.ErrInvalidDepositorAddress)
 
 	// Get the millions internal module tracker
-	epochTracker, err = app.MillionsKeeper.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, millionstypes.WithdrawalTrackerType)
+	epochTracker, err := app.MillionsKeeper.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, millionstypes.WithdrawalTrackerType)
 	suite.Require().NoError(err)
 
 	// Get epoch unbonding

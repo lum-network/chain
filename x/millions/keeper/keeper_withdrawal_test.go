@@ -532,7 +532,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawals() {
 	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), remotePoolDenom)
 	epochInfo, err := TriggerEpochUpdate(suite)
 	suite.Require().NoError(err)
-	epochTracker, err := TriggerEpochTrackerUpdate(suite, epochInfo)
+	_, err = TriggerEpochTrackerUpdate(suite, epochInfo)
 	suite.Require().NoError(err)
 	// Remote pool
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
@@ -745,7 +745,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawals() {
 	suite.Require().Equal(millionstypes.WithdrawalState_Unspecified, withdrawal.ErrorState)
 
 	// Get the millions internal module tracker
-	epochTracker, err = app.MillionsKeeper.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, millionstypes.WithdrawalTrackerType)
+	epochTracker, err := app.MillionsKeeper.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, millionstypes.WithdrawalTrackerType)
 	suite.Require().NoError(err)
 
 	// Get epoch unbonding

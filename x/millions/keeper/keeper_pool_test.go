@@ -773,7 +773,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	ctx := suite.ctx
 	epochInfo, err := TriggerEpochUpdate(suite)
 	suite.Require().NoError(err)
-	epochTracker, err := TriggerEpochTrackerUpdate(suite, epochInfo)
+	_, err = TriggerEpochTrackerUpdate(suite, epochInfo)
 	suite.Require().NoError(err)
 
 	valAddr := "cosmosvaloper196ax4vc0lwpxndu9dyhvca7jhxp70rmcvrj90c"
@@ -908,7 +908,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	suite.Require().NoError(err)
 
 	// Get the millions internal module tracker
-	epochTracker, err = app.MillionsKeeper.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, millionstypes.WithdrawalTrackerType)
+	epochTracker, err := app.MillionsKeeper.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, millionstypes.WithdrawalTrackerType)
 	suite.Require().NoError(err)
 
 	// Get epoch unbonding

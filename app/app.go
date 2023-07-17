@@ -833,7 +833,7 @@ func (app *App) registerUpgradeHandlers() {
 		}
 
 		// Run migrations to ensure we patch our IBC channels names
-		vm, err := app.mm.RunMigrations(ctx, app.configurator, fromVM)
+		vm, _ := app.mm.RunMigrations(ctx, app.configurator, fromVM)
 
 		// Change the Millions Pool prize strategy
 		// We check if we are able to find the pool with ID 2, but we don't error out in the other case, to allow running on testnet as well

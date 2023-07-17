@@ -83,7 +83,9 @@ func (k msgServer) WithdrawDeposit(goCtx context.Context, msg *types.MsgWithdraw
 	})
 
 	// Add epoch unbonding
-	k.AddEpochUnbonding(ctx, withdrawal, false)
+	if err := k.AddEpochUnbonding(ctx, withdrawal, false); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgWithdrawDepositResponse{WithdrawalId: withdrawal.WithdrawalId}, err
 }
