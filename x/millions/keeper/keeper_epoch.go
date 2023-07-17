@@ -56,7 +56,7 @@ func (k Keeper) AddEpochUnbonding(ctx sdk.Context, withdrawal types.Withdrawal, 
 	}
 
 	// If it's the first epoch unbonding, create it with the first withdrawal
-	if !k.hasEpochUnbonding(ctx, epochTracker.EpochNumber, withdrawal.PoolId) {
+	if !k.hasEpochPoolUnbonding(ctx, epochTracker.EpochNumber, withdrawal.PoolId) {
 		epochUnbonding := types.EpochUnbonding{
 			EpochNumber:        epochTracker.EpochNumber,
 			EpochIdentifier:    epochstypes.DAY_EPOCH,
@@ -132,11 +132,11 @@ func (k Keeper) AddWithdrawalToNextAvailableEpoch(ctx sdk.Context, withdrawal ty
 	nextEpoch := epochTracker.EpochNumber + 1
 
 	for {
-		epochUnbonding, err := k.GetEpochPoolUnbonding(ctx, nextEpoch, withdrawal.PoolId)
+		epochPoolUnbonding, err := k.GetEpochPoolUnbonding(ctx, nextEpoch, withdrawal.PoolId)
 		if err != nil {
 			if errors.Is(err, types.ErrInvalidEpochUnbonding) {
 				// Create a new epoch unbonding since it doesn't exist for the next epoch
-				epochUnbonding = types.EpochUnbonding{
+				epochPoolUnbonding = types.EpochUnbonding{
 					EpochNumber:        nextEpoch,
 					EpochIdentifier:    epochstypes.DAY_EPOCH,
 					PoolId:             withdrawal.PoolId,
@@ -146,36 +146,21 @@ func (k Keeper) AddWithdrawalToNextAvailableEpoch(ctx sdk.Context, withdrawal ty
 					CreatedAtHeight:    ctx.BlockHeight(),
 					CreatedAt:          ctx.BlockTime(),
 				}
-				k.setEpochPoolUnbonding(ctx, epochUnbonding)
+				k.setEpochPoolUnbonding(ctx, epochPoolUnbonding)
 				return nil
 			}
 			return err
 		}
 
-		if !epochUnbonding.WithdrawalIDsLimitReached(epochUnbonding.WithdrawalIdsCount) {
+		if !epochPoolUnbonding.WithdrawalIDsLimitReached(epochPoolUnbonding.WithdrawalIdsCount) {
 			// Add the withdrawal to the found epoch unbonding
-			if err := k.UpdateEpochUnbonding(ctx, epochUnbonding, withdrawal); err != nil {
+			if err := k.UpdateEpochUnbonding(ctx, epochPoolUnbonding, withdrawal); err != nil {
 				return err
 			}
 			return nil
 		}
 
 		nextEpoch++
-
-		// Emit event
-		ctx.EventManager().EmitEvents(sdk.Events{
-			sdk.NewEvent(
-				sdk.EventTypeMessage,
-				sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			),
-			sdk.NewEvent(
-				types.EventTypeEpochUnbonding,
-				sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(withdrawal.PoolId, 10)),
-				sdk.NewAttribute(types.AttributeKeyWithdrawalID, strconv.FormatUint(withdrawal.WithdrawalId, 10)),
-				sdk.NewAttribute(types.AttributeKeyEpochID, strconv.FormatUint(nextEpoch, 10)),
-				sdk.NewAttribute(sdk.AttributeKeyAmount, withdrawal.Amount.String()),
-			),
-		})
 	}
 }
 
@@ -324,8 +309,8 @@ func (k Keeper) GetEpochTracker(ctx sdk.Context, epochIdentifier string, tracker
 	return eTracker, nil
 }
 
-// hasEpochUnbonding allows to check if an epoch unbonding needs to be freshly created or updated
-func (k Keeper) hasEpochUnbonding(ctx sdk.Context, epochID uint64, poolID uint64) bool {
+// hasEpochPoolUnbonding allows to check if an epoch unbonding needs to be freshly created or updated
+func (k Keeper) hasEpochPoolUnbonding(ctx sdk.Context, epochID uint64, poolID uint64) bool {
 	kvStore := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(kvStore, types.GetEpochPoolUnbondingKey(epochID, poolID))
 
