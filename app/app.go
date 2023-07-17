@@ -823,6 +823,9 @@ func (app *App) registerUpgradeHandlers() {
 			return nil, errorsmod.Wrapf(err, "unable to prune expired consensus states")
 		}
 
+		// Run migrations to ensure we patch our IBC channels names
+		vm, err := app.mm.RunMigrations(ctx, app.configurator, fromVM)
+
 		// Change the Millions Pool prize strategy
 		// We check if we are able to find the pool with ID 2, but we don't error out in the other case, to allow running on testnet as well
 		app.Logger().Info("Patch the Millions prize strategy...")
@@ -842,9 +845,9 @@ func (app *App) registerUpgradeHandlers() {
 			}
 		}
 
-		// Final steps
+		// Upgrade complete
 		app.Logger().Info("v1.5.0 upgrade applied")
-		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+		return vm, err
 	})
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
