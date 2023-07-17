@@ -635,6 +635,16 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawals() {
 	suite.Require().Equal(millionstypes.WithdrawalState_Unspecified, withdrawal.ErrorState)
 
 	// Simulate failed ackResponse AckResponseStatus_FAILURE
+	// Get the millions internal module tracker
+	epochTracker, err := app.MillionsKeeper.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, millionstypes.WithdrawalTrackerType)
+	suite.Require().NoError(err)
+	// Get epoch unbonding
+	currentEpochUnbonding, err := app.MillionsKeeper.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber, 1)
+	suite.Require().NoError(err)
+	// Remove to simulate epoch flow
+	err = app.MillionsKeeper.RemoveEpochUnbonding(ctx, currentEpochUnbonding)
+	suite.Require().NoError(err)
+
 	app.MillionsKeeper.UpdateWithdrawalStatus(ctx, withdrawals[0].PoolId, withdrawals[0].WithdrawalId, millionstypes.WithdrawalState_IcaUndelegate, &time.Time{}, false)
 	err = app.MillionsKeeper.OnUndelegateWithdrawalsOnRemoteZoneCompleted(ctx, withdrawal.GetPoolId(), []uint64{withdrawal.GetWithdrawalId()}, &time.Time{}, true)
 	suite.Require().NoError(err)
@@ -745,11 +755,11 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawals() {
 	suite.Require().Equal(millionstypes.WithdrawalState_Unspecified, withdrawal.ErrorState)
 
 	// Get the millions internal module tracker
-	epochTracker, err := app.MillionsKeeper.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, millionstypes.WithdrawalTrackerType)
+	epochTracker, err = app.MillionsKeeper.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, millionstypes.WithdrawalTrackerType)
 	suite.Require().NoError(err)
 
 	// Get epoch unbonding
-	currentEpochUnbonding, err := app.MillionsKeeper.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber, 2)
+	currentEpochUnbonding, err = app.MillionsKeeper.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber, 2)
 	suite.Require().NoError(err)
 
 	// Simulate successful undelegation flow

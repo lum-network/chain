@@ -6,9 +6,10 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/cast"
+
 	epochstypes "github.com/lum-network/chain/x/epochs/types"
 	"github.com/lum-network/chain/x/millions/types"
-	"github.com/spf13/cast"
 )
 
 // AddEpochUnbonding adds an epoch unbonding record that serves to undelegate withdrawals via batches

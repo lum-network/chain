@@ -915,14 +915,13 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	currentEpochUnbonding, err := app.MillionsKeeper.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber, poolID)
 	suite.Require().NoError(err)
 
-	// Simulate undelegate launched with success for d1 + d2 (ignore error voluntarely here)
-	err = app.MillionsKeeper.UndelegateWithdrawalsOnRemoteZone(ctx, currentEpochUnbonding)
-	suite.Require().Error(err)
-
 	// Simulate undelegate failure for d1 + d2
 	t := time.Now()
-	err = app.MillionsKeeper.OnUndelegateWithdrawalsOnRemoteZoneCompleted(ctx, poolID, []uint64{w1.WithdrawalId, w2.WithdrawalId}, &t, true)
+	err = app.MillionsKeeper.RemoveEpochUnbonding(ctx, currentEpochUnbonding)
 	suite.Require().NoError(err)
+
+	err = app.MillionsKeeper.OnUndelegateWithdrawalsOnRemoteZoneCompleted(ctx, poolID, []uint64{w1.WithdrawalId, w2.WithdrawalId}, &t, true)
+	suite.Require().Error(err)
 
 	// Validators bounded amount should be d1 + d2
 	pool, err = app.MillionsKeeper.GetPool(ctx, poolID)
