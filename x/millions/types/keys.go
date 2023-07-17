@@ -53,7 +53,6 @@ var (
 	WithdrawalMaturationTimePrefix = []byte{0x14}
 	EpochUnbondingPrefix           = []byte{0x15}
 	EpochTrackerPrefix             = []byte{0x16}
-	EpochUnbondingTimePrefix       = []byte{0x17}
 	ParamsPrefix                   = []byte{0x20}
 	// KeyIndexSeparator separator between combined keys
 	KeyIndexSeparator = []byte{0xFF}
