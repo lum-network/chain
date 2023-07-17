@@ -5,4 +5,4 @@ secret.yml
 
 .idea/
 
-build/*
+build/*.DS_Store
