@@ -239,8 +239,8 @@ func (k Keeper) UpdateEpochUnbonding(ctx sdk.Context, epochPoolUnbonding types.E
 
 // AddFailedIcaUndelegationsToEpochUnbonding add failed ica withdrawals to current epoch unbonding record
 func (k Keeper) AddFailedIcaUndelegationsToEpochUnbonding(ctx sdk.Context) error {
-	withdrawDepositStore := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(withdrawDepositStore, types.GetWithdrawalsKey())
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.GetWithdrawalsKey())
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -336,8 +336,8 @@ func (k Keeper) hasEpochPoolUnbonding(ctx sdk.Context, epochID uint64, poolID ui
 
 // GetEpochUnbondings lists the epoch unbondings by epochID
 func (k Keeper) GetEpochUnbondings(ctx sdk.Context, epochID uint64) (epochUnbondings []types.EpochUnbonding) {
-	epochStore := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(epochStore, types.GetEpochUnbondingsKey(epochID))
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.GetEpochUnbondingsKey(epochID))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
