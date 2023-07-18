@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"fmt"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	"strconv"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -836,17 +838,20 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType
 	}
 
 	// Compute the port ID
+	var portOwner string
 	var portID string
 	if accountType == types.ICATypeDeposit {
+		portOwner = pool.GetIcaDepositPortId()
 		portID = pool.GetIcaDepositPortIdWithPrefix()
 	} else if accountType == types.ICATypePrizePool {
+		portOwner = pool.GetIcaPrizepoolPortId()
 		portID = pool.GetIcaPrizepoolPortIdWithPrefix()
 	}
 
 	// Acquire the channel capacities
 	channelID, found := k.ICAControllerKeeper.GetActiveChannelID(ctx, pool.GetConnectionId(), portID)
 	if !found {
-		return 0, errorsmod.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve open active channel for port %s (%s / %s) on connection %s", portID, pool.GetIcaDepositPortId(), pool.GetIcaPrizepoolPortId(), pool.GetConnectionId())
+		return 0, errorsmod.Wrapf(icatypes.ErrActiveChannelNotFound, "Millions failed to retrieve open active channel for port %s (%s / %s) on connection %s", portID, pool.GetIcaDepositPortId(), pool.GetIcaPrizepoolPortId(), pool.GetConnectionId())
 	}
 
 	// Serialize the data and construct the packet to send
@@ -865,12 +870,13 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, poolID uint64, accountType
 	}
 
 	// Broadcast the messages
-	// TODO: switch to MsgServer once they fixes their shit. Switch timestamp
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTimeoutNanos
-	sequence, err := k.ICAControllerKeeper.SendTx(ctx, nil, pool.GetConnectionId(), portID, packetData, timeoutTimestamp) // nolint:staticcheck
+	msgServer := icacontrollerkeeper.NewMsgServerImpl(&k.ICAControllerKeeper)
+	msgSendTx := icacontrollertypes.NewMsgSendTx(portOwner, pool.GetConnectionId(), timeoutNanos, packetData)
+	res, err := msgServer.SendTx(ctx, msgSendTx)
 	if err != nil {
 		return 0, err
 	}
+	sequence := res.Sequence
 
 	// Store the callback data
 	if callbackId != "" && callbackArgs != nil {
