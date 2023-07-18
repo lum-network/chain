@@ -1040,7 +1040,6 @@ func GetCmdEpochUnbondings(groupID string) *cobra.Command {
 				return err
 			}
 
-			// Construct the params payload
 			epochUnbondings := &types.QueryEpochUnbondingsRequest{
 				EpochNumber: epochID,
 				Pagination:  pageReq,
@@ -1083,7 +1082,6 @@ func GetCmdEpochPoolUnbonding(groupID string) *cobra.Command {
 				return err
 			}
 
-			// Construct the params payload
 			epochPoolUnbonding := &types.QueryEpochPoolUnbondingRequest{
 				EpochNumber: epochID,
 				PoolId:      poolID,
