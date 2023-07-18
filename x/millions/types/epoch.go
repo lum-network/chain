@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	MaxAcceptableWithdrawalIDsCount = 10_000
+	MaxAcceptableWithdrawalIDsCount = 1000
 	WithdrawalTrackerType           = "withdrawal"
 )
 
