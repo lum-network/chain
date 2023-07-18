@@ -58,7 +58,7 @@ func (k Keeper) AddEpochUnbonding(ctx sdk.Context, withdrawal types.Withdrawal, 
 
 	// If it's the first epoch unbonding, create it with the first withdrawal
 	if !k.hasEpochPoolUnbonding(ctx, epochTracker.EpochNumber, withdrawal.PoolId) {
-		epochUnbonding := types.EpochUnbonding{
+		epochPoolUnbonding := types.EpochUnbonding{
 			EpochNumber:        epochTracker.EpochNumber,
 			EpochIdentifier:    epochstypes.DAY_EPOCH,
 			PoolId:             withdrawal.PoolId,
@@ -66,7 +66,7 @@ func (k Keeper) AddEpochUnbonding(ctx sdk.Context, withdrawal types.Withdrawal, 
 			WithdrawalIdsCount: uint64(1),
 			TotalAmount:        withdrawal.Amount,
 		}
-		k.setEpochPoolUnbonding(ctx, epochUnbonding)
+		k.setEpochPoolUnbonding(ctx, epochPoolUnbonding)
 
 		// Emit event
 		ctx.EventManager().EmitEvents(sdk.Events{
@@ -78,7 +78,7 @@ func (k Keeper) AddEpochUnbonding(ctx sdk.Context, withdrawal types.Withdrawal, 
 				types.EventTypeEpochUnbonding,
 				sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(withdrawal.PoolId, 10)),
 				sdk.NewAttribute(types.AttributeKeyEpochID, strconv.FormatUint(epochTracker.EpochNumber, 10)),
-				sdk.NewAttribute(sdk.AttributeKeyAmount, withdrawal.Amount.String()),
+				sdk.NewAttribute(sdk.AttributeKeyAmount, epochPoolUnbonding.TotalAmount.String()),
 			),
 		})
 
@@ -148,6 +148,21 @@ func (k Keeper) AddWithdrawalToNextAvailableEpoch(ctx sdk.Context, withdrawal ty
 					CreatedAt:          ctx.BlockTime(),
 				}
 				k.setEpochPoolUnbonding(ctx, epochPoolUnbonding)
+
+				// Emit event
+				ctx.EventManager().EmitEvents(sdk.Events{
+					sdk.NewEvent(
+						sdk.EventTypeMessage,
+						sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+					),
+					sdk.NewEvent(
+						types.EventTypeEpochUnbonding,
+						sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(withdrawal.PoolId, 10)),
+						sdk.NewAttribute(types.AttributeKeyEpochID, strconv.FormatUint(epochTracker.EpochNumber, 10)),
+						sdk.NewAttribute(sdk.AttributeKeyAmount, epochPoolUnbonding.TotalAmount.String()),
+					),
+				})
+
 				return nil
 			}
 			return err
