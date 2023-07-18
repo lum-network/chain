@@ -58,13 +58,13 @@ func (k Keeper) GetUnbondingCompletionTime(ctx sdk.Context, msgResponses [][]byt
 
 func UndelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
 	// Deserialize the callback args
-	UndelegateCallback, err := k.UnmarshalUndelegateCallbackArgs(ctx, args)
+	undelegateCallback, err := k.UnmarshalUndelegateCallbackArgs(ctx, args)
 	if err != nil {
 		return errorsmod.Wrapf(types.ErrUnmarshalFailure, fmt.Sprintf("Unable to unmarshal undelegate callback args: %s", err.Error()))
 	}
 
 	// Acquire the pool instance from the callback
-	_, err = k.GetPool(ctx, UndelegateCallback.GetPoolId())
+	_, err = k.GetPool(ctx, undelegateCallback.GetPoolId())
 	if err != nil {
 		return err
 	}
@@ -78,8 +78,8 @@ func UndelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, a
 		// Failed OnUndelegateEpochUnbondingOnRemoteZoneCompleted
 		return k.OnUndelegateWithdrawalsOnRemoteZoneCompleted(
 			ctx,
-			UndelegateCallback.PoolId,
-			UndelegateCallback.WithdrawalIds,
+			undelegateCallback.PoolId,
+			undelegateCallback.WithdrawalIds,
 			nil,
 			true,
 		)
@@ -91,8 +91,8 @@ func UndelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, a
 		}
 		return k.OnUndelegateWithdrawalsOnRemoteZoneCompleted(
 			ctx,
-			UndelegateCallback.PoolId,
-			UndelegateCallback.WithdrawalIds,
+			undelegateCallback.PoolId,
+			undelegateCallback.WithdrawalIds,
 			unbondingEndsAt,
 			false,
 		)

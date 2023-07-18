@@ -1099,6 +1099,6 @@ func GetCmdEpochPoolUnbonding(groupID string) *cobra.Command {
 		},
 	}
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "all epochUnbondings by epoch")
+	flags.AddPaginationFlagsToCmd(cmd, "epoch pool unbonding")
 	return cmd
 }

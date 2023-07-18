@@ -58,10 +58,10 @@ func (k queryServer) EpochPoolUnbonding(goCtx context.Context, req *types.QueryE
 		return nil, status.Error(codes.NotFound, types.ErrPoolNotFound.Error())
 	}
 
-	poolEpochUnbonding, err := k.GetEpochPoolUnbonding(ctx, req.GetEpochNumber(), req.GetPoolId())
+	epochPoolUnbonding, err := k.GetEpochPoolUnbonding(ctx, req.GetEpochNumber(), req.GetPoolId())
 	if err != nil {
 		return &types.QueryEpochPoolUnbondingResponse{}, err
 	}
 
-	return &types.QueryEpochPoolUnbondingResponse{EpochUnbonding: poolEpochUnbonding}, nil
+	return &types.QueryEpochPoolUnbondingResponse{EpochUnbonding: epochPoolUnbonding}, nil
 }
