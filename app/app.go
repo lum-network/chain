@@ -850,6 +850,33 @@ func (app *App) registerUpgradeHandlers() {
 		return vm, err
 	})
 
+	app.UpgradeKeeper.SetUpgradeHandler("v1.5.1", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		app.Logger().Info("Starting v1.5.1 upgrade")
+
+		// Change the Millions Pool prize strategy
+		// We check if we are able to find the pool with ID 2, but we don't error out in the other case, to allow running on testnet as well
+		app.Logger().Info("Patch the Millions prize strategy...")
+		pool, err := app.MillionsKeeper.GetPool(ctx, 2)
+		if err == nil {
+			prizeStrategy := millionstypes.PrizeStrategy{
+				PrizeBatches: []millionstypes.PrizeBatch{
+					{PoolPercent: 50, Quantity: 1, IsUnique: true, DrawProbability: sdk.NewDecWithPrec(20, 2)},
+					{PoolPercent: 25, Quantity: 5, IsUnique: true, DrawProbability: sdk.NewDecWithPrec(20, 2)},
+					{PoolPercent: 17, Quantity: 25, IsUnique: true, DrawProbability: sdk.NewDecWithPrec(20, 2)},
+					{PoolPercent: 8, Quantity: 60, IsUnique: true, DrawProbability: sdk.NewDecWithPrec(90, 2)},
+				},
+			}
+			err = app.MillionsKeeper.UpdatePool(ctx, pool.GetPoolId(), []string{}, nil, nil, &prizeStrategy, millionstypes.PoolState_Unspecified)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// Upgrade complete
+		app.Logger().Info("v1.5.1 upgrade applied")
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	})
+
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
@@ -917,6 +944,11 @@ func (app *App) registerUpgradeHandlers() {
 		storeUpgrades := storetypes.StoreUpgrades{
 			Added: []string{crisistypes.StoreKey, consensusparamtypes.StoreKey},
 		}
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
+
+	if upgradeInfo.Name == "v1.5.1" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := storetypes.StoreUpgrades{}
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
 }
