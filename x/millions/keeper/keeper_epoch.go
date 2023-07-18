@@ -327,8 +327,8 @@ func (k Keeper) GetEpochTracker(ctx sdk.Context, epochIdentifier string, tracker
 
 // hasEpochPoolUnbonding allows to check if an epoch unbonding needs to be freshly created or updated
 func (k Keeper) hasEpochPoolUnbonding(ctx sdk.Context, epochID uint64, poolID uint64) bool {
-	kvStore := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(kvStore, types.GetEpochPoolUnbondingKey(epochID, poolID))
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.GetEpochPoolUnbondingKey(epochID, poolID))
 
 	defer iterator.Close()
 	return iterator.Valid()
