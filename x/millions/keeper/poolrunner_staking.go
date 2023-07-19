@@ -2,12 +2,17 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
 	"github.com/lum-network/chain/x/millions/types"
 )
 
@@ -194,14 +199,112 @@ func (runner *PoolRunnerStaking) UndelegateWithdrawalOnRemoteZone(ctx sdk.Contex
 	return splits, nil, nil
 }
 
-func (runner *PoolRunnerStaking) ClaimYieldOnRemoteZone(ctx sdk.Context, pool types.Pool) error {
-	// logger := runner.Logger(ctx).With("ctx", "claim_yield")
-	// TODO: implementation
-	return fmt.Errorf("not implemented yet")
+func (runner *PoolRunnerStaking) ClaimYieldOnRemoteZone(ctx sdk.Context, pool types.Pool, draw types.Draw) error {
+	logger := runner.Logger(ctx).With("ctx", "claim_yield")
+
+	if pool.IsLocalZone(ctx) {
+		coins := sdk.Coins{}
+		for _, validator := range pool.GetValidators() {
+			if validator.IsBonded() {
+				rewardCoins, err := runner.keeper.DistributionKeeper.WithdrawDelegationRewards(
+					ctx,
+					sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress()),
+					validator.MustValAddressFromBech32(),
+				)
+				if err != nil {
+					// Return with error here since it is the first operation and nothing needs to be saved to state
+					return errorsmod.Wrapf(err, "%s", validator.OperatorAddress)
+				}
+				coins = coins.Add(rewardCoins...)
+			}
+		}
+	} else {
+		var msgs []sdk.Msg
+		for _, validator := range pool.GetValidators() {
+			if validator.IsBonded() {
+				msgs = append(msgs, &distributiontypes.MsgWithdrawDelegatorReward{
+					DelegatorAddress: pool.GetIcaDepositAddress(),
+					ValidatorAddress: validator.OperatorAddress,
+				})
+			}
+		}
+
+		if len(msgs) == 0 {
+			// Special case - no bonded validator
+			// Does not need to do any ICA call
+			return nil
+		}
+
+		callbackData := types.ClaimRewardsCallback{
+			PoolId: pool.PoolId,
+			DrawId: draw.DrawId,
+		}
+
+		marshalledCallbackData, err := runner.keeper.MarshalClaimCallbackArgs(ctx, callbackData)
+		if err != nil {
+			return err
+		}
+
+		// Dispatch our message with a timeout of 30 minutes in nanos
+		sequence, err := runner.keeper.BroadcastICAMessages(ctx, pool, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Claim, marshalledCallbackData)
+		if err != nil {
+			// Return with error here since it is the first operation and nothing needs to be saved to state
+			logger.Error(
+				fmt.Sprintf("failed to dispatch ICA claim delegator rewards: %v", err),
+				"pool_id", pool.PoolId,
+				"draw_id", draw.DrawId,
+				"chain_id", pool.GetChainId(),
+				"sequence", sequence,
+			)
+			return err
+		}
+		logger.Debug(
+			"ICA claim delegator rewards dispatched",
+			"pool_id", pool.PoolId,
+			"draw_id", draw.DrawId,
+			"chain_id", pool.GetChainId(),
+			"sequence", sequence,
+		)
+	}
+	return nil
 }
 
-func (runner *PoolRunnerStaking) QueryFreshPrizePoolCoinsOnRemoteZone(ctx sdk.Context, pool types.Pool) error {
-	// logger := runner.Logger(ctx).With("ctx", "query_fresh_prize_pool")
-	// TODO: implementation
-	return fmt.Errorf("not implemented yet")
+func (runner *PoolRunnerStaking) QueryFreshPrizePoolCoinsOnRemoteZone(ctx sdk.Context, pool types.Pool, draw types.Draw) error {
+	logger := runner.Logger(ctx).With("ctx", "query_fresh_prize_pool")
+
+	// Encode the ica address for query
+	_, icaAddressBz, err := bech32.DecodeAndConvert(pool.GetIcaPrizepoolAddress())
+	if err != nil {
+		panic(err)
+	}
+
+	// Construct the query data and timeout timestamp (now + 30 minutes)
+	extraID := types.CombineStringKeys(strconv.FormatUint(pool.PoolId, 10), strconv.FormatUint(draw.DrawId, 10))
+	queryData := append(banktypes.CreateAccountBalancesPrefix(icaAddressBz), []byte(pool.GetNativeDenom())...)
+
+	err = runner.keeper.BroadcastICQuery(
+		ctx,
+		pool,
+		ICQCallbackID_Balance,
+		extraID,
+		icqueriestypes.BANK_STORE_QUERY_WITH_PROOF,
+		queryData,
+		types.IBCTimeoutNanos,
+	)
+	if err != nil {
+		logger.Error(
+			fmt.Sprintf("failed to dispatch ICQ query balance: %v", err),
+			"pool_id", pool.PoolId,
+			"draw_id", draw.DrawId,
+			"chain_id", pool.GetChainId(),
+		)
+		return err
+	}
+	logger.Debug(
+		"ICQ query balance dispatched",
+		"pool_id", pool.PoolId,
+		"draw_id", draw.DrawId,
+		"chain_id", pool.GetChainId(),
+	)
+	return nil
 }

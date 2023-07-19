@@ -34,9 +34,9 @@ type PoolRunner interface {
 	// TransferWithdrawalToRecipient transfers the withdrawal amount from a remove Pool owned address to a user owned address
 	TransferWithdrawalToRecipient(ctx sdk.Context, pool types.Pool, withdrawal types.Withdrawal) error
 	// ClaimYieldOnRemoteZone launches an ICA action on the remote Pool owned address (such as claim rewards for native staking Pools)
-	ClaimYieldOnRemoteZone(ctx sdk.Context, pool types.Pool) error
+	ClaimYieldOnRemoteZone(ctx sdk.Context, pool types.Pool, draw types.Draw) error
 	// QueryPrizePoolOnRemoteZone launches an ICA action on the remote Pool owned address (such as query balance for native staking Pools)
-	QueryFreshPrizePoolCoinsOnRemoteZone(ctx sdk.Context, pool types.Pool) error
+	QueryFreshPrizePoolCoinsOnRemoteZone(ctx sdk.Context, pool types.Pool, draw types.Draw) error
 	// TransferPrizePoolToLocalZone launches an IBC transfer (via ICA) from a remote Pool owned address to a local Pool owned address
 	TransferFreshPrizePoolCoinsToLocalZone(ctx sdk.Context, pool types.Pool, draw types.Draw) error
 }
@@ -215,7 +215,83 @@ func (runner *PoolRunnerBase) TransferWithdrawalToRecipient(ctx sdk.Context, poo
 }
 
 func (runner *PoolRunnerBase) TransferFreshPrizePoolCoinsToLocalZone(ctx sdk.Context, pool types.Pool, draw types.Draw) error {
-	// logger := runner.Logger(ctx).With("ctx", "fresh_prizepool_transfer")
-	// TODO: implementation
-	return fmt.Errorf("not implemented yet")
+	logger := runner.Logger(ctx).With("ctx", "fresh_prizepool_transfer")
+
+	// Converts the local ibc Denom into the native chain Denom
+	amount := sdk.NewCoin(pool.NativeDenom, draw.PrizePoolFreshAmount)
+
+	// If pool is local zone, we can synchronously process and return
+	if pool.IsLocalZone(ctx) {
+		// Move coins locally to keep a proper funds segregation
+		if err := runner.keeper.BankKeeper.SendCoins(
+			ctx,
+			sdk.MustAccAddressFromBech32(pool.GetIcaPrizepoolAddress()),
+			sdk.MustAccAddressFromBech32(pool.GetLocalAddress()),
+			sdk.NewCoins(amount),
+		); err != nil {
+			logger.Error(
+				fmt.Sprintf("failed to move funds from prize pool address to local address: %v", err),
+				"pool_id", pool.PoolId,
+				"draw_id", draw.DrawId,
+			)
+			return err
+		}
+		return nil
+	}
+
+	// Otherwise, we broadcast an ICA message
+	// We start by acquiring the counterparty channel id
+	transferChannel, found := runner.keeper.IBCKeeper.ChannelKeeper.GetChannel(ctx, ibctransfertypes.PortID, pool.GetTransferChannelId())
+	if !found {
+		return errorsmod.Wrapf(channeltypes.ErrChannelNotFound, "transfer channel %s not found", pool.GetTransferChannelId())
+	}
+	counterpartyChannelId := transferChannel.Counterparty.ChannelId
+
+	// Build our array of messages
+	var msgs []sdk.Msg
+	// From Remote to Local - use counterparty transfer channel ID
+	msgs = append(msgs, ibctransfertypes.NewMsgTransfer(
+		ibctransfertypes.PortID,
+		counterpartyChannelId,
+		amount,
+		pool.GetIcaPrizepoolAddress(),
+		pool.GetLocalAddress(),
+		clienttypes.Height{},
+		uint64(ctx.BlockTime().UnixNano())+types.IBCTimeoutNanos,
+		"Cosmos Millions",
+	))
+
+	// Construct our callback data
+	callbackData := types.TransferFromNativeCallback{
+		Type:   types.TransferType_Claim,
+		PoolId: pool.PoolId,
+		DrawId: draw.DrawId,
+	}
+	marshalledCallbackData, err := runner.keeper.MarshalTransferFromNativeCallbackArgs(ctx, callbackData)
+	if err != nil {
+		return err
+	}
+
+	// Dispatch our message with a timeout of 30 minutes in nanos
+	sequence, err := runner.keeper.BroadcastICAMessages(ctx, pool, types.ICATypePrizePool, msgs, types.IBCTimeoutNanos, ICACallbackID_TransferFromNative, marshalledCallbackData)
+	if err != nil {
+		// Save error state since we cannot simply recover from a failure at this stage
+		// A subsequent call to DrawRetry will be made possible by setting an error state and not returning an error here
+		logger.Error(
+			fmt.Sprintf("failed to dispatch ICA transfer: %v", err),
+			"pool_id", pool.PoolId,
+			"draw_id", draw.DrawId,
+			"chain_id", pool.GetChainId(),
+			"sequence", sequence,
+		)
+		return err
+	}
+	logger.Debug(
+		"ICA transfer dispatched",
+		"pool_id", pool.PoolId,
+		"draw_id", draw.DrawId,
+		"chain_id", pool.GetChainId(),
+		"sequence", sequence,
+	)
+	return nil
 }

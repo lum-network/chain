@@ -12,14 +12,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 
-	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
 	"github.com/lum-network/chain/x/millions/types"
 )
 
@@ -85,8 +78,6 @@ func (k Keeper) LaunchNewDraw(ctx sdk.Context, poolID uint64) (*types.Draw, erro
 // - wait for the ICA callback to move to OnClaimYieldOnRemoteZoneCompleted
 // - or go to OnClaimYieldOnRemoteZoneCompleted directly upon claim rewards success if local zone
 func (k Keeper) ClaimYieldOnRemoteZone(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
-	logger := k.Logger(ctx).With("func", "draw_claim_rewards")
-
 	// Acquire pool config
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
@@ -98,68 +89,22 @@ func (k Keeper) ClaimYieldOnRemoteZone(ctx sdk.Context, poolID uint64, drawID ui
 		return nil, err
 	}
 
-	if pool.IsLocalZone(ctx) {
-		coins := sdk.Coins{}
-		for _, validator := range pool.GetValidators() {
-			if validator.IsBonded() {
-				rewardCoins, err := k.DistributionKeeper.WithdrawDelegationRewards(
-					ctx,
-					sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress()),
-					validator.MustValAddressFromBech32(),
-				)
-				if err != nil {
-					// Return with error here since it is the first operation and nothing needs to be saved to state
-					return &draw, errorsmod.Wrapf(err, "%s", validator.OperatorAddress)
-				}
-				coins = coins.Add(rewardCoins...)
-			}
-		}
-		return k.OnClaimYieldOnRemoteZoneCompleted(ctx, poolID, drawID, false)
-	} else {
-		var msgs []sdk.Msg
-		for _, validator := range pool.GetValidators() {
-			if validator.IsBonded() {
-				msgs = append(msgs, &distributiontypes.MsgWithdrawDelegatorReward{
-					DelegatorAddress: pool.GetIcaDepositAddress(),
-					ValidatorAddress: validator.OperatorAddress,
-				})
-			}
-		}
-		if len(msgs) == 0 {
-			// Special case - no bonded validator
-			// Does not need to do any ICA call
-			return k.OnClaimYieldOnRemoteZoneCompleted(ctx, poolID, drawID, false)
-		}
-		callbackData := types.ClaimRewardsCallback{
-			PoolId: poolID,
-			DrawId: drawID,
-		}
-		marshalledCallbackData, err := k.MarshalClaimCallbackArgs(ctx, callbackData)
-		if err != nil {
-			return &draw, err
-		}
-
-		// Dispatch our message with a timeout of 30 minutes in nanos
-		sequence, err := k.BroadcastICAMessages(ctx, pool, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Claim, marshalledCallbackData)
-		if err != nil {
-			// Return with error here since it is the first operation and nothing needs to be saved to state
-			logger.Error(
-				fmt.Sprintf("failed to dispatch ICA claim delegator rewards: %v", err),
-				"pool_id", poolID,
-				"draw_id", drawID,
-				"chain_id", pool.GetChainId(),
-				"sequence", sequence,
-			)
-			return &draw, err
-		}
-		logger.Debug(
-			"ICA claim delegator rewards dispatched",
-			"pool_id", poolID,
-			"draw_id", drawID,
-			"chain_id", pool.GetChainId(),
-			"sequence", sequence,
-		)
+	poolRunner := k.MustGetPoolRunner(pool.PoolType)
+	if err := poolRunner.ClaimYieldOnRemoteZone(ctx, pool, draw); err != nil {
+		return &draw, err
 	}
+
+	if pool.IsLocalZone(ctx) {
+		return k.OnClaimYieldOnRemoteZoneCompleted(ctx, poolID, drawID, false)
+	}
+
+	// Special case - no bonded validator
+	// Does not need to do any ICA call
+	bondedActiveVals, _ := pool.BondedValidators()
+	if len(bondedActiveVals) == 0 {
+		return k.OnClaimYieldOnRemoteZoneCompleted(ctx, poolID, drawID, false)
+	}
+
 	return &draw, nil
 }
 
@@ -210,8 +155,6 @@ func (k Keeper) OnClaimYieldOnRemoteZoneCompleted(ctx sdk.Context, poolID uint64
 // - wait for the ICQ callback to move to OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted
 // - or go to OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted directly upon query rewards success if local zone
 func (k Keeper) QueryFreshPrizePoolCoinsOnRemoteZone(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
-	logger := k.Logger(ctx).With("func", "draw_query_rewards")
-
 	// Acquire pool config
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
@@ -234,40 +177,12 @@ func (k Keeper) QueryFreshPrizePoolCoinsOnRemoteZone(ctx sdk.Context, poolID uin
 		return k.OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted(ctx, poolID, drawID, sdk.NewCoins(balance), false)
 	}
 
-	// Encode the ica address for query
-	_, icaAddressBz, err := bech32.DecodeAndConvert(pool.GetIcaPrizepoolAddress())
-	if err != nil {
-		panic(err)
-	}
-
-	// Construct the query data and timeout timestamp (now + 30 minutes)
-	extraID := types.CombineStringKeys(strconv.FormatUint(poolID, 10), strconv.FormatUint(drawID, 10))
-	queryData := append(banktypes.CreateAccountBalancesPrefix(icaAddressBz), []byte(pool.GetNativeDenom())...)
-
-	err = k.BroadcastICQuery(
-		ctx,
-		pool,
-		ICQCallbackID_Balance,
-		extraID,
-		icqueriestypes.BANK_STORE_QUERY_WITH_PROOF,
-		queryData,
-		types.IBCTimeoutNanos,
-	)
-	if err != nil {
-		logger.Error(
-			fmt.Sprintf("failed to dispatch ICQ query balance: %v", err),
-			"pool_id", poolID,
-			"draw_id", drawID,
-			"chain_id", pool.GetChainId(),
-		)
+	poolRunner := k.MustGetPoolRunner(pool.PoolType)
+	if err := poolRunner.QueryFreshPrizePoolCoinsOnRemoteZone(ctx, pool, draw); err != nil {
+		// Handle the error here and return it
 		return k.OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted(ctx, poolID, drawID, nil, true)
 	}
-	logger.Debug(
-		"ICQ query balance dispatched",
-		"pool_id", poolID,
-		"draw_id", drawID,
-		"chain_id", pool.GetChainId(),
-	)
+
 	return &draw, err
 }
 
@@ -333,7 +248,6 @@ func (k Keeper) OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted(ctx sdk.Context,
 // - wait for the ICA callback to move to OnTransferFreshPrizePoolCoinsToLocalZoneCompleted
 // - or go to OnTransferFreshPrizePoolCoinsToLocalZoneCompleted directly if local zone
 func (k Keeper) TransferFreshPrizePoolCoinsToLocalZone(ctx sdk.Context, poolID uint64, drawID uint64) (*types.Draw, error) {
-	logger := k.Logger(ctx).With("ctx", "draw_transfer_rewards")
 
 	// Acquire Pool
 	pool, err := k.GetPool(ctx, poolID)
@@ -354,82 +268,16 @@ func (k Keeper) TransferFreshPrizePoolCoinsToLocalZone(ctx sdk.Context, poolID u
 		return k.OnTransferFreshPrizePoolCoinsToLocalZoneCompleted(ctx, poolID, drawID, false)
 	}
 
-	// Converts the local ibc Denom into the native chain Denom
-	amount := sdk.NewCoin(pool.NativeDenom, draw.PrizePoolFreshAmount)
+	poolRunner := k.MustGetPoolRunner(pool.PoolType)
+	if err := poolRunner.TransferFreshPrizePoolCoinsToLocalZone(ctx, pool, draw); err != nil {
+		// Handle the error here and return it
+		return k.OnTransferFreshPrizePoolCoinsToLocalZoneCompleted(ctx, poolID, drawID, true)
+	}
 
-	// If pool is local zone, we can synchronously process and return
 	if pool.IsLocalZone(ctx) {
-		// Move coins locally to keep a proper funds segregation
-		if err := k.BankKeeper.SendCoins(
-			ctx,
-			sdk.MustAccAddressFromBech32(pool.GetIcaPrizepoolAddress()),
-			sdk.MustAccAddressFromBech32(pool.GetLocalAddress()),
-			sdk.NewCoins(amount),
-		); err != nil {
-			logger.Error(
-				fmt.Sprintf("failed to move funds from prize pool address to local address: %v", err),
-				"pool_id", poolID,
-				"draw_id", drawID,
-			)
-			return k.OnTransferFreshPrizePoolCoinsToLocalZoneCompleted(ctx, poolID, drawID, true)
-		}
 		return k.OnTransferFreshPrizePoolCoinsToLocalZoneCompleted(ctx, poolID, drawID, false)
 	}
 
-	// Otherwise, we broadcast an ICA message
-	// We start by acquiring the counterparty channel id
-	transferChannel, found := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, ibctransfertypes.PortID, pool.GetTransferChannelId())
-	if !found {
-		return &draw, errorsmod.Wrapf(channeltypes.ErrChannelNotFound, "transfer channel %s not found", pool.GetTransferChannelId())
-	}
-	counterpartyChannelId := transferChannel.Counterparty.ChannelId
-
-	// Build our array of messages
-	var msgs []sdk.Msg
-	// From Remote to Local - use counterparty transfer channel ID
-	msgs = append(msgs, ibctransfertypes.NewMsgTransfer(
-		ibctransfertypes.PortID,
-		counterpartyChannelId,
-		amount,
-		pool.GetIcaPrizepoolAddress(),
-		pool.GetLocalAddress(),
-		clienttypes.Height{},
-		uint64(ctx.BlockTime().UnixNano())+types.IBCTimeoutNanos,
-		"Cosmos Millions",
-	))
-
-	// Construct our callback data
-	callbackData := types.TransferFromNativeCallback{
-		Type:   types.TransferType_Claim,
-		PoolId: poolID,
-		DrawId: drawID,
-	}
-	marshalledCallbackData, err := k.MarshalTransferFromNativeCallbackArgs(ctx, callbackData)
-	if err != nil {
-		return &draw, err
-	}
-
-	// Dispatch our message with a timeout of 30 minutes in nanos
-	sequence, err := k.BroadcastICAMessages(ctx, pool, types.ICATypePrizePool, msgs, types.IBCTimeoutNanos, ICACallbackID_TransferFromNative, marshalledCallbackData)
-	if err != nil {
-		// Save error state since we cannot simply recover from a failure at this stage
-		// A subsequent call to DrawRetry will be made possible by setting an error state and not returning an error here
-		logger.Error(
-			fmt.Sprintf("failed to dispatch ICA transfer: %v", err),
-			"pool_id", poolID,
-			"draw_id", drawID,
-			"chain_id", pool.GetChainId(),
-			"sequence", sequence,
-		)
-		return k.OnTransferFreshPrizePoolCoinsToLocalZoneCompleted(ctx, poolID, drawID, true)
-	}
-	logger.Debug(
-		"ICA transfer dispatched",
-		"pool_id", poolID,
-		"draw_id", drawID,
-		"chain_id", pool.GetChainId(),
-		"sequence", sequence,
-	)
 	return &draw, nil
 }
 
