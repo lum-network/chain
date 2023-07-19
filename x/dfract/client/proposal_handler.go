@@ -6,4 +6,4 @@ import (
 	"github.com/lum-network/chain/x/dfract/client/cli"
 )
 
-var ProposalHandler = govclient.NewProposalHandler(cli.NewSubmitWithdrawAndMintProposal)
+var UpdateParamsProposalHandler = govclient.NewProposalHandler(cli.CmdProposalUpdateParams)

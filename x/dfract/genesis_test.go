@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
+
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -25,8 +27,10 @@ var testGenesis = types.GenesisState{
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 15_000),
 	},
 	Params: types.Params{
-		DepositDenoms:    []string{sdk.DefaultBondDenom},
-		MinDepositAmount: 1_000,
+		DepositDenoms:     []string{sdk.DefaultBondDenom},
+		MinDepositAmount:  math.NewInt(types.DefaultMinDepositAmount),
+		IsDepositEnabled:  true,
+		WithdrawalAddress: "",
 	},
 	DepositsMinted: []*types.Deposit{
 		{

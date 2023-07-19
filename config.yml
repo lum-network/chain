@@ -31,8 +31,12 @@ genesis:
         voting_period: "180s"
     dfract:
       params:
-        min_deposit_amount: "1"
-        deposit_denoms: ["ulum"]
+        min_deposit_amount: "1000000"
+        deposit_denoms:
+          [
+            "ibc/05554A9BFDD28894D7F18F4C707AA0930D778751A437A9FE1F4684A3E1199728",
+          ]
+        is_deposit_enabled: true
     millions:
       params:
         min_deposit_amount: "1000"

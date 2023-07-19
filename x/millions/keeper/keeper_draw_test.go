@@ -1549,3 +1549,304 @@ func (suite *KeeperTestSuite) TestDraw_ExecuteDraw() {
 	suite.Require().Equal(int64(1_000_000), draw.PrizePoolRemainsAmount.Int64())
 	suite.Require().Equal(int64(2_000_000), draw.PrizePool.Amount.Int64())
 }
+
+// TestDraw_NoPrizeToWin_WithUnique tests cases where no prize can be computed and therefore no winner
+func (suite *KeeperTestSuite) TestDraw_NoPrizeToWin_WithUnique() {
+	app := suite.app
+	ctx := suite.ctx
+
+	seed := int64(42)
+
+	// Empty prize pool should return 0 prizes
+	prizePool := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.ZeroInt())
+	result, err := app.MillionsKeeper.RunDrawPrizes(ctx,
+		prizePool,
+		millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 20, Quantity: 1, DrawProbability: floatToDec(0.01), IsUnique: true},
+				{PoolPercent: 30, Quantity: 1, DrawProbability: floatToDec(0.11)},
+				{PoolPercent: 50, Quantity: 1, DrawProbability: floatToDec(1.00)},
+			},
+		},
+		[]millionskeeper.DepositTWB{},
+		seed,
+	)
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.ZeroInt(), result.TotalWinAmount)
+	suite.Require().Equal(uint64(0), result.TotalWinCount)
+	suite.Require().Len(result.PrizeDraws, 0)
+
+	result, err = app.MillionsKeeper.RunDrawPrizes(ctx,
+		prizePool,
+		millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 20, Quantity: 1, DrawProbability: floatToDec(0.01), IsUnique: true},
+				{PoolPercent: 30, Quantity: 1, DrawProbability: floatToDec(0.11)},
+				{PoolPercent: 50, Quantity: 1, DrawProbability: floatToDec(1.00)},
+			},
+		},
+		[]millionskeeper.DepositTWB{
+			{Address: suite.addrs[0].String(), Amount: sdk.NewInt(1_000_000)},
+			{Address: suite.addrs[1].String(), Amount: sdk.NewInt(1_000_000)},
+			{Address: suite.addrs[2].String(), Amount: sdk.NewInt(1_000_000)},
+		},
+		seed,
+	)
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.ZeroInt(), result.TotalWinAmount)
+	suite.Require().Equal(uint64(0), result.TotalWinCount)
+	suite.Require().Len(result.PrizeDraws, 0)
+
+	// No depositors should return prizes without winners
+	prizePool = sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(1_000_000))
+	result, err = app.MillionsKeeper.RunDrawPrizes(ctx,
+		prizePool,
+		millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 20, Quantity: 1, DrawProbability: floatToDec(0.01), IsUnique: true},
+				{PoolPercent: 30, Quantity: 1, DrawProbability: floatToDec(0.11)},
+				{PoolPercent: 50, Quantity: 1, DrawProbability: floatToDec(1.00)},
+			},
+		},
+		[]millionskeeper.DepositTWB{},
+		seed,
+	)
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.ZeroInt(), result.TotalWinAmount)
+	suite.Require().Equal(uint64(0), result.TotalWinCount)
+	suite.Require().Len(result.PrizeDraws, 3)
+}
+
+// TestDraw_NoPrizesWon_WithUnique tests the outcome of winnable prizes without winners
+func (suite *KeeperTestSuite) TestDraw_NoPrizesWon_WithUnique() {
+	app := suite.app
+	ctx := suite.ctx
+
+	seed := int64(84)
+
+	// No depositors should return prizes without winners
+	prizePool := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(1_000_000))
+	result, err := app.MillionsKeeper.RunDrawPrizes(ctx,
+		prizePool,
+		millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 20, Quantity: 1, DrawProbability: floatToDec(0.01), IsUnique: true},
+				{PoolPercent: 30, Quantity: 1, DrawProbability: floatToDec(0.11)},
+				{PoolPercent: 50, Quantity: 1, DrawProbability: floatToDec(1.00)},
+			},
+		},
+		[]millionskeeper.DepositTWB{},
+		seed,
+	)
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.ZeroInt(), result.TotalWinAmount)
+	suite.Require().Equal(uint64(0), result.TotalWinCount)
+	suite.Require().Len(result.PrizeDraws, 3)
+	suite.Require().Nil(result.PrizeDraws[0].Winner)
+	suite.Require().Nil(result.PrizeDraws[1].Winner)
+	suite.Require().Nil(result.PrizeDraws[2].Winner)
+
+	// Unlikely odds to win despite a large number of draws (deterministic due to the seed used)
+	result, err = app.MillionsKeeper.RunDrawPrizes(ctx,
+		prizePool,
+		millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 20, Quantity: 1000, DrawProbability: floatToDec(0.00001), IsUnique: true},
+				{PoolPercent: 30, Quantity: 100, DrawProbability: floatToDec(0.00001)},
+				{PoolPercent: 50, Quantity: 10, DrawProbability: floatToDec(0.00001)},
+			},
+		},
+		[]millionskeeper.DepositTWB{
+			{Address: suite.addrs[0].String(), Amount: sdk.NewInt(1_000_000)},
+			{Address: suite.addrs[1].String(), Amount: sdk.NewInt(1_000_000)},
+			{Address: suite.addrs[2].String(), Amount: sdk.NewInt(1_000_000)},
+		},
+		seed,
+	)
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.ZeroInt(), result.TotalWinAmount)
+	suite.Require().Equal(uint64(0), result.TotalWinCount)
+	suite.Require().Len(result.PrizeDraws, 1110)
+	for i, pd := range result.PrizeDraws {
+		suite.Require().Nil(pd.Winner, "prize draw %d unexpected winner", i)
+	}
+}
+
+// TestDraw_PrizesDrawDeterminism_WithUnique tests prizes draw determinism using the same input parameters
+// Each draw using the same parameters should be identical (deterministic)
+func (suite *KeeperTestSuite) TestDraw_PrizesDrawDeterminism_WithUnique() {
+	app := suite.app
+	ctx := suite.ctx
+
+	prizePool := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(42_000_000_000))
+	depositors := []millionskeeper.DepositTWB{}
+	for i := 0; i < 100; i++ {
+		uid := fmt.Sprintf("small_%d", i)
+		depositors = append(depositors, millionskeeper.DepositTWB{Address: uid, Amount: sdk.NewInt(1_000_000)})
+	}
+
+	// Init stable strategy for all draws
+	strat := millionstypes.PrizeStrategy{
+		PrizeBatches: []millionstypes.PrizeBatch{
+			{PoolPercent: 100, Quantity: 100, DrawProbability: floatToDec(1.0), IsUnique: true},
+		},
+	}
+
+	seed := int64(42)
+	firstDraw, err := app.MillionsKeeper.RunDrawPrizes(ctx,
+		prizePool,
+		strat,
+		depositors,
+		seed,
+	)
+	suite.Require().NoError(err)
+
+	for i := 0; i < 100; i++ {
+		draw, err := app.MillionsKeeper.RunDrawPrizes(ctx,
+			prizePool,
+			strat,
+			depositors,
+			seed,
+		)
+		suite.Require().NoError(err)
+		suite.Require().Equal(firstDraw.TotalWinAmount.Int64(), draw.TotalWinAmount.Int64())
+		suite.Require().Equal(firstDraw.TotalWinCount, draw.TotalWinCount)
+		suite.Require().Equal(len(firstDraw.PrizeDraws), len(draw.PrizeDraws))
+		for j, pd := range draw.PrizeDraws {
+			suite.Require().Equal(firstDraw.PrizeDraws[j].Amount.Int64(), pd.Amount.Int64())
+			if firstDraw.PrizeDraws[j].Winner == nil {
+				suite.Require().Nil(pd.Winner)
+			} else {
+				suite.Require().Equal(firstDraw.PrizeDraws[j].Winner.Address, pd.Winner.Address)
+				suite.Require().Equal(firstDraw.PrizeDraws[j].Winner.Amount.Int64(), pd.Winner.Amount.Int64())
+			}
+		}
+	}
+}
+
+// TestDraw_PrizesDrawUniqueExclusion_WithUnique tests prizes draw winner exclusion for prize marked as unique
+func (suite *KeeperTestSuite) TestDraw_PrizesDrawUniqueExclusion_WithUnique() {
+	app := suite.app
+	ctx := suite.ctx
+
+	// Whale should get the first prize due to its high stakes
+	// Dep1 should get the second one since whale is excluded after first prize won
+	// Other prizes should have no winner
+	draw, err := app.MillionsKeeper.RunDrawPrizes(ctx,
+		sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(42_000_000_000)),
+		millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 100, Quantity: 100, DrawProbability: floatToDec(1.0), IsUnique: true},
+			},
+		},
+		[]millionskeeper.DepositTWB{
+			{Address: "whale1", Amount: sdk.NewInt(1_000_000_000)},
+			{Address: "dep1", Amount: sdk.NewInt(1_000_000)},
+		},
+		42,
+	)
+	suite.Require().NoError(err)
+	suite.Require().Len(draw.PrizeDraws, 100)
+	suite.Require().Equal("whale1", draw.PrizeDraws[0].Winner.Address)
+	suite.Require().Equal("dep1", draw.PrizeDraws[1].Winner.Address)
+	for i := 2; i < len(draw.PrizeDraws); i++ {
+		suite.Require().Nil(draw.PrizeDraws[i].Winner)
+	}
+
+	// Whale should get the big prize due to its hight stakes
+	// Dep1 and Dep2 should share other prizes, share should output close to 50%
+	// but we expect at least 30% allocation to either of them for the test to pass (randomness)
+	draw, err = app.MillionsKeeper.RunDrawPrizes(ctx,
+		sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(42_000_000_000)),
+		millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 50, Quantity: 1, DrawProbability: floatToDec(1.0), IsUnique: true},
+				{PoolPercent: 50, Quantity: 100, DrawProbability: floatToDec(1.0)},
+			},
+		},
+		[]millionskeeper.DepositTWB{
+			{Address: "whale1", Amount: sdk.NewInt(1_000_000_000)},
+			{Address: "dep1", Amount: sdk.NewInt(1_000_000)},
+			{Address: "dep2", Amount: sdk.NewInt(1_000_000)},
+		},
+		42,
+	)
+	suite.Require().NoError(err)
+	suite.Require().Len(draw.PrizeDraws, 101)
+	suite.Require().Equal("whale1", draw.PrizeDraws[0].Winner.Address)
+	depCnts := map[string]int{
+		"dep1": 0,
+		"dep2": 0,
+	}
+	for i := 1; i < len(draw.PrizeDraws); i++ {
+		suite.Require().NotNil(draw.PrizeDraws[i].Winner)
+		suite.Require().NotEqual("whale1", draw.PrizeDraws[i].Winner.Address)
+		depCnts[draw.PrizeDraws[i].Winner.Address]++
+	}
+	suite.Require().Greater(depCnts["dep1"], 30)
+	suite.Require().Greater(depCnts["dep2"], 30)
+
+	// Test multiple deposits with same winner address with multiple unique batches
+	// ensure that exclusion works in this case
+	draw, err = app.MillionsKeeper.RunDrawPrizes(ctx,
+		sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(42_000_000_000)),
+		millionstypes.PrizeStrategy{
+			PrizeBatches: []millionstypes.PrizeBatch{
+				{PoolPercent: 25, Quantity: 1, DrawProbability: floatToDec(1.0), IsUnique: true},
+				{PoolPercent: 25, Quantity: 4, DrawProbability: floatToDec(1.0), IsUnique: true},
+				{PoolPercent: 50, Quantity: 100, DrawProbability: floatToDec(1.0)},
+			},
+		},
+		[]millionskeeper.DepositTWB{
+			{Address: "whale1", Amount: sdk.NewInt(1_000_000_000)},
+			{Address: "whale2", Amount: sdk.NewInt(1_000_000_000)},
+			{Address: "whale2", Amount: sdk.NewInt(1_000_000_000)},
+			{Address: "whale3", Amount: sdk.NewInt(1_000_000_000)},
+			{Address: "whale3", Amount: sdk.NewInt(1_000_000_000)},
+			{Address: "whale3", Amount: sdk.NewInt(1_000_000_000)},
+			{Address: "dep1", Amount: sdk.NewInt(1_000_000)},
+			{Address: "dep2", Amount: sdk.NewInt(1_000_000)},
+			{Address: "dep2", Amount: sdk.NewInt(1_000_000)},
+			{Address: "dep3", Amount: sdk.NewInt(1_000_000)},
+			{Address: "dep3", Amount: sdk.NewInt(1_000_000)},
+			{Address: "dep3", Amount: sdk.NewInt(1_000_000)},
+			{Address: "dep4", Amount: sdk.NewInt(1_000_000)},
+			{Address: "dep4", Amount: sdk.NewInt(1_000_000)},
+			{Address: "dep4", Amount: sdk.NewInt(1_000_000)},
+			{Address: "dep4", Amount: sdk.NewInt(1_000_000)},
+		},
+		42,
+	)
+	suite.Require().NoError(err)
+	suite.Require().Len(draw.PrizeDraws, 105)
+	depCnts = map[string]int{
+		"whale1": 0,
+		"whale2": 0,
+		"whale3": 0,
+		"dep1":   0,
+		"dep2":   0,
+		"dep3":   0,
+		"dep4":   0,
+	}
+	for i := 0; i < len(draw.PrizeDraws); i++ {
+		suite.Require().NotNil(draw.PrizeDraws[i].Winner)
+		depCnts[draw.PrizeDraws[i].Winner.Address]++
+	}
+	// Whales should get one of the big unique prizes
+	// The first 5 prizes should be attributed to unique depositors (3 whales + 2 random depositors)
+	suite.Require().Equal(1, depCnts["whale1"])
+	suite.Require().Equal(1, depCnts["whale2"])
+	suite.Require().Equal(1, depCnts["whale3"])
+	suite.Require().NotEqual(draw.PrizeDraws[4].Winner.Address, draw.PrizeDraws[3].Winner.Address)
+	suite.Require().Equal(1, depCnts[draw.PrizeDraws[3].Winner.Address])
+	suite.Require().Equal(1, depCnts[draw.PrizeDraws[4].Winner.Address])
+	// All other prizes should go to the depositors who did not get a unique prize
+	// The first 5 winners (of unique prizes) should not be found as a winner in any other prize
+	for i := 5; i < len(draw.PrizeDraws); i++ {
+		suite.Require().NotEqual(draw.PrizeDraws[i].Winner.Address, "whale1")
+		suite.Require().NotEqual(draw.PrizeDraws[i].Winner.Address, "whale2")
+		suite.Require().NotEqual(draw.PrizeDraws[i].Winner.Address, "whale3")
+		suite.Require().NotEqual(draw.PrizeDraws[i].Winner.Address, draw.PrizeDraws[3].Winner.Address)
+		suite.Require().NotEqual(draw.PrizeDraws[i].Winner.Address, draw.PrizeDraws[4].Winner.Address)
+	}
+}

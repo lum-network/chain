@@ -12,4 +12,6 @@ message PrizeBatch {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
+
+  bool is_unique = 4;
 }
