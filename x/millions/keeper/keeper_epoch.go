@@ -66,7 +66,7 @@ func (k Keeper) AddEpochUnbonding(ctx sdk.Context, withdrawal types.Withdrawal, 
 			WithdrawalIdsCount: uint64(1),
 			TotalAmount:        withdrawal.Amount,
 		}
-		k.setEpochPoolUnbonding(ctx, epochPoolUnbonding)
+		k.SetEpochPoolUnbonding(ctx, epochPoolUnbonding)
 
 		// Emit event
 		ctx.EventManager().EmitEvents(sdk.Events{
@@ -147,7 +147,7 @@ func (k Keeper) AddWithdrawalToNextAvailableEpoch(ctx sdk.Context, withdrawal ty
 					CreatedAtHeight:    ctx.BlockHeight(),
 					CreatedAt:          ctx.BlockTime(),
 				}
-				k.setEpochPoolUnbonding(ctx, epochPoolUnbonding)
+				k.SetEpochPoolUnbonding(ctx, epochPoolUnbonding)
 
 				// Emit event
 				ctx.EventManager().EmitEvents(sdk.Events{
@@ -218,7 +218,7 @@ func (k Keeper) UpdateEpochUnbonding(ctx sdk.Context, epochPoolUnbonding types.E
 	epochPoolUnbonding.UpdatedAtHeight = ctx.BlockHeight()
 	epochPoolUnbonding.UpdatedAt = ctx.BlockTime()
 
-	k.setEpochPoolUnbonding(ctx, epochPoolUnbonding)
+	k.SetEpochPoolUnbonding(ctx, epochPoolUnbonding)
 
 	// Emit event
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -257,8 +257,8 @@ func (k Keeper) AddFailedIcaUndelegationsToEpochUnbonding(ctx sdk.Context) error
 	return nil
 }
 
-// setEpochPoolUnbonding sets an epoch unbonding by its epochNumber and poolID
-func (k Keeper) setEpochPoolUnbonding(ctx sdk.Context, epochUnbonding types.EpochUnbonding) {
+// SetEpochPoolUnbonding sets an epoch unbonding by its epochNumber and poolID
+func (k Keeper) SetEpochPoolUnbonding(ctx sdk.Context, epochUnbonding types.EpochUnbonding) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetEpochPoolUnbondingKey(epochUnbonding.EpochNumber, epochUnbonding.PoolId)
 	encodedEpochUnbonding := k.cdc.MustMarshal(&epochUnbonding)
@@ -296,13 +296,13 @@ func (k Keeper) UpdateEpochTracker(ctx sdk.Context, epochInfo epochstypes.EpochI
 		NextEpochNumber:     epochNumber + 1,
 		NextEpochStartTime:  epochInfo.CurrentEpochStartTime.Add(epochInfo.Duration),
 	}
-	k.setEpochTracker(ctx, eTracker, types.WithdrawalTrackerType)
+	k.SetEpochTracker(ctx, eTracker, types.WithdrawalTrackerType)
 
 	return eTracker, nil
 }
 
 // SetEpochTracker sets the internal epoch tracker
-func (k Keeper) setEpochTracker(ctx sdk.Context, epochTracker types.EpochTracker, trackerType string) {
+func (k Keeper) SetEpochTracker(ctx sdk.Context, epochTracker types.EpochTracker, trackerType string) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetEpochTrackerKey(epochTracker.EpochIdentifier, trackerType)
 	encodedEpochTracker := k.cdc.MustMarshal(&epochTracker)
@@ -345,5 +345,33 @@ func (k Keeper) GetEpochUnbondings(ctx sdk.Context, epochID uint64) (epochUnbond
 		k.cdc.MustUnmarshal(iterator.Value(), &epochUnbonding)
 		epochUnbondings = append(epochUnbondings, epochUnbonding)
 	}
+	return
+}
+
+// GetEpochUnbondings lists the epoch unbondings by epochID
+func (k Keeper) ListEpochUnbondings(ctx sdk.Context) (epochUnbondings []types.EpochUnbonding) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.EpochUnbondingPrefix)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var epochUnbonding types.EpochUnbonding
+		k.cdc.MustUnmarshal(iterator.Value(), &epochUnbonding)
+		epochUnbondings = append(epochUnbondings, epochUnbonding)
+	}
+	return
+}
+
+func (k Keeper) ListEpochTrackers(ctx sdk.Context) (list []types.EpochTracker) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.EpochTrackerPrefix)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.EpochTracker
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
 	return
 }

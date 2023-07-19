@@ -41,6 +41,17 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, withdrawal := range genState.Withdrawals {
 		k.AddWithdrawal(ctx, withdrawal)
 	}
+
+	// Import epoch trackers
+	for _, epochTracker := range genState.EpochTrackers {
+		k.SetEpochTracker(ctx, epochTracker, types.WithdrawalTrackerType)
+	}
+
+	// Import epochUnbondings
+	for _, epochUnbonding := range genState.EpochUnbondings {
+		k.SetEpochPoolUnbonding(ctx, epochUnbonding)
+	}
+
 }
 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
@@ -56,5 +67,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		Draws:            k.ListDraws(ctx),
 		Prizes:           k.ListPrizes(ctx),
 		Withdrawals:      k.ListWithdrawals(ctx),
+		EpochUnbondings:  k.ListEpochUnbondings(ctx),
+		EpochTrackers:    k.ListEpochTrackers(ctx),
 	}
 }
