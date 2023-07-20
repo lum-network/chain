@@ -37,9 +37,9 @@ type PoolRunner interface {
 	TransferWithdrawalToRecipient(ctx sdk.Context, pool types.Pool, withdrawal types.Withdrawal) error
 	// ClaimYieldOnRemoteZone launches an ICA action on the remote Pool owned address (such as claim rewards for native staking Pools)
 	ClaimYieldOnRemoteZone(ctx sdk.Context, pool types.Pool, draw types.Draw) error
-	// QueryPrizePoolOnRemoteZone launches an ICA action on the remote Pool owned address (such as query balance for native staking Pools)
+	// QueryFreshPrizePoolCoinsOnRemoteZone launches an ICA action on the remote Pool owned address (such as query balance for native staking Pools)
 	QueryFreshPrizePoolCoinsOnRemoteZone(ctx sdk.Context, pool types.Pool, draw types.Draw) error
-	// TransferPrizePoolToLocalZone launches an IBC transfer (via ICA) from a remote Pool owned address to a local Pool owned address
+	// TransferFreshPrizePoolCoinsToLocalZone launches an IBC transfer (via ICA) from a remote Pool owned address to a local Pool owned address
 	TransferFreshPrizePoolCoinsToLocalZone(ctx sdk.Context, pool types.Pool, draw types.Draw) error
 }
 
