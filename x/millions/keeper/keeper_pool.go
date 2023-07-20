@@ -685,6 +685,21 @@ func (k Keeper) UnsafeUpdatePoolPortIds(ctx sdk.Context, poolID uint64, icaDepos
 	return pool, nil
 }
 
+// UnsafeUpdatePoolType raw updates the provided pooltype
+// Unsafe method to be used only during migration
+func (k Keeper) UnsafeUpdatePoolType(ctx sdk.Context, poolID uint64, poolType types.PoolType) (types.Pool, error) {
+	// Grab our pool instance
+	pool, err := k.GetPool(ctx, poolID)
+	if err != nil {
+		return types.Pool{}, err
+	}
+
+	pool.PoolType = poolType
+	k.updatePool(ctx, &pool)
+
+	return pool, nil
+}
+
 func (k Keeper) updatePool(ctx sdk.Context, pool *types.Pool) {
 	pool.UpdatedAt = ctx.BlockTime()
 	pool.UpdatedAtHeight = ctx.BlockHeight()
