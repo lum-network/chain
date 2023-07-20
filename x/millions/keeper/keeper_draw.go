@@ -89,6 +89,7 @@ func (k Keeper) ClaimYieldOnRemoteZone(ctx sdk.Context, poolID uint64, drawID ui
 		return nil, err
 	}
 
+	// Validate pool runner
 	poolRunner := k.MustGetPoolRunner(pool.PoolType)
 	if err := poolRunner.ClaimYieldOnRemoteZone(ctx, pool, draw); err != nil {
 		return &draw, err
@@ -177,6 +178,7 @@ func (k Keeper) QueryFreshPrizePoolCoinsOnRemoteZone(ctx sdk.Context, poolID uin
 		return k.OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted(ctx, poolID, drawID, sdk.NewCoins(balance), false)
 	}
 
+	// Validate pool runner
 	poolRunner := k.MustGetPoolRunner(pool.PoolType)
 	if err := poolRunner.QueryFreshPrizePoolCoinsOnRemoteZone(ctx, pool, draw); err != nil {
 		// Handle the error here and return it
@@ -268,6 +270,7 @@ func (k Keeper) TransferFreshPrizePoolCoinsToLocalZone(ctx sdk.Context, poolID u
 		return k.OnTransferFreshPrizePoolCoinsToLocalZoneCompleted(ctx, poolID, drawID, false)
 	}
 
+	// Validate pool runner
 	poolRunner := k.MustGetPoolRunner(pool.PoolType)
 	if err := poolRunner.TransferFreshPrizePoolCoinsToLocalZone(ctx, pool, draw); err != nil {
 		// Handle the error here and return it
