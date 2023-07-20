@@ -1195,7 +1195,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 	// Simulate failed ICA callback
 	// The initial splits amount for the inactive validator 1 was 1_000_000
 	splits = pool.ComputeSplitDelegations(ctx, sdk.NewInt(1_000_000))
-	err = app.MillionsKeeper.OnRedelegateToRemoteZoneCompleted(ctx, pool.PoolId, pool.Validators[0].GetOperatorAddress(), splits, true)
+	err = app.MillionsKeeper.OnRedelegateToActiveValidatorsOnRemoteZoneCompleted(ctx, pool.PoolId, pool.Validators[0].GetOperatorAddress(), splits, true)
 	suite.Require().NoError(err)
 	pool, err = app.MillionsKeeper.GetPool(ctx, 2)
 	suite.Require().NoError(err)

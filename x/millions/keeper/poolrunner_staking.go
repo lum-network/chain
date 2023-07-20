@@ -199,6 +199,96 @@ func (runner *PoolRunnerStaking) UndelegateWithdrawalOnRemoteZone(ctx sdk.Contex
 	return splits, nil, nil
 }
 
+func (runner *PoolRunnerStaking) RedelegateToActiveValidatorsOnRemoteZone(ctx sdk.Context, pool types.Pool, inactiveVal types.PoolValidator, splits []*types.SplitDelegation) error {
+	logger := runner.Logger(ctx).With("ctx", "pool_redelegate")
+
+	// If pool is local, we just process operation in place
+	// Otherwise we trigger ICA transactions
+	if pool.IsLocalZone(ctx) {
+		delAddr := sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress())
+		valSrcAddr, err := sdk.ValAddressFromBech32(inactiveVal.GetOperatorAddress())
+		if err != nil {
+			return err
+		}
+
+		for _, split := range splits {
+			valDstAddr, err := sdk.ValAddressFromBech32(split.GetValidatorAddress())
+			if err != nil {
+				return err
+			}
+
+			// Validate the redelegation sharesAmount
+			sharesAmount, err := runner.keeper.StakingKeeper.ValidateUnbondAmount(
+				ctx,
+				delAddr,
+				valSrcAddr,
+				split.Amount,
+			)
+			if err != nil {
+				return errorsmod.Wrapf(err, "%s", valDstAddr.String())
+			}
+
+			_, err = runner.keeper.StakingKeeper.BeginRedelegation(ctx, delAddr, valSrcAddr, valDstAddr, sharesAmount)
+			if err != nil {
+				return errorsmod.Wrapf(err, "%s", valDstAddr.String())
+			}
+		}
+
+		// ApplySplitRedelegate to pool validator set
+		pool.ApplySplitRedelegate(ctx, inactiveVal.GetOperatorAddress(), splits)
+		runner.keeper.updatePool(ctx, &pool)
+
+		return nil
+	}
+
+	// Construct our callback data
+	callbackData := types.RedelegateCallback{
+		PoolId:           pool.PoolId,
+		OperatorAddress:  inactiveVal.GetOperatorAddress(),
+		SplitDelegations: splits,
+	}
+	marshalledCallbackData, err := runner.keeper.MarshalRedelegateCallbackArgs(ctx, callbackData)
+	if err != nil {
+		return err
+	}
+
+	// Build the MsgBeginRedelegate
+	var msgs []sdk.Msg
+	for _, split := range splits {
+		msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{
+			DelegatorAddress:    pool.GetIcaDepositAddress(),
+			ValidatorSrcAddress: inactiveVal.GetOperatorAddress(),
+			ValidatorDstAddress: split.GetValidatorAddress(),
+			Amount:              sdk.NewCoin(pool.NativeDenom, split.Amount),
+		})
+	}
+
+	// ApplySplitRedelegate to pool validator set
+	pool.ApplySplitRedelegate(ctx, inactiveVal.GetOperatorAddress(), splits)
+	runner.keeper.updatePool(ctx, &pool)
+
+	// Dispatch our message with a timeout of 30 minutes in nanos
+	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTimeoutNanos
+	sequence, err := runner.keeper.BroadcastICAMessages(ctx, pool, types.ICATypeDeposit, msgs, timeoutTimestamp, ICACallbackID_Redelegate, marshalledCallbackData)
+	if err != nil {
+		logger.Error(
+			fmt.Sprintf("failed to dispatch ICA redelegation: %v", err),
+			"pool_id", pool.PoolId,
+			"chain_id", pool.GetChainId(),
+			"sequence", sequence,
+		)
+		return err
+	}
+	logger.Debug(
+		"ICA redelegation dispatched",
+		"pool_id", pool.PoolId,
+		"chain_id", pool.GetChainId(),
+		"sequence", sequence,
+	)
+
+	return nil
+}
+
 func (runner *PoolRunnerStaking) ClaimYieldOnRemoteZone(ctx sdk.Context, pool types.Pool, draw types.Draw) error {
 	logger := runner.Logger(ctx).With("ctx", "claim_yield")
 

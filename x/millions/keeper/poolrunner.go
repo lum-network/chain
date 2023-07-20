@@ -31,6 +31,8 @@ type PoolRunner interface {
 	DelegateDepositOnRemoteZone(ctx sdk.Context, pool types.Pool, deposit types.Deposit) ([]*types.SplitDelegation, error)
 	// UndelegateWithdrawalOnRemoteZone launches and ICA action on the remote Pool owned address (such as undelegate coins for native staking Pools)
 	UndelegateWithdrawalOnRemoteZone(ctx sdk.Context, pool types.Pool, withdrawal types.Withdrawal) ([]*types.SplitDelegation, *time.Time, error)
+	// RedelegateToActiveValidatorsOnRemoteZone launches an ICA action on the remote pool to redelegate the bonded tokens from inactive to active validators
+	RedelegateToActiveValidatorsOnRemoteZone(ctx sdk.Context, pool types.Pool, validator types.PoolValidator, splits []*types.SplitDelegation) error
 	// TransferWithdrawalToRecipient transfers the withdrawal amount from a remove Pool owned address to a user owned address
 	TransferWithdrawalToRecipient(ctx sdk.Context, pool types.Pool, withdrawal types.Withdrawal) error
 	// ClaimYieldOnRemoteZone launches an ICA action on the remote Pool owned address (such as claim rewards for native staking Pools)

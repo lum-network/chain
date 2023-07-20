@@ -1,4 +1,4 @@
-package v15x_test
+package v152_test
 
 import (
 	"testing"
@@ -14,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	apptypes "github.com/lum-network/chain/app"
-	v15x "github.com/lum-network/chain/x/millions/migrations/v15x"
+	v152 "github.com/lum-network/chain/x/millions/migrations/v152"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 
@@ -152,7 +152,7 @@ func (suite *StoreMigrationTestSuite) TestUpdatePoolType() {
 	suite.app.MillionsKeeper.AddPool(suite.ctx, newValidPool(suite, millionstypes.Pool{PoolId: poolID}))
 
 	// Run the migration operation
-	err := v15x.MigratePoolType(suite.ctx, *suite.app.MillionsKeeper)
+	err := v152.MigratePoolType(suite.ctx, *suite.app.MillionsKeeper)
 	suite.Require().NoError(err)
 
 	// Grab our pool

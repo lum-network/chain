@@ -12,7 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distribtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
@@ -474,7 +473,7 @@ func (k Keeper) RebalanceValidatorsBondings(ctx sdk.Context, poolID uint64) erro
 	for _, valSrc := range valsSrc {
 		// Double check that valSrc is inactive
 		if !valSrc.IsEnabled {
-			if err := k.RedelegateToActiveValidators(ctx, pool.PoolId, valSrc.GetOperatorAddress()); err != nil {
+			if err := k.RedelegateToActiveValidatorsOnRemoteZone(ctx, pool.PoolId, valSrc.GetOperatorAddress()); err != nil {
 				return err
 			}
 		}
@@ -483,10 +482,8 @@ func (k Keeper) RebalanceValidatorsBondings(ctx sdk.Context, poolID uint64) erro
 	return nil
 }
 
-// RedelegateToActiveValidators redistribute evenly the bondedAmount from the bonded inactive to the active valitator set of the pool
-func (k Keeper) RedelegateToActiveValidators(ctx sdk.Context, poolID uint64, valSrcAddr string) error {
-	logger := k.Logger(ctx).With("ctx", "pool_redelegate")
-
+// RedelegateToActiveValidatorsOnRemoteZone redistribute evenly the bondedAmount from the bonded inactive to the active valitator set of the pool
+func (k Keeper) RedelegateToActiveValidatorsOnRemoteZone(ctx sdk.Context, poolID uint64, valSrcAddr string) error {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err
@@ -514,101 +511,25 @@ func (k Keeper) RedelegateToActiveValidators(ctx sdk.Context, poolID uint64, val
 		)
 	}
 
-	// Generate splits for active validators based on the bonded amount from incoming inactive validator
 	splits := pool.ComputeSplitDelegations(ctx, inactiveVal.BondedAmount)
 	if len(splits) == 0 {
 		return types.ErrPoolEmptySplitDelegations
 	}
 
-	// If pool is local, we just process operation in place
-	// Otherwise we trigger ICA transactions
+	poolRunner := k.MustGetPoolRunner(pool.PoolType)
+	if err := poolRunner.RedelegateToActiveValidatorsOnRemoteZone(ctx, pool, inactiveVal, splits); err != nil {
+		return err
+	}
+
 	if pool.IsLocalZone(ctx) {
-		delAddr := sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress())
-		valSrcAddr, err := sdk.ValAddressFromBech32(inactiveVal.GetOperatorAddress())
-		if err != nil {
-			return err
-		}
-
-		for _, split := range splits {
-			valDstAddr, err := sdk.ValAddressFromBech32(split.GetValidatorAddress())
-			if err != nil {
-				return err
-			}
-
-			// Validate the redelegation sharesAmount
-			sharesAmount, err := k.StakingKeeper.ValidateUnbondAmount(
-				ctx,
-				delAddr,
-				valSrcAddr,
-				split.Amount,
-			)
-			if err != nil {
-				return errorsmod.Wrapf(err, "%s", valDstAddr.String())
-			}
-
-			_, err = k.StakingKeeper.BeginRedelegation(ctx, delAddr, valSrcAddr, valDstAddr, sharesAmount)
-			if err != nil {
-				return errorsmod.Wrapf(err, "%s", valDstAddr.String())
-			}
-		}
-
-		// ApplySplitRedelegate to pool validator set
-		pool.ApplySplitRedelegate(ctx, inactiveVal.GetOperatorAddress(), splits)
-		k.updatePool(ctx, &pool)
-
-		return k.OnRedelegateToRemoteZoneCompleted(ctx, pool.PoolId, inactiveVal.GetOperatorAddress(), splits, false)
+		return k.OnRedelegateToActiveValidatorsOnRemoteZoneCompleted(ctx, pool.PoolId, inactiveVal.GetOperatorAddress(), splits, false)
 	}
-
-	// Construct our callback data
-	callbackData := types.RedelegateCallback{
-		PoolId:           poolID,
-		OperatorAddress:  inactiveVal.GetOperatorAddress(),
-		SplitDelegations: splits,
-	}
-	marshalledCallbackData, err := k.MarshalRedelegateCallbackArgs(ctx, callbackData)
-	if err != nil {
-		return err
-	}
-
-	// Build the MsgBeginRedelegate
-	var msgs []sdk.Msg
-	for _, split := range splits {
-		msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{
-			DelegatorAddress:    pool.GetIcaDepositAddress(),
-			ValidatorSrcAddress: inactiveVal.GetOperatorAddress(),
-			ValidatorDstAddress: split.GetValidatorAddress(),
-			Amount:              sdk.NewCoin(pool.NativeDenom, split.Amount),
-		})
-	}
-
-	// ApplySplitRedelegate to pool validator set
-	pool.ApplySplitRedelegate(ctx, inactiveVal.GetOperatorAddress(), splits)
-	k.updatePool(ctx, &pool)
-
-	// Dispatch our message with a timeout of 30 minutes in nanos
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTimeoutNanos
-	sequence, err := k.BroadcastICAMessages(ctx, pool, types.ICATypeDeposit, msgs, timeoutTimestamp, ICACallbackID_Redelegate, marshalledCallbackData)
-	if err != nil {
-		logger.Error(
-			fmt.Sprintf("failed to dispatch ICA redelegation: %v", err),
-			"pool_id", poolID,
-			"chain_id", pool.GetChainId(),
-			"sequence", sequence,
-		)
-		return err
-	}
-	logger.Debug(
-		"ICA redelegation dispatched",
-		"pool_id", poolID,
-		"chain_id", pool.GetChainId(),
-		"sequence", sequence,
-	)
 
 	return nil
 }
 
-// OnRedelegateToRemoteZoneCompleted Acknowledged a redelegation of an inactive validator's bondedAmount
-func (k Keeper) OnRedelegateToRemoteZoneCompleted(ctx sdk.Context, poolID uint64, valSrcAddr string, splits []*types.SplitDelegation, isError bool) error {
+// OnRedelegateToActiveValidatorsOnRemoteZoneCompleted Acknowledged a redelegation of an inactive validator's bondedAmount
+func (k Keeper) OnRedelegateToActiveValidatorsOnRemoteZoneCompleted(ctx sdk.Context, poolID uint64, valSrcAddr string, splits []*types.SplitDelegation, isError bool) error {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err
