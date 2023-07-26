@@ -487,10 +487,10 @@ func (app *App) InitParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.
 	// Custom modules
 	paramsKeeper.Subspace(icacallbackstypes.ModuleName)
 	paramsKeeper.Subspace(icqueriestypes.ModuleName)
+	paramsKeeper.Subspace(epochstypes.ModuleName)
 	paramsKeeper.Subspace(beamtypes.ModuleName)
 	paramsKeeper.Subspace(dfracttypes.ModuleName)
 	paramsKeeper.Subspace(millionstypes.ModuleName)
-	paramsKeeper.Subspace(epochstypes.ModuleName)
 
 	return paramsKeeper
 }
