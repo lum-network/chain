@@ -142,7 +142,7 @@ func (suite *StoreMigrationTestSuite) SetupTest() {
 	})
 }
 
-func (suite *StoreMigrationTestSuite) TestUpdatePortIds() {
+func (suite *StoreMigrationTestSuite) TestMigrateUndelegations() {
 	poolID := suite.app.MillionsKeeper.GetNextPoolIDAndIncrement(suite.ctx)
 	suite.app.MillionsKeeper.AddPool(suite.ctx, newValidPool(suite, millionstypes.Pool{PoolId: poolID}))
 
