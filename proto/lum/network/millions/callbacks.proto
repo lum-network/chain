@@ -30,7 +30,9 @@ message DelegateCallback {
 }
 
 message UndelegateCallback {
-  uint64 pool_id = 3;
+  uint64 pool_id = 1;
+  reserved 2;
+  reserved 3;
   repeated uint64 withdrawal_ids = 4;
 }
 
