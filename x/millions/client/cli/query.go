@@ -59,8 +59,6 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdPoolWithdrawal(groupPool.ID),
 		GetCmdAccountWithdrawals(groupAccount.ID),
 		GetCmdAccountPoolWithdrawals(groupAccount.ID),
-		GetCmdEpochUnbondings(groupEpoch.ID),
-		GetCmdEpochPoolUnbonding(groupEpoch.ID),
 	)
 
 	return cmd
@@ -1013,90 +1011,5 @@ func GetCmdAccountPoolWithdrawals(groupID string) *cobra.Command {
 	}
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "all withdrawals by address and pool")
-	return cmd
-}
-
-func GetCmdEpochUnbondings(groupID string) *cobra.Command {
-	cmd := &cobra.Command{
-		GroupID: groupID,
-		Use:     "epoch-unbondings <epoch_id>",
-		Short:   "Query all epoch unbondings for a given epoch",
-		Args:    cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// Acquire the client instance
-			clientCtx := client.GetClientContextFromCmd(cmd)
-
-			// Acquire the pagination
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			// Acquire the query client from the context
-			queryClient := types.NewQueryClient(clientCtx)
-
-			epochID, err := strconv.ParseUint(args[0], 0, 64)
-			if err != nil {
-				return err
-			}
-
-			epochUnbondings := &types.QueryEpochUnbondingsRequest{
-				EpochNumber: epochID,
-				Pagination:  pageReq,
-			}
-
-			// Construct the query
-			res, err := queryClient.EpochUnbondings(cmd.Context(), epochUnbondings)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "all epochUnbondings by epoch")
-	return cmd
-}
-
-func GetCmdEpochPoolUnbonding(groupID string) *cobra.Command {
-	cmd := &cobra.Command{
-		GroupID: groupID,
-		Use:     "epoch-pool-unbonding <epoch_id> <pool_id>",
-		Short:   "Query epoch unbonding for a given epoch and poolID",
-		Args:    cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// Acquire the client instance
-			clientCtx := client.GetClientContextFromCmd(cmd)
-
-			// Acquire the query client from the context
-			queryClient := types.NewQueryClient(clientCtx)
-
-			epochID, err := strconv.ParseUint(args[0], 0, 64)
-			if err != nil {
-				return err
-			}
-
-			poolID, err := strconv.ParseUint(args[1], 0, 64)
-			if err != nil {
-				return err
-			}
-
-			epochPoolUnbonding := &types.QueryEpochPoolUnbondingRequest{
-				EpochNumber: epochID,
-				PoolId:      poolID,
-			}
-
-			// Construct the query
-			res, err := queryClient.EpochPoolUnbonding(cmd.Context(), epochPoolUnbonding)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "epoch pool unbonding")
 	return cmd
 }

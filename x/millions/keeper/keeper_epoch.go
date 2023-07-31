@@ -348,20 +348,6 @@ func (k Keeper) GetEpochUnbondings(ctx sdk.Context, epochID uint64) (epochUnbond
 	return
 }
 
-// GetEpochUnbondings lists the epoch unbondings by epochID
-func (k Keeper) ListEpochUnbondings(ctx sdk.Context) (epochUnbondings []types.EpochUnbonding) {
-	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.EpochUnbondingPrefix)
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		var epochUnbonding types.EpochUnbonding
-		k.cdc.MustUnmarshal(iterator.Value(), &epochUnbonding)
-		epochUnbondings = append(epochUnbondings, epochUnbonding)
-	}
-	return
-}
-
 func (k Keeper) ListEpochTrackers(ctx sdk.Context) (list []types.EpochTracker) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.EpochTrackerPrefix)

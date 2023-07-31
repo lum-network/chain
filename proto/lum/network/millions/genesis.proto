@@ -28,7 +28,5 @@ message GenesisState {
   repeated Draw draws = 8 [ (gogoproto.nullable) = false ];
   repeated Prize prizes = 9 [ (gogoproto.nullable) = false ];
   repeated Withdrawal withdrawals = 10 [ (gogoproto.nullable) = false ];
-  repeated EpochUnbonding epoch_unbondings = 11
-      [ (gogoproto.nullable) = false ];
-  repeated EpochTracker epoch_trackers = 12 [ (gogoproto.nullable) = false ];
+  repeated EpochTracker epoch_trackers = 11 [ (gogoproto.nullable) = false ];
 }
