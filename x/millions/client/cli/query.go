@@ -26,13 +26,11 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	groupPool := &cobra.Group{Title: "Pool Commands:", ID: fmt.Sprintf("%s/%s", cmd.Use, "pool")}
 	groupDraw := &cobra.Group{Title: "Draw Commands:", ID: fmt.Sprintf("%s/%s", cmd.Use, "draw")}
 	groupAccount := &cobra.Group{Title: "Account Commands:", ID: fmt.Sprintf("%s/%s", cmd.Use, "account")}
-	groupEpoch := &cobra.Group{Title: "Epoch Commands:", ID: fmt.Sprintf("%s/%s", cmd.Use, "epoch")}
 	cmd.AddGroup(
 		groupAll,
 		groupPool,
 		groupDraw,
 		groupAccount,
-		groupEpoch,
 	)
 
 	cmd.AddCommand(

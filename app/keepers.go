@@ -323,6 +323,9 @@ func (app *App) InitNormalKeepers() {
 	// Initialize our ICQueries keeper
 	app.ICQueriesKeeper = icquerieskeeper.NewKeeper(appCodec, keys[icqueriestypes.StoreKey], app.IBCKeeper)
 
+	// Initialize custom epochs
+	app.EpochsKeeper = epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
+
 	// Initialize our custom beam keeper
 	app.BeamKeeper = beamkeeper.NewKeeper(
 		appCodec,
@@ -370,9 +373,6 @@ func (app *App) InitNormalKeepers() {
 		app.DistrKeeper,
 		app.StakingKeeper,
 	)
-
-	// Initialize custom epochs
-	app.EpochsKeeper = epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
 
 	// First stack contains
 	// - Transfer IBC Module

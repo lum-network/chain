@@ -269,9 +269,8 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, ICAControllerCustomStoreKey, icahosttypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey, crisistypes.StoreKey, consensusparamtypes.StoreKey,
-		icacallbackstypes.StoreKey, icqueriestypes.StoreKey,
+		icacallbackstypes.StoreKey, icqueriestypes.StoreKey, epochstypes.StoreKey,
 		beamtypes.StoreKey, airdroptypes.StoreKey, dfracttypes.StoreKey, millionstypes.StoreKey,
-		epochstypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -360,12 +359,12 @@ func New(
 		ibctransfertypes.ModuleName,
 		icqueriestypes.ModuleName,
 		icacallbackstypes.ModuleName,
+		epochstypes.ModuleName,
+		consensusparamtypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
 		millionstypes.ModuleName,
-		epochstypes.ModuleName,
-		consensusparamtypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -390,12 +389,12 @@ func New(
 		ibctransfertypes.ModuleName,
 		icqueriestypes.ModuleName,
 		icacallbackstypes.ModuleName,
+		epochstypes.ModuleName,
+		consensusparamtypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
 		millionstypes.ModuleName,
-		epochstypes.ModuleName,
-		consensusparamtypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -425,12 +424,12 @@ func New(
 		authz.ModuleName,
 		icqueriestypes.ModuleName,
 		icacallbackstypes.ModuleName,
+		epochstypes.ModuleName,
+		consensusparamtypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
 		millionstypes.ModuleName,
-		epochstypes.ModuleName,
-		consensusparamtypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
