@@ -401,21 +401,21 @@ func (suite *KeeperTestSuite) TestEpoch_AddWithdrawalsToNextAvailableEpoch() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(100), uint64(epochUnbonding.WithdrawalIdsCount))
 	epochUnbondings := app.MillionsKeeper.GetEpochUnbondings(ctx, 1)
-	suite.Require().Equal(int(100), len(epochUnbondings[0].WithdrawalIds))
+	suite.Require().Equal(millionstypes.MaxAcceptableWithdrawalIDsCount, len(epochUnbondings[0].WithdrawalIds))
 
 	// Second 10k goes to the 2nd epoch
 	epochUnbonding, err = app.MillionsKeeper.GetEpochPoolUnbonding(ctx, 2, 1)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(100), uint64(epochUnbonding.WithdrawalIdsCount))
 	epochUnbondings = app.MillionsKeeper.GetEpochUnbondings(ctx, 2)
-	suite.Require().Equal(int(100), len(epochUnbondings[0].WithdrawalIds))
+	suite.Require().Equal(millionstypes.MaxAcceptableWithdrawalIDsCount, len(epochUnbondings[0].WithdrawalIds))
 
 	// Third 10k goes to the 3rd epoch
 	epochUnbonding, err = app.MillionsKeeper.GetEpochPoolUnbonding(ctx, 3, 1)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(100), uint64(epochUnbonding.WithdrawalIdsCount))
 	epochUnbondings = app.MillionsKeeper.GetEpochUnbondings(ctx, 3)
-	suite.Require().Equal(int(100), len(epochUnbondings[0].WithdrawalIds))
+	suite.Require().Equal(millionstypes.MaxAcceptableWithdrawalIDsCount, len(epochUnbondings[0].WithdrawalIds))
 
 	// 5 remaining goes to 4th epoch
 	epochUnbonding, err = app.MillionsKeeper.GetEpochPoolUnbonding(ctx, 4, 1)
@@ -489,7 +489,7 @@ func (suite *KeeperTestSuite) TestEpoch_AddWithdrawalsToNextAvailableEpoch() {
 	epochUnbondings = app.MillionsKeeper.GetEpochUnbondings(ctx, 1)
 	suite.Require().Equal(int(2), len(epochUnbondings))
 	epochUnbondings = app.MillionsKeeper.GetEpochUnbondings(ctx, 1)
-	suite.Require().Equal(int(100), len(epochUnbondings[1].WithdrawalIds))
+	suite.Require().Equal(millionstypes.MaxAcceptableWithdrawalIDsCount, len(epochUnbondings[1].WithdrawalIds))
 
 	epochUnbonding, err = app.MillionsKeeper.GetEpochPoolUnbonding(ctx, 2, 2)
 	suite.Require().NoError(err)
@@ -497,7 +497,7 @@ func (suite *KeeperTestSuite) TestEpoch_AddWithdrawalsToNextAvailableEpoch() {
 	epochUnbondings = app.MillionsKeeper.GetEpochUnbondings(ctx, 2)
 	suite.Require().Equal(int(2), len(epochUnbondings))
 	epochUnbondings = app.MillionsKeeper.GetEpochUnbondings(ctx, 2)
-	suite.Require().Equal(int(100), len(epochUnbondings[1].WithdrawalIds))
+	suite.Require().Equal(millionstypes.MaxAcceptableWithdrawalIDsCount, len(epochUnbondings[1].WithdrawalIds))
 
 	epochUnbonding, err = app.MillionsKeeper.GetEpochPoolUnbonding(ctx, 3, 2)
 	suite.Require().NoError(err)
@@ -505,7 +505,7 @@ func (suite *KeeperTestSuite) TestEpoch_AddWithdrawalsToNextAvailableEpoch() {
 	epochUnbondings = app.MillionsKeeper.GetEpochUnbondings(ctx, 3)
 	suite.Require().Equal(int(2), len(epochUnbondings))
 	epochUnbondings = app.MillionsKeeper.GetEpochUnbondings(ctx, 3)
-	suite.Require().Equal(int(100), len(epochUnbondings[1].WithdrawalIds))
+	suite.Require().Equal(millionstypes.MaxAcceptableWithdrawalIDsCount, len(epochUnbondings[1].WithdrawalIds))
 
 	epochUnbonding, err = app.MillionsKeeper.GetEpochPoolUnbonding(ctx, 4, 2)
 	suite.Require().NoError(err)
