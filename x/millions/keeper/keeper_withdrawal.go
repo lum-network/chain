@@ -153,7 +153,7 @@ func (k Keeper) OnUndelegateWithdrawalsOnRemoteZoneCompleted(ctx sdk.Context, po
 
 		if isError {
 			// Revert undelegate pool validators update
-			splits := pool.ComputeSplitDelegations(ctx, withdrawal.GetAmount().Amount)
+			splits := pool.ComputeSplitUndelegations(ctx, withdrawal.GetAmount().Amount)
 			pool.ApplySplitDelegate(ctx, splits)
 			k.updatePool(ctx, &pool)
 			k.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, types.WithdrawalState_IcaUndelegate, nil, true)
