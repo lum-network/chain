@@ -21,6 +21,7 @@ enum WithdrawalState {
   WITHDRAWAL_STATE_IBC_TRANSFER = 3
       [ (gogoproto.enumvalue_customname) = "IbcTransfer" ];
   WITHDRAWAL_STATE_FAILURE = 4 [ (gogoproto.enumvalue_customname) = "Failure" ];
+  WITHDRAWAL_STATE_PENDING = 5 [ (gogoproto.enumvalue_customname) = "Pending" ];
 }
 
 message Withdrawal {

@@ -106,6 +106,7 @@ import (
 	"github.com/lum-network/chain/x/dfract"
 	dfractclient "github.com/lum-network/chain/x/dfract/client"
 	dfracttypes "github.com/lum-network/chain/x/dfract/types"
+	"github.com/lum-network/chain/x/epochs"
 	"github.com/lum-network/chain/x/icacallbacks"
 	icacallbackstypes "github.com/lum-network/chain/x/icacallbacks/types"
 	"github.com/lum-network/chain/x/icqueries"
@@ -113,6 +114,8 @@ import (
 	"github.com/lum-network/chain/x/millions"
 	millionsclient "github.com/lum-network/chain/x/millions/client"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
+
+	epochstypes "github.com/lum-network/chain/x/epochs/types"
 )
 
 var (
@@ -162,6 +165,7 @@ var (
 		airdrop.AppModuleBasic{},
 		dfract.AppModuleBasic{},
 		millions.AppModuleBasic{},
+		epochs.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -265,7 +269,7 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, ICAControllerCustomStoreKey, icahosttypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey, crisistypes.StoreKey, consensusparamtypes.StoreKey,
-		icacallbackstypes.StoreKey, icqueriestypes.StoreKey,
+		icacallbackstypes.StoreKey, icqueriestypes.StoreKey, epochstypes.StoreKey,
 		beamtypes.StoreKey, airdroptypes.StoreKey, dfracttypes.StoreKey, millionstypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -326,6 +330,7 @@ func New(
 		millions.NewAppModule(appCodec, *app.MillionsKeeper),
 		icacallbacks.NewAppModule(appCodec, *app.ICACallbacksKeeper, app.AccountKeeper, app.BankKeeper),
 		icqueries.NewAppModule(appCodec, *app.ICQueriesKeeper),
+		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -354,11 +359,12 @@ func New(
 		ibctransfertypes.ModuleName,
 		icqueriestypes.ModuleName,
 		icacallbackstypes.ModuleName,
+		epochstypes.ModuleName,
+		consensusparamtypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
 		millionstypes.ModuleName,
-		consensusparamtypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -383,11 +389,12 @@ func New(
 		ibctransfertypes.ModuleName,
 		icqueriestypes.ModuleName,
 		icacallbackstypes.ModuleName,
+		epochstypes.ModuleName,
+		consensusparamtypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
 		millionstypes.ModuleName,
-		consensusparamtypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -417,11 +424,12 @@ func New(
 		authz.ModuleName,
 		icqueriestypes.ModuleName,
 		icacallbackstypes.ModuleName,
+		epochstypes.ModuleName,
+		consensusparamtypes.ModuleName,
 		beamtypes.ModuleName,
 		airdroptypes.ModuleName,
 		dfracttypes.ModuleName,
 		millionstypes.ModuleName,
-		consensusparamtypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
@@ -877,6 +885,13 @@ func (app *App) registerUpgradeHandlers() {
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
 
+	app.UpgradeKeeper.SetUpgradeHandler("v1.5.2", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		app.Logger().Info("Starting v1.5.2 upgrade")
+
+		app.Logger().Info("v1.5.2 upgrade applied")
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	})
+
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
@@ -949,6 +964,13 @@ func (app *App) registerUpgradeHandlers() {
 
 	if upgradeInfo.Name == "v1.5.1" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{}
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
+
+	if upgradeInfo.Name == "v1.5.2" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := storetypes.StoreUpgrades{
+			Added: []string{epochstypes.StoreKey},
+		}
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
 }

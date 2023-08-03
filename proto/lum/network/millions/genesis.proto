@@ -9,6 +9,7 @@ import "lum/network/millions/params.proto";
 import "lum/network/millions/pool.proto";
 import "lum/network/millions/prize.proto";
 import "lum/network/millions/withdrawal.proto";
+import "lum/network/millions/epoch.proto";
 
 option go_package = "github.com/lum-network/chain/x/millions/types";
 
@@ -27,4 +28,5 @@ message GenesisState {
   repeated Draw draws = 8 [ (gogoproto.nullable) = false ];
   repeated Prize prizes = 9 [ (gogoproto.nullable) = false ];
   repeated Withdrawal withdrawals = 10 [ (gogoproto.nullable) = false ];
+  repeated EpochTracker epoch_trackers = 11 [ (gogoproto.nullable) = false ];
 }

@@ -10,6 +10,7 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	epochstypes "github.com/lum-network/chain/x/epochs/types"
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
@@ -770,6 +771,10 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
 func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	app := suite.app
 	ctx := suite.ctx
+	epochInfo, err := TriggerEpochUpdate(suite)
+	suite.Require().NoError(err)
+	_, err = TriggerEpochTrackerUpdate(suite, epochInfo)
+	suite.Require().NoError(err)
 
 	valAddr := "cosmosvaloper196ax4vc0lwpxndu9dyhvca7jhxp70rmcvrj90c"
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
@@ -838,11 +843,6 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	app.MillionsKeeper.UpdateDepositStatus(ctx, poolID, d2.DepositId, millionstypes.DepositState_IcaDelegate, false)
 	app.MillionsKeeper.UpdateDepositStatus(ctx, poolID, d3.DepositId, millionstypes.DepositState_IcaDelegate, false)
 
-	// Validators bounded amount should still be 0 (not delegated yet)
-	pool, err = app.MillionsKeeper.GetPool(ctx, poolID)
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.ZeroInt(), pool.Validators[0].BondedAmount)
-
 	// Simulate delegate success for d1 + failure on d2
 	sd := pool.ComputeSplitDelegations(ctx, d1.Amount.Amount)
 	suite.Require().Len(sd, 1)
@@ -875,7 +875,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 		PoolId:           poolID,
 		DepositId:        d1.DepositId,
 		WithdrawalId:     app.MillionsKeeper.GetNextWithdrawalIdAndIncrement(ctx),
-		State:            millionstypes.WithdrawalState_IcaUndelegate,
+		State:            millionstypes.WithdrawalState_Pending,
 		DepositorAddress: d1.DepositorAddress,
 		ToAddress:        d1.DepositorAddress,
 		Amount:           d1.Amount,
@@ -884,11 +884,16 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	su1 := pool.ComputeSplitUndelegations(ctx, w1.Amount.Amount)
 	suite.Require().Len(su1, 1)
 
+	withdrawals := app.MillionsKeeper.ListWithdrawals(ctx)
+
+	err = app.MillionsKeeper.AddEpochUnbonding(ctx, withdrawals[0], false)
+	suite.Require().NoError(err)
+
 	w2 := millionstypes.Withdrawal{
 		PoolId:           poolID,
 		DepositId:        d2.DepositId,
 		WithdrawalId:     app.MillionsKeeper.GetNextWithdrawalIdAndIncrement(ctx),
-		State:            millionstypes.WithdrawalState_IcaUndelegate,
+		State:            millionstypes.WithdrawalState_Pending,
 		DepositorAddress: d2.DepositorAddress,
 		ToAddress:        d2.DepositorAddress,
 		Amount:           d2.Amount,
@@ -897,38 +902,37 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	su2 := pool.ComputeSplitUndelegations(ctx, w2.Amount.Amount)
 	suite.Require().Len(su2, 1)
 
-	// Simulate undelegate launched with success for d1 + d2 (ignore error voluntarely here)
-	err = app.MillionsKeeper.UndelegateWithdrawalOnNativeChain(ctx, poolID, w1.WithdrawalId)
-	suite.Require().Error(err)
-	err = app.MillionsKeeper.UndelegateWithdrawalOnNativeChain(ctx, poolID, w2.WithdrawalId)
-	suite.Require().Error(err)
+	withdrawals = app.MillionsKeeper.ListWithdrawals(ctx)
 
-	// Force fix withdrawals statuses since they will fail due to missing remote chain
-	app.MillionsKeeper.UpdateWithdrawalStatus(ctx, poolID, w1.WithdrawalId, millionstypes.WithdrawalState_IcaUndelegate, nil, false)
-	app.MillionsKeeper.UpdateWithdrawalStatus(ctx, poolID, w2.WithdrawalId, millionstypes.WithdrawalState_IcaUndelegate, nil, false)
-
-	// Validators bounded amount should be 0 now
-	pool, err = app.MillionsKeeper.GetPool(ctx, poolID)
+	err = app.MillionsKeeper.AddEpochUnbonding(ctx, withdrawals[1], false)
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.ZeroInt(), pool.Validators[0].BondedAmount)
 
-	// Simulate undelegate success for d1 + failure on d2
+	// Get the millions internal module tracker
+	epochTracker, err := app.MillionsKeeper.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, millionstypes.WithdrawalTrackerType)
+	suite.Require().NoError(err)
+
+	// Get epoch unbonding
+	currentEpochUnbonding, err := app.MillionsKeeper.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber, poolID)
+	suite.Require().NoError(err)
+
+	// Simulate undelegate failure for d1 + d2
 	t := time.Now()
-	err = app.MillionsKeeper.OnUndelegateWithdrawalOnNativeChainCompleted(ctx, poolID, w1.WithdrawalId, su1, &t, false)
-	suite.Require().NoError(err)
-	err = app.MillionsKeeper.OnUndelegateWithdrawalOnNativeChainCompleted(ctx, poolID, w2.WithdrawalId, su2, &t, true)
+	err = app.MillionsKeeper.RemoveEpochUnbonding(ctx, currentEpochUnbonding)
 	suite.Require().NoError(err)
 
-	// Validators bounded amount should be d2 now since d2 undelegate request failed
+	err = app.MillionsKeeper.OnUndelegateWithdrawalsOnRemoteZoneCompleted(ctx, poolID, []uint64{w1.WithdrawalId, w2.WithdrawalId}, &t, true)
+	suite.Require().Error(err)
+
+	// Validators bounded amount should be d1 + d2
 	pool, err = app.MillionsKeeper.GetPool(ctx, poolID)
 	suite.Require().NoError(err)
-	suite.Require().Equal(d2.Amount.Amount, pool.Validators[0].BondedAmount)
+	suite.Require().Equal(d1.Amount.Amount.Add(d2.Amount.Amount), pool.Validators[0].BondedAmount)
 
-	// Simulate undelegate success for d2
-	app.MillionsKeeper.UpdateWithdrawalStatus(ctx, poolID, w2.WithdrawalId, millionstypes.WithdrawalState_IcaUndelegate, nil, false)
-	err = app.MillionsKeeper.UndelegateWithdrawalOnNativeChain(ctx, poolID, w2.WithdrawalId)
+	// Error is intended
+	err = app.MillionsKeeper.UndelegateWithdrawalsOnRemoteZone(ctx, currentEpochUnbonding)
 	suite.Require().Error(err)
-	err = app.MillionsKeeper.OnUndelegateWithdrawalOnNativeChainCompleted(ctx, poolID, w2.WithdrawalId, su2, &t, false)
+	// Simulate undelegate success for d1 + d2
+	err = app.MillionsKeeper.OnUndelegateWithdrawalsOnRemoteZoneCompleted(ctx, poolID, []uint64{w1.WithdrawalId, w2.WithdrawalId}, &t, false)
 	suite.Require().NoError(err)
 
 	// Validators bounded amount should be 0 now
