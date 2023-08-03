@@ -2,6 +2,7 @@ package v152
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/lum-network/chain/x/millions/types"
 
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
