@@ -139,6 +139,9 @@ func (k Keeper) OnUndelegateWithdrawalsOnRemoteZoneCompleted(ctx sdk.Context, po
 		return err
 	}
 
+	// Track total amount in case of error to revert pool to appropriate state
+	totalAmount := sdk.ZeroInt()
+
 	// Update withdrawals
 	for _, wid := range withdrawalIDs {
 		withdrawal, err := k.GetPoolWithdrawal(ctx, pool.PoolId, wid)
@@ -152,10 +155,7 @@ func (k Keeper) OnUndelegateWithdrawalsOnRemoteZoneCompleted(ctx sdk.Context, po
 		}
 
 		if isError {
-			// Revert undelegate pool validators update
-			splits := pool.ComputeSplitUndelegations(ctx, withdrawal.GetAmount().Amount)
-			pool.ApplySplitDelegate(ctx, splits)
-			k.updatePool(ctx, &pool)
+			totalAmount = totalAmount.Add(withdrawal.Amount.Amount)
 			k.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, types.WithdrawalState_IcaUndelegate, nil, true)
 			// Add failed withdrawals to a fresh epoch unbonding for a retry
 			if err := k.AddEpochUnbonding(ctx, withdrawal, true); err != nil {
@@ -168,6 +168,13 @@ func (k Keeper) OnUndelegateWithdrawalsOnRemoteZoneCompleted(ctx sdk.Context, po
 		withdrawal.UnbondingEndsAt = unbondingEndsAt
 		k.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, types.WithdrawalState_IcaUnbonding, unbondingEndsAt, false)
 		k.addWithdrawalToMaturedQueue(ctx, withdrawal)
+	}
+
+	if isError {
+		// Revert undelegate pool validators update
+		splits := pool.ComputeSplitUndelegations(ctx, totalAmount)
+		pool.ApplySplitDelegate(ctx, splits)
+		k.updatePool(ctx, &pool)
 	}
 
 	return nil
