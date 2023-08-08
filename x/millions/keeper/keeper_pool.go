@@ -521,6 +521,11 @@ func (k Keeper) RedelegateToActiveValidatorsOnRemoteZone(ctx sdk.Context, poolID
 
 	// Validate pool runner
 	poolRunner := k.MustGetPoolRunner(pool.PoolType)
+
+	// ApplySplitRedelegate to pool validator set
+	pool.ApplySplitRedelegate(ctx, inactiveVal.GetOperatorAddress(), splits)
+	k.updatePool(ctx, &pool)
+
 	if err := poolRunner.RedelegateToActiveValidatorsOnRemoteZone(ctx, pool, inactiveVal, splits); err != nil {
 		return err
 	}

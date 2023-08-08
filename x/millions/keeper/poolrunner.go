@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/libs/log"
@@ -29,7 +30,7 @@ type PoolRunner interface {
 	// DelegateDepositOnRemoteZone launches an ICA action on the remote Pool owned address (such as delegate coins for native staking Pools)
 	DelegateDepositOnRemoteZone(ctx sdk.Context, pool types.Pool, deposit types.Deposit) ([]*types.SplitDelegation, error)
 	// UndelegateWithdrawalOnRemoteZone launches and ICA action on the remote Pool owned address (such as undelegate coins for native staking Pools)
-	UndelegateWithdrawalsOnRemoteZone(ctx sdk.Context, epochUnbonding types.EpochUnbonding) error
+	UndelegateWithdrawalsOnRemoteZone(ctx sdk.Context, epochUnbonding types.EpochUnbonding) ([]*types.SplitDelegation, *time.Time, error)
 	// RedelegateToActiveValidatorsOnRemoteZone launches an ICA action on the remote pool to redelegate the bonded tokens from inactive to active validators
 	RedelegateToActiveValidatorsOnRemoteZone(ctx sdk.Context, pool types.Pool, validator types.PoolValidator, splits []*types.SplitDelegation) error
 	// TransferWithdrawalToRecipient transfers the withdrawal amount from a remove Pool owned address to a user owned address

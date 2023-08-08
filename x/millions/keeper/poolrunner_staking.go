@@ -113,26 +113,26 @@ func (runner *PoolRunnerStaking) DelegateDepositOnRemoteZone(ctx sdk.Context, po
 	return splits, nil
 }
 
-func (runner *PoolRunnerStaking) UndelegateWithdrawalsOnRemoteZone(ctx sdk.Context, epochUnbonding types.EpochUnbonding) error {
+func (runner *PoolRunnerStaking) UndelegateWithdrawalsOnRemoteZone(ctx sdk.Context, epochUnbonding types.EpochUnbonding) ([]*types.SplitDelegation, *time.Time, error) {
 	logger := runner.Logger(ctx).With("ctx", "withdrawal_undelegate")
 
 	pool, err := runner.keeper.GetPool(ctx, epochUnbonding.PoolId)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
 	if pool.IsLocalZone(ctx) {
 		modAddr := sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress())
 		splits := pool.ComputeSplitUndelegations(ctx, epochUnbonding.GetTotalAmount().Amount)
 		if len(splits) == 0 {
-			return types.ErrPoolEmptySplitDelegations
+			return nil, nil, types.ErrPoolEmptySplitDelegations
 		}
 
 		var unbondingEndsAt *time.Time
 		for _, split := range splits {
 			valAddr, err := sdk.ValAddressFromBech32(split.ValidatorAddress)
 			if err != nil {
-				return err
+				return splits, unbondingEndsAt, err
 			}
 			shares, err := runner.keeper.StakingKeeper.ValidateUnbondAmount(
 				ctx,
@@ -141,28 +141,26 @@ func (runner *PoolRunnerStaking) UndelegateWithdrawalsOnRemoteZone(ctx sdk.Conte
 				split.Amount,
 			)
 			if err != nil {
-				return errorsmod.Wrapf(err, "%s", valAddr.String())
+				return splits, unbondingEndsAt, errorsmod.Wrapf(err, "%s", valAddr.String())
 			}
 
 			// Trigger undelegate
 			endsAt, err := runner.keeper.StakingKeeper.Undelegate(ctx, modAddr, valAddr, shares)
 			if err != nil {
-				return errorsmod.Wrapf(err, "%s", valAddr.String())
+				return splits, unbondingEndsAt, errorsmod.Wrapf(err, "%s", valAddr.String())
 			}
 			if unbondingEndsAt == nil || endsAt.After(*unbondingEndsAt) {
 				unbondingEndsAt = &endsAt
 			}
 		}
-		// Apply undelegate pool validators update
-		pool.ApplySplitUndelegate(ctx, splits)
-		runner.keeper.updatePool(ctx, &pool)
-		return runner.keeper.OnUndelegateWithdrawalsOnRemoteZoneCompleted(ctx, epochUnbonding.PoolId, epochUnbonding.WithdrawalIds, unbondingEndsAt, false)
+
+		return splits, unbondingEndsAt, nil
 	}
 
 	// Prepare undelegate split
 	splits := pool.ComputeSplitUndelegations(ctx, epochUnbonding.GetTotalAmount().Amount)
 	if len(splits) == 0 {
-		return types.ErrPoolEmptySplitDelegations
+		return nil, nil, types.ErrPoolEmptySplitDelegations
 	}
 
 	// Construct our callback data
@@ -172,7 +170,7 @@ func (runner *PoolRunnerStaking) UndelegateWithdrawalsOnRemoteZone(ctx sdk.Conte
 	}
 	marshalledCallbackData, err := runner.keeper.MarshalUndelegateCallbackArgs(ctx, callbackData)
 	if err != nil {
-		return err
+		return splits, nil, err
 	}
 
 	// Build undelegate tx
@@ -185,10 +183,6 @@ func (runner *PoolRunnerStaking) UndelegateWithdrawalsOnRemoteZone(ctx sdk.Conte
 		})
 	}
 
-	// Apply undelegate pool validators update
-	pool.ApplySplitUndelegate(ctx, splits)
-	runner.keeper.updatePool(ctx, &pool)
-
 	// Dispatch our message with a timeout of 30 minutes in nanos
 	sequence, err := runner.keeper.BroadcastICAMessages(ctx, pool, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Undelegate, marshalledCallbackData)
 	if err != nil {
@@ -200,7 +194,7 @@ func (runner *PoolRunnerStaking) UndelegateWithdrawalsOnRemoteZone(ctx sdk.Conte
 			"chain_id", pool.GetChainId(),
 			"sequence", sequence,
 		)
-		return err
+		return splits, nil, err
 	}
 	logger.Debug(
 		"ICA undelegate dispatched",
@@ -209,7 +203,7 @@ func (runner *PoolRunnerStaking) UndelegateWithdrawalsOnRemoteZone(ctx sdk.Conte
 		"chain_id", pool.GetChainId(),
 		"sequence", sequence,
 	)
-	return nil
+	return splits, nil, nil
 }
 
 func (runner *PoolRunnerStaking) RedelegateToActiveValidatorsOnRemoteZone(ctx sdk.Context, pool types.Pool, inactiveVal types.PoolValidator, splits []*types.SplitDelegation) error {
@@ -247,10 +241,6 @@ func (runner *PoolRunnerStaking) RedelegateToActiveValidatorsOnRemoteZone(ctx sd
 			}
 		}
 
-		// ApplySplitRedelegate to pool validator set
-		pool.ApplySplitRedelegate(ctx, inactiveVal.GetOperatorAddress(), splits)
-		runner.keeper.updatePool(ctx, &pool)
-
 		return nil
 	}
 
@@ -275,10 +265,6 @@ func (runner *PoolRunnerStaking) RedelegateToActiveValidatorsOnRemoteZone(ctx sd
 			Amount:              sdk.NewCoin(pool.NativeDenom, split.Amount),
 		})
 	}
-
-	// ApplySplitRedelegate to pool validator set
-	pool.ApplySplitRedelegate(ctx, inactiveVal.GetOperatorAddress(), splits)
-	runner.keeper.updatePool(ctx, &pool)
 
 	// Dispatch our message with a timeout of 30 minutes in nanos
 	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + types.IBCTimeoutNanos

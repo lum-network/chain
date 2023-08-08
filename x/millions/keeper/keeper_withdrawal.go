@@ -34,9 +34,19 @@ func (k Keeper) UndelegateWithdrawalsOnRemoteZone(ctx sdk.Context, epochUnbondin
 	}
 
 	poolRunner := k.MustGetPoolRunner(pool.PoolType)
-	if err := poolRunner.UndelegateWithdrawalsOnRemoteZone(ctx, epochUnbonding); err != nil {
+	splits, unbondingEndsAt, err := poolRunner.UndelegateWithdrawalsOnRemoteZone(ctx, epochUnbonding)
+
+	// Apply undelegate pool validators update
+	pool.ApplySplitUndelegate(ctx, splits)
+	k.updatePool(ctx, &pool)
+
+	if err != nil {
 		// Return with error here and let the caller manage the state changes if needed
 		return err
+	}
+
+	if pool.IsLocalZone(ctx) {
+		return k.OnUndelegateWithdrawalsOnRemoteZoneCompleted(ctx, epochUnbonding.PoolId, epochUnbonding.WithdrawalIds, unbondingEndsAt, false)
 	}
 
 	return nil
