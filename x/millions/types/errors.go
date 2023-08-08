@@ -49,4 +49,7 @@ var (
 	ErrInvalidWithdrawalState            = errorsmod.Register(ModuleName, 1602, "Invalid withdrawal state")
 	ErrWithdrawalNotFound                = errorsmod.Register(ModuleName, 1603, "Withdrawal not found")
 	ErrInvalidPacketCompletionTime       = errorsmod.Register(ModuleName, 1604, "Invalid packet completion time for withdrawal undelegate")
+	ErrInvalidEpochTracker               = errorsmod.Register(ModuleName, 1700, "Invalid epoch tracker")
+	ErrInvalidEpochUnbonding             = errorsmod.Register(ModuleName, 1701, "Invalid epoch unbonding")
+	ErrInvalidEpochField                 = errorsmod.Register(ModuleName, 1702, "Invalid epoch field")
 )

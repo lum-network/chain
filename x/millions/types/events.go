@@ -14,6 +14,7 @@ const (
 	EventTypeRedelegate           = "redelegate"
 	EventTypeWithdrawDeposit      = "withdraw_deposit"
 	EventTypeWithdrawDepositRetry = "withdraw_deposit_retry"
+	EventTypeEpochUnbonding       = "epoch_unbonding"
 
 	AttributeKeyPoolID          = "pool_id"
 	AttributeKeyDrawID          = "draw_id"
@@ -29,4 +30,5 @@ const (
 	AttributeKeyTotalWinners    = "total_winners"
 	AttributeKeyTotalWinAmount  = "total_win_amount"
 	AttributeKeySponsor         = "sponsor"
+	AttributeKeyEpochID         = "epoch_id"
 )

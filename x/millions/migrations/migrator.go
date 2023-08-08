@@ -23,5 +23,5 @@ func (m Migrator) Migrate1To2(ctx sdk.Context) error {
 
 // Migrate2To3 migrates from version 2 to 3
 func (m Migrator) Migrate2To3(ctx sdk.Context) error {
-	return v152.MigratePoolType(ctx, m.keeper)
+	return v152.MigrateFailedIcaUndelegationsToEpochUnbonding(ctx, m.keeper)
 }

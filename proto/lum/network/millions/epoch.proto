@@ -1,0 +1,35 @@
+syntax = "proto3";
+package lum.network.millions;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/lum-network/chain/x/millions/types";
+
+message EpochUnbonding {
+  string epoch_identifier = 1;
+  uint64 epoch_number = 2;
+  uint64 pool_id = 3;
+  repeated uint64 withdrawal_ids = 4;
+  uint64 withdrawal_ids_count = 5;
+  cosmos.base.v1beta1.Coin total_amount = 6 [ (gogoproto.nullable) = false ];
+
+  // metadata
+  int64 created_at_height = 7;
+  int64 updated_at_height = 8;
+  google.protobuf.Timestamp created_at = 9
+      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+  google.protobuf.Timestamp updated_at = 10
+      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+}
+
+message EpochTracker {
+  string epoch_tracker_type = 1;
+  string epoch_identifier = 2;
+  uint64 epoch_number = 3;
+  uint64 next_epoch_number = 4;
+  uint64 previous_epoch_number = 5;
+  google.protobuf.Timestamp next_epoch_start_time = 6
+      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+}

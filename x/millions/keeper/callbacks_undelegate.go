@@ -34,7 +34,7 @@ func (k Keeper) UnmarshalUndelegateCallbackArgs(ctx sdk.Context, undelegateCallb
 }
 
 // Get the latest completion time across each MsgUndelegate in the ICA transaction
-func (k Keeper) GetLatestUnbondingCompletionTime(ctx sdk.Context, msgResponses [][]byte) (*time.Time, error) {
+func (k Keeper) GetUnbondingCompletionTime(ctx sdk.Context, msgResponses [][]byte) (*time.Time, error) {
 	// Update the completion time using the latest completion time across each message within the transaction
 	latestCompletionTime := time.Time{}
 
@@ -75,26 +75,24 @@ func UndelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, a
 		k.Logger(ctx).Debug("Received timeout for an undelegate packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
 		k.Logger(ctx).Debug("Received failure for an undelegate packet")
-		// Failed OnUndelegateWithdrawalOnRemoteZoneCompleted
-		return k.OnUndelegateWithdrawalOnRemoteZoneCompleted(
+		// Failed OnUndelegateEpochUnbondingOnRemoteZoneCompleted
+		return k.OnUndelegateWithdrawalsOnRemoteZoneCompleted(
 			ctx,
-			undelegateCallback.GetPoolId(),
-			undelegateCallback.GetWithdrawalId(),
-			undelegateCallback.GetSplitDelegations(),
+			undelegateCallback.PoolId,
+			undelegateCallback.WithdrawalIds,
 			nil,
 			true,
 		)
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
 		k.Logger(ctx).Debug("Received success for an undelegate packet")
-		unbondingEndsAt, err := k.GetLatestUnbondingCompletionTime(ctx, ackResponse.MsgResponses)
+		unbondingEndsAt, err := k.GetUnbondingCompletionTime(ctx, ackResponse.MsgResponses)
 		if err != nil {
 			return err
 		}
-		return k.OnUndelegateWithdrawalOnRemoteZoneCompleted(
+		return k.OnUndelegateWithdrawalsOnRemoteZoneCompleted(
 			ctx,
-			undelegateCallback.GetPoolId(),
-			undelegateCallback.GetWithdrawalId(),
-			undelegateCallback.GetSplitDelegations(),
+			undelegateCallback.PoolId,
+			undelegateCallback.WithdrawalIds,
 			unbondingEndsAt,
 			false,
 		)

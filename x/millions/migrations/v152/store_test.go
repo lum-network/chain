@@ -147,20 +147,56 @@ func (suite *StoreMigrationTestSuite) SetupTest() {
 	})
 }
 
-func (suite *StoreMigrationTestSuite) TestUpdatePoolType() {
+func (suite *StoreMigrationTestSuite) TestMigrateUndelegations() {
 	poolID := suite.app.MillionsKeeper.GetNextPoolIDAndIncrement(suite.ctx)
 	suite.app.MillionsKeeper.AddPool(suite.ctx, newValidPool(suite, millionstypes.Pool{PoolId: poolID}))
 
-	// Run the migration operation
-	err := v152.MigratePoolType(suite.ctx, *suite.app.MillionsKeeper)
-	suite.Require().NoError(err)
-
-	// Grab our pool
+	// Grab our pool entity
 	pool, err := suite.app.MillionsKeeper.GetPool(suite.ctx, poolID)
 	suite.Require().NoError(err)
 
-	// Ensure our pool has the new poolType
-	suite.Require().Equal(millionstypes.PoolType_Staking, pool.PoolType)
+	for i := 0; i < 5; i++ {
+		suite.app.MillionsKeeper.AddDeposit(suite.ctx, &millionstypes.Deposit{
+			PoolId:           pool.PoolId,
+			DepositorAddress: suite.addrs[i].String(),
+			WinnerAddress:    suite.addrs[i].String(),
+			State:            millionstypes.DepositState_IbcTransfer,
+			Amount:           sdk.NewCoin("ulum", sdk.NewInt(1_000_0)),
+		})
+	}
+
+	deposits := suite.app.MillionsKeeper.ListDeposits(suite.ctx)
+
+	for i := 0; i < 5; i++ {
+		suite.app.MillionsKeeper.AddWithdrawal(suite.ctx, millionstypes.Withdrawal{
+			PoolId:           pool.PoolId,
+			DepositId:        deposits[i].DepositId,
+			DepositorAddress: suite.addrs[i].String(),
+			ToAddress:        suite.addrs[i].String(),
+			State:            millionstypes.WithdrawalState_Failure,
+			ErrorState:       millionstypes.WithdrawalState_IcaUndelegate,
+			Amount:           sdk.NewCoin("ulum", sdk.NewInt(1_000_0)),
+		})
+	}
+
+	// Old withdrawals values
+	oldWithdrawals := suite.app.MillionsKeeper.ListWithdrawals(suite.ctx)
+	for _, oldWithdrawal := range oldWithdrawals {
+		suite.Require().Equal(millionstypes.WithdrawalState_IcaUndelegate, oldWithdrawal.ErrorState)
+		suite.Require().Equal(millionstypes.WithdrawalState_Failure, oldWithdrawal.State)
+	}
+
+	// Run the migration operation
+	err = v152.MigrateFailedIcaUndelegationsToEpochUnbonding(suite.ctx, *suite.app.MillionsKeeper)
+	suite.Require().NoError(err)
+
+	newWithdrawals := suite.app.MillionsKeeper.ListWithdrawals(suite.ctx)
+
+	for _, newWithdrawals := range newWithdrawals {
+		suite.Require().Equal(millionstypes.WithdrawalState_Unspecified, newWithdrawals.ErrorState)
+		suite.Require().Equal(millionstypes.WithdrawalState_Pending, newWithdrawals.State)
+	}
+
 }
 
 func TestKeeperSuite(t *testing.T) {

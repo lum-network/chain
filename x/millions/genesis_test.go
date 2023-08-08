@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	apptypes "github.com/lum-network/chain/app"
+	epochstypes "github.com/lum-network/chain/x/epochs/types"
 	"github.com/lum-network/chain/x/millions"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
@@ -104,6 +105,9 @@ var testGenesis = millionstypes.GenesisState{
 		{PoolId: 3, DepositId: 9, WithdrawalId: 2, DepositorAddress: testAccs[4], ToAddress: testAccs[4], Amount: sdk.NewCoin("denom-3", sdk.NewInt(300)), State: millionstypes.WithdrawalState_IcaUnbonding, UnbondingEndsAt: &future},
 		{PoolId: 3, DepositId: 10, WithdrawalId: 3, DepositorAddress: testAccs[4], ToAddress: testAccs[4], Amount: sdk.NewCoin("denom-3", sdk.NewInt(301)), State: millionstypes.WithdrawalState_IcaUnbonding, UnbondingEndsAt: &future},
 		{PoolId: 4, DepositId: 11, WithdrawalId: 4, DepositorAddress: testAccs[5], ToAddress: testAccs[5], Amount: sdk.NewCoin("denom-4", sdk.NewInt(400)), State: millionstypes.WithdrawalState_IcaUnbonding, UnbondingEndsAt: &now},
+	},
+	EpochTrackers: []millionstypes.EpochTracker{
+		{EpochTrackerType: epochstypes.DAY_EPOCH, EpochIdentifier: epochstypes.DAY_EPOCH, NextEpochNumber: uint64(2), PreviousEpochNumber: uint64(0), NextEpochStartTime: future},
 	},
 }
 
@@ -283,6 +287,17 @@ func TestInitGenesis(t *testing.T) {
 			require.Equal(t, col.WithdrawalsIds[i].WithdrawalId, wid.WithdrawalId)
 		}
 	}
+
+	epochTrackers := app.MillionsKeeper.ListEpochTrackers(ctx)
+	require.Len(t, epochTrackers, len(testGenesis.EpochTrackers))
+	for i, epochTracker := range epochTrackers {
+		require.Equal(t, testGenesis.EpochTrackers[i].EpochIdentifier, epochTracker.EpochIdentifier)
+		require.Equal(t, testGenesis.EpochTrackers[i].EpochNumber, epochTracker.EpochNumber)
+		require.Equal(t, testGenesis.EpochTrackers[i].EpochTrackerType, epochTracker.EpochTrackerType)
+		require.Equal(t, testGenesis.EpochTrackers[i].NextEpochNumber, epochTracker.NextEpochNumber)
+		require.Equal(t, testGenesis.EpochTrackers[i].NextEpochStartTime, epochTracker.NextEpochStartTime)
+	}
+
 }
 
 func TestExportGenesis(t *testing.T) {
@@ -382,5 +397,14 @@ func TestExportGenesis(t *testing.T) {
 		require.Equal(t, exportGenesis.Withdrawals[i].ToAddress, w.ToAddress)
 		require.Equal(t, exportGenesis.Withdrawals[i].Amount, w.Amount)
 		require.Equal(t, exportGenesis.Withdrawals[i].State, w.State)
+	}
+
+	require.Len(t, exportGenesis.EpochTrackers, len(testGenesis.EpochTrackers))
+	for i, epochTracker := range testGenesis.EpochTrackers {
+		require.Equal(t, testGenesis.EpochTrackers[i].EpochIdentifier, epochTracker.EpochIdentifier)
+		require.Equal(t, testGenesis.EpochTrackers[i].EpochNumber, epochTracker.EpochNumber)
+		require.Equal(t, testGenesis.EpochTrackers[i].EpochTrackerType, epochTracker.EpochTrackerType)
+		require.Equal(t, testGenesis.EpochTrackers[i].NextEpochNumber, epochTracker.NextEpochNumber)
+		require.Equal(t, testGenesis.EpochTrackers[i].NextEpochStartTime, epochTracker.NextEpochStartTime)
 	}
 }

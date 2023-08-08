@@ -11,6 +11,7 @@ import (
 
 	"github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
+	epochstypes "github.com/lum-network/chain/x/epochs/types"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 
@@ -80,6 +81,26 @@ func (suite *KeeperTestSuite) SetupTest() {
 		FeesStakers:             sdk.ZeroDec(),
 		MinDepositDrawDelta:     millionstypes.MinAcceptableDepositDrawDelta,
 	})
+}
+
+func TriggerEpochUpdate(suite *KeeperTestSuite) (epochInfo epochstypes.EpochInfo, err error) {
+	app := suite.app
+	ctx := suite.ctx
+	epochsInfo, _ := app.EpochsKeeper.GetEpochInfo(ctx, epochstypes.DAY_EPOCH)
+	epochsInfo.CurrentEpoch++
+	epochsInfo.StartTime = ctx.BlockTime()
+	epochsInfo.CurrentEpochStartHeight = ctx.BlockHeight()
+	app.EpochsKeeper.SetEpochInfo(ctx, epochsInfo)
+
+	return epochsInfo, nil
+}
+
+func TriggerEpochTrackerUpdate(suite *KeeperTestSuite, epochInfo epochstypes.EpochInfo) (epochTracker millionstypes.EpochTracker, err error) {
+	app := suite.app
+	ctx := suite.ctx
+	epochTracker, err = app.MillionsKeeper.UpdateEpochTracker(ctx, epochInfo, "withdrawal")
+	suite.Require().NoError(err)
+	return epochTracker, nil
 }
 
 // floatToDec simple helper to create sdk.Dec with a precision of 6

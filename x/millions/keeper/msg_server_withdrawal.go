@@ -51,7 +51,7 @@ func (k msgServer) WithdrawDeposit(goCtx context.Context, msg *types.MsgWithdraw
 		PoolId:           msg.PoolId,
 		DepositId:        msg.DepositId,
 		WithdrawalId:     k.GetNextWithdrawalIdAndIncrement(ctx),
-		State:            types.WithdrawalState_IcaUndelegate,
+		State:            types.WithdrawalState_Pending,
 		DepositorAddress: deposit.DepositorAddress,
 		ToAddress:        toAddr.String(),
 		Amount:           deposit.Amount,
@@ -82,7 +82,8 @@ func (k msgServer) WithdrawDeposit(goCtx context.Context, msg *types.MsgWithdraw
 		),
 	})
 
-	if err := k.UndelegateWithdrawalOnRemoteZone(ctx, withdrawal.GetPoolId(), withdrawal.GetWithdrawalId()); err != nil {
+	// Add epoch unbonding
+	if err := k.AddEpochUnbonding(ctx, withdrawal, false); err != nil {
 		return nil, err
 	}
 
@@ -123,13 +124,7 @@ func (k msgServer) WithdrawDepositRetry(goCtx context.Context, msg *types.MsgWit
 	}
 
 	newState := types.WithdrawalState_Unspecified
-	if withdrawal.ErrorState == types.WithdrawalState_IcaUndelegate {
-		newState = types.WithdrawalState_IcaUndelegate
-		k.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, newState, withdrawal.UnbondingEndsAt, false)
-		if err := k.UndelegateWithdrawalOnRemoteZone(ctx, withdrawal.PoolId, withdrawal.WithdrawalId); err != nil {
-			return nil, err
-		}
-	} else if withdrawal.ErrorState == types.WithdrawalState_IbcTransfer {
+	if withdrawal.ErrorState == types.WithdrawalState_IbcTransfer {
 		newState = types.WithdrawalState_IbcTransfer
 		k.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, newState, withdrawal.UnbondingEndsAt, false)
 		if err := k.TransferWithdrawalToRecipient(ctx, withdrawal.PoolId, withdrawal.WithdrawalId); err != nil {
