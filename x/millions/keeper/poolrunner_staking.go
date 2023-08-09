@@ -121,14 +121,15 @@ func (runner *PoolRunnerStaking) UndelegateWithdrawalsOnRemoteZone(ctx sdk.Conte
 		return nil, nil, err
 	}
 
-	if pool.IsLocalZone(ctx) {
-		modAddr := sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress())
-		splits := pool.ComputeSplitUndelegations(ctx, epochUnbonding.GetTotalAmount().Amount)
-		if len(splits) == 0 {
-			return nil, nil, types.ErrPoolEmptySplitDelegations
-		}
+	// Prepare undelegate split
+	splits := pool.ComputeSplitUndelegations(ctx, epochUnbonding.GetTotalAmount().Amount)
+	if len(splits) == 0 {
+		return nil, nil, types.ErrPoolEmptySplitDelegations
+	}
 
+	if pool.IsLocalZone(ctx) {
 		var unbondingEndsAt *time.Time
+		modAddr := sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress())
 		for _, split := range splits {
 			valAddr, err := sdk.ValAddressFromBech32(split.ValidatorAddress)
 			if err != nil {
@@ -157,17 +158,12 @@ func (runner *PoolRunnerStaking) UndelegateWithdrawalsOnRemoteZone(ctx sdk.Conte
 		return splits, unbondingEndsAt, nil
 	}
 
-	// Prepare undelegate split
-	splits := pool.ComputeSplitUndelegations(ctx, epochUnbonding.GetTotalAmount().Amount)
-	if len(splits) == 0 {
-		return nil, nil, types.ErrPoolEmptySplitDelegations
-	}
-
 	// Construct our callback data
 	callbackData := types.UndelegateCallback{
 		PoolId:        epochUnbonding.PoolId,
 		WithdrawalIds: epochUnbonding.WithdrawalIds,
 	}
+
 	marshalledCallbackData, err := runner.keeper.MarshalUndelegateCallbackArgs(ctx, callbackData)
 	if err != nil {
 		return splits, nil, err
