@@ -16,37 +16,40 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochInfo epochstypes.EpochInf
 
 	// Get the correct identifier
 	if epochInfo.Identifier == epochstypes.DAY_EPOCH {
+		// Update the epoch with the actual information
 		epochTracker, err := k.UpdateEpochTracker(ctx, epochInfo, types.WithdrawalTrackerType)
-		if err == nil {
-			// List the unbondings from the previous epoch
-			epochUnbondings := k.GetEpochUnbondings(ctx, epochTracker.PreviousEpochNumber)
-			for _, epochUnbonding := range epochUnbondings {
-				if err := k.UndelegateWithdrawalsOnRemoteZone(ctx, epochUnbonding); err != nil {
-					logger.Error(
-						fmt.Sprintf("failed to launch undelegation for epoch unbonding: %v", err),
-						"pool_id", epochUnbonding.PoolId,
-						"epoch_number", epochUnbonding.EpochNumber,
-					)
-					errorCount++
-				} else {
-					successCount++
-				}
-				// Remove the epoch unbonding record to start the next one with a fresh one
-				if err := k.RemoveEpochUnbonding(ctx, epochUnbonding); err != nil {
-					logger.Error(
-						fmt.Sprintf("failed to remove record for epoch unbonding: %v", err),
-						"pool_id", epochUnbonding.PoolId,
-						"epoch_number", epochUnbonding.EpochNumber,
-					)
-					errorCount++
-				}
-			}
-		} else {
+		if err != nil {
 			logger.Error(
 				fmt.Sprintf("Unable to update epoch tracker, err: %v", err),
 				"epoch_number", epochInfo.CurrentEpoch,
 			)
 			errorCount++
+			return
+		}
+
+		// List the unbondings from the previous epoch
+		epochUnbondings := k.GetEpochUnbondings(ctx, epochTracker.PreviousEpochNumber)
+		for _, epochUnbonding := range epochUnbondings {
+			if err := k.UndelegateWithdrawalsOnRemoteZone(ctx, epochUnbonding); err != nil {
+				logger.Error(
+					fmt.Sprintf("failed to launch undelegation for epoch unbonding: %v", err),
+					"pool_id", epochUnbonding.PoolId,
+					"epoch_number", epochUnbonding.EpochNumber,
+				)
+				errorCount++
+			} else {
+				successCount++
+			}
+
+			// Remove the epoch unbonding record to start the next one with a fresh one
+			if err := k.RemoveEpochUnbonding(ctx, epochUnbonding); err != nil {
+				logger.Error(
+					fmt.Sprintf("failed to remove record for epoch unbonding: %v", err),
+					"pool_id", epochUnbonding.PoolId,
+					"epoch_number", epochUnbonding.EpochNumber,
+				)
+				errorCount++
+			}
 		}
 
 		if successCount+errorCount > 0 {
