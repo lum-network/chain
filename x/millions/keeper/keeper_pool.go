@@ -267,6 +267,7 @@ func (k Keeper) RegisterPool(
 	vals []string,
 	bech32Acc, bech32Val string,
 	minDepositAmount math.Int,
+	unbondingFrequency math.Int,
 	drawSchedule types.DrawSchedule,
 	prizeStrategy types.PrizeStrategy,
 ) (uint64, error) {
@@ -300,6 +301,7 @@ func (k Keeper) RegisterPool(
 		Bech32PrefixAccAddr: bech32Acc,
 		Bech32PrefixValAddr: bech32Val,
 		MinDepositAmount:    minDepositAmount,
+		UnbondingFrequency:  unbondingFrequency,
 		DrawSchedule:        drawSchedule.Sanitized(),
 		PrizeStrategy:       prizeStrategy,
 		LocalAddress:        localAddress.String(),
@@ -364,6 +366,7 @@ func (k Keeper) UpdatePool(
 	poolID uint64,
 	vals []string,
 	minDepositAmount *math.Int,
+	unbondingFrequency *math.Int,
 	drawSchedule *types.DrawSchedule,
 	prizeStrategy *types.PrizeStrategy,
 	state types.PoolState,
@@ -397,6 +400,9 @@ func (k Keeper) UpdatePool(
 	// Only a few properties can be updated
 	if minDepositAmount != nil {
 		pool.MinDepositAmount = *minDepositAmount
+	}
+	if unbondingFrequency != nil {
+		pool.UnbondingFrequency = *unbondingFrequency
 	}
 	if drawSchedule != nil {
 		pool.DrawSchedule = *drawSchedule

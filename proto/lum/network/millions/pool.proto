@@ -53,7 +53,10 @@ message Pool {
   ];
   DrawSchedule draw_schedule = 14 [ (gogoproto.nullable) = false ];
   PrizeStrategy prize_strategy = 15 [ (gogoproto.nullable) = false ];
-  reserved 16;
+  string unbonding_frequency = 16 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
   reserved 17;
 
   string local_address = 18 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];

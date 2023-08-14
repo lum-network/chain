@@ -15,7 +15,7 @@ func NewMillionsProposalHandler(k keeper.Keeper) govtypes.Handler {
 		switch c := content.(type) {
 		case *types.ProposalUpdatePool:
 			{
-				return k.UpdatePool(ctx, c.PoolId, c.Validators, c.MinDepositAmount, c.DrawSchedule, c.PrizeStrategy, c.State)
+				return k.UpdatePool(ctx, c.PoolId, c.Validators, c.MinDepositAmount, c.UnbondingFrequency, c.DrawSchedule, c.PrizeStrategy, c.State)
 			}
 		case *types.ProposalRegisterPool:
 			{
@@ -30,6 +30,7 @@ func NewMillionsProposalHandler(k keeper.Keeper) govtypes.Handler {
 					c.GetBech32PrefixAccAddr(),
 					c.GetBech32PrefixValAddr(),
 					c.MinDepositAmount,
+					c.UnbondingFrequency,
 					c.GetDrawSchedule(),
 					c.GetPrizeStrategy(),
 				)

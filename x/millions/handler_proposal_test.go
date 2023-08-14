@@ -102,10 +102,11 @@ func (suite *HandlerTestSuite) SetupTest() {
 				IsEnabled:       true,
 			},
 		},
-		IcaDepositAddress: suite.moduleAddrs[0].String(),
-		MinDepositAmount:  sdk.NewInt(1000000),
-		State:             millionstypes.PoolState_Ready,
-		PoolId:            poolID,
+		IcaDepositAddress:  suite.moduleAddrs[0].String(),
+		MinDepositAmount:   sdk.NewInt(1000000),
+		UnbondingFrequency: sdk.NewInt(3),
+		State:              millionstypes.PoolState_Ready,
+		PoolId:             poolID,
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
 				{PoolPercent: 100, Quantity: 1, DrawProbability: sdk.NewDecWithPrec(int64(0.00*1_000_000), 6)},
@@ -160,73 +161,79 @@ func (suite *HandlerTestSuite) TestProposal_RegisterPool() {
 	}{
 		{
 			"Title cannot be empty",
-			millionstypes.NewRegisterPoolProposal("", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, sdk.NewInt(3)),
 			true,
 			false,
 		},
 		{
 			"Description cannot be empty",
-			millionstypes.NewRegisterPoolProposal("Test", "", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, sdk.NewInt(3)),
 			true,
 			false,
 		},
 		{
 			"Chain ID cannot be empty",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", "", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", "", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, sdk.NewInt(3)),
 			true,
 			true,
 		},
 		{
 			"Bech 32 acc prefix cannot be empty",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, sdk.NewInt(3)),
 			true,
 			true,
 		},
 		{
 			"Bech 32 val prefix cannot be empty",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, sdk.NewInt(3)),
 			true,
 			true,
 		},
 		{
 			"Validators list cannot be empty",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", emptyValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", emptyValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, sdk.NewInt(3)),
 			true,
 			true,
 		},
 		{
 			"Validators list cannot be invalid",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", invalidValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", invalidValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, sdk.NewInt(3)),
 			false,
 			true,
 		},
 		{
 			"Min deposit amount cannot be less than min acceptable amount",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(millionstypes.MinAcceptableDepositAmount-1), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(millionstypes.MinAcceptableDepositAmount-1), validPrizeStrategy, validDrawSchedule, sdk.NewInt(3)),
 			true,
 			true,
 		},
 		{
 			"Prize strategy cannot be empty",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), emptyPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), emptyPrizeStrategy, validDrawSchedule, sdk.NewInt(3)),
 			true,
 			true,
 		},
 		{
 			"Prize strategy cannot be invalid",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), invalidPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), invalidPrizeStrategy, validDrawSchedule, sdk.NewInt(3)),
 			false,
 			true,
 		},
 		{
 			"Draw Schedule cannot be invalid",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, invalidDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, invalidDrawSchedule, sdk.NewInt(3)),
+			true,
+			true,
+		},
+		{
+			"Unbonding frequency cannot be zero",
+			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, sdk.NewInt(0)),
 			true,
 			true,
 		},
 		{
 			"Fine should be fine",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, sdk.NewInt(3)),
 			false,
 			false,
 		},
@@ -300,6 +307,9 @@ func (suite *HandlerTestSuite) TestProposal_UpdatePool() {
 	validMinDepositAmount := millionstypes.DefaultParams().MinDepositAmount
 	invalidMinDepositAmount := sdk.NewInt(millionstypes.MinAcceptableDepositAmount - 1)
 
+	validUnbondingFrequency := sdk.NewInt(3)
+	invalidUnbondingFrequency := sdk.NewInt(0)
+
 	cases := []struct {
 		name            string
 		proposal        govtypesv1beta1.Content
@@ -308,61 +318,67 @@ func (suite *HandlerTestSuite) TestProposal_UpdatePool() {
 	}{
 		{
 			"Title cannot be empty",
-			millionstypes.NewUpdatePoolProposal("", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateUnspecified),
+			millionstypes.NewUpdatePoolProposal("", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateUnspecified, &validUnbondingFrequency),
 			true,
 			false,
 		},
 		{
 			"Description cannot be empty",
-			millionstypes.NewUpdatePoolProposal("Test", "", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused),
+			millionstypes.NewUpdatePoolProposal("Test", "", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused, &validUnbondingFrequency),
 			true,
 			false,
 		},
 		{
 			"Validators list can be empty",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateReady),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateReady, &validUnbondingFrequency),
 			false,
 			false,
 		},
 		{
 			"Validators list cannot be invalid",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), invalidValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), invalidValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused, &validUnbondingFrequency),
 			false,
 			true,
 		},
 		{
 			"Min deposit amount cannot be less than 1000000 (default params)",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &invalidMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateReady),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &invalidMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateReady, &validUnbondingFrequency),
+			true,
+			true,
+		},
+		{
+			"Unbonding frequency cannot be zero",
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateReady, &invalidUnbondingFrequency),
 			true,
 			true,
 		},
 		{
 			"Prize strategy cannot be empty",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &emptyPrizeStrategy, &validDrawSchedule, poolStatePaused),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &emptyPrizeStrategy, &validDrawSchedule, poolStatePaused, &validUnbondingFrequency),
 			true,
 			true,
 		},
 		{
 			"Prize strategy cannot be invalid",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &invalidPrizeStrategy, &validDrawSchedule, poolStateReady),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &invalidPrizeStrategy, &validDrawSchedule, poolStateReady, &validUnbondingFrequency),
 			false,
 			true,
 		},
 		{
 			"Draw Schedule cannot be invalid",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &invalidDrawSchedule, poolStatePaused),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &invalidDrawSchedule, poolStatePaused, &validUnbondingFrequency),
 			true,
 			true,
 		},
 		{
 			"Partial should be fine",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, nil, nil, nil, poolStateUnspecified),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, nil, nil, nil, poolStateUnspecified, &validUnbondingFrequency),
 			false,
 			false,
 		},
 		{
 			"Fine should be fine",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused, &validUnbondingFrequency),
 			false,
 			false,
 		},

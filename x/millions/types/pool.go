@@ -55,6 +55,9 @@ func (pool *Pool) ValidateBasic(params Params) error {
 	if pool.MinDepositAmount.IsNil() || pool.MinDepositAmount.LT(params.MinDepositAmount) {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "min deposit denom must be gte %d", params.MinDepositAmount.Int64())
 	}
+	if pool.UnbondingFrequency.IsNil() || pool.UnbondingFrequency.IsNegative() || pool.UnbondingFrequency.IsZero() {
+		return errorsmod.Wrapf(ErrInvalidPoolParams, "unbonding frequency must be gt 0")
+	}
 	if pool.AvailablePrizePool.IsNil() || pool.AvailablePrizePool.Denom != pool.Denom {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "clawback prize pool must be initialized")
 	}

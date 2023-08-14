@@ -30,6 +30,10 @@ message ProposalRegisterPool {
   string bech32_prefix_acc_addr = 11;
   string bech32_prefix_val_addr = 12;
   string transfer_channel_id = 13;
+  string unbonding_frequency = 14 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message ProposalUpdatePool {
@@ -47,6 +51,10 @@ message ProposalUpdatePool {
   DrawSchedule draw_schedule = 6 [ (gogoproto.nullable) = true ];
   PrizeStrategy prize_strategy = 7 [ (gogoproto.nullable) = true ];
   PoolState state = 8;
+  string unbonding_frequency = 9 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = true
+  ];
 }
 
 message ProposalUpdateParams {

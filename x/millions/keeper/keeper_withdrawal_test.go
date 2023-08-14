@@ -69,6 +69,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_AddWithdrawal() {
 		"lum",
 		"lumvaloper",
 		app.MillionsKeeper.GetParams(ctx).MinDepositAmount,
+		sdk.NewInt(3),
 		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
 		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
 	)

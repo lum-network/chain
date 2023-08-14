@@ -847,7 +847,7 @@ func (app *App) registerUpgradeHandlers() {
 					{PoolPercent: 8, Quantity: 60, IsUnique: false, DrawProbability: sdk.NewDecWithPrec(90, 2)},
 				},
 			}
-			err = app.MillionsKeeper.UpdatePool(ctx, pool.GetPoolId(), []string{}, nil, nil, &prizeStrategy, millionstypes.PoolState_Unspecified)
+			err = app.MillionsKeeper.UpdatePool(ctx, pool.GetPoolId(), []string{}, nil, nil, nil, &prizeStrategy, millionstypes.PoolState_Unspecified)
 			if err != nil {
 				return nil, err
 			}
@@ -874,7 +874,7 @@ func (app *App) registerUpgradeHandlers() {
 					{PoolPercent: 8, Quantity: 60, IsUnique: true, DrawProbability: sdk.NewDecWithPrec(90, 2)},
 				},
 			}
-			err = app.MillionsKeeper.UpdatePool(ctx, pool.GetPoolId(), []string{}, nil, nil, &prizeStrategy, millionstypes.PoolState_Unspecified)
+			err = app.MillionsKeeper.UpdatePool(ctx, pool.GetPoolId(), []string{}, nil, nil, nil, &prizeStrategy, millionstypes.PoolState_Unspecified)
 			if err != nil {
 				return nil, err
 			}

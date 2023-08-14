@@ -141,6 +141,7 @@ func (suite *KeeperTestSuite) TestFees_DrawPrizesFees() {
 		[]string{suite.valAddrs[0].String()},
 		p.Bech32PrefixAccAddr, p.Bech32PrefixValAddr,
 		p.MinDepositAmount,
+		p.UnbondingFrequency,
 		p.DrawSchedule,
 		p.PrizeStrategy,
 	)
