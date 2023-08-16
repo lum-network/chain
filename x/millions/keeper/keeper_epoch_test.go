@@ -23,6 +23,7 @@ func (suite *KeeperTestSuite) TestEpoch_BeforeEpochStartHook() {
 	app.MillionsKeeper.Hooks().BeforeEpochStart(ctx, epochInfo)
 
 	// Test epochs with local pool
+	// Unbonding frequency of 4 days
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
 		PoolId:      1,
 		Denom:       localPoolDenom,
@@ -42,6 +43,7 @@ func (suite *KeeperTestSuite) TestEpoch_BeforeEpochStartHook() {
 			DrawDelta:     drawDelta1,
 		},
 		AvailablePrizePool: sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
+		UnbondingFrequency: sdk.NewInt(4),
 	}))
 	// List pools
 	pools := app.MillionsKeeper.ListPools(ctx)
@@ -73,7 +75,7 @@ func (suite *KeeperTestSuite) TestEpoch_BeforeEpochStartHook() {
 	}
 
 	// Add 2 withdrawals for the first epoch
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 5; i++ {
 		app.MillionsKeeper.AddWithdrawal(ctx, millionstypes.Withdrawal{
 			PoolId:           deposits[i].PoolId,
 			DepositId:        deposits[i].DepositId,
@@ -85,7 +87,7 @@ func (suite *KeeperTestSuite) TestEpoch_BeforeEpochStartHook() {
 	}
 	// There should be 2 withdrawals
 	withdrawals := app.MillionsKeeper.ListWithdrawals(ctx)
-	suite.Require().Len(withdrawals, 2)
+	suite.Require().Len(withdrawals, 5)
 
 	for _, w := range withdrawals {
 		err = app.MillionsKeeper.AddEpochUnbonding(ctx, w, false)
@@ -100,74 +102,32 @@ func (suite *KeeperTestSuite) TestEpoch_BeforeEpochStartHook() {
 	currentEpochUnbonding := app.MillionsKeeper.GetEpochUnbondings(ctx, epochTracker.EpochNumber)
 	suite.Require().NoError(err)
 	suite.Require().Len(currentEpochUnbonding, 1)
-	suite.Require().Len(currentEpochUnbonding[0].WithdrawalIds, 2)
+	suite.Require().Len(currentEpochUnbonding[0].WithdrawalIds, 5)
 
-	// Trigger epoch update
-	epochInfo, err = TriggerEpochUpdate(suite)
-	suite.Require().NoError(err)
-	suite.Require().Equal(int64(2), epochInfo.CurrentEpoch)
-
-	app.MillionsKeeper.Hooks().BeforeEpochStart(ctx, epochInfo)
-
-	// Epoch got delete after hook
-	_, err = app.MillionsKeeper.GetEpochPoolUnbonding(ctx, 2, 1)
-	suite.Require().ErrorIs(millionstypes.ErrInvalidEpochUnbonding, err)
-
-	withdrawals = app.MillionsKeeper.ListWithdrawals(ctx)
-	for _, w := range withdrawals {
-		suite.Require().Equal(millionstypes.WithdrawalState_IcaUnbonding, w.State)
-		suite.Require().Equal(millionstypes.WithdrawalState_Unspecified, w.ErrorState)
-		suite.Require().NotNil(w.UnbondingEndsAt)
-	}
-
-	// Add 3 withdrawals for the second epoch
-	for i := 2; i < 5; i++ {
-		app.MillionsKeeper.AddWithdrawal(ctx, millionstypes.Withdrawal{
-			PoolId:           deposits[i].PoolId,
-			DepositId:        deposits[i].DepositId,
-			DepositorAddress: suite.addrs[i].String(),
-			ToAddress:        suite.addrs[i].String(),
-			State:            millionstypes.WithdrawalState_Pending,
-			Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_0)),
-		})
-	}
-	// There should be 5 withdrawals
-	withdrawals = app.MillionsKeeper.ListWithdrawals(ctx)
-	suite.Require().Len(withdrawals, 5)
-
-	for _, nw := range withdrawals[2:5] {
-		err = app.MillionsKeeper.AddEpochUnbonding(ctx, nw, false)
+	for epoch := int64(2); epoch <= 4; epoch++ {
+		epochInfo, err := TriggerEpochUpdate(suite)
 		suite.Require().NoError(err)
+		suite.Require().Equal(epoch, epochInfo.CurrentEpoch)
+
+		app.MillionsKeeper.Hooks().BeforeEpochStart(ctx, epochInfo)
+
+		prevEpoch := uint64(epoch - 1)
+		_, err = app.MillionsKeeper.GetEpochPoolUnbonding(ctx, prevEpoch, 1)
+		suite.Require().ErrorIs(err, millionstypes.ErrInvalidEpochUnbonding)
+
+		withdrawals := app.MillionsKeeper.ListWithdrawals(ctx)
+		expectedState := millionstypes.WithdrawalState_Pending
+		if epoch == 4 {
+			expectedState = millionstypes.WithdrawalState_IcaUnbonding
+		}
+		for _, w := range withdrawals {
+			suite.Require().Equal(expectedState, w.State)
+			suite.Require().Equal(millionstypes.WithdrawalState_Unspecified, w.ErrorState)
+			if expectedState == millionstypes.WithdrawalState_IcaUnbonding {
+				suite.Require().NotNil(w.UnbondingEndsAt)
+			}
+		}
 	}
-
-	// Get the millions internal module tracker
-	epochTracker, err = app.MillionsKeeper.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, millionstypes.WithdrawalTrackerType)
-	suite.Require().NoError(err)
-
-	// Get epoch unbonding
-	// Should have 3 withdrawalIDs
-	currentEpochUnbonding = app.MillionsKeeper.GetEpochUnbondings(ctx, epochTracker.EpochNumber)
-	suite.Require().NoError(err)
-	suite.Require().Len(currentEpochUnbonding, 1)
-	suite.Require().Len(currentEpochUnbonding[0].WithdrawalIds, 3)
-
-	epochInfo, err = TriggerEpochUpdate(suite)
-	suite.Require().NoError(err)
-	suite.Require().Equal(int64(3), epochInfo.CurrentEpoch)
-
-	app.MillionsKeeper.Hooks().BeforeEpochStart(ctx, epochInfo)
-
-	withdrawals = app.MillionsKeeper.ListWithdrawals(ctx)
-
-	for _, nw := range withdrawals[2:5] {
-		suite.Require().Equal(millionstypes.WithdrawalState_IcaUnbonding, nw.State)
-		suite.Require().Equal(millionstypes.WithdrawalState_Unspecified, nw.ErrorState)
-		suite.Require().NotNil(nw.UnbondingEndsAt)
-	}
-
-	// Epoch got delete after hook
-	_, err = app.MillionsKeeper.GetEpochPoolUnbonding(ctx, 2, 1)
-	suite.Require().ErrorIs(millionstypes.ErrInvalidEpochUnbonding, err)
 }
 
 // TestEpoch_AddEpochUnbonding test the epoch unbonding for different pools
@@ -523,6 +483,7 @@ func (suite *KeeperTestSuite) TestEpoch_AddFailedIcaUndelegationsToEpochUnbondin
 	ctx := suite.ctx
 	drawDelta1 := 1 * time.Hour
 
+	// Initit pool with unbonding frequency of 1 day
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
 		PoolId:      1,
 		Denom:       localPoolDenom,
@@ -542,6 +503,7 @@ func (suite *KeeperTestSuite) TestEpoch_AddFailedIcaUndelegationsToEpochUnbondin
 			DrawDelta:     drawDelta1,
 		},
 		AvailablePrizePool: sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
+		UnbondingFrequency: sdk.NewInt(1),
 	}))
 
 	pools := app.MillionsKeeper.ListPools(ctx)
@@ -599,6 +561,8 @@ func (suite *KeeperTestSuite) TestEpoch_AddFailedIcaUndelegationsToEpochUnbondin
 	withdrawals := app.MillionsKeeper.ListWithdrawals(ctx)
 	for _, w := range withdrawals {
 		suite.Require().Equal(millionstypes.WithdrawalState_IcaUnbonding, w.State)
+		suite.Require().Equal(millionstypes.WithdrawalState_Unspecified, w.ErrorState)
+		suite.Require().NotNil(w.UnbondingEndsAt)
 	}
 }
 
