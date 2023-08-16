@@ -2,6 +2,7 @@ package migrations
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v153 "github.com/lum-network/chain/x/millions/migrations/v153"
 
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
 	v150 "github.com/lum-network/chain/x/millions/migrations/v150"
@@ -24,4 +25,9 @@ func (m Migrator) Migrate1To2(ctx sdk.Context) error {
 // Migrate2To3 migrates from version 2 to 3
 func (m Migrator) Migrate2To3(ctx sdk.Context) error {
 	return v152.MigrateFailedIcaUndelegationsToEpochUnbonding(ctx, m.keeper)
+}
+
+// Migrate3To4 migrates from version 3 to 4
+func (m Migrator) Migrate3To4(ctx sdk.Context) error {
+	return v153.MigratePoolDefaultUnbondingFrequency(ctx, m.keeper)
 }

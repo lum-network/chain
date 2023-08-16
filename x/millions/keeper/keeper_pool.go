@@ -686,6 +686,19 @@ func (k Keeper) UnsafeUpdatePoolPortIds(ctx sdk.Context, poolID uint64, icaDepos
 	return pool, nil
 }
 
+func (k Keeper) UnsafeUpdatePoolUnbondingFrequency(ctx sdk.Context, poolID uint64, unbondingFrequency int64) (types.Pool, error) {
+	// Grab our pool instance
+	pool, err := k.GetPool(ctx, poolID)
+	if err != nil {
+		return types.Pool{}, err
+	}
+
+	// Patch and update our pool entity
+	pool.UnbondingFrequency = sdk.NewInt(unbondingFrequency)
+	k.updatePool(ctx, &pool)
+	return pool, nil
+}
+
 func (k Keeper) updatePool(ctx sdk.Context, pool *types.Pool) {
 	pool.UpdatedAt = ctx.BlockTime()
 	pool.UpdatedAtHeight = ctx.BlockHeight()
