@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	epochstypes "github.com/lum-network/chain/x/epochs/types"
@@ -11,70 +12,99 @@ import (
 
 // BeforeEpochStart is a hook triggered every defined epoch
 // Currently triggers the undelegation of epochUnbonding withdrawals
-func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochInfo epochstypes.EpochInfo) (successCount, errorCount, skippedCount int) {
+func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochInfo epochstypes.EpochInfo) {
 	logger := k.Logger(ctx).With("ctx", "epoch_unbonding")
 
-	// Get the correct identifier
+	// Proceed daily based epoch
 	if epochInfo.Identifier == epochstypes.DAY_EPOCH {
-		// Update the epoch with the actual information
-		epochTracker, err := k.UpdateEpochTracker(ctx, epochInfo, types.WithdrawalTrackerType)
+		k.processEpochUnbondings(ctx, epochInfo, logger)
+	}
+}
+
+func (k Keeper) processEpochUnbondings(ctx sdk.Context, epochInfo epochstypes.EpochInfo, logger log.Logger) (successCount, errorCount, skippedCount int) {
+	epochTracker, err := k.UpdateEpochTracker(ctx, epochInfo, types.WithdrawalTrackerType)
+	if err != nil {
+		logger.Error(
+			fmt.Sprintf("Unable to update epoch tracker, err: %v", err),
+			"epoch_number", epochInfo.CurrentEpoch,
+		)
+		return
+	}
+
+	// Get epoch unbondings
+	epochUnbondings := k.GetEpochUnbondings(ctx, epochTracker.PreviousEpochNumber)
+	for _, epochUnbonding := range epochUnbondings {
+		success, err := k.processEpochUnbonding(ctx, epochUnbonding, epochTracker, logger)
 		if err != nil {
 			logger.Error(
-				fmt.Sprintf("Unable to update epoch tracker, err: %v", err),
-				"epoch_number", epochInfo.CurrentEpoch,
+				fmt.Sprintf("Error processing epoch unbonding: %v", err),
+				"pool_id", epochUnbonding.GetPoolId(),
+				"epoch_number", epochUnbonding.GetEpochNumber(),
 			)
+			errorCount++
+		} else if success {
+			successCount++
+		} else {
 			skippedCount++
-			return
-		}
-
-		// List the unbondings from the previous epoch
-		epochUnbondings := k.GetEpochUnbondings(ctx, epochTracker.PreviousEpochNumber)
-		for _, epochUnbonding := range epochUnbondings {
-			// Confirm the unbonding is supposed to get triggered at this epoch time
-			pool, _ := k.GetPool(ctx, epochUnbonding.GetPoolId())
-			if epochTracker.EpochNumber%pool.UnbondingFrequency.Uint64() != 0 {
-				logger.Info(
-					fmt.Sprintf("Unbonding isn't supposed to trigger at this epoch"),
-					"pool_id", epochUnbonding.PoolId,
-					"epoch_number", epochUnbonding.GetEpochNumber(),
-				)
-				errorCount++
-				continue
-			}
-
-			if err := k.UndelegateWithdrawalsOnRemoteZone(ctx, epochUnbonding); err != nil {
-				logger.Error(
-					fmt.Sprintf("failed to launch undelegation for epoch unbonding: %v", err),
-					"pool_id", epochUnbonding.GetPoolId(),
-					"epoch_number", epochUnbonding.GetEpochNumber(),
-				)
-				errorCount++
-			} else {
-				successCount++
-			}
-
-			// Remove the epoch unbonding record to start the next one with a fresh one
-			if err := k.RemoveEpochUnbonding(ctx, epochUnbonding); err != nil {
-				logger.Error(
-					fmt.Sprintf("failed to remove record for epoch unbonding: %v", err),
-					"pool_id", epochUnbonding.GetPoolId(),
-					"epoch_number", epochUnbonding.GetEpochNumber(),
-				)
-				errorCount++
-			}
-		}
-
-		if successCount+errorCount > 0 {
-			logger.Info(
-				"epoch unbonding undelegate started",
-				"nbr_success", successCount,
-				"nbr_error", errorCount,
-				"nbr_skipped", skippedCount,
-			)
 		}
 	}
 
-	return
+	if successCount+errorCount > 0 {
+		logger.Info(
+			"epoch unbonding undelegate started",
+			"nbr_success", successCount,
+			"nbr_error", errorCount,
+			"nbr_skipped", skippedCount,
+		)
+	}
+
+	return successCount, errorCount, skippedCount
+}
+
+func (k Keeper) processEpochUnbonding(ctx sdk.Context, epochUnbonding types.EpochUnbonding, epochTracker types.EpochTracker, logger log.Logger) (bool, error) {
+	pool, err := k.GetPool(ctx, epochUnbonding.GetPoolId())
+	if err != nil {
+		return false, err
+	}
+
+	// Epoch unbonding is supposed to happen every X where X is (unbonding_frequency/7)+1
+	// Modulo operation allows to ensure that this one can run
+	if epochTracker.EpochNumber%pool.UnbondingFrequency.Uint64() != 0 {
+		logger.Info(
+			"Unbonding isn't supposed to trigger at this epoch",
+			"pool_id", epochUnbonding.PoolId,
+			"epoch_number", epochUnbonding.GetEpochNumber(),
+		)
+
+		// Each withdrawal is added back to the next ongoing epoch
+		// Then we just remove the actual epoch entity
+		for _, wid := range epochUnbonding.WithdrawalIds {
+			withdrawal, err := k.GetPoolWithdrawal(ctx, epochUnbonding.PoolId, wid)
+			if err != nil {
+				return false, err
+			}
+			if err := k.AddEpochUnbonding(ctx, withdrawal, false); err != nil {
+				return false, err
+			}
+		}
+
+		if err := k.RemoveEpochUnbonding(ctx, epochUnbonding); err != nil {
+			return false, err
+		}
+
+		return false, nil
+	}
+
+	// In case everything worked fine, we just proceed as expected
+	// Undelegate the batch withdrawals to remote zone, then remove the actual epoch entity
+	if err := k.UndelegateWithdrawalsOnRemoteZone(ctx, epochUnbonding); err != nil {
+		return false, err
+	}
+	if err := k.RemoveEpochUnbonding(ctx, epochUnbonding); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochInfo epochstypes.EpochInfo) {}
