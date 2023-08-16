@@ -11,7 +11,7 @@ import (
 
 // BeforeEpochStart is a hook triggered every defined epoch
 // Currently triggers the undelegation of epochUnbonding withdrawals
-func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochInfo epochstypes.EpochInfo) (successCount, errorCount int) {
+func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochInfo epochstypes.EpochInfo) (successCount, errorCount, skippedCount int) {
 	logger := k.Logger(ctx).With("ctx", "epoch_unbonding")
 
 	// Get the correct identifier
@@ -23,18 +23,30 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochInfo epochstypes.EpochInf
 				fmt.Sprintf("Unable to update epoch tracker, err: %v", err),
 				"epoch_number", epochInfo.CurrentEpoch,
 			)
-			errorCount++
+			skippedCount++
 			return
 		}
 
 		// List the unbondings from the previous epoch
 		epochUnbondings := k.GetEpochUnbondings(ctx, epochTracker.PreviousEpochNumber)
 		for _, epochUnbonding := range epochUnbondings {
+			// Confirm the unbonding is supposed to get triggered at this epoch time
+			pool, _ := k.GetPool(ctx, epochUnbonding.GetPoolId())
+			if epochTracker.EpochNumber%pool.UnbondingFrequency.Uint64() != 0 {
+				logger.Info(
+					fmt.Sprintf("Unbonding isn't supposed to trigger at this epoch"),
+					"pool_id", epochUnbonding.PoolId,
+					"epoch_number", epochUnbonding.GetEpochNumber(),
+				)
+				errorCount++
+				continue
+			}
+
 			if err := k.UndelegateWithdrawalsOnRemoteZone(ctx, epochUnbonding); err != nil {
 				logger.Error(
 					fmt.Sprintf("failed to launch undelegation for epoch unbonding: %v", err),
-					"pool_id", epochUnbonding.PoolId,
-					"epoch_number", epochUnbonding.EpochNumber,
+					"pool_id", epochUnbonding.GetPoolId(),
+					"epoch_number", epochUnbonding.GetEpochNumber(),
 				)
 				errorCount++
 			} else {
@@ -45,8 +57,8 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochInfo epochstypes.EpochInf
 			if err := k.RemoveEpochUnbonding(ctx, epochUnbonding); err != nil {
 				logger.Error(
 					fmt.Sprintf("failed to remove record for epoch unbonding: %v", err),
-					"pool_id", epochUnbonding.PoolId,
-					"epoch_number", epochUnbonding.EpochNumber,
+					"pool_id", epochUnbonding.GetPoolId(),
+					"epoch_number", epochUnbonding.GetEpochNumber(),
 				)
 				errorCount++
 			}
@@ -57,6 +69,7 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochInfo epochstypes.EpochInf
 				"epoch unbonding undelegate started",
 				"nbr_success", successCount,
 				"nbr_error", errorCount,
+				"nbr_skipped", skippedCount,
 			)
 		}
 	}
