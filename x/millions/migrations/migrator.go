@@ -2,6 +2,7 @@ package migrations
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	v153 "github.com/lum-network/chain/x/millions/migrations/v153"
 
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
