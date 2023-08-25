@@ -42,8 +42,9 @@ func (suite *KeeperTestSuite) TestEpoch_BeforeEpochStartHook() {
 			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
 			DrawDelta:     drawDelta1,
 		},
-		AvailablePrizePool: sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
-		UnbondingFrequency: sdk.NewInt(4),
+		AvailablePrizePool:    sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
+		ZoneUnbondingDuration: time.Duration(millionstypes.DefaultUnbondingDuration),
+		MaxUnbondingEntries:   sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 	}))
 	// List pools
 	pools := app.MillionsKeeper.ListPools(ctx)
@@ -483,6 +484,12 @@ func (suite *KeeperTestSuite) TestEpoch_AddFailedIcaUndelegationsToEpochUnbondin
 	ctx := suite.ctx
 	drawDelta1 := 1 * time.Hour
 
+	// Trigger a first epoch update
+	epochInfo, err := TriggerEpochUpdate(suite)
+	suite.Require().NoError(err)
+	suite.Require().Equal(int64(1), epochInfo.CurrentEpoch)
+	app.MillionsKeeper.Hooks().BeforeEpochStart(ctx, epochInfo)
+
 	// Initit pool with unbonding frequency of 1 day
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
 		PoolId:      1,
@@ -502,8 +509,9 @@ func (suite *KeeperTestSuite) TestEpoch_AddFailedIcaUndelegationsToEpochUnbondin
 			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
 			DrawDelta:     drawDelta1,
 		},
-		AvailablePrizePool: sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
-		UnbondingFrequency: sdk.NewInt(1),
+		AvailablePrizePool:    sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
+		ZoneUnbondingDuration: time.Duration(millionstypes.DefaultUnbondingDuration),
+		MaxUnbondingEntries:   sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 	}))
 
 	pools := app.MillionsKeeper.ListPools(ctx)
@@ -519,7 +527,7 @@ func (suite *KeeperTestSuite) TestEpoch_AddFailedIcaUndelegationsToEpochUnbondin
 	}
 	deposits := app.MillionsKeeper.ListDeposits(ctx)
 
-	err := app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[0].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(30_000_000))})
+	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[0].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(30_000_000))})
 	suite.Require().NoError(err)
 
 	for i := 0; i < 50; i++ {
@@ -543,7 +551,11 @@ func (suite *KeeperTestSuite) TestEpoch_AddFailedIcaUndelegationsToEpochUnbondin
 	err = app.MillionsKeeper.AddFailedIcaUndelegationsToEpochUnbonding(ctx)
 	suite.Require().NoError(err)
 
-	epochUnbondings := app.MillionsKeeper.GetEpochUnbondings(ctx, uint64(0))
+	// Get the millions internal module tracker
+	epochTracker, err := app.MillionsKeeper.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, millionstypes.WithdrawalTrackerType)
+	suite.Require().NoError(err)
+
+	epochUnbondings := app.MillionsKeeper.GetEpochUnbondings(ctx, uint64(epochTracker.EpochNumber))
 	suite.Require().Equal(1, len(epochUnbondings))
 	suite.Require().Equal(50, len(epochUnbondings[0].WithdrawalIds))
 	for _, wid := range epochUnbondings[0].WithdrawalIds {
@@ -552,17 +564,29 @@ func (suite *KeeperTestSuite) TestEpoch_AddFailedIcaUndelegationsToEpochUnbondin
 		suite.Require().Equal(millionstypes.WithdrawalState_Pending, w.State)
 	}
 
-	epochInfo, err := TriggerEpochUpdate(suite)
-	suite.Require().NoError(err)
-	suite.Require().Equal(int64(1), epochInfo.CurrentEpoch)
+	for epoch := int64(2); epoch <= 4; epoch++ {
+		epochInfo, err := TriggerEpochUpdate(suite)
+		suite.Require().NoError(err)
+		suite.Require().Equal(epoch, epochInfo.CurrentEpoch)
 
-	app.MillionsKeeper.Hooks().BeforeEpochStart(ctx, epochInfo)
+		app.MillionsKeeper.Hooks().BeforeEpochStart(ctx, epochInfo)
 
-	withdrawals := app.MillionsKeeper.ListWithdrawals(ctx)
-	for _, w := range withdrawals {
-		suite.Require().Equal(millionstypes.WithdrawalState_IcaUnbonding, w.State)
-		suite.Require().Equal(millionstypes.WithdrawalState_Unspecified, w.ErrorState)
-		suite.Require().NotNil(w.UnbondingEndsAt)
+		prevEpoch := uint64(epoch - 1)
+		_, err = app.MillionsKeeper.GetEpochPoolUnbonding(ctx, prevEpoch, 1)
+		suite.Require().ErrorIs(err, millionstypes.ErrInvalidEpochUnbonding)
+
+		withdrawals := app.MillionsKeeper.ListWithdrawals(ctx)
+		expectedState := millionstypes.WithdrawalState_Pending
+		if epoch == 4 {
+			expectedState = millionstypes.WithdrawalState_IcaUnbonding
+		}
+		for _, w := range withdrawals {
+			suite.Require().Equal(expectedState, w.State)
+			suite.Require().Equal(millionstypes.WithdrawalState_Unspecified, w.ErrorState)
+			if expectedState == millionstypes.WithdrawalState_IcaUnbonding {
+				suite.Require().NotNil(w.UnbondingEndsAt)
+			}
+		}
 	}
 }
 

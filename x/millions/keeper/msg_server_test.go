@@ -295,7 +295,8 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit() {
 		"lum",
 		"lumvaloper",
 		app.MillionsKeeper.GetParams(ctx).MinDepositAmount,
-		sdk.NewInt(3),
+		time.Duration(millionstypes.DefaultUnbondingDuration),
+		sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
 		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
 	)
@@ -414,7 +415,8 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 		"lum",
 		"lumvaloper",
 		app.MillionsKeeper.GetParams(ctx).MinDepositAmount,
-		sdk.NewInt(3),
+		time.Duration(millionstypes.DefaultUnbondingDuration),
+		sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
 		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
 	)
@@ -761,7 +763,8 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 		"lum",
 		"lumvaloper",
 		app.MillionsKeeper.GetParams(ctx).MinDepositAmount,
-		sdk.NewInt(3),
+		time.Duration(millionstypes.DefaultUnbondingDuration),
+		sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
 		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
 	)

@@ -11,7 +11,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // ValidateBasic validates if a pool has a valid configuration
@@ -55,8 +57,11 @@ func (pool *Pool) ValidateBasic(params Params) error {
 	if pool.MinDepositAmount.IsNil() || pool.MinDepositAmount.LT(params.MinDepositAmount) {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "min deposit denom must be gte %d", params.MinDepositAmount.Int64())
 	}
-	if pool.UnbondingFrequency.IsNil() || pool.UnbondingFrequency.IsNegative() || pool.UnbondingFrequency.IsZero() {
-		return errorsmod.Wrapf(ErrInvalidPoolParams, "unbonding frequency must be gt 0")
+	if pool.ZoneUnbondingDuration < MinUnbondingDuration {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unbonding duration cannot be lower than %s", MinUnbondingDuration)
+	}
+	if pool.MaxUnbondingEntries.IsNegative() || pool.MaxUnbondingEntries.GT(sdk.NewInt(DefaultMaxUnbondingEntries)) {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "Unbonding entries cannot be negative or greated than %d", DefaultMaxUnbondingEntries)
 	}
 	if pool.AvailablePrizePool.IsNil() || pool.AvailablePrizePool.Denom != pool.Denom {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "clawback prize pool must be initialized")
@@ -308,4 +313,12 @@ func (p *Pool) GetIcaDepositPortIdWithPrefix() string {
 func (p *Pool) GetIcaPrizepoolPortIdWithPrefix() string {
 	portID, _ := icatypes.NewControllerPortID(p.GetIcaPrizepoolPortId())
 	return portID
+}
+
+func (p *Pool) GetUnbondingFrequency() math.Int {
+	// (unbonding_duration / max_unbonding_entries) + 1
+	durationToDays := math.NewInt(int64(p.ZoneUnbondingDuration.Hours() / 24))
+	frequency := durationToDays.Quo(p.MaxUnbondingEntries).Add(types.NewInt(1))
+
+	return frequency
 }

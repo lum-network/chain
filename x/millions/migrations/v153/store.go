@@ -11,7 +11,7 @@ func MigratePoolDefaultUnbondingFrequency(ctx sdk.Context, k millionskeeper.Keep
 	ctx.Logger().Info("Processing unbonding frequency migration on pools")
 	k.IteratePools(ctx, func(pool millionstypes.Pool) bool {
 		// Unbonding frequency here is Cosmos Hub (unbonding time/7)+1
-		if _, err := k.UnsafeUpdatePoolUnbondingFrequency(ctx, pool.GetPoolId(), 4); err != nil {
+		if _, err := k.UnsafeUpdatePoolUnbondingFrequency(ctx, pool.GetPoolId(), millionstypes.DefaultUnbondingDuration, sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries)); err != nil {
 			panic(err)
 		}
 		return false

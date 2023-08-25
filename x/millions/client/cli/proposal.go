@@ -87,7 +87,9 @@ Where proposal.json contains:
     },
     "bech32_prefix_acc_addr": "lum",
     "bech32_prefix_val_addr": "lumvaloper",
-    "transfer_channel_id": ""
+    "transfer_channel_id": "",
+	"zone_unbonding_duration": "504h",
+	"max_unbonding_entries: "7"
 }
 `, version.AppName),
 		),
@@ -173,7 +175,9 @@ Where proposal.json contains:
             "quantity": "100"
         }]
     },
-	"state": 3
+	"state": 3,
+	"zone_unbonding_duration": "504h",
+	"max_unbonding_entries: "7"	
 }
 `, version.AppName),
 		),

@@ -69,7 +69,7 @@ func (k Keeper) processEpochUnbonding(ctx sdk.Context, epochUnbonding types.Epoc
 
 	// Epoch unbonding is supposed to happen every X where X is (unbonding_frequency/7)+1
 	// Modulo operation allows to ensure that this one can run
-	if epochTracker.EpochNumber%pool.UnbondingFrequency.Uint64() != 0 {
+	if epochTracker.EpochNumber%pool.GetUnbondingFrequency().Uint64() != 0 {
 		logger.Info(
 			"Unbonding isn't supposed to trigger at this epoch",
 			"pool_id", epochUnbonding.PoolId,

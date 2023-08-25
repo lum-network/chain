@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -23,21 +24,22 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeRegisterPool)
 }
 
-func NewRegisterPoolProposal(title, description, chainID string, denom string, nativeDenom string, connectionId string, bech32PrefixAccAddr string, bech32PrefixValAddr string, validators []string, minDepositAmount math.Int, prizeStrategy PrizeStrategy, drawSchedule DrawSchedule, unbondingFrequency math.Int) govtypes.Content {
+func NewRegisterPoolProposal(title, description, chainID string, denom string, nativeDenom string, connectionId string, bech32PrefixAccAddr string, bech32PrefixValAddr string, validators []string, minDepositAmount math.Int, prizeStrategy PrizeStrategy, drawSchedule DrawSchedule, zoneUnbondingDuration time.Duration, maxUnbondingEntries math.Int) govtypes.Content {
 	return &ProposalRegisterPool{
-		Title:               title,
-		Description:         description,
-		ChainId:             chainID,
-		Denom:               denom,
-		NativeDenom:         nativeDenom,
-		ConnectionId:        connectionId,
-		Validators:          validators,
-		MinDepositAmount:    minDepositAmount,
-		Bech32PrefixAccAddr: bech32PrefixAccAddr,
-		Bech32PrefixValAddr: bech32PrefixValAddr,
-		PrizeStrategy:       prizeStrategy,
-		DrawSchedule:        drawSchedule,
-		UnbondingFrequency:  unbondingFrequency,
+		Title:                 title,
+		Description:           description,
+		ChainId:               chainID,
+		Denom:                 denom,
+		NativeDenom:           nativeDenom,
+		ConnectionId:          connectionId,
+		Validators:            validators,
+		MinDepositAmount:      minDepositAmount,
+		Bech32PrefixAccAddr:   bech32PrefixAccAddr,
+		Bech32PrefixValAddr:   bech32PrefixValAddr,
+		PrizeStrategy:         prizeStrategy,
+		DrawSchedule:          drawSchedule,
+		ZoneUnbondingDuration: zoneUnbondingDuration,
+		MaxUnbondingEntries:   maxUnbondingEntries,
 	}
 }
 
@@ -70,8 +72,11 @@ func (p *ProposalRegisterPool) ValidateBasic() error {
 	if p.MinDepositAmount.IsNil() || p.MinDepositAmount.LT(sdk.NewInt(MinAcceptableDepositAmount)) {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "min deposit denom must be gte %d", MinAcceptableDepositAmount)
 	}
-	if p.UnbondingFrequency.IsNil() || p.UnbondingFrequency.IsNegative() || p.UnbondingFrequency.IsZero() {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unbonding frequency must be gt 0")
+	if p.ZoneUnbondingDuration < MinUnbondingDuration {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unbonding duration cannot be lower than %s", MinUnbondingDuration)
+	}
+	if p.MaxUnbondingEntries.IsNegative() || p.MaxUnbondingEntries.GT(sdk.NewInt(DefaultMaxUnbondingEntries)) {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "Unbonding entries cannot be negative or greated than %d", DefaultMaxUnbondingEntries)
 	}
 	if len(strings.TrimSpace(p.Bech32PrefixAccAddr)) <= 0 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "bech32 acc prefix is required")
@@ -90,18 +95,19 @@ func (p *ProposalRegisterPool) ValidateBasic() error {
 
 func (p ProposalRegisterPool) String() string {
 	return fmt.Sprintf(`Register Pool Proposal:
-	Title:            		%s
-	Description:      		%s
-	ChainID:          		%s
-	Denom:			  		%s
-	Native Denom:     		%s
-	Connection ID	  		%s
-	Validators:       		%+v
-	Min Deposit Amount: 	%d
-	Unbonding Frequency:	%d
-	Bech32 Acc Prefix: 		%s
-	Bech32 Val Prefix: 		%s
-	Transfer Channel ID:	%s
+	Title:            			%s
+	Description:      			%s
+	ChainID:          			%s
+	Denom:			  			%s
+	Native Denom:     			%s
+	Connection ID	  			%s
+	Validators:       			%+v
+	Min Deposit Amount: 		%d
+	Zone Unbonding Duration:	%s
+	Max Unbonding Entries:		%d
+	Bech32 Acc Prefix: 			%s
+	Bech32 Val Prefix: 			%s
+	Transfer Channel ID:		%s
 	======Draw Schedule======
 	%s
 	======Prize Strategy======
@@ -112,7 +118,8 @@ func (p ProposalRegisterPool) String() string {
 		p.ConnectionId,
 		p.Validators,
 		p.MinDepositAmount.Int64(),
-		p.UnbondingFrequency.Int64(),
+		p.ZoneUnbondingDuration.String(),
+		p.MaxUnbondingEntries.Int64(),
 		p.Bech32PrefixAccAddr, p.Bech32PrefixValAddr,
 		p.TransferChannelId,
 		p.DrawSchedule.String(),
