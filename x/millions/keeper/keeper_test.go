@@ -140,8 +140,8 @@ func newValidPool(suite *KeeperTestSuite, pool millionstypes.Pool) *millionstype
 	if pool.MinDepositAmount.IsNil() {
 		pool.MinDepositAmount = params.MinDepositAmount
 	}
-	if pool.ZoneUnbondingDuration == 0 {
-		pool.ZoneUnbondingDuration = millionstypes.DefaultUnbondingDuration
+	if pool.UnbondingDuration == 0 {
+		pool.UnbondingDuration = millionstypes.DefaultUnbondingDuration
 	}
 	if pool.MaxUnbondingEntries.IsNil() {
 		pool.MaxUnbondingEntries = sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries)

@@ -23,18 +23,18 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeUpdatePool)
 }
 
-func NewUpdatePoolProposal(title, description string, poolId uint64, validators []string, minDepositAmount *math.Int, prizeStrategy *PrizeStrategy, drawSchedule *DrawSchedule, state PoolState, zoneUnbondingDuration *time.Duration, maxUnbondingEntries *math.Int) govtypes.Content {
+func NewUpdatePoolProposal(title, description string, poolId uint64, validators []string, minDepositAmount *math.Int, prizeStrategy *PrizeStrategy, drawSchedule *DrawSchedule, state PoolState, UnbondingDuration *time.Duration, maxUnbondingEntries *math.Int) govtypes.Content {
 	return &ProposalUpdatePool{
-		Title:                 title,
-		Description:           description,
-		PoolId:                poolId,
-		Validators:            validators,
-		MinDepositAmount:      minDepositAmount,
-		PrizeStrategy:         prizeStrategy,
-		DrawSchedule:          drawSchedule,
-		State:                 state,
-		ZoneUnbondingDuration: zoneUnbondingDuration,
-		MaxUnbondingEntries:   maxUnbondingEntries,
+		Title:               title,
+		Description:         description,
+		PoolId:              poolId,
+		Validators:          validators,
+		MinDepositAmount:    minDepositAmount,
+		PrizeStrategy:       prizeStrategy,
+		DrawSchedule:        drawSchedule,
+		State:               state,
+		UnbondingDuration:   UnbondingDuration,
+		MaxUnbondingEntries: maxUnbondingEntries,
 	}
 }
 
@@ -56,8 +56,8 @@ func (p *ProposalUpdatePool) ValidateBasic() error {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "min deposit denom must be gte %d", MinAcceptableDepositAmount)
 		}
 	}
-	if p.ZoneUnbondingDuration != nil {
-		if *p.ZoneUnbondingDuration < MinUnbondingDuration {
+	if p.UnbondingDuration != nil {
+		if *p.UnbondingDuration < MinUnbondingDuration {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unbonding duration cannot be lower than %s", MinUnbondingDuration)
 		}
 	}
@@ -99,7 +99,7 @@ func (p ProposalUpdatePool) String() string {
 		p.Validators,
 		p.State.String(),
 		p.MinDepositAmount.Int64(),
-		p.ZoneUnbondingDuration.String(),
+		p.UnbondingDuration.String(),
 		p.MaxUnbondingEntries.Int64(),
 		p.DrawSchedule.String(),
 		p.PrizeStrategy.String(),

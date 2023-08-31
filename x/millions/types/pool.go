@@ -57,7 +57,7 @@ func (pool *Pool) ValidateBasic(params Params) error {
 	if pool.MinDepositAmount.IsNil() || pool.MinDepositAmount.LT(params.MinDepositAmount) {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "min deposit denom must be gte %d", params.MinDepositAmount.Int64())
 	}
-	if pool.ZoneUnbondingDuration < MinUnbondingDuration {
+	if pool.UnbondingDuration < MinUnbondingDuration {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unbonding duration cannot be lower than %s", MinUnbondingDuration)
 	}
 	if pool.MaxUnbondingEntries.IsNegative() || pool.MaxUnbondingEntries.GT(sdk.NewInt(DefaultMaxUnbondingEntries)) {
@@ -317,7 +317,7 @@ func (p *Pool) GetIcaPrizepoolPortIdWithPrefix() string {
 
 func (p *Pool) GetUnbondingFrequency() math.Int {
 	// (unbonding_duration / max_unbonding_entries) + 1
-	durationToDays := math.NewInt(int64(p.ZoneUnbondingDuration.Hours() / 24))
+	durationToDays := math.NewInt(int64(p.UnbondingDuration.Hours() / 24))
 	frequency := durationToDays.Quo(p.MaxUnbondingEntries).Add(types.NewInt(1))
 
 	return frequency

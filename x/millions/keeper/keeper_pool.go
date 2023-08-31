@@ -268,7 +268,7 @@ func (k Keeper) RegisterPool(
 	vals []string,
 	bech32Acc, bech32Val string,
 	minDepositAmount math.Int,
-	zoneUnbondingDuration time.Duration,
+	UnbondingDuration time.Duration,
 	maxUnbondingEntries math.Int,
 	drawSchedule types.DrawSchedule,
 	prizeStrategy types.PrizeStrategy,
@@ -294,31 +294,31 @@ func (k Keeper) RegisterPool(
 
 	// Prepare new pool
 	var pool = types.Pool{
-		PoolId:                poolID,
-		Denom:                 denom,
-		NativeDenom:           nativeDenom,
-		ChainId:               chainId,
-		ConnectionId:          connectionId,
-		Validators:            validators,
-		Bech32PrefixAccAddr:   bech32Acc,
-		Bech32PrefixValAddr:   bech32Val,
-		MinDepositAmount:      minDepositAmount,
-		ZoneUnbondingDuration: zoneUnbondingDuration,
-		MaxUnbondingEntries:   maxUnbondingEntries,
-		DrawSchedule:          drawSchedule.Sanitized(),
-		PrizeStrategy:         prizeStrategy,
-		LocalAddress:          localAddress.String(),
-		NextDrawId:            1,
-		TvlAmount:             sdk.ZeroInt(),
-		DepositorsCount:       0,
-		SponsorshipAmount:     sdk.ZeroInt(),
-		AvailablePrizePool:    sdk.NewCoin(denom, sdk.ZeroInt()),
-		State:                 types.PoolState_Created,
-		TransferChannelId:     transferChannelId,
-		CreatedAtHeight:       ctx.BlockHeight(),
-		UpdatedAtHeight:       ctx.BlockHeight(),
-		CreatedAt:             ctx.BlockTime(),
-		UpdatedAt:             ctx.BlockTime(),
+		PoolId:              poolID,
+		Denom:               denom,
+		NativeDenom:         nativeDenom,
+		ChainId:             chainId,
+		ConnectionId:        connectionId,
+		Validators:          validators,
+		Bech32PrefixAccAddr: bech32Acc,
+		Bech32PrefixValAddr: bech32Val,
+		MinDepositAmount:    minDepositAmount,
+		UnbondingDuration:   UnbondingDuration,
+		MaxUnbondingEntries: maxUnbondingEntries,
+		DrawSchedule:        drawSchedule.Sanitized(),
+		PrizeStrategy:       prizeStrategy,
+		LocalAddress:        localAddress.String(),
+		NextDrawId:          1,
+		TvlAmount:           sdk.ZeroInt(),
+		DepositorsCount:     0,
+		SponsorshipAmount:   sdk.ZeroInt(),
+		AvailablePrizePool:  sdk.NewCoin(denom, sdk.ZeroInt()),
+		State:               types.PoolState_Created,
+		TransferChannelId:   transferChannelId,
+		CreatedAtHeight:     ctx.BlockHeight(),
+		UpdatedAtHeight:     ctx.BlockHeight(),
+		CreatedAt:           ctx.BlockTime(),
+		UpdatedAt:           ctx.BlockTime(),
 	}
 
 	// Validate pool configuration
@@ -369,7 +369,7 @@ func (k Keeper) UpdatePool(
 	poolID uint64,
 	vals []string,
 	minDepositAmount *math.Int,
-	zoneUnbondingDuration *time.Duration,
+	UnbondingDuration *time.Duration,
 	maxUnbondingEntries *math.Int,
 	drawSchedule *types.DrawSchedule,
 	prizeStrategy *types.PrizeStrategy,
@@ -405,8 +405,8 @@ func (k Keeper) UpdatePool(
 	if minDepositAmount != nil {
 		pool.MinDepositAmount = *minDepositAmount
 	}
-	if zoneUnbondingDuration != nil {
-		pool.ZoneUnbondingDuration = *zoneUnbondingDuration
+	if UnbondingDuration != nil {
+		pool.UnbondingDuration = *UnbondingDuration
 	}
 	if maxUnbondingEntries != nil {
 		pool.MaxUnbondingEntries = *maxUnbondingEntries
@@ -693,9 +693,9 @@ func (k Keeper) UnsafeUpdatePoolPortIds(ctx sdk.Context, poolID uint64, icaDepos
 	return pool, nil
 }
 
-// UnsafeUpdatePoolUnbondingFrequency raw updates the zoneUnbondingDuration and mexUnbonding entries
+// UnsafeUpdatePoolUnbondingFrequency raw updates the UnbondingDuration and mexUnbonding entries
 // Unsafe and should only be used for store migration
-func (k Keeper) UnsafeUpdatePoolUnbondingFrequency(ctx sdk.Context, poolID uint64, zoneUnbondingDuration time.Duration, maxUnbondingEntries math.Int) (types.Pool, error) {
+func (k Keeper) UnsafeUpdatePoolUnbondingFrequency(ctx sdk.Context, poolID uint64, UnbondingDuration time.Duration, maxUnbondingEntries math.Int) (types.Pool, error) {
 	// Grab our pool instance
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
@@ -703,7 +703,7 @@ func (k Keeper) UnsafeUpdatePoolUnbondingFrequency(ctx sdk.Context, poolID uint6
 	}
 
 	// Patch and update our pool entity
-	pool.ZoneUnbondingDuration = zoneUnbondingDuration
+	pool.UnbondingDuration = UnbondingDuration
 	pool.MaxUnbondingEntries = maxUnbondingEntries
 	k.updatePool(ctx, &pool)
 	return pool, nil

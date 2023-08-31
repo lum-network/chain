@@ -30,7 +30,7 @@ message ProposalRegisterPool {
   string bech32_prefix_acc_addr = 11;
   string bech32_prefix_val_addr = 12;
   string transfer_channel_id = 13;
-  google.protobuf.Duration zone_unbonding_duration = 14
+  google.protobuf.Duration unbonding_duration = 14
       [ (gogoproto.stdduration) = true, (gogoproto.nullable) = false ];
   string max_unbonding_entries = 15 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
@@ -53,7 +53,7 @@ message ProposalUpdatePool {
   DrawSchedule draw_schedule = 6 [ (gogoproto.nullable) = true ];
   PrizeStrategy prize_strategy = 7 [ (gogoproto.nullable) = true ];
   PoolState state = 8;
-  google.protobuf.Duration zone_unbonding_duration = 9
+  google.protobuf.Duration unbonding_duration = 9
       [ (gogoproto.stdduration) = true, (gogoproto.nullable) = true ];
   string max_unbonding_entries = 10 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",

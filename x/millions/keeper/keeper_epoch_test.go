@@ -42,9 +42,9 @@ func (suite *KeeperTestSuite) TestEpoch_BeforeEpochStartHook() {
 			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
 			DrawDelta:     drawDelta1,
 		},
-		AvailablePrizePool:    sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
-		ZoneUnbondingDuration: time.Duration(millionstypes.DefaultUnbondingDuration),
-		MaxUnbondingEntries:   sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
+		AvailablePrizePool:  sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
+		UnbondingDuration:   time.Duration(millionstypes.DefaultUnbondingDuration),
+		MaxUnbondingEntries: sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 	}))
 	// List pools
 	pools := app.MillionsKeeper.ListPools(ctx)
@@ -509,9 +509,9 @@ func (suite *KeeperTestSuite) TestEpoch_AddFailedIcaUndelegationsToEpochUnbondin
 			InitialDrawAt: ctx.BlockTime().Add(drawDelta1),
 			DrawDelta:     drawDelta1,
 		},
-		AvailablePrizePool:    sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
-		ZoneUnbondingDuration: time.Duration(millionstypes.DefaultUnbondingDuration),
-		MaxUnbondingEntries:   sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
+		AvailablePrizePool:  sdk.NewCoin(localPoolDenom, math.NewInt(1000)),
+		UnbondingDuration:   time.Duration(millionstypes.DefaultUnbondingDuration),
+		MaxUnbondingEntries: sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 	}))
 
 	pools := app.MillionsKeeper.ListPools(ctx)

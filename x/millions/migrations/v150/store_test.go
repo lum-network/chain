@@ -60,8 +60,8 @@ func newValidPool(suite *StoreMigrationTestSuite, pool millionstypes.Pool) *mill
 	if pool.MinDepositAmount.IsNil() {
 		pool.MinDepositAmount = params.MinDepositAmount
 	}
-	if pool.ZoneUnbondingDuration == 0 {
-		pool.ZoneUnbondingDuration = time.Duration(millionstypes.DefaultUnbondingDuration)
+	if pool.UnbondingDuration == 0 {
+		pool.UnbondingDuration = time.Duration(millionstypes.DefaultUnbondingDuration)
 	}
 	if pool.MaxUnbondingEntries.IsNil() {
 		pool.MaxUnbondingEntries = sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries)

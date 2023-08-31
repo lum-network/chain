@@ -24,22 +24,22 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeRegisterPool)
 }
 
-func NewRegisterPoolProposal(title, description, chainID string, denom string, nativeDenom string, connectionId string, bech32PrefixAccAddr string, bech32PrefixValAddr string, validators []string, minDepositAmount math.Int, prizeStrategy PrizeStrategy, drawSchedule DrawSchedule, zoneUnbondingDuration time.Duration, maxUnbondingEntries math.Int) govtypes.Content {
+func NewRegisterPoolProposal(title, description, chainID string, denom string, nativeDenom string, connectionId string, bech32PrefixAccAddr string, bech32PrefixValAddr string, validators []string, minDepositAmount math.Int, prizeStrategy PrizeStrategy, drawSchedule DrawSchedule, UnbondingDuration time.Duration, maxUnbondingEntries math.Int) govtypes.Content {
 	return &ProposalRegisterPool{
-		Title:                 title,
-		Description:           description,
-		ChainId:               chainID,
-		Denom:                 denom,
-		NativeDenom:           nativeDenom,
-		ConnectionId:          connectionId,
-		Validators:            validators,
-		MinDepositAmount:      minDepositAmount,
-		Bech32PrefixAccAddr:   bech32PrefixAccAddr,
-		Bech32PrefixValAddr:   bech32PrefixValAddr,
-		PrizeStrategy:         prizeStrategy,
-		DrawSchedule:          drawSchedule,
-		ZoneUnbondingDuration: zoneUnbondingDuration,
-		MaxUnbondingEntries:   maxUnbondingEntries,
+		Title:               title,
+		Description:         description,
+		ChainId:             chainID,
+		Denom:               denom,
+		NativeDenom:         nativeDenom,
+		ConnectionId:        connectionId,
+		Validators:          validators,
+		MinDepositAmount:    minDepositAmount,
+		Bech32PrefixAccAddr: bech32PrefixAccAddr,
+		Bech32PrefixValAddr: bech32PrefixValAddr,
+		PrizeStrategy:       prizeStrategy,
+		DrawSchedule:        drawSchedule,
+		UnbondingDuration:   UnbondingDuration,
+		MaxUnbondingEntries: maxUnbondingEntries,
 	}
 }
 
@@ -72,7 +72,7 @@ func (p *ProposalRegisterPool) ValidateBasic() error {
 	if p.MinDepositAmount.IsNil() || p.MinDepositAmount.LT(sdk.NewInt(MinAcceptableDepositAmount)) {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "min deposit denom must be gte %d", MinAcceptableDepositAmount)
 	}
-	if p.ZoneUnbondingDuration < MinUnbondingDuration {
+	if p.UnbondingDuration < MinUnbondingDuration {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unbonding duration cannot be lower than %s", MinUnbondingDuration)
 	}
 	if p.MaxUnbondingEntries.IsNegative() || p.MaxUnbondingEntries.GT(sdk.NewInt(DefaultMaxUnbondingEntries)) {
@@ -118,7 +118,7 @@ func (p ProposalRegisterPool) String() string {
 		p.ConnectionId,
 		p.Validators,
 		p.MinDepositAmount.Int64(),
-		p.ZoneUnbondingDuration.String(),
+		p.UnbondingDuration.String(),
 		p.MaxUnbondingEntries.Int64(),
 		p.Bech32PrefixAccAddr, p.Bech32PrefixValAddr,
 		p.TransferChannelId,
