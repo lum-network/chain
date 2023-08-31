@@ -322,3 +322,19 @@ func (p *Pool) GetUnbondingFrequency() math.Int {
 
 	return frequency
 }
+
+func (p *Pool) GetNextEpochUnbonding(epochTracker EpochTracker) uint64 {
+	frequency := p.GetUnbondingFrequency().Uint64()
+	currentEpoch := epochTracker.EpochNumber
+	// If there are remaining days before the next epoch of unbonding,
+	// we computes the epoch at which the next unbonding will happen.
+	// Otherwise return current epoch
+	if currentEpoch%p.GetUnbondingFrequency().Uint64() != 0 {
+		remainingEpochs := frequency - (currentEpoch % frequency)
+		nextUnbondingEpoch := currentEpoch + remainingEpochs
+
+		return nextUnbondingEpoch
+	}
+
+	return currentEpoch
+}

@@ -32,7 +32,7 @@ func (k Keeper) processEpochUnbondings(ctx sdk.Context, epochInfo epochstypes.Ep
 	}
 
 	// Get epoch unbondings
-	epochUnbondings := k.GetEpochUnbondings(ctx, epochTracker.PreviousEpochNumber)
+	epochUnbondings := k.GetEpochUnbondings(ctx, epochTracker.EpochNumber)
 	for _, epochUnbonding := range epochUnbondings {
 		success, err := k.processEpochUnbonding(ctx, epochUnbonding, epochTracker, logger)
 		if err != nil {
@@ -76,7 +76,7 @@ func (k Keeper) processEpochUnbonding(ctx sdk.Context, epochUnbonding types.Epoc
 			"epoch_number", epochUnbonding.GetEpochNumber(),
 		)
 
-		// Each withdrawal is added back to the next ongoing epoch
+		// Fail safe - each withdrawal is added back to the next executable epoch unbonding
 		// Then we just remove the actual epoch entity
 		for _, wid := range epochUnbonding.WithdrawalIds {
 			withdrawal, err := k.GetPoolWithdrawal(ctx, epochUnbonding.PoolId, wid)

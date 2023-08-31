@@ -96,6 +96,14 @@ func TriggerEpochUpdate(suite *KeeperTestSuite) (epochInfo epochstypes.EpochInfo
 	return epochsInfo, nil
 }
 
+func GetEpochInfo(suite *KeeperTestSuite) (epochInfo epochstypes.EpochInfo, err error) {
+	app := suite.app
+	ctx := suite.ctx
+	epochsInfo, _ := app.EpochsKeeper.GetEpochInfo(ctx, epochstypes.DAY_EPOCH)
+
+	return epochsInfo, nil
+}
+
 func TriggerEpochTrackerUpdate(suite *KeeperTestSuite, epochInfo epochstypes.EpochInfo) (epochTracker millionstypes.EpochTracker, err error) {
 	app := suite.app
 	ctx := suite.ctx

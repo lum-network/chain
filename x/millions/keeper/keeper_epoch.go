@@ -56,10 +56,13 @@ func (k Keeper) AddEpochUnbonding(ctx sdk.Context, withdrawal types.Withdrawal, 
 		}
 	}
 
+	// Get the next epoch that will be executed
+	nextEpochUnbonding := pool.GetNextEpochUnbonding(epochTracker)
+
 	// If it's the first epoch unbonding, create it with the first withdrawal
-	if !k.hasEpochPoolUnbonding(ctx, epochTracker.EpochNumber, withdrawal.PoolId) {
+	if !k.hasEpochPoolUnbonding(ctx, nextEpochUnbonding, withdrawal.PoolId) {
 		epochPoolUnbonding := types.EpochUnbonding{
-			EpochNumber:        epochTracker.EpochNumber,
+			EpochNumber:        nextEpochUnbonding,
 			EpochIdentifier:    epochstypes.DAY_EPOCH,
 			PoolId:             withdrawal.PoolId,
 			WithdrawalIds:      []uint64{withdrawal.WithdrawalId},
@@ -86,7 +89,7 @@ func (k Keeper) AddEpochUnbonding(ctx sdk.Context, withdrawal types.Withdrawal, 
 	}
 
 	// Get epoch unbonding entity for new withdrawals within the created epoch and poolID
-	epochPoolUnbonding, err := k.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber, withdrawal.PoolId)
+	epochPoolUnbonding, err := k.GetEpochPoolUnbonding(ctx, nextEpochUnbonding, withdrawal.PoolId)
 	if err != nil {
 		return err
 	}
@@ -130,15 +133,16 @@ func (k Keeper) AddWithdrawalToNextAvailableEpoch(ctx sdk.Context, withdrawal ty
 		return err
 	}
 
-	nextEpoch := epochTracker.EpochNumber + 1
+	// Get the next epoch unbonding considering the unbonding frequency
+	nextEpochUnbonding := pool.GetNextEpochUnbonding(epochTracker) + pool.GetUnbondingFrequency().Uint64()
 
 	for {
-		epochPoolUnbonding, err := k.GetEpochPoolUnbonding(ctx, nextEpoch, withdrawal.PoolId)
+		epochPoolUnbonding, err := k.GetEpochPoolUnbonding(ctx, nextEpochUnbonding, withdrawal.PoolId)
 		if err != nil {
 			if errors.Is(err, types.ErrInvalidEpochUnbonding) {
 				// Create a new epoch unbonding since it doesn't exist for the next epoch
 				epochPoolUnbonding = types.EpochUnbonding{
-					EpochNumber:        nextEpoch,
+					EpochNumber:        nextEpochUnbonding,
 					EpochIdentifier:    epochstypes.DAY_EPOCH,
 					PoolId:             withdrawal.PoolId,
 					WithdrawalIds:      []uint64{withdrawal.WithdrawalId},
@@ -176,7 +180,7 @@ func (k Keeper) AddWithdrawalToNextAvailableEpoch(ctx sdk.Context, withdrawal ty
 			return nil
 		}
 
-		nextEpoch++
+		nextEpochUnbonding += pool.GetUnbondingFrequency().Uint64()
 	}
 }
 

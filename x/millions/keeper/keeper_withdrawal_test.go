@@ -532,11 +532,15 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawals() {
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
 	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), remotePoolDenom)
-	epochInfo, err := TriggerEpochUpdate(suite)
-	suite.Require().NoError(err)
-	_, err = TriggerEpochTrackerUpdate(suite, epochInfo)
-	suite.Require().NoError(err)
-	// Remote pool
+	// Assuming first epoch is 1, and nextEpochUnbonding is the 4th one
+	for epoch := int64(1); epoch <= 4; epoch++ {
+		epochInfo, err := TriggerEpochUpdate(suite)
+		suite.Require().NoError(err)
+		suite.Require().Equal(epoch, epochInfo.CurrentEpoch)
+
+		_, err = TriggerEpochTrackerUpdate(suite, epochInfo)
+		suite.Require().NoError(err)
+	}
 	app.MillionsKeeper.AddPool(ctx, newValidPool(suite, millionstypes.Pool{
 		PoolId:              poolID,
 		Bech32PrefixValAddr: remoteBech32PrefixValAddr,
@@ -581,7 +585,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawals() {
 		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
 	})
 
-	err = app.BankKeeper.SendCoins(ctx, uatomAddresses[0], sdk.MustAccAddressFromBech32(pools[0].LocalAddress), sdk.Coins{sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000))})
+	err := app.BankKeeper.SendCoins(ctx, uatomAddresses[0], sdk.MustAccAddressFromBech32(pools[0].LocalAddress), sdk.Coins{sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
 	deposits := app.MillionsKeeper.ListAccountDeposits(ctx, uatomAddresses[0])
 	deposit, err := app.MillionsKeeper.GetPoolDeposit(ctx, deposits[0].PoolId, deposits[0].DepositId)
@@ -1337,10 +1341,15 @@ func (suite *KeeperTestSuite) TestWithdrawal_BalanceWithdrawal() {
 	ctx := suite.ctx
 	drawDelta1 := 1 * time.Hour
 	var now = time.Now().UTC()
-	epochInfo, err := TriggerEpochUpdate(suite)
-	suite.Require().NoError(err)
-	epochTracker, err := TriggerEpochTrackerUpdate(suite, epochInfo)
-	suite.Require().NoError(err)
+	// Assuming first epoch is 1, and nextEpochUnbonding is the 4th one
+	for epoch := int64(1); epoch <= 4; epoch++ {
+		epochInfo, err := TriggerEpochUpdate(suite)
+		suite.Require().NoError(err)
+		suite.Require().Equal(epoch, epochInfo.CurrentEpoch)
+
+		_, err = TriggerEpochTrackerUpdate(suite, epochInfo)
+		suite.Require().NoError(err)
+	}
 
 	// Initialize the local pool
 	pool := newValidPool(suite, millionstypes.Pool{
@@ -1378,7 +1387,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_BalanceWithdrawal() {
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
 	})
 	// Send coin
-	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
+	err := app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
 	deposits := app.MillionsKeeper.ListAccountDeposits(ctx, suite.addrs[0])
 	deposit, err := app.MillionsKeeper.GetPoolDeposit(ctx, deposits[0].PoolId, deposits[0].DepositId)
@@ -1429,7 +1438,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_BalanceWithdrawal() {
 	}
 
 	// Get the millions internal module tracker
-	epochTracker, err = app.MillionsKeeper.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, millionstypes.WithdrawalTrackerType)
+	epochTracker, err := app.MillionsKeeper.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, millionstypes.WithdrawalTrackerType)
 	suite.Require().NoError(err)
 
 	// Get epoch unbonding

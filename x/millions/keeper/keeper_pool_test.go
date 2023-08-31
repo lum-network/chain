@@ -773,10 +773,15 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
 func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	app := suite.app
 	ctx := suite.ctx
-	epochInfo, err := TriggerEpochUpdate(suite)
-	suite.Require().NoError(err)
-	_, err = TriggerEpochTrackerUpdate(suite, epochInfo)
-	suite.Require().NoError(err)
+	// Assuming first epoch is 1, and nextEpochUnbonding is the 4th one
+	for epoch := int64(1); epoch <= 4; epoch++ {
+		epochInfo, err := TriggerEpochUpdate(suite)
+		suite.Require().NoError(err)
+		suite.Require().Equal(epoch, epochInfo.CurrentEpoch)
+
+		_, err = TriggerEpochTrackerUpdate(suite, epochInfo)
+		suite.Require().NoError(err)
+	}
 
 	valAddr := "cosmosvaloper196ax4vc0lwpxndu9dyhvca7jhxp70rmcvrj90c"
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
