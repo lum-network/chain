@@ -1,7 +1,6 @@
-package v150_test
+package v160_test
 
 import (
-	"strings"
 	"testing"
 	"time"
 
@@ -15,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	apptypes "github.com/lum-network/chain/app"
-	v150 "github.com/lum-network/chain/x/millions/migrations/v150"
+	v160 "github.com/lum-network/chain/x/millions/migrations/v160"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 
@@ -42,8 +41,16 @@ func newValidPool(suite *StoreMigrationTestSuite, pool millionstypes.Pool) *mill
 	if pool.ChainId == "" {
 		pool.ChainId = "lum-network-devnet"
 	}
+
 	if pool.PoolType == millionstypes.PoolType_Unspecified {
 		pool.PoolType = millionstypes.PoolType_Staking
+	}
+
+	if pool.UnbondingDuration == 0 {
+		pool.UnbondingDuration = millionstypes.DefaultUnbondingDuration
+	}
+	if pool.MaxUnbondingEntries.IsNil() {
+		pool.MaxUnbondingEntries = sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries)
 	}
 
 	if pool.Validators == nil {
@@ -63,12 +70,6 @@ func newValidPool(suite *StoreMigrationTestSuite, pool millionstypes.Pool) *mill
 	}
 	if pool.MinDepositAmount.IsNil() {
 		pool.MinDepositAmount = params.MinDepositAmount
-	}
-	if pool.UnbondingDuration == 0 {
-		pool.UnbondingDuration = time.Duration(millionstypes.DefaultUnbondingDuration)
-	}
-	if pool.MaxUnbondingEntries.IsNil() {
-		pool.MaxUnbondingEntries = sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries)
 	}
 	if err := pool.DrawSchedule.ValidateBasic(params); err != nil {
 		pool.DrawSchedule = millionstypes.DrawSchedule{DrawDelta: 1 * time.Hour, InitialDrawAt: time.Now().UTC()}
@@ -153,41 +154,25 @@ func (suite *StoreMigrationTestSuite) SetupTest() {
 	})
 }
 
-func (suite *StoreMigrationTestSuite) TestUpdatePortIds() {
+func (suite *StoreMigrationTestSuite) TestUpdatePoolType() {
 	poolID := suite.app.MillionsKeeper.GetNextPoolIDAndIncrement(suite.ctx)
 	suite.app.MillionsKeeper.AddPool(suite.ctx, newValidPool(suite, millionstypes.Pool{PoolId: poolID}))
 
-	// Grab our pool entity
+	// Run the migration operation
+	err := v160.MigratePoolTypeAndUnbondingFrequency(suite.ctx, *suite.app.MillionsKeeper)
+	suite.Require().NoError(err)
+
+	// Grab our pool
 	pool, err := suite.app.MillionsKeeper.GetPool(suite.ctx, poolID)
 	suite.Require().NoError(err)
 
-	// Save old value for further testing
-	oldDepositPortId := pool.GetIcaDepositPortId()
-	oldPrizepoolPortId := pool.GetIcaPrizepoolPortId()
+	// Ensure our pool has the new poolType
+	suite.Require().Equal(millionstypes.PoolType_Staking, pool.PoolType)
 
-	// Ensure our pool has the old setup
-	suite.Require().True(strings.HasPrefix(oldDepositPortId, icatypes.ControllerPortPrefix))
-	suite.Require().True(strings.HasPrefix(oldPrizepoolPortId, icatypes.ControllerPortPrefix))
+	// Ensure we have a new max entries and unbonding duration
+	suite.Require().Equal(millionstypes.DefaultUnbondingDuration, pool.UnbondingDuration)
+	suite.Require().Equal(sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries), pool.MaxUnbondingEntries)
 
-	// Run the migration operation
-	err = v150.MigratePoolPortIdsToPortOwnerName(suite.ctx, *suite.app.MillionsKeeper)
-	suite.Require().NoError(err)
-
-	// Grab again our pool
-	pool, err = suite.app.MillionsKeeper.GetPool(suite.ctx, poolID)
-	suite.Require().NoError(err)
-
-	// Ensure our pool has the new setup
-	suite.Require().False(strings.HasPrefix(pool.GetIcaDepositPortId(), icatypes.ControllerPortPrefix))
-	suite.Require().False(strings.HasPrefix(pool.GetIcaPrizepoolPortId(), icatypes.ControllerPortPrefix))
-
-	// Make sure it matches the new format
-	newFormatPortNameDeposit := string(millionstypes.NewPoolName(pool.GetPoolId(), millionstypes.ICATypeDeposit))
-	newFormatPortNamePrizepool := string(millionstypes.NewPoolName(pool.GetPoolId(), millionstypes.ICATypePrizePool))
-	suite.Require().Equal(newFormatPortNameDeposit, pool.GetIcaDepositPortId())
-	suite.Require().Equal(newFormatPortNamePrizepool, pool.GetIcaPrizepoolPortId())
-	suite.Require().Equal(oldDepositPortId, pool.GetIcaDepositPortIdWithPrefix())
-	suite.Require().Equal(oldPrizepoolPortId, pool.GetIcaPrizepoolPortIdWithPrefix())
 }
 
 func TestKeeperSuite(t *testing.T) {

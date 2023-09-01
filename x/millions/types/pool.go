@@ -22,6 +22,9 @@ func (pool *Pool) ValidateBasic(params Params) error {
 	if pool.PoolId == UnknownID {
 		return ErrInvalidID
 	}
+	if pool.PoolType == PoolType_Unspecified {
+		return errorsmod.Wrapf(ErrInvalidPoolType, "%s not allowed", pool.PoolType.String())
+	}
 	if pool.State == PoolState_Unspecified {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "no state specified")
 	}
@@ -40,20 +43,6 @@ func (pool *Pool) ValidateBasic(params Params) error {
 	if strings.TrimSpace(pool.Bech32PrefixValAddr) == "" {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "empty bech32 prefix validator address")
 	}
-	if len(pool.Validators) == 0 {
-		return errorsmod.Wrapf(ErrInvalidPoolParams, "empty validators set")
-	} else {
-		for _, val := range pool.Validators {
-			bz, err := sdk.GetFromBech32(val.OperatorAddress, pool.Bech32PrefixValAddr)
-			if err != nil {
-				return errorsmod.Wrapf(ErrInvalidPoolParams, "invalid validator address %s: %v", val.OperatorAddress, err)
-			}
-			err = sdk.VerifyAddressFormat(bz)
-			if err != nil {
-				return errorsmod.Wrapf(ErrInvalidPoolParams, "invalid validator address %s: %v", val.OperatorAddress, err)
-			}
-		}
-	}
 	if pool.MinDepositAmount.IsNil() || pool.MinDepositAmount.LT(params.MinDepositAmount) {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "min deposit denom must be gte %d", params.MinDepositAmount.Int64())
 	}
@@ -64,13 +53,30 @@ func (pool *Pool) ValidateBasic(params Params) error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "Unbonding entries cannot be negative or greated than %d", DefaultMaxUnbondingEntries)
 	}
 	if pool.AvailablePrizePool.IsNil() || pool.AvailablePrizePool.Denom != pool.Denom {
-		return errorsmod.Wrapf(ErrInvalidPoolParams, "clawback prize pool must be initialized")
+		return errorsmod.Wrapf(ErrInvalidPoolParams, "prize pool must be initialized")
 	}
 	if err := pool.DrawSchedule.ValidateBasic(params); err != nil {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, err.Error())
 	}
 	if err := pool.PrizeStrategy.Validate(params); err != nil {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, err.Error())
+	}
+	if pool.PoolType == PoolType_Staking {
+		// Validate native staking configuration
+		if len(pool.Validators) == 0 {
+			return errorsmod.Wrapf(ErrInvalidPoolParams, "empty validators set")
+		} else {
+			for _, val := range pool.Validators {
+				bz, err := sdk.GetFromBech32(val.OperatorAddress, pool.Bech32PrefixValAddr)
+				if err != nil {
+					return errorsmod.Wrapf(ErrInvalidPoolParams, "invalid validator address %s: %v", val.OperatorAddress, err)
+				}
+				err = sdk.VerifyAddressFormat(bz)
+				if err != nil {
+					return errorsmod.Wrapf(ErrInvalidPoolParams, "invalid validator address %s: %v", val.OperatorAddress, err)
+				}
+			}
+		}
 	}
 	return nil
 }

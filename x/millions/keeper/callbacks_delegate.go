@@ -45,10 +45,10 @@ func DelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ack
 		k.Logger(ctx).Debug("Received timeout for a delegate packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
 		k.Logger(ctx).Debug("Received failure for a delegate packet")
-		return k.OnDelegateDepositOnNativeChainCompleted(ctx, delegateCallback.GetPoolId(), delegateCallback.GetDepositId(), delegateCallback.GetSplitDelegations(), true)
+		return k.OnDelegateDepositOnRemoteZoneCompleted(ctx, delegateCallback.GetPoolId(), delegateCallback.GetDepositId(), delegateCallback.GetSplitDelegations(), true)
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
 		k.Logger(ctx).Debug("Received success for a delegate packet")
-		return k.OnDelegateDepositOnNativeChainCompleted(ctx, delegateCallback.GetPoolId(), delegateCallback.GetDepositId(), delegateCallback.GetSplitDelegations(), false)
+		return k.OnDelegateDepositOnRemoteZoneCompleted(ctx, delegateCallback.GetPoolId(), delegateCallback.GetDepositId(), delegateCallback.GetSplitDelegations(), false)
 	}
 	return nil
 }

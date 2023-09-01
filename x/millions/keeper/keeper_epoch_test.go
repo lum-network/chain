@@ -76,7 +76,7 @@ func (suite *KeeperTestSuite) TestEpoch_BeforeEpochStartHook() {
 
 	// Simulate the transfer to native chain
 	for i := 0; i < 5; i++ {
-		err = app.MillionsKeeper.TransferDepositToNativeChain(ctx, deposits[i].PoolId, deposits[i].DepositId)
+		err = app.MillionsKeeper.TransferDepositToRemoteZone(ctx, deposits[i].PoolId, deposits[i].DepositId)
 		suite.Require().NoError(err)
 	}
 
@@ -213,7 +213,7 @@ func (suite *KeeperTestSuite) TestEpoch_AddEpochUnbonding() {
 	deposits := app.MillionsKeeper.ListDeposits(ctx)
 	// Simulate the transfer to native chain
 	for i := 0; i < 2; i++ {
-		err = app.MillionsKeeper.TransferDepositToNativeChain(ctx, deposits[i].PoolId, deposits[i].DepositId)
+		err = app.MillionsKeeper.TransferDepositToRemoteZone(ctx, deposits[i].PoolId, deposits[i].DepositId)
 		suite.Require().NoError(err)
 	}
 
@@ -266,7 +266,7 @@ func (suite *KeeperTestSuite) TestEpoch_AddEpochUnbonding() {
 	deposits = app.MillionsKeeper.ListDeposits(ctx)
 	// Simulate the transfer to native chain
 	for i := 2; i < 5; i++ {
-		err = app.MillionsKeeper.TransferDepositToNativeChain(ctx, deposits[i].PoolId, deposits[i].DepositId)
+		err = app.MillionsKeeper.TransferDepositToRemoteZone(ctx, deposits[i].PoolId, deposits[i].DepositId)
 		suite.Require().Error(err)
 	}
 
@@ -518,7 +518,7 @@ func (suite *KeeperTestSuite) TestEpoch_AddFailedIcaUndelegationsToEpochUnbondin
 	suite.Require().NoError(err)
 
 	for i := 0; i < 50; i++ {
-		err := app.MillionsKeeper.TransferDepositToNativeChain(ctx, deposits[i].PoolId, deposits[i].DepositId)
+		err := app.MillionsKeeper.TransferDepositToRemoteZone(ctx, deposits[i].PoolId, deposits[i].DepositId)
 		suite.Require().NoError(err)
 	}
 
@@ -610,8 +610,8 @@ func (suite *KeeperTestSuite) TestEpoch_RemoveEpochUnbonding() {
 	deposits := app.MillionsKeeper.ListDeposits(ctx)
 
 	for i := 0; i < 50; i++ {
-		err := app.MillionsKeeper.TransferDepositToNativeChain(ctx, deposits[i].PoolId, deposits[i].DepositId)
-		suite.Require().Error(err)
+		err := app.MillionsKeeper.TransferDepositToRemoteZone(ctx, deposits[i].PoolId, deposits[i].DepositId)
+		suite.Require().NoError(err)
 	}
 
 	err := app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[0].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(30_000_000))})

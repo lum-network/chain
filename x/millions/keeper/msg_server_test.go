@@ -286,6 +286,7 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit() {
 
 	// Register real pool and apply real deposits
 	poolID, err = app.MillionsKeeper.RegisterPool(ctx,
+		millionstypes.PoolType_Staking,
 		"ulum",
 		"ulum",
 		testChainID,
@@ -406,6 +407,7 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 	denom := app.StakingKeeper.BondDenom(ctx)
 	// Initialize the pool
 	poolID, err := app.MillionsKeeper.RegisterPool(ctx,
+		millionstypes.PoolType_Staking,
 		denom,
 		denom,
 		testChainID,
@@ -754,6 +756,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 
 	// Initialize the pool
 	poolID, err := app.MillionsKeeper.RegisterPool(ctx,
+		millionstypes.PoolType_Staking,
 		"ulum",
 		"ulum",
 		testChainID,
@@ -804,7 +807,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 		err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[0].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 		suite.Require().NoError(err)
 		// Trigger the Transfer deposit to native chain
-		err = app.MillionsKeeper.TransferDepositToNativeChain(ctx, deposits[i].PoolId, deposits[i].DepositId)
+		err = app.MillionsKeeper.TransferDepositToRemoteZone(ctx, deposits[i].PoolId, deposits[i].DepositId)
 		suite.Require().NoError(err)
 	}
 	// Create deposit with failure state
@@ -1026,10 +1029,10 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 	suite.Require().NoError(err)
 	deposits := app.MillionsKeeper.ListDeposits(ctx)
 	// Simulate transfer deposit and delegate to native chain
-	err = app.MillionsKeeper.TransferDepositToNativeChain(ctx, deposits[0].PoolId, deposits[0].DepositId)
+	err = app.MillionsKeeper.TransferDepositToRemoteZone(ctx, deposits[0].PoolId, deposits[0].DepositId)
 	suite.Require().NoError(err)
 	deposits = app.MillionsKeeper.ListDeposits(ctx)
-	err = app.MillionsKeeper.DelegateDepositOnNativeChain(ctx, deposits[0].PoolId, deposits[0].DepositId)
+	err = app.MillionsKeeper.DelegateDepositOnRemoteZone(ctx, deposits[0].PoolId, deposits[0].DepositId)
 	suite.Require().Error(err)
 
 	deposits = app.MillionsKeeper.ListDeposits(ctx)

@@ -36,6 +36,7 @@ message ProposalRegisterPool {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
+  PoolType pool_type = 16;
 }
 
 message ProposalUpdatePool {

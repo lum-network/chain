@@ -41,6 +41,18 @@ func newValidPool(suite *StoreMigrationTestSuite, pool millionstypes.Pool) *mill
 	if pool.ChainId == "" {
 		pool.ChainId = "lum-network-devnet"
 	}
+
+	if pool.PoolType == millionstypes.PoolType_Unspecified {
+		pool.PoolType = millionstypes.PoolType_Staking
+	}
+
+	if pool.UnbondingDuration == 0 {
+		pool.UnbondingDuration = millionstypes.DefaultUnbondingDuration
+	}
+	if pool.MaxUnbondingEntries.IsNil() {
+		pool.MaxUnbondingEntries = sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries)
+	}
+
 	if pool.Validators == nil {
 		for _, addr := range suite.valAddrs {
 			pool.Validators = append(pool.Validators, millionstypes.PoolValidator{
@@ -58,12 +70,6 @@ func newValidPool(suite *StoreMigrationTestSuite, pool millionstypes.Pool) *mill
 	}
 	if pool.MinDepositAmount.IsNil() {
 		pool.MinDepositAmount = params.MinDepositAmount
-	}
-	if pool.UnbondingDuration == 0 {
-		pool.UnbondingDuration = time.Duration(millionstypes.DefaultUnbondingDuration)
-	}
-	if pool.MaxUnbondingEntries.IsNil() {
-		pool.MaxUnbondingEntries = sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries)
 	}
 	if err := pool.DrawSchedule.ValidateBasic(params); err != nil {
 		pool.DrawSchedule = millionstypes.DrawSchedule{DrawDelta: 1 * time.Hour, InitialDrawAt: time.Now().UTC()}

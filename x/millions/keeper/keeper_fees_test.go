@@ -137,6 +137,7 @@ func (suite *KeeperTestSuite) TestFees_DrawPrizesFees() {
 	})
 	poolID, err := app.MillionsKeeper.RegisterPool(
 		ctx,
+		millionstypes.PoolType_Staking,
 		p.Denom, p.NativeDenom, p.ChainId, p.ConnectionId, p.TransferChannelId,
 		[]string{suite.valAddrs[0].String()},
 		p.Bech32PrefixAccAddr, p.Bech32PrefixValAddr,

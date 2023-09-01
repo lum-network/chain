@@ -36,6 +36,8 @@ type Keeper struct {
 	BankKeeper          bankkeeper.Keeper
 	DistributionKeeper  *distributionkeeper.Keeper
 	StakingKeeper       *stakingkeeper.Keeper
+
+	poolRunners map[types.PoolType]PoolRunner
 }
 
 // NewKeeper Initialize the keeper with the base params
@@ -43,7 +45,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, paramSpace p
 	accountKeeper account.AccountKeeper, ibcKeeper ibckeeper.Keeper, ibcTransferKeeper ibctransferkeeper.Keeper, icaKeeper icacontrollerkeeper.Keeper, icaCallbacksKeeper icacallbackskeeper.Keeper,
 	icqueriesKeeper icquerieskeeper.Keeper, bank bankkeeper.Keeper, distribution *distributionkeeper.Keeper, stakingKeeper *stakingkeeper.Keeper,
 ) *Keeper {
-	return &Keeper{
+	k := Keeper{
 		cdc:                 cdc,
 		storeKey:            storeKey,
 		paramSpace:          paramSpace,
@@ -57,6 +59,8 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, paramSpace p
 		DistributionKeeper:  distribution,
 		StakingKeeper:       stakingKeeper,
 	}
+	k.RegisterPoolRunners()
+	return &k
 }
 
 // Logger Return a keeper logger instance
@@ -90,4 +94,28 @@ func (k Keeper) GetConnectionID(ctx sdk.Context, portId string) (string, error) 
 		}
 	}
 	return "", fmt.Errorf(fmt.Sprintf("portId %s has no associated connectionId", portId))
+}
+
+// RegisterPoolRunners register all know Pool Runners
+func (k *Keeper) RegisterPoolRunners() {
+	k.poolRunners = make(map[types.PoolType]PoolRunner)
+	k.poolRunners[types.PoolType_Staking] = &PoolRunnerStaking{PoolRunnerBase{keeper: k}}
+}
+
+// GetPoolRunner returns the Pool Runner for the specified Pool Type
+// returns an error if no runner registered for this Pool Type
+func (k Keeper) GetPoolRunner(poolType types.PoolType) (PoolRunner, error) {
+	if runner, found := k.poolRunners[poolType]; found {
+		return runner, nil
+	}
+	return nil, fmt.Errorf("pool runner not registered for type %s", poolType.String())
+}
+
+// MustGetPoolRunner runs GetPoolRunner and panic in case of error
+func (k Keeper) MustGetPoolRunner(poolType types.PoolType) PoolRunner {
+	runner, err := k.GetPoolRunner(poolType)
+	if err != nil {
+		panic(err)
+	}
+	return runner
 }

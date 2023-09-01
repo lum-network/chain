@@ -9,11 +9,10 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
 	epochstypes "github.com/lum-network/chain/x/epochs/types"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
-
-	"github.com/lum-network/chain/app"
 )
 
 const testChainID = "lum-network-devnet-1"
@@ -121,6 +120,9 @@ func floatToDec(v float64) sdk.Dec {
 func newValidPool(suite *KeeperTestSuite, pool millionstypes.Pool) *millionstypes.Pool {
 	params := suite.app.MillionsKeeper.GetParams(suite.ctx)
 
+	if pool.PoolType == millionstypes.PoolType_Unspecified {
+		pool.PoolType = millionstypes.PoolType_Staking
+	}
 	if pool.Denom == "" {
 		pool.Denom = suite.app.StakingKeeper.BondDenom(suite.ctx)
 	}
