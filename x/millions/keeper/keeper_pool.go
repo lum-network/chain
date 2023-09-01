@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
@@ -267,6 +268,8 @@ func (k Keeper) RegisterPool(
 	vals []string,
 	bech32Acc, bech32Val string,
 	minDepositAmount math.Int,
+	UnbondingDuration time.Duration,
+	maxUnbondingEntries math.Int,
 	drawSchedule types.DrawSchedule,
 	prizeStrategy types.PrizeStrategy,
 ) (uint64, error) {
@@ -301,6 +304,8 @@ func (k Keeper) RegisterPool(
 		Bech32PrefixAccAddr: bech32Acc,
 		Bech32PrefixValAddr: bech32Val,
 		MinDepositAmount:    minDepositAmount,
+		UnbondingDuration:   UnbondingDuration,
+		MaxUnbondingEntries: maxUnbondingEntries,
 		DrawSchedule:        drawSchedule.Sanitized(),
 		PrizeStrategy:       prizeStrategy,
 		LocalAddress:        localAddress.String(),
@@ -369,6 +374,8 @@ func (k Keeper) UpdatePool(
 	poolID uint64,
 	vals []string,
 	minDepositAmount *math.Int,
+	UnbondingDuration *time.Duration,
+	maxUnbondingEntries *math.Int,
 	drawSchedule *types.DrawSchedule,
 	prizeStrategy *types.PrizeStrategy,
 	state types.PoolState,
@@ -382,6 +389,12 @@ func (k Keeper) UpdatePool(
 	// Only a few properties can be updated
 	if minDepositAmount != nil {
 		pool.MinDepositAmount = *minDepositAmount
+	}
+	if UnbondingDuration != nil {
+		pool.UnbondingDuration = *UnbondingDuration
+	}
+	if maxUnbondingEntries != nil {
+		pool.MaxUnbondingEntries = *maxUnbondingEntries
 	}
 	if drawSchedule != nil {
 		pool.DrawSchedule = *drawSchedule
@@ -624,7 +637,25 @@ func (k Keeper) UnsafeUpdatePoolType(ctx sdk.Context, poolID uint64, poolType ty
 		return types.Pool{}, err
 	}
 
+	// Patch and update our pool entity
 	pool.PoolType = poolType
+	k.updatePool(ctx, &pool)
+
+	return pool, nil
+}
+
+// UnsafeUpdatePoolUnbondingFrequency raw updates the UnbondingDuration and mexUnbonding entries
+// Unsafe and should only be used for store migration
+func (k Keeper) UnsafeUpdatePoolUnbondingFrequency(ctx sdk.Context, poolID uint64, UnbondingDuration time.Duration, maxUnbondingEntries math.Int) (types.Pool, error) {
+	// Grab our pool instance
+	pool, err := k.GetPool(ctx, poolID)
+	if err != nil {
+		return types.Pool{}, err
+	}
+
+	// Patch and update our pool entity
+	pool.UnbondingDuration = UnbondingDuration
+	pool.MaxUnbondingEntries = maxUnbondingEntries
 	k.updatePool(ctx, &pool)
 
 	return pool, nil

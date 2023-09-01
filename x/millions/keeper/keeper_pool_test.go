@@ -302,6 +302,8 @@ func (suite *KeeperTestSuite) TestPool_DepositorsCountAndTVL() {
 		"lum",
 		"lumvaloper",
 		app.MillionsKeeper.GetParams(ctx).MinDepositAmount,
+		time.Duration(millionstypes.DefaultUnbondingDuration),
+		sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
 		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
 	)
@@ -772,10 +774,15 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
 func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	app := suite.app
 	ctx := suite.ctx
-	epochInfo, err := TriggerEpochUpdate(suite)
-	suite.Require().NoError(err)
-	_, err = TriggerEpochTrackerUpdate(suite, epochInfo)
-	suite.Require().NoError(err)
+	// Assuming first epoch is 1, and nextEpochUnbonding is the 4th one
+	for epoch := int64(1); epoch <= 4; epoch++ {
+		epochInfo, err := TriggerEpochUpdate(suite)
+		suite.Require().NoError(err)
+		suite.Require().Equal(epoch, epochInfo.CurrentEpoch)
+
+		_, err = TriggerEpochTrackerUpdate(suite, epochInfo)
+		suite.Require().NoError(err)
+	}
 
 	valAddr := "cosmosvaloper196ax4vc0lwpxndu9dyhvca7jhxp70rmcvrj90c"
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
@@ -966,6 +973,9 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 		},
 	}
 
+	UnbondingDuration := time.Duration(millionstypes.DefaultUnbondingDuration)
+	maxUnbondingEntries := sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries)
+
 	// create 5 validators
 	for i := 0; i < 5; i++ {
 		privKey := ed25519.GenPrivKey().PubKey()
@@ -1038,7 +1048,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 
 	// Simulate that 2 validators are bonded but inactive in the poolSet
 	// - Validator 2 and 4 are being removed
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{pool.Validators[0].GetOperatorAddress(), pool.Validators[2].GetOperatorAddress(), pool.Validators[4].GetOperatorAddress()}, nil, nil, nil, millionstypes.PoolState_Unspecified)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{pool.Validators[0].GetOperatorAddress(), pool.Validators[2].GetOperatorAddress(), pool.Validators[4].GetOperatorAddress()}, nil, nil, nil, nil, nil, millionstypes.PoolState_Unspecified)
 	suite.Require().NoError(err)
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
@@ -1056,12 +1066,16 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 	suite.Require().Equal(true, pool.Validators[4].IsEnabled)
 
 	// UpdatePool with new params
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Paused)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Paused)
 	suite.Require().NoError(err)
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
 	// New Deposit amount should be 2_000_000
 	suite.Require().Equal(newDepositAmount, pool.MinDepositAmount)
+	// New UnbondingDuration
+	suite.Require().Equal(UnbondingDuration, pool.UnbondingDuration)
+	// New maxUnbondingEntries
+	suite.Require().Equal(maxUnbondingEntries, pool.MaxUnbondingEntries)
 	// PoolState should be paused
 	suite.Require().Equal(millionstypes.PoolState_Paused, pool.State)
 	// New prize strategy applied
@@ -1070,7 +1084,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 	suite.Require().Equal(newDrawSchedule, pool.DrawSchedule)
 
 	// UpdatePool with invalid pool_state -> PoolState_Killed
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Killed)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Killed)
 	suite.Require().ErrorIs(err, millionstypes.ErrPoolStateChangeNotAllowed)
 	// Grab fresh pool instance
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
@@ -1079,7 +1093,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 
 	// UpdatePool with invalid pool_state -> PoolState_Unspecified
 	// Should remain with the current poolState
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Unspecified)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Unspecified)
 	suite.Require().NoError(err)
 	// Grab fresh pool instance
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
@@ -1087,7 +1101,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 	suite.Require().Equal(millionstypes.PoolState_Paused, pool.State)
 
 	// UpdatePool with valid pool_state -> PoolState_Ready
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Ready)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Ready)
 	suite.Require().NoError(err)
 	// Grab fresh pool instance
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
@@ -1173,7 +1187,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[4].BondedAmount)
 
 	// Simulate validator 1 that gets removed from the valSet
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{pool.Validators[1].GetOperatorAddress(), pool.Validators[2].GetOperatorAddress(), pool.Validators[3].GetOperatorAddress(), pool.Validators[4].GetOperatorAddress()}, nil, nil, nil, millionstypes.PoolState_Unspecified)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{pool.Validators[1].GetOperatorAddress(), pool.Validators[2].GetOperatorAddress(), pool.Validators[3].GetOperatorAddress(), pool.Validators[4].GetOperatorAddress()}, nil, nil, nil, nil, nil, millionstypes.PoolState_Unspecified)
 	suite.Require().Error(err)
 	// No active channel for this owner
 	pool, err = app.MillionsKeeper.GetPool(ctx, 2)

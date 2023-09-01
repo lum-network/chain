@@ -1,4 +1,4 @@
-package v153_test
+package v160_test
 
 import (
 	"testing"
@@ -14,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	apptypes "github.com/lum-network/chain/app"
-	v153 "github.com/lum-network/chain/x/millions/migrations/v153"
+	v160 "github.com/lum-network/chain/x/millions/migrations/v160"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 
@@ -44,6 +44,13 @@ func newValidPool(suite *StoreMigrationTestSuite, pool millionstypes.Pool) *mill
 
 	if pool.PoolType == millionstypes.PoolType_Unspecified {
 		pool.PoolType = millionstypes.PoolType_Staking
+	}
+
+	if pool.UnbondingDuration == 0 {
+		pool.UnbondingDuration = millionstypes.DefaultUnbondingDuration
+	}
+	if pool.MaxUnbondingEntries.IsNil() {
+		pool.MaxUnbondingEntries = sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries)
 	}
 
 	if pool.Validators == nil {
@@ -152,7 +159,7 @@ func (suite *StoreMigrationTestSuite) TestUpdatePoolType() {
 	suite.app.MillionsKeeper.AddPool(suite.ctx, newValidPool(suite, millionstypes.Pool{PoolId: poolID}))
 
 	// Run the migration operation
-	err := v153.MigratePoolType(suite.ctx, *suite.app.MillionsKeeper)
+	err := v160.MigratePoolTypeAndUnbondingFrequency(suite.ctx, *suite.app.MillionsKeeper)
 	suite.Require().NoError(err)
 
 	// Grab our pool
@@ -161,6 +168,11 @@ func (suite *StoreMigrationTestSuite) TestUpdatePoolType() {
 
 	// Ensure our pool has the new poolType
 	suite.Require().Equal(millionstypes.PoolType_Staking, pool.PoolType)
+
+	// Ensure we have a new max entries and unbonding duration
+	suite.Require().Equal(millionstypes.DefaultUnbondingDuration, pool.UnbondingDuration)
+	suite.Require().Equal(sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries), pool.MaxUnbondingEntries)
+
 }
 
 func TestKeeperSuite(t *testing.T) {

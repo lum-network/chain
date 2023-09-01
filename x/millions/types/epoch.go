@@ -1,6 +1,8 @@
 package types
 
 import (
+	time "time"
+
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -10,6 +12,9 @@ import (
 const (
 	MaxAcceptableWithdrawalIDsCount = 100
 	WithdrawalTrackerType           = "withdrawal"
+	DefaultUnbondingDuration        = 21 * 24 * time.Hour // 21 days
+	MinUnbondingDuration            = 7 * 24 * time.Hour
+	DefaultMaxUnbondingEntries      = 7
 )
 
 func (e *EpochUnbonding) ValidateBasic(params Params) error {

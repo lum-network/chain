@@ -6,7 +6,7 @@ import (
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
 	v150 "github.com/lum-network/chain/x/millions/migrations/v150"
 	v152 "github.com/lum-network/chain/x/millions/migrations/v152"
-	v153 "github.com/lum-network/chain/x/millions/migrations/v153"
+	v160 "github.com/lum-network/chain/x/millions/migrations/v160"
 )
 
 type Migrator struct {
@@ -29,5 +29,5 @@ func (m Migrator) Migrate2To3(ctx sdk.Context) error {
 
 // Migrate3To4 migrates from version 3 to 4
 func (m Migrator) Migrate3To4(ctx sdk.Context) error {
-	return v153.MigratePoolType(ctx, m.keeper)
+	return v160.MigratePoolTypeAndUnbondingFrequency(ctx, m.keeper)
 }

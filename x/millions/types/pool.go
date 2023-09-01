@@ -11,7 +11,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // ValidateBasic validates if a pool has a valid configuration
@@ -43,6 +45,12 @@ func (pool *Pool) ValidateBasic(params Params) error {
 	}
 	if pool.MinDepositAmount.IsNil() || pool.MinDepositAmount.LT(params.MinDepositAmount) {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "min deposit denom must be gte %d", params.MinDepositAmount.Int64())
+	}
+	if pool.UnbondingDuration < MinUnbondingDuration {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unbonding duration cannot be lower than %s", MinUnbondingDuration)
+	}
+	if pool.MaxUnbondingEntries.IsNegative() || pool.MaxUnbondingEntries.GT(sdk.NewInt(DefaultMaxUnbondingEntries)) {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "Unbonding entries cannot be negative or greated than %d", DefaultMaxUnbondingEntries)
 	}
 	if pool.AvailablePrizePool.IsNil() || pool.AvailablePrizePool.Denom != pool.Denom {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "prize pool must be initialized")
@@ -311,4 +319,32 @@ func (p *Pool) GetIcaDepositPortIdWithPrefix() string {
 func (p *Pool) GetIcaPrizepoolPortIdWithPrefix() string {
 	portID, _ := icatypes.NewControllerPortID(p.GetIcaPrizepoolPortId())
 	return portID
+}
+
+func (p *Pool) GetUnbondingFrequency() math.Int {
+	// (unbonding_duration / max_unbonding_entries) + 1
+	durationToDays := math.NewInt(int64(p.UnbondingDuration.Hours() / 24))
+	frequency := durationToDays.Quo(p.MaxUnbondingEntries).Add(types.NewInt(1))
+
+	return frequency
+}
+
+func (p *Pool) GetNextEpochUnbonding(epochTracker EpochTracker) uint64 {
+	frequency := p.GetUnbondingFrequency().Uint64()
+	currentEpoch := epochTracker.EpochNumber
+	// If there are remaining days before the next epoch of unbonding,
+	// We compute the epoch at which the next unbonding will happen
+	// Otherwise return current epoch
+	if p.IsInvalidEpochUnbonding(epochTracker) {
+		remainingEpochs := frequency - (currentEpoch % frequency)
+		nextUnbondingEpoch := currentEpoch + remainingEpochs
+
+		return nextUnbondingEpoch
+	}
+
+	return currentEpoch
+}
+
+func (p *Pool) IsInvalidEpochUnbonding(epochTracker EpochTracker) bool {
+	return epochTracker.EpochNumber%p.GetUnbondingFrequency().Uint64() != 0
 }

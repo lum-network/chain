@@ -2,6 +2,7 @@ syntax = "proto3";
 package lum.network.millions;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
@@ -64,8 +65,12 @@ message Pool {
   ];
   DrawSchedule draw_schedule = 14 [ (gogoproto.nullable) = false ];
   PrizeStrategy prize_strategy = 15 [ (gogoproto.nullable) = false ];
-  reserved 16;
-  reserved 17;
+  google.protobuf.Duration unbonding_duration = 16
+      [ (gogoproto.stdduration) = true, (gogoproto.nullable) = false ];
+  string max_unbonding_entries = 17 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
 
   string local_address = 18 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string ica_deposit_address = 19

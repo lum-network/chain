@@ -296,6 +296,8 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit() {
 		"lum",
 		"lumvaloper",
 		app.MillionsKeeper.GetParams(ctx).MinDepositAmount,
+		time.Duration(millionstypes.DefaultUnbondingDuration),
+		sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
 		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
 	)
@@ -415,6 +417,8 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 		"lum",
 		"lumvaloper",
 		app.MillionsKeeper.GetParams(ctx).MinDepositAmount,
+		time.Duration(millionstypes.DefaultUnbondingDuration),
+		sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
 		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
 	)
@@ -762,6 +766,8 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 		"lum",
 		"lumvaloper",
 		app.MillionsKeeper.GetParams(ctx).MinDepositAmount,
+		time.Duration(millionstypes.DefaultUnbondingDuration),
+		sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
 		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
 	)
@@ -980,10 +986,15 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 	drawDelta1 := 1 * time.Hour
 	var now = time.Now().UTC()
-	epochInfo, err := TriggerEpochUpdate(suite)
-	suite.Require().NoError(err)
-	_, err = TriggerEpochTrackerUpdate(suite, epochInfo)
-	suite.Require().NoError(err)
+	// Assuming first epoch is 1, and nextEpochUnbonding is the 4th one
+	for epoch := int64(1); epoch <= 4; epoch++ {
+		epochInfo, err := TriggerEpochUpdate(suite)
+		suite.Require().NoError(err)
+		suite.Require().Equal(epoch, epochInfo.CurrentEpoch)
+
+		_, err = TriggerEpochTrackerUpdate(suite, epochInfo)
+		suite.Require().NoError(err)
+	}
 
 	pool := newValidPool(suite, millionstypes.Pool{
 		PoolId:      uint64(1),
@@ -1014,7 +1025,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 		State:            millionstypes.DepositState_IbcTransfer,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
 	})
-	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
+	err := app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
 	deposits := app.MillionsKeeper.ListDeposits(ctx)
 	// Simulate transfer deposit and delegate to native chain

@@ -453,6 +453,8 @@ func (suite *KeeperTestSuite) TestDraw_PrizePoolPersistence() {
 		[]string{suite.valAddrs[0].String()},
 		p.Bech32PrefixAccAddr, p.Bech32PrefixValAddr,
 		p.MinDepositAmount,
+		p.UnbondingDuration,
+		p.MaxUnbondingEntries,
 		p.DrawSchedule,
 		p.PrizeStrategy,
 	)
@@ -475,6 +477,8 @@ func (suite *KeeperTestSuite) TestDraw_PrizePoolPersistence() {
 		[]string{suite.valAddrs[0].String()},
 		p.Bech32PrefixAccAddr, p.Bech32PrefixValAddr,
 		p.MinDepositAmount,
+		p.UnbondingDuration,
+		p.MaxUnbondingEntries,
 		p.DrawSchedule,
 		p.PrizeStrategy,
 	)

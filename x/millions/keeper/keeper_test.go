@@ -95,6 +95,14 @@ func TriggerEpochUpdate(suite *KeeperTestSuite) (epochInfo epochstypes.EpochInfo
 	return epochsInfo, nil
 }
 
+func GetEpochInfo(suite *KeeperTestSuite) (epochInfo epochstypes.EpochInfo, err error) {
+	app := suite.app
+	ctx := suite.ctx
+	epochsInfo, _ := app.EpochsKeeper.GetEpochInfo(ctx, epochstypes.DAY_EPOCH)
+
+	return epochsInfo, nil
+}
+
 func TriggerEpochTrackerUpdate(suite *KeeperTestSuite, epochInfo epochstypes.EpochInfo) (epochTracker millionstypes.EpochTracker, err error) {
 	app := suite.app
 	ctx := suite.ctx
@@ -141,6 +149,12 @@ func newValidPool(suite *KeeperTestSuite, pool millionstypes.Pool) *millionstype
 	}
 	if pool.MinDepositAmount.IsNil() {
 		pool.MinDepositAmount = params.MinDepositAmount
+	}
+	if pool.UnbondingDuration == 0 {
+		pool.UnbondingDuration = millionstypes.DefaultUnbondingDuration
+	}
+	if pool.MaxUnbondingEntries.IsNil() {
+		pool.MaxUnbondingEntries = sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries)
 	}
 	if err := pool.DrawSchedule.ValidateBasic(params); err != nil {
 		pool.DrawSchedule = millionstypes.DrawSchedule{DrawDelta: 1 * time.Hour, InitialDrawAt: time.Now().UTC()}

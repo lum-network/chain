@@ -64,6 +64,12 @@ func newValidPool(suite *StoreMigrationTestSuite, pool millionstypes.Pool) *mill
 	if pool.MinDepositAmount.IsNil() {
 		pool.MinDepositAmount = params.MinDepositAmount
 	}
+	if pool.UnbondingDuration == 0 {
+		pool.UnbondingDuration = time.Duration(millionstypes.DefaultUnbondingDuration)
+	}
+	if pool.MaxUnbondingEntries.IsNil() {
+		pool.MaxUnbondingEntries = sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries)
+	}
 	if err := pool.DrawSchedule.ValidateBasic(params); err != nil {
 		pool.DrawSchedule = millionstypes.DrawSchedule{DrawDelta: 1 * time.Hour, InitialDrawAt: time.Now().UTC()}
 	}

@@ -847,7 +847,7 @@ func (app *App) registerUpgradeHandlers() {
 					{PoolPercent: 8, Quantity: 60, IsUnique: false, DrawProbability: sdk.NewDecWithPrec(90, 2)},
 				},
 			}
-			err = app.MillionsKeeper.UpdatePool(ctx, pool.GetPoolId(), []string{}, nil, nil, &prizeStrategy, millionstypes.PoolState_Unspecified)
+			err = app.MillionsKeeper.UpdatePool(ctx, pool.GetPoolId(), []string{}, nil, nil, nil, nil, &prizeStrategy, millionstypes.PoolState_Unspecified)
 			if err != nil {
 				return nil, err
 			}
@@ -874,7 +874,7 @@ func (app *App) registerUpgradeHandlers() {
 					{PoolPercent: 8, Quantity: 60, IsUnique: true, DrawProbability: sdk.NewDecWithPrec(90, 2)},
 				},
 			}
-			err = app.MillionsKeeper.UpdatePool(ctx, pool.GetPoolId(), []string{}, nil, nil, &prizeStrategy, millionstypes.PoolState_Unspecified)
+			err = app.MillionsKeeper.UpdatePool(ctx, pool.GetPoolId(), []string{}, nil, nil, nil, nil, &prizeStrategy, millionstypes.PoolState_Unspecified)
 			if err != nil {
 				return nil, err
 			}
@@ -892,10 +892,10 @@ func (app *App) registerUpgradeHandlers() {
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
 
-	app.UpgradeKeeper.SetUpgradeHandler("v1.5.3", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		app.Logger().Info("Starting v1.5.3 upgrade")
+	app.UpgradeKeeper.SetUpgradeHandler("v1.6.0", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		app.Logger().Info("Starting v1.6.0 upgrade")
 
-		app.Logger().Info("v1.5.3 upgrade applied")
+		app.Logger().Info("v1.6.0 upgrade applied")
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
 
@@ -981,7 +981,7 @@ func (app *App) registerUpgradeHandlers() {
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
 
-	if upgradeInfo.Name == "v1.5.3" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	if upgradeInfo.Name == "v1.6.0" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{}
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}

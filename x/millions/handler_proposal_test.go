@@ -103,10 +103,12 @@ func (suite *HandlerTestSuite) SetupTest() {
 				IsEnabled:       true,
 			},
 		},
-		IcaDepositAddress: suite.moduleAddrs[0].String(),
-		MinDepositAmount:  sdk.NewInt(1000000),
-		State:             millionstypes.PoolState_Ready,
-		PoolId:            poolID,
+		IcaDepositAddress:   suite.moduleAddrs[0].String(),
+		MinDepositAmount:    sdk.NewInt(1000000),
+		UnbondingDuration:   time.Duration(millionstypes.DefaultUnbondingDuration),
+		MaxUnbondingEntries: sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
+		State:               millionstypes.PoolState_Ready,
+		PoolId:              poolID,
 		PrizeStrategy: millionstypes.PrizeStrategy{
 			PrizeBatches: []millionstypes.PrizeBatch{
 				{PoolPercent: 100, Quantity: 1, DrawProbability: sdk.NewDecWithPrec(int64(0.00*1_000_000), 6)},
@@ -153,6 +155,9 @@ func (suite *HandlerTestSuite) TestProposal_RegisterPool() {
 	invalidValidatorSet := []string{"lumvaloper16rlynj5wvzw"}
 	var emptyValidatorSet []string
 
+	UnbondingDuration := time.Duration(millionstypes.DefaultUnbondingDuration)
+	maxUnbondingEntries := sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries)
+
 	cases := []struct {
 		name            string
 		proposal        govtypesv1beta1.Content
@@ -161,79 +166,97 @@ func (suite *HandlerTestSuite) TestProposal_RegisterPool() {
 	}{
 		{
 			"Title cannot be empty",
-			millionstypes.NewRegisterPoolProposal("", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, UnbondingDuration, maxUnbondingEntries),
 			true,
 			false,
 		},
 		{
 			"Description cannot be empty",
-			millionstypes.NewRegisterPoolProposal("Test", "", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, UnbondingDuration, maxUnbondingEntries),
 			true,
 			false,
 		},
 		{
 			"Pool Type cannot be unspecified",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Unspecified, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Unspecified, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, UnbondingDuration, maxUnbondingEntries),
 			true,
 			true,
 		},
 		{
 			"Chain ID cannot be empty",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, UnbondingDuration, maxUnbondingEntries),
 			true,
 			true,
 		},
 		{
 			"Bech 32 acc prefix cannot be empty",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, UnbondingDuration, maxUnbondingEntries),
 			true,
 			true,
 		},
 		{
 			"Bech 32 val prefix cannot be empty",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, UnbondingDuration, maxUnbondingEntries),
 			true,
 			true,
 		},
 		{
 			"Validators list cannot be empty",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", emptyValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", emptyValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, UnbondingDuration, maxUnbondingEntries),
 			true,
 			true,
 		},
 		{
 			"Validators list cannot be invalid",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", invalidValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", invalidValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, UnbondingDuration, maxUnbondingEntries),
 			false,
 			true,
 		},
 		{
 			"Min deposit amount cannot be less than min acceptable amount",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(millionstypes.MinAcceptableDepositAmount-1), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(millionstypes.MinAcceptableDepositAmount-1), validPrizeStrategy, validDrawSchedule, UnbondingDuration, maxUnbondingEntries),
 			true,
 			true,
 		},
 		{
 			"Prize strategy cannot be empty",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), emptyPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), emptyPrizeStrategy, validDrawSchedule, UnbondingDuration, maxUnbondingEntries),
 			true,
 			true,
 		},
 		{
 			"Prize strategy cannot be invalid",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), invalidPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), invalidPrizeStrategy, validDrawSchedule, UnbondingDuration, maxUnbondingEntries),
 			false,
 			true,
 		},
 		{
 			"Draw Schedule cannot be invalid",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, invalidDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, invalidDrawSchedule, UnbondingDuration, maxUnbondingEntries),
+			true,
+			true,
+		},
+		{
+			"ZoneUnbonding duration cannot be below the min unbonding",
+			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, time.Duration(6*24*time.Hour), maxUnbondingEntries),
+			true,
+			true,
+		},
+		{
+			"MaxUnbondingEntries cannot exceed 7 parallel unbondings",
+			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, UnbondingDuration, sdk.NewInt(8)),
+			true,
+			true,
+		},
+		{
+			"MaxUnbondingEntries cannot exceed cannot be negative",
+			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, UnbondingDuration, sdk.NewInt(-2)),
 			true,
 			true,
 		},
 		{
 			"Fine should be fine",
-			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule),
+			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, UnbondingDuration, maxUnbondingEntries),
 			false,
 			false,
 		},
@@ -307,6 +330,9 @@ func (suite *HandlerTestSuite) TestProposal_UpdatePool() {
 	validMinDepositAmount := millionstypes.DefaultParams().MinDepositAmount
 	invalidMinDepositAmount := sdk.NewInt(millionstypes.MinAcceptableDepositAmount - 1)
 
+	UnbondingDuration := time.Duration(millionstypes.DefaultUnbondingDuration)
+	maxUnbondingEntries := sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries)
+
 	cases := []struct {
 		name            string
 		proposal        govtypesv1beta1.Content
@@ -315,61 +341,61 @@ func (suite *HandlerTestSuite) TestProposal_UpdatePool() {
 	}{
 		{
 			"Title cannot be empty",
-			millionstypes.NewUpdatePoolProposal("", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateUnspecified),
+			millionstypes.NewUpdatePoolProposal("", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateUnspecified, &UnbondingDuration, &maxUnbondingEntries),
 			true,
 			false,
 		},
 		{
 			"Description cannot be empty",
-			millionstypes.NewUpdatePoolProposal("Test", "", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused),
+			millionstypes.NewUpdatePoolProposal("Test", "", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused, &UnbondingDuration, &maxUnbondingEntries),
 			true,
 			false,
 		},
 		{
 			"Validators list can be empty",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateReady),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateReady, &UnbondingDuration, &maxUnbondingEntries),
 			false,
 			false,
 		},
 		{
 			"Validators list cannot be invalid",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), invalidValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), invalidValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused, &UnbondingDuration, &maxUnbondingEntries),
 			false,
 			true,
 		},
 		{
 			"Min deposit amount cannot be less than 1000000 (default params)",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &invalidMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateReady),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &invalidMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStateReady, &UnbondingDuration, &maxUnbondingEntries),
 			true,
 			true,
 		},
 		{
 			"Prize strategy cannot be empty",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &emptyPrizeStrategy, &validDrawSchedule, poolStatePaused),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &emptyPrizeStrategy, &validDrawSchedule, poolStatePaused, &UnbondingDuration, &maxUnbondingEntries),
 			true,
 			true,
 		},
 		{
 			"Prize strategy cannot be invalid",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &invalidPrizeStrategy, &validDrawSchedule, poolStateReady),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &invalidPrizeStrategy, &validDrawSchedule, poolStateReady, &UnbondingDuration, &maxUnbondingEntries),
 			false,
 			true,
 		},
 		{
 			"Draw Schedule cannot be invalid",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &invalidDrawSchedule, poolStatePaused),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, &validMinDepositAmount, &validPrizeStrategy, &invalidDrawSchedule, poolStatePaused, &UnbondingDuration, &maxUnbondingEntries),
 			true,
 			true,
 		},
 		{
 			"Partial should be fine",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, nil, nil, nil, poolStateUnspecified),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), nil, nil, nil, nil, poolStateUnspecified, nil, nil),
 			false,
 			false,
 		},
 		{
 			"Fine should be fine",
-			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused),
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused, &UnbondingDuration, &maxUnbondingEntries),
 			false,
 			false,
 		},
