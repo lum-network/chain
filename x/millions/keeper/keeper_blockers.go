@@ -131,7 +131,7 @@ func (k Keeper) BlockWithdrawalUpdates(ctx sdk.Context) (successCount, errorCoun
 			// Initiate a dedicated cache context to avoid partial withdrawal commits
 			cacheCtx, writeCache := ctx.CacheContext()
 			k.UpdateWithdrawalStatus(cacheCtx, withdrawal.PoolId, withdrawal.WithdrawalId, types.WithdrawalState_IbcTransfer, nil, false)
-			if err := k.TransferWithdrawalToDestAddr(cacheCtx, withdrawal.PoolId, withdrawal.WithdrawalId); err != nil {
+			if err := k.TransferWithdrawalToRecipient(cacheCtx, withdrawal.PoolId, withdrawal.WithdrawalId); err != nil {
 				logger.Error(
 					fmt.Sprintf("failed to launch transfer withdrawal amount to destination address: %v", err),
 					"pool_id", withdrawal.PoolId,

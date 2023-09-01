@@ -1,4 +1,4 @@
-package v152_test
+package v153_test
 
 import (
 	"testing"
@@ -14,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	apptypes "github.com/lum-network/chain/app"
-	v152 "github.com/lum-network/chain/x/millions/migrations/v152"
+	v153 "github.com/lum-network/chain/x/millions/migrations/v153"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 
@@ -147,56 +147,20 @@ func (suite *StoreMigrationTestSuite) SetupTest() {
 	})
 }
 
-func (suite *StoreMigrationTestSuite) TestMigrateUndelegations() {
+func (suite *StoreMigrationTestSuite) TestUpdatePoolType() {
 	poolID := suite.app.MillionsKeeper.GetNextPoolIDAndIncrement(suite.ctx)
 	suite.app.MillionsKeeper.AddPool(suite.ctx, newValidPool(suite, millionstypes.Pool{PoolId: poolID}))
 
-	// Grab our pool entity
+	// Run the migration operation
+	err := v153.MigratePoolType(suite.ctx, *suite.app.MillionsKeeper)
+	suite.Require().NoError(err)
+
+	// Grab our pool
 	pool, err := suite.app.MillionsKeeper.GetPool(suite.ctx, poolID)
 	suite.Require().NoError(err)
 
-	for i := 0; i < 5; i++ {
-		suite.app.MillionsKeeper.AddDeposit(suite.ctx, &millionstypes.Deposit{
-			PoolId:           pool.PoolId,
-			DepositorAddress: suite.addrs[i].String(),
-			WinnerAddress:    suite.addrs[i].String(),
-			State:            millionstypes.DepositState_IbcTransfer,
-			Amount:           sdk.NewCoin("ulum", sdk.NewInt(1_000_0)),
-		})
-	}
-
-	deposits := suite.app.MillionsKeeper.ListDeposits(suite.ctx)
-
-	for i := 0; i < 5; i++ {
-		suite.app.MillionsKeeper.AddWithdrawal(suite.ctx, millionstypes.Withdrawal{
-			PoolId:           pool.PoolId,
-			DepositId:        deposits[i].DepositId,
-			DepositorAddress: suite.addrs[i].String(),
-			ToAddress:        suite.addrs[i].String(),
-			State:            millionstypes.WithdrawalState_Failure,
-			ErrorState:       millionstypes.WithdrawalState_IcaUndelegate,
-			Amount:           sdk.NewCoin("ulum", sdk.NewInt(1_000_0)),
-		})
-	}
-
-	// Old withdrawals values
-	oldWithdrawals := suite.app.MillionsKeeper.ListWithdrawals(suite.ctx)
-	for _, oldWithdrawal := range oldWithdrawals {
-		suite.Require().Equal(millionstypes.WithdrawalState_IcaUndelegate, oldWithdrawal.ErrorState)
-		suite.Require().Equal(millionstypes.WithdrawalState_Failure, oldWithdrawal.State)
-	}
-
-	// Run the migration operation
-	err = v152.MigrateFailedIcaUndelegationsToEpochUnbonding(suite.ctx, *suite.app.MillionsKeeper)
-	suite.Require().NoError(err)
-
-	newWithdrawals := suite.app.MillionsKeeper.ListWithdrawals(suite.ctx)
-
-	for _, newWithdrawals := range newWithdrawals {
-		suite.Require().Equal(millionstypes.WithdrawalState_Unspecified, newWithdrawals.ErrorState)
-		suite.Require().Equal(millionstypes.WithdrawalState_Pending, newWithdrawals.State)
-	}
-
+	// Ensure our pool has the new poolType
+	suite.Require().Equal(millionstypes.PoolType_Staking, pool.PoolType)
 }
 
 func TestKeeperSuite(t *testing.T) {

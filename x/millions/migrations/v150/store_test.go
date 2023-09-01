@@ -42,6 +42,10 @@ func newValidPool(suite *StoreMigrationTestSuite, pool millionstypes.Pool) *mill
 	if pool.ChainId == "" {
 		pool.ChainId = "lum-network-devnet"
 	}
+	if pool.PoolType == millionstypes.PoolType_Unspecified {
+		pool.PoolType = millionstypes.PoolType_Staking
+	}
+
 	if pool.Validators == nil {
 		for _, addr := range suite.valAddrs {
 			pool.Validators = append(pool.Validators, millionstypes.PoolValidator{

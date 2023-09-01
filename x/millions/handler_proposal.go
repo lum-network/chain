@@ -21,6 +21,7 @@ func NewMillionsProposalHandler(k keeper.Keeper) govtypes.Handler {
 			{
 				_, err := k.RegisterPool(
 					ctx,
+					c.GetPoolType(),
 					c.GetDenom(),
 					c.GetNativeDenom(),
 					c.GetChainId(),

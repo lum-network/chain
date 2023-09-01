@@ -448,6 +448,7 @@ func (suite *KeeperTestSuite) TestDraw_PrizePoolPersistence() {
 	})
 	newID, err := app.MillionsKeeper.RegisterPool(
 		ctx,
+		millionstypes.PoolType_Staking,
 		p.Denom, p.NativeDenom, p.ChainId, p.ConnectionId, p.TransferChannelId,
 		[]string{suite.valAddrs[0].String()},
 		p.Bech32PrefixAccAddr, p.Bech32PrefixValAddr,
@@ -469,6 +470,7 @@ func (suite *KeeperTestSuite) TestDraw_PrizePoolPersistence() {
 	})
 	newID, err = app.MillionsKeeper.RegisterPool(
 		ctx,
+		millionstypes.PoolType_Staking,
 		p.Denom, p.NativeDenom, p.ChainId, p.ConnectionId, p.TransferChannelId,
 		[]string{suite.valAddrs[0].String()},
 		p.Bech32PrefixAccAddr, p.Bech32PrefixValAddr,
@@ -1167,8 +1169,8 @@ func (suite *KeeperTestSuite) TestDraw_SetPoolDraw() {
 	suite.Require().Len(draws, 3)
 }
 
-// TestDraw_ClaimRewardsOnNativeChain tests claim of staking rewards from the native chain validators
-func (suite *KeeperTestSuite) TestDraw_ClaimRewardsOnNativeChain() {
+// TestDraw_ClaimYieldOnRemoteZone tests claim of staking rewards from the native chain validators
+func (suite *KeeperTestSuite) TestDraw_ClaimYieldOnRemoteZone() {
 	app := suite.app
 	ctx := suite.ctx
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
@@ -1221,10 +1223,10 @@ func (suite *KeeperTestSuite) TestDraw_ClaimRewardsOnNativeChain() {
 
 	app.MillionsKeeper.SetPoolDraw(ctx, draw1)
 	// Test to acquire a pool with wrong poolID
-	_, err := app.MillionsKeeper.ClaimRewardsOnNativeChain(ctx, uint64(0), pools[0].NextDrawId)
+	_, err := app.MillionsKeeper.ClaimYieldOnRemoteZone(ctx, uint64(0), pools[0].NextDrawId)
 	suite.Require().ErrorIs(err, millionstypes.ErrPoolNotFound)
 	// Test to acquire a draw with wrong drawID
-	_, err = app.MillionsKeeper.ClaimRewardsOnNativeChain(ctx, pools[0].PoolId, uint64(0))
+	_, err = app.MillionsKeeper.ClaimYieldOnRemoteZone(ctx, pools[0].PoolId, uint64(0))
 	suite.Require().ErrorIs(err, millionstypes.ErrPoolDrawNotFound)
 	draw, err := app.MillionsKeeper.GetPoolDraw(ctx, pools[0].PoolId, pools[0].NextDrawId)
 	suite.Require().NoError(err)
@@ -1232,7 +1234,7 @@ func (suite *KeeperTestSuite) TestDraw_ClaimRewardsOnNativeChain() {
 	suite.Require().Equal(millionstypes.DrawState_IcaWithdrawRewards, draw.State)
 	suite.Require().Equal(millionstypes.DrawState_Unspecified, draw.ErrorState)
 	// Simulate failed callBack
-	_, err = app.MillionsKeeper.OnClaimRewardsOnNativeChainCompleted(ctx, draw.PoolId, draw.DrawId, true)
+	_, err = app.MillionsKeeper.OnClaimYieldOnRemoteZoneCompleted(ctx, draw.PoolId, draw.DrawId, true)
 	suite.Require().NoError(err)
 	draw, err = app.MillionsKeeper.GetPoolDraw(ctx, pools[0].PoolId, pools[0].NextDrawId)
 	suite.Require().NoError(err)
@@ -1245,7 +1247,7 @@ func (suite *KeeperTestSuite) TestDraw_ClaimRewardsOnNativeChain() {
 	app.MillionsKeeper.SetPoolDraw(ctx, draw)
 	// Simulate successful ICA callback
 	// Move to ICQ phase (query available prize pool)
-	_, err = app.MillionsKeeper.OnClaimRewardsOnNativeChainCompleted(ctx, draw.PoolId, draw.DrawId, false)
+	_, err = app.MillionsKeeper.OnClaimYieldOnRemoteZoneCompleted(ctx, draw.PoolId, draw.DrawId, false)
 	suite.Require().NoError(err)
 	draw, err = app.MillionsKeeper.GetPoolDraw(ctx, pools[0].PoolId, pools[0].NextDrawId)
 	suite.Require().NoError(err)
@@ -1253,7 +1255,7 @@ func (suite *KeeperTestSuite) TestDraw_ClaimRewardsOnNativeChain() {
 	suite.Require().Equal(millionstypes.DrawState_Unspecified, draw.ErrorState)
 	// Simulate succesful ICQ callback
 	// Should complete the Draw since no coins was found by the simulated callback (skip transfer phase)
-	_, err = app.MillionsKeeper.OnQueryRewardsOnNativeChainCompleted(ctx, draw.PoolId, draw.DrawId, sdk.NewCoins(), false)
+	_, err = app.MillionsKeeper.OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted(ctx, draw.PoolId, draw.DrawId, sdk.NewCoins(), false)
 	suite.Require().NoError(err)
 	draw, err = app.MillionsKeeper.GetPoolDraw(ctx, pools[0].PoolId, pools[0].NextDrawId)
 	suite.Require().NoError(err)
@@ -1306,8 +1308,8 @@ func (suite *KeeperTestSuite) TestDraw_ClaimRewardsOnNativeChain() {
 	suite.Require().Equal(millionstypes.DrawState_IcaWithdrawRewards, draw.State)
 	suite.Require().Equal(millionstypes.DrawState_Unspecified, draw.ErrorState)
 
-	// Trigger ClaimRewardsOnNativeChain
-	_, err = app.MillionsKeeper.ClaimRewardsOnNativeChain(ctx, draw.PoolId, draw.DrawId)
+	// Trigger ClaimYieldOnRemoteZone
+	_, err = app.MillionsKeeper.ClaimYieldOnRemoteZone(ctx, draw.PoolId, draw.DrawId)
 	suite.Require().NoError(err)
 	draw, err = app.MillionsKeeper.GetPoolDraw(ctx, pools[1].PoolId, pools[1].NextDrawId)
 	suite.Require().NoError(err)
@@ -1315,8 +1317,8 @@ func (suite *KeeperTestSuite) TestDraw_ClaimRewardsOnNativeChain() {
 	suite.Require().Equal(millionstypes.DrawState_Unspecified, draw.ErrorState)
 }
 
-// TestDraw_TransferRewardsToLocalChain tests the transfer of the claimed rewards to the local chain
-func (suite *KeeperTestSuite) TestDraw_TransferRewardsToLocalChain() {
+// TestDraw_TransferFreshPrizePoolCoinsToLocalZone tests the transfer of the claimed rewards to the local chain
+func (suite *KeeperTestSuite) TestDraw_TransferFreshPrizePoolCoinsToLocalZone() {
 	app := suite.app
 	ctx := suite.ctx
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
@@ -1369,10 +1371,10 @@ func (suite *KeeperTestSuite) TestDraw_TransferRewardsToLocalChain() {
 
 	app.MillionsKeeper.SetPoolDraw(ctx, draw1)
 	// Test to acquire a pool with wrong poolID
-	_, err := app.MillionsKeeper.TransferRewardsToLocalChain(ctx, uint64(0), pools[0].NextDrawId)
+	_, err := app.MillionsKeeper.TransferFreshPrizePoolCoinsToLocalZone(ctx, uint64(0), pools[0].NextDrawId)
 	suite.Require().ErrorIs(err, millionstypes.ErrPoolNotFound)
 	// Test to acquire a draw with wrong drawID
-	_, err = app.MillionsKeeper.TransferRewardsToLocalChain(ctx, pools[0].PoolId, uint64(0))
+	_, err = app.MillionsKeeper.TransferFreshPrizePoolCoinsToLocalZone(ctx, pools[0].PoolId, uint64(0))
 	suite.Require().ErrorIs(err, millionstypes.ErrPoolDrawNotFound)
 	draw, err := app.MillionsKeeper.GetPoolDraw(ctx, pools[0].PoolId, pools[0].NextDrawId)
 	suite.Require().NoError(err)
@@ -1380,7 +1382,7 @@ func (suite *KeeperTestSuite) TestDraw_TransferRewardsToLocalChain() {
 	suite.Require().Equal(millionstypes.DrawState_IbcTransfer, draw.State)
 	suite.Require().Equal(millionstypes.DrawState_Unspecified, draw.ErrorState)
 	// Simulate failed callBack
-	_, err = app.MillionsKeeper.OnTransferRewardsToLocalChainCompleted(ctx, draw.PoolId, draw.DrawId, true)
+	_, err = app.MillionsKeeper.OnTransferFreshPrizePoolCoinsToLocalZoneCompleted(ctx, draw.PoolId, draw.DrawId, true)
 	suite.Require().NoError(err)
 	draw, err = app.MillionsKeeper.GetPoolDraw(ctx, pools[0].PoolId, pools[0].NextDrawId)
 	suite.Require().NoError(err)
@@ -1392,7 +1394,7 @@ func (suite *KeeperTestSuite) TestDraw_TransferRewardsToLocalChain() {
 	draw.ErrorState = millionstypes.DrawState_Unspecified
 	app.MillionsKeeper.SetPoolDraw(ctx, draw)
 	// Simulate successful callBack
-	_, err = app.MillionsKeeper.OnTransferRewardsToLocalChainCompleted(ctx, draw.PoolId, draw.DrawId, false)
+	_, err = app.MillionsKeeper.OnTransferFreshPrizePoolCoinsToLocalZoneCompleted(ctx, draw.PoolId, draw.DrawId, false)
 	suite.Require().NoError(err)
 	draw, err = app.MillionsKeeper.GetPoolDraw(ctx, pools[0].PoolId, pools[0].NextDrawId)
 	suite.Require().NoError(err)
@@ -1443,16 +1445,16 @@ func (suite *KeeperTestSuite) TestDraw_TransferRewardsToLocalChain() {
 	app.MillionsKeeper.SetPoolDraw(ctx, draw2)
 	draw, err = app.MillionsKeeper.GetPoolDraw(ctx, pools[1].PoolId, pools[1].NextDrawId)
 	suite.Require().NoError(err)
-	// Test state before TransferRewardsToLocalChain
+	// Test state before TransferFreshPrizePoolCoinsToLocalZone
 	suite.Require().Equal(millionstypes.DrawState_IbcTransfer, draw.State)
 	suite.Require().Equal(millionstypes.DrawState_Unspecified, draw.ErrorState)
 
-	// Trigger TransferRewardsToLocalChain
-	_, err = app.MillionsKeeper.TransferRewardsToLocalChain(ctx, draw.PoolId, draw.DrawId)
+	// Trigger TransferFreshPrizePoolCoinsToLocalZone
+	_, err = app.MillionsKeeper.TransferFreshPrizePoolCoinsToLocalZone(ctx, draw.PoolId, draw.DrawId)
 	suite.Require().NoError(err)
 	draw, err = app.MillionsKeeper.GetPoolDraw(ctx, pools[1].PoolId, pools[1].NextDrawId)
 	suite.Require().NoError(err)
-	// Test state after TransferRewardsToLocalChain
+	// Test state after TransferFreshPrizePoolCoinsToLocalZone
 	suite.Require().Equal(millionstypes.DrawState_Success, draw.State)
 	suite.Require().Equal(millionstypes.DrawState_Unspecified, draw.ErrorState)
 }

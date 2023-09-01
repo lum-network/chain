@@ -160,6 +160,7 @@ Where proposal.json contains:
     "title": "Update my pool",
     "description": "This is my updated pool",
     "pool_id": 1,
+	"pool_type": 1,
     "validators": ["lumvaloper1wf6alkrpjn4zhcnag3afqz34mlanplzwx6v8qz"],
     "min_deposit_amount": "2000000",
     "draw_schedule": {

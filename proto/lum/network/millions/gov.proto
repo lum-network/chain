@@ -30,6 +30,7 @@ message ProposalRegisterPool {
   string bech32_prefix_acc_addr = 11;
   string bech32_prefix_val_addr = 12;
   string transfer_channel_id = 13;
+  PoolType pool_type = 14;
 }
 
 message ProposalUpdatePool {
