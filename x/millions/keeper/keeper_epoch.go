@@ -88,7 +88,7 @@ func (k Keeper) AddEpochUnbonding(ctx sdk.Context, withdrawal types.Withdrawal, 
 		return nil
 	}
 
-	// Get epoch unbonding entity for new withdrawals within the created epoch and poolID
+	// Get epoch unbonding entity for new withdrawals within the unbonding epoch and poolID
 	epochPoolUnbonding, err := k.GetEpochPoolUnbonding(ctx, nextEpochUnbonding, withdrawal.PoolId)
 	if err != nil {
 		return err
