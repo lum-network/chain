@@ -14,16 +14,31 @@ import (
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 
+// TestMsgServer_GenerateSeed run seed generation related tests
 func (suite *KeeperTestSuite) TestMsgServer_GenerateSeed() {
 	// Set the app context
 	app := suite.app
-	ctx := suite.ctx
-	goCtx := sdk.WrapSDKContext(ctx)
+	ctx := suite.ctx.WithBlockHeight(12).WithBlockTime(time.Now().UTC())
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 
-	response, err := msgServer.GenerateSeed(goCtx, &millionstypes.MsgGenerateSeed{})
+	// Generate a basic seed
+	response, err := msgServer.GenerateSeed(sdk.WrapSDKContext(ctx), &millionstypes.MsgGenerateSeed{})
 	suite.Require().NoError(err)
-	suite.Require().Greater(response.GetSeed(), int64(1))
+	suite.Require().NotNil(response.GetSeed())
+
+	// Asking for a second one should always return the same (at same height)
+	secondResponse, err := msgServer.GenerateSeed(sdk.WrapSDKContext(ctx), &millionstypes.MsgGenerateSeed{})
+	suite.Require().NoError(err)
+	suite.Require().NotNil(secondResponse.GetSeed())
+	suite.Require().Equal(response.GetSeed(), secondResponse.GetSeed())
+
+	// Asking for a third one should be different (at different height)
+	ctx = suite.ctx.WithBlockHeight(13).WithBlockTime(time.Now().UTC())
+	thirdResponse, err := msgServer.GenerateSeed(sdk.WrapSDKContext(ctx), &millionstypes.MsgGenerateSeed{})
+	suite.Require().NoError(err)
+	suite.Require().NotNil(thirdResponse.GetSeed())
+	suite.Require().NotEqual(thirdResponse.GetSeed(), response.GetSeed())
+	suite.Require().NotEqual(thirdResponse.GetSeed(), secondResponse.GetSeed())
 }
 
 // TestMsgServer_DrawRetry runs draw retry related tests
