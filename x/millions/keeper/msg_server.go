@@ -2,9 +2,11 @@ package keeper
 
 import (
 	"context"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/lum-network/chain/x/millions/types"
 	"strconv"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/lum-network/chain/x/millions/types"
 )
 
 type msgServer struct {
