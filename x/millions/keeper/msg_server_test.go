@@ -14,6 +14,18 @@ import (
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 
+func (suite *KeeperTestSuite) TestMsgServer_GenerateSeed() {
+	// Set the app context
+	app := suite.app
+	ctx := suite.ctx
+	goCtx := sdk.WrapSDKContext(ctx)
+	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
+
+	response, err := msgServer.GenerateSeed(goCtx, &millionstypes.MsgGenerateSeed{})
+	suite.Require().NoError(err)
+	suite.Require().Greater(response.GetSeed(), int64(1))
+}
+
 // TestMsgServer_DrawRetry runs draw retry related tests
 func (suite *KeeperTestSuite) TestMsgServer_DrawRetry() {
 	// Set the app context

@@ -40,6 +40,7 @@ var (
 	ErrPoolDrawNotDone                   = errorsmod.Register(ModuleName, 1301, "Cannot launch a new draw until the previous one is done")
 	ErrInvalidDrawState                  = errorsmod.Register(ModuleName, 1302, "Invalid draw state")
 	ErrInvalidDrawRetryAddress           = errorsmod.Register(ModuleName, 1303, "Invalid draw retry address")
+	ErrInvalidRequesterAddress           = errorsmod.Register(ModuleName, 1304, "Invalid requester address")
 	ErrPrizeNotFound                     = errorsmod.Register(ModuleName, 1400, "Prize not found")
 	ErrInvalidPrizeState                 = errorsmod.Register(ModuleName, 1401, "Prize is in an invalid state")
 	ErrInvalidPrizeAmount                = errorsmod.Register(ModuleName, 1402, "Prize amount cannot be less than 1")
