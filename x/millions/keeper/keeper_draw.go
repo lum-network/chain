@@ -468,6 +468,7 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*typ
 		),
 		sdk.NewEvent(
 			types.EventTypeDrawSuccess,
+			sdk.NewAttribute(types.AttributeSeed, strconv.FormatInt(draw.RandSeed, 10)),
 			sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(draw.PoolId, 10)),
 			sdk.NewAttribute(types.AttributeKeyDrawID, strconv.FormatUint(draw.DrawId, 10)),
 			sdk.NewAttribute(types.AttributeKeyPrizePool, draw.PrizePool.String()),
