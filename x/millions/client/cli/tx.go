@@ -472,9 +472,6 @@ func CmdTxRestoreInterchainAccounts() *cobra.Command {
 
 			// Build the message
 			msg := types.NewMsgRestoreInterchainAccounts(clientCtx.GetFromAddress().String(), poolId)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
 
 			// Generate the transaction
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
@@ -505,9 +502,6 @@ func CmdTxGenerateSeed() *cobra.Command {
 
 			// Build the message
 			msg := types.NewMsgGenerateSeed(clientCtx.GetFromAddress().String())
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
 
 			// Generate the transaction
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
