@@ -356,6 +356,24 @@ func (k Keeper) OnTransferFreshPrizePoolCoinsToLocalZoneCompleted(ctx sdk.Contex
 	return fDraw, nil
 }
 
+func (k Keeper) ComputeRandomSeed(ctx sdk.Context) int64 {
+	hashBytes := sha256.Sum256(append(ctx.BlockHeader().AppHash, []byte(strconv.Itoa(int(ctx.BlockTime().UnixNano())))...))
+	bytesToInt64 := func(bytes []byte) int64 {
+		var value int64
+		for i := 0; i < 8; i++ {
+			value = (value << 8) | int64(bytes[i])
+		}
+		for i := 8; i < 32; i++ {
+			value = (value << 8) | int64(bytes[i]&0x7F)
+			if bytes[i]&0x80 != 0 {
+				value = -value
+			}
+		}
+		return value
+	}
+	return bytesToInt64(hashBytes[:])
+}
+
 // ExecuteDraw completes the draw phases by effectively drawing prizes
 // This is the last phase of a Draw
 // WARNING: this method can eventually commit critical partial store updates if the caller does not return on error
@@ -375,21 +393,7 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*typ
 	}
 
 	// Generate draw random seed
-	hashBytes := sha256.Sum256(append(ctx.BlockHeader().AppHash, []byte(strconv.Itoa(int(ctx.BlockTime().UnixNano())))...))
-	bytesToInt64 := func(bytes []byte) int64 {
-		var value int64
-		for i := 0; i < 8; i++ {
-			value = (value << 8) | int64(bytes[i])
-		}
-		for i := 8; i < 32; i++ {
-			value = (value << 8) | int64(bytes[i]&0x7F)
-			if bytes[i]&0x80 != 0 {
-				value = -value
-			}
-		}
-		return value
-	}
-	draw.RandSeed = bytesToInt64(hashBytes[:])
+	draw.RandSeed = k.ComputeRandomSeed(ctx)
 
 	// Acquire TWB deposits
 	depositorsTWB := k.ComputeDepositsTWB(
@@ -464,6 +468,7 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*typ
 		),
 		sdk.NewEvent(
 			types.EventTypeDrawSuccess,
+			sdk.NewAttribute(types.AttributeSeed, strconv.FormatInt(draw.RandSeed, 10)),
 			sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(draw.PoolId, 10)),
 			sdk.NewAttribute(types.AttributeKeyDrawID, strconv.FormatUint(draw.DrawId, 10)),
 			sdk.NewAttribute(types.AttributeKeyPrizePool, draw.PrizePool.String()),
