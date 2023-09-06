@@ -9,11 +9,10 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
 	epochstypes "github.com/lum-network/chain/x/epochs/types"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
-
-	"github.com/lum-network/chain/app"
 )
 
 const testChainID = "lum-network-devnet-1"
@@ -96,6 +95,14 @@ func TriggerEpochUpdate(suite *KeeperTestSuite) (epochInfo epochstypes.EpochInfo
 	return epochsInfo, nil
 }
 
+func GetEpochInfo(suite *KeeperTestSuite) (epochInfo epochstypes.EpochInfo, err error) {
+	app := suite.app
+	ctx := suite.ctx
+	epochsInfo, _ := app.EpochsKeeper.GetEpochInfo(ctx, epochstypes.DAY_EPOCH)
+
+	return epochsInfo, nil
+}
+
 func TriggerEpochTrackerUpdate(suite *KeeperTestSuite, epochInfo epochstypes.EpochInfo) (epochTracker millionstypes.EpochTracker, err error) {
 	app := suite.app
 	ctx := suite.ctx
@@ -113,6 +120,9 @@ func floatToDec(v float64) sdk.Dec {
 func newValidPool(suite *KeeperTestSuite, pool millionstypes.Pool) *millionstypes.Pool {
 	params := suite.app.MillionsKeeper.GetParams(suite.ctx)
 
+	if pool.PoolType == millionstypes.PoolType_Unspecified {
+		pool.PoolType = millionstypes.PoolType_Staking
+	}
 	if pool.Denom == "" {
 		pool.Denom = suite.app.StakingKeeper.BondDenom(suite.ctx)
 	}
@@ -139,6 +149,12 @@ func newValidPool(suite *KeeperTestSuite, pool millionstypes.Pool) *millionstype
 	}
 	if pool.MinDepositAmount.IsNil() {
 		pool.MinDepositAmount = params.MinDepositAmount
+	}
+	if pool.UnbondingDuration == 0 {
+		pool.UnbondingDuration = millionstypes.DefaultUnbondingDuration
+	}
+	if pool.MaxUnbondingEntries.IsNil() {
+		pool.MaxUnbondingEntries = sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries)
 	}
 	if err := pool.DrawSchedule.ValidateBasic(params); err != nil {
 		pool.DrawSchedule = millionstypes.DrawSchedule{DrawDelta: 1 * time.Hour, InitialDrawAt: time.Now().UTC()}

@@ -68,25 +68,12 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types
 	}
 
 	// Move funds
-	if pool.IsLocalZone(ctx) {
-		// Directly send funds to the local deposit address in case of local pool
-		if err := k.BankKeeper.SendCoins(
-			ctx,
-			depositorAddr,
-			sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress()),
-			sdk.NewCoins(msg.Amount),
-		); err != nil {
-			return nil, err
-		}
-	} else {
-		if err := k.BankKeeper.SendCoins(
-			ctx,
-			depositorAddr,
-			sdk.MustAccAddressFromBech32(pool.GetLocalAddress()),
-			sdk.NewCoins(msg.Amount),
-		); err != nil {
-			return nil, err
-		}
+	poolRunner, err := k.GetPoolRunner(pool.PoolType)
+	if err != nil {
+		return nil, errorsmod.Wrapf(types.ErrInvalidPoolType, err.Error())
+	}
+	if err := poolRunner.SendDepositToPool(ctx, pool, deposit); err != nil {
+		return nil, err
 	}
 
 	// Store deposit
@@ -109,7 +96,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types
 		),
 	})
 
-	if err := k.TransferDepositToNativeChain(ctx, deposit.GetPoolId(), deposit.GetDepositId()); err != nil {
+	if err := k.TransferDepositToRemoteZone(ctx, deposit.GetPoolId(), deposit.GetDepositId()); err != nil {
 		return nil, err
 	}
 	return &types.MsgDepositResponse{DepositId: deposit.DepositId}, nil
@@ -151,13 +138,13 @@ func (k msgServer) DepositRetry(goCtx context.Context, msg *types.MsgDepositRetr
 	if deposit.ErrorState == types.DepositState_IbcTransfer {
 		newState = types.DepositState_IbcTransfer
 		k.UpdateDepositStatus(ctx, deposit.PoolId, deposit.DepositId, newState, false)
-		if err := k.TransferDepositToNativeChain(ctx, deposit.PoolId, deposit.DepositId); err != nil {
+		if err := k.TransferDepositToRemoteZone(ctx, deposit.PoolId, deposit.DepositId); err != nil {
 			return nil, err
 		}
 	} else if deposit.ErrorState == types.DepositState_IcaDelegate {
 		newState = types.DepositState_IcaDelegate
 		k.UpdateDepositStatus(ctx, deposit.PoolId, deposit.DepositId, newState, false)
-		if err := k.DelegateDepositOnNativeChain(ctx, deposit.PoolId, deposit.DepositId); err != nil {
+		if err := k.DelegateDepositOnRemoteZone(ctx, deposit.PoolId, deposit.DepositId); err != nil {
 			return nil, err
 		}
 	} else {

@@ -127,7 +127,7 @@ func (k msgServer) WithdrawDepositRetry(goCtx context.Context, msg *types.MsgWit
 	if withdrawal.ErrorState == types.WithdrawalState_IbcTransfer {
 		newState = types.WithdrawalState_IbcTransfer
 		k.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, newState, withdrawal.UnbondingEndsAt, false)
-		if err := k.TransferWithdrawalToDestAddr(ctx, withdrawal.PoolId, withdrawal.WithdrawalId); err != nil {
+		if err := k.TransferWithdrawalToRecipient(ctx, withdrawal.PoolId, withdrawal.WithdrawalId); err != nil {
 			return nil, err
 		}
 	} else {

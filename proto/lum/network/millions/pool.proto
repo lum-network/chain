@@ -2,6 +2,7 @@ syntax = "proto3";
 package lum.network.millions;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
@@ -32,6 +33,17 @@ enum PoolState {
   POOL_STATE_KILLED = 4 [ (gogoproto.enumvalue_customname) = "Killed" ];
 }
 
+// PoolType the type of Pool
+// Each PoolType implements a dedicated runner which applies its own Pool
+// Lifecycle in order to deliver yield and distribute prizes
+enum PoolType {
+  option (gogoproto.goproto_enum_prefix) = true;
+
+  POOL_TYPE_UNSPECIFIED = 0
+      [ (gogoproto.enumvalue_customname) = "Unspecified" ];
+  POOL_TYPE_STAKING = 1 [ (gogoproto.enumvalue_customname) = "Staking" ];
+}
+
 message Pool {
   uint64 pool_id = 1;
   string denom = 2;
@@ -41,7 +53,7 @@ message Pool {
   string transfer_channel_id = 6;
   string ica_deposit_port_id = 7;
   string ica_prizepool_port_id = 8;
-  reserved 9;
+  PoolType pool_type = 9;
 
   repeated PoolValidator validators = 10 [ (gogoproto.nullable) = false ];
   string bech32_prefix_acc_addr = 11;
@@ -53,8 +65,12 @@ message Pool {
   ];
   DrawSchedule draw_schedule = 14 [ (gogoproto.nullable) = false ];
   PrizeStrategy prize_strategy = 15 [ (gogoproto.nullable) = false ];
-  reserved 16;
-  reserved 17;
+  google.protobuf.Duration unbonding_duration = 16
+      [ (gogoproto.stdduration) = true, (gogoproto.nullable) = false ];
+  string max_unbonding_entries = 17 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
 
   string local_address = 18 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string ica_deposit_address = 19

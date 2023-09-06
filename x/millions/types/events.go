@@ -15,6 +15,7 @@ const (
 	EventTypeWithdrawDeposit      = "withdraw_deposit"
 	EventTypeWithdrawDepositRetry = "withdraw_deposit_retry"
 	EventTypeEpochUnbonding       = "epoch_unbonding"
+	EventTypeGenerateSeed         = "generate_seed"
 
 	AttributeKeyPoolID          = "pool_id"
 	AttributeKeyDrawID          = "draw_id"
@@ -31,4 +32,5 @@ const (
 	AttributeKeyTotalWinAmount  = "total_win_amount"
 	AttributeKeySponsor         = "sponsor"
 	AttributeKeyEpochID         = "epoch_id"
+	AttributeSeed               = "seed"
 )

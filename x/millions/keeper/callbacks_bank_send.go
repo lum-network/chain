@@ -48,10 +48,10 @@ func BankSendCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ack
 		k.Logger(ctx).Debug("Received timeout for a bank send to native packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
 		k.Logger(ctx).Debug("Received failure for a bank send to native packet")
-		return k.OnTransferWithdrawalToDestAddrCompleted(ctx, pool.PoolId, bankSendCallback.GetWithdrawalId(), true)
+		return k.OnTransferWithdrawalToRecipientCompleted(ctx, pool.PoolId, bankSendCallback.GetWithdrawalId(), true)
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
 		k.Logger(ctx).Debug("Received success for a bank send to native packet")
-		return k.OnTransferWithdrawalToDestAddrCompleted(ctx, pool.PoolId, bankSendCallback.GetWithdrawalId(), false)
+		return k.OnTransferWithdrawalToRecipientCompleted(ctx, pool.PoolId, bankSendCallback.GetWithdrawalId(), false)
 	}
 	return nil
 }

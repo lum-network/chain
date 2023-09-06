@@ -35,6 +35,7 @@ func GetTxCmd() *cobra.Command {
 		CmdTxWithdrawDepositRetry(),
 		CmdTxRestoreInterchainAccounts(),
 		CmdTxDepositEdit(),
+		CmdTxGenerateSeed(),
 	)
 	return cmd
 }
@@ -471,9 +472,36 @@ func CmdTxRestoreInterchainAccounts() *cobra.Command {
 
 			// Build the message
 			msg := types.NewMsgRestoreInterchainAccounts(clientCtx.GetFromAddress().String(), poolId)
-			if err := msg.ValidateBasic(); err != nil {
+
+			// Generate the transaction
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	_ = cmd.MarkFlagRequired(flags.FlagFrom)
+	return cmd
+}
+
+func CmdTxGenerateSeed() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "generate-seed",
+		Short: "Generate a consensus-based random seed and return it",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Acquire the client context
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
 				return err
 			}
+
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+			txf = txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			// Build the message
+			msg := types.NewMsgGenerateSeed(clientCtx.GetFromAddress().String())
 
 			// Generate the transaction
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)

@@ -87,7 +87,9 @@ Where proposal.json contains:
     },
     "bech32_prefix_acc_addr": "lum",
     "bech32_prefix_val_addr": "lumvaloper",
-    "transfer_channel_id": ""
+    "transfer_channel_id": "",
+	"unbonding_duration": "504h",
+	"max_unbonding_entries: "7"
 }
 `, version.AppName),
 		),
@@ -160,6 +162,7 @@ Where proposal.json contains:
     "title": "Update my pool",
     "description": "This is my updated pool",
     "pool_id": 1,
+	"pool_type": 1,
     "validators": ["lumvaloper1wf6alkrpjn4zhcnag3afqz34mlanplzwx6v8qz"],
     "min_deposit_amount": "2000000",
     "draw_schedule": {
@@ -173,7 +176,9 @@ Where proposal.json contains:
             "quantity": "100"
         }]
     },
-	"state": 3
+	"state": 3,
+	"unbonding_duration": "504h",
+	"max_unbonding_entries: "7"	
 }
 `, version.AppName),
 		),
