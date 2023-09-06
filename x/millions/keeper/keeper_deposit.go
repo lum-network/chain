@@ -329,6 +329,24 @@ func (k Keeper) hasPoolDeposit(ctx sdk.Context, address string, poolID uint64) b
 	return iterator.Valid()
 }
 
+// UnsafeUpdateAutoCompoundDeposits raw updates deposit's origin
+// It's heavily unsafe and should only be used by store migrations
+func (k Keeper) UnsafeUpdateAutoCompoundDeposits(ctx sdk.Context, deposit types.Deposit) (types.Deposit, error) {
+	// Acquire the deposit
+	deposit, err := k.GetPoolDeposit(ctx, deposit.PoolId, deposit.DepositId)
+	if err != nil {
+		return types.Deposit{}, err
+	}
+
+	deposit.DepositOrigin = types.DepositOrigin_Direct
+	// Update pool deposits
+	k.setPoolDeposit(ctx, &deposit)
+	// Update account deposits
+	k.setAccountDeposit(ctx, &deposit)
+
+	return deposit, nil
+}
+
 // ListPoolDeposits returns all deposits for a given poolID
 // Warning: expensive operation
 func (k Keeper) ListPoolDeposits(ctx sdk.Context, poolID uint64) (deposits []types.Deposit) {

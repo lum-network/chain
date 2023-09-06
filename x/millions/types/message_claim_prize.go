@@ -44,5 +44,9 @@ func (msg *MsgClaimPrize) ValidateBasic() error {
 		return ErrInvalidID
 	}
 
+	if !msg.GetIsAutoCompound() && msg.GetIsSponsor() {
+		return ErrInvalidAutoCompoundSponsorCombo
+	}
+
 	return nil
 }

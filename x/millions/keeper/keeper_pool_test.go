@@ -812,6 +812,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 		DepositorAddress: suite.addrs[0].String(),
 		WinnerAddress:    suite.addrs[0].String(),
 		Amount:           sdk.NewCoin("uatom", sdk.NewInt(111)),
+		DepositOrigin:    millionstypes.DepositOrigin_Direct,
 	}
 	app.MillionsKeeper.AddDeposit(ctx, &d1)
 	d2 := millionstypes.Deposit{
@@ -821,6 +822,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 		DepositorAddress: suite.addrs[1].String(),
 		WinnerAddress:    suite.addrs[1].String(),
 		Amount:           sdk.NewCoin("uatom", sdk.NewInt(222)),
+		DepositOrigin:    millionstypes.DepositOrigin_Direct,
 	}
 	app.MillionsKeeper.AddDeposit(ctx, &d2)
 	d3 := millionstypes.Deposit{
@@ -830,6 +832,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 		DepositorAddress: suite.addrs[2].String(),
 		WinnerAddress:    suite.addrs[2].String(),
 		Amount:           sdk.NewCoin("uatom", sdk.NewInt(333)),
+		DepositOrigin:    millionstypes.DepositOrigin_Direct,
 	}
 	app.MillionsKeeper.AddDeposit(ctx, &d3)
 
@@ -1164,6 +1167,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(5_000_000)),
 		DepositorAddress: suite.addrs[0].String(),
 		WinnerAddress:    suite.addrs[0].String(),
+		DepositOrigin:    millionstypes.DepositOrigin_Direct,
 	})
 	pool, err = app.MillionsKeeper.GetPool(ctx, 2)
 	suite.Require().NoError(err)

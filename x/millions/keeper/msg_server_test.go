@@ -481,6 +481,7 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 		State:            millionstypes.DepositState_Failure,
 		ErrorState:       millionstypes.DepositState_IbcTransfer,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+		DepositOrigin:    millionstypes.DepositOrigin_Direct,
 	})
 	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[0].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -540,6 +541,7 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 		State:            millionstypes.DepositState_Failure,
 		ErrorState:       millionstypes.DepositState_IcaDelegate,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+		DepositOrigin:    millionstypes.DepositOrigin_Direct,
 	})
 	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[1].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -563,6 +565,7 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 		State:            millionstypes.DepositState_Failure,
 		ErrorState:       millionstypes.DepositState_Unspecified,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+		DepositOrigin:    millionstypes.DepositOrigin_Direct,
 	})
 	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], suite.moduleAddrs[0], sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -611,6 +614,7 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositEdit() {
 		State:            millionstypes.DepositState_Success,
 		ErrorState:       millionstypes.DepositState_Unspecified,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+		DepositOrigin:    millionstypes.DepositOrigin_Direct,
 	})
 	err := app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[0].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -829,6 +833,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+			DepositOrigin:    millionstypes.DepositOrigin_Direct,
 		})
 		deposits := app.MillionsKeeper.ListAccountDeposits(ctx, suite.addrs[0])
 		err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[0].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
@@ -844,6 +849,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_Failure,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+		DepositOrigin:    millionstypes.DepositOrigin_Direct,
 	})
 	// List deposits
 	deposits := app.MillionsKeeper.ListAccountDeposits(ctx, suite.addrs[0])
@@ -974,6 +980,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_Success,
 		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
+		DepositOrigin:    millionstypes.DepositOrigin_Direct,
 	})
 	deposits = app.MillionsKeeper.ListAccountDeposits(ctx, suite.addrs[0])
 	err = app.BankKeeper.SendCoins(ctx, uatomAddresses[0], sdk.MustAccAddressFromBech32(pools[2].LocalAddress), sdk.Coins{sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000))})
@@ -1051,6 +1058,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_IbcTransfer,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+		DepositOrigin:    millionstypes.DepositOrigin_Direct,
 	})
 	err := app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -1186,6 +1194,20 @@ func (suite *KeeperTestSuite) TestMsgServer_ClaimPrize() {
 	})
 	app.MillionsKeeper.AddPool(ctx, pool)
 
+	_, err := app.MillionsKeeper.GetPool(ctx, poolID)
+	suite.Require().NoError(err)
+
+	// Add a deposit
+	app.MillionsKeeper.AddDeposit(ctx, &millionstypes.Deposit{
+		PoolId:           poolID,
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[0].String(),
+		State:            millionstypes.DepositState_Failure,
+		ErrorState:       millionstypes.DepositState_IbcTransfer,
+		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(500_000)),
+		DepositOrigin:    millionstypes.DepositOrigin_Direct,
+	})
+
 	// Create prizes at various stages
 	app.MillionsKeeper.AddPrize(ctx, millionstypes.Prize{
 		PoolId:        poolID,
@@ -1249,27 +1271,120 @@ func (suite *KeeperTestSuite) TestMsgServer_ClaimPrize() {
 	suite.Require().Error(err)
 	suite.Require().ErrorIs(err, millionstypes.ErrPrizeNotFound)
 
+	// Test claim autocompound without sponsorship
 	prizes = app.MillionsKeeper.ListPrizes(ctx)
+	addr := sdk.MustAccAddressFromBech32(prizes[0].WinnerAddress)
+	// Get the module balance before claimPrize
+	moduleBalanceBefore := app.BankKeeper.GetBalance(ctx, modAddr, pool.Denom)
+	suite.Require().Equal(sdk.NewCoin(localPoolDenom, sdk.NewInt(6_000_000)), moduleBalanceBefore)
+	// Get the balance before claimPrize
+	accountBalanceBefore := app.BankKeeper.GetBalance(ctx, addr, pool.Denom)
+	// Check pool tvl
+	p1, err := app.MillionsKeeper.GetPool(ctx, poolID)
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.NewInt(500_000), p1.TvlAmount)
+	suite.Require().Equal(sdk.NewInt(0), p1.SponsorshipAmount)
+	// claimPrize
+	_, err = msgServer.ClaimPrize(goCtx, &millionstypes.MsgClaimPrize{
+		PoolId:         prizes[0].PoolId,
+		DrawId:         prizes[0].DrawId,
+		PrizeId:        prizes[0].PrizeId,
+		WinnerAddress:  addr.String(),
+		IsAutoCompound: true,
+	})
+	suite.Require().NoError(err)
+	// Account balance should have not moved (as directly re-deposited)
+	accountBalance := app.BankKeeper.GetBalance(ctx, addr, pool.Denom)
+	suite.Require().True(accountBalanceBefore.Equal(accountBalance))
+	// The new moduleBalance should be less 1_000_000 which is the prize amount
+	expectedModuleBalance := moduleBalanceBefore.Sub(prizes[0].Amount)
+	moduleBalance := app.BankKeeper.GetBalance(ctx, modAddr, pool.Denom)
+	suite.Require().True(expectedModuleBalance.Equal(moduleBalance))
+	// There should be 2 prizes left
+	prizes = app.MillionsKeeper.ListPrizes(ctx)
+	suite.Require().Len(prizes, 2)
+	// There should be a new deposit
+	deposits := app.MillionsKeeper.ListDeposits(ctx)
+	suite.Require().Len(deposits, 2)
+	suite.Require().Equal(millionstypes.DepositOrigin_Autocompound, deposits[1].DepositOrigin)
+	suite.Require().Equal(millionstypes.DepositState_Success, deposits[1].State)
+	suite.Require().Equal(millionstypes.DepositState_Unspecified, deposits[1].ErrorState)
+	// Pool tvl should have increased by 1_000_000
+	p1, err = app.MillionsKeeper.GetPool(ctx, poolID)
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.NewInt(1_500_000), p1.TvlAmount)
+	suite.Require().Equal(sdk.NewInt(0), p1.SponsorshipAmount)
 
-	for _, prize := range prizes {
-		addr := sdk.MustAccAddressFromBech32(prize.WinnerAddress)
-		// Get the module balance before claimPrize
-		moduleBalanceBefore := app.BankKeeper.GetBalance(ctx, modAddr, pool.Denom)
-		// Get the balance before claimPrize
-		balanceBefore := app.BankKeeper.GetBalance(ctx, addr, pool.Denom)
-		// claimPrize
-		_, err = msgServer.ClaimPrize(goCtx, millionstypes.NewMsgMsgClaimPrize(addr.String(), prize.PoolId, prize.DrawId, prize.PrizeId))
-		suite.Require().NoError(err)
-		// Compare the new balance with the expected balance
-		balance := app.BankKeeper.GetBalance(ctx, addr, pool.Denom)
-		expectedBalance := balanceBefore.Add(prize.Amount)
-		suite.Require().True(expectedBalance.Equal(balance))
-		// Compare the new module balance with the expected module balance
-		expectedModuleBalance := moduleBalanceBefore.Sub(prize.Amount)
-		moduleBalance := app.BankKeeper.GetBalance(ctx, modAddr, pool.Denom)
-		suite.Require().True(expectedModuleBalance.Equal(moduleBalance))
-	}
-	// There should be no more prizes
+	// Test claim autocompound with sponsorship
+	prizes = app.MillionsKeeper.ListPrizes(ctx)
+	addr = sdk.MustAccAddressFromBech32(prizes[0].WinnerAddress)
+	// Get the module balance before claimPrize
+	moduleBalanceBefore = app.BankKeeper.GetBalance(ctx, modAddr, pool.Denom)
+	suite.Require().Equal(sdk.NewCoin(localPoolDenom, sdk.NewInt(5_000_000)), moduleBalanceBefore)
+	// Get the balance before claimPrize
+	accountBalanceBefore = app.BankKeeper.GetBalance(ctx, addr, pool.Denom)
+	// Check pool tvl
+	p1, err = app.MillionsKeeper.GetPool(ctx, poolID)
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.NewInt(1_500_000), p1.TvlAmount)
+	suite.Require().Equal(sdk.NewInt(0), p1.SponsorshipAmount)
+	// claimPrize
+	_, err = msgServer.ClaimPrize(goCtx, &millionstypes.MsgClaimPrize{
+		PoolId:         prizes[0].PoolId,
+		DrawId:         prizes[0].DrawId,
+		PrizeId:        prizes[0].PrizeId,
+		WinnerAddress:  addr.String(),
+		IsAutoCompound: true,
+		IsSponsor:      true,
+	})
+	suite.Require().NoError(err)
+	// Account balance should have not moved (as directly re-deposited)
+	accountBalance = app.BankKeeper.GetBalance(ctx, addr, pool.Denom)
+	suite.Require().True(accountBalanceBefore.Equal(accountBalance))
+	// The new moduleBalance should be less 2_000_000 which is the prize amount
+	expectedModuleBalance = moduleBalanceBefore.Sub(prizes[0].Amount)
+	moduleBalance = app.BankKeeper.GetBalance(ctx, modAddr, pool.Denom)
+	suite.Require().True(expectedModuleBalance.Equal(moduleBalance))
+	// There should be 1 prizes left
+	prizes = app.MillionsKeeper.ListPrizes(ctx)
+	suite.Require().Len(prizes, 1)
+	// There should be a new deposit
+	deposits = app.MillionsKeeper.ListDeposits(ctx)
+	suite.Require().Len(deposits, 3)
+	suite.Require().Equal(millionstypes.DepositOrigin_Autocompound, deposits[2].DepositOrigin)
+	suite.Require().Equal(millionstypes.DepositState_Success, deposits[2].State)
+	suite.Require().Equal(millionstypes.DepositState_Unspecified, deposits[2].ErrorState)
+	// Pool tvl should have increased by 2_000_000
+	p1, err = app.MillionsKeeper.GetPool(ctx, poolID)
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.NewInt(3_500_000), p1.TvlAmount)
+	suite.Require().Equal(sdk.NewInt(2_000_000), p1.SponsorshipAmount)
+
+	// Test last prize as normal claim
+	prizes = app.MillionsKeeper.ListPrizes(ctx)
+	suite.Require().Len(prizes, 1)
+	addr = sdk.MustAccAddressFromBech32(prizes[0].WinnerAddress)
+	// Get the module balance before claimPrize
+	moduleBalanceBefore = app.BankKeeper.GetBalance(ctx, modAddr, pool.Denom)
+	// Get the balance before claimPrize
+	accountBalanceBefore = app.BankKeeper.GetBalance(ctx, addr, pool.Denom)
+	// claimPrize
+	_, err = msgServer.ClaimPrize(goCtx, &millionstypes.MsgClaimPrize{
+		PoolId:        prizes[0].PoolId,
+		DrawId:        prizes[0].DrawId,
+		PrizeId:       prizes[0].PrizeId,
+		WinnerAddress: addr.String(),
+	})
+	suite.Require().NoError(err)
+	// Account balance should have increased by the prize amount as it's a simple claim
+	balance := app.BankKeeper.GetBalance(ctx, addr, pool.Denom)
+	expectedBalance := accountBalanceBefore.Add(prizes[0].Amount)
+	suite.Require().True(expectedBalance.Equal(balance))
+	// The new moduleBalance should be less 3_000_000 which is the prize amount
+	expectedModuleBalance = moduleBalanceBefore.Sub(prizes[0].Amount)
+	moduleBalance = app.BankKeeper.GetBalance(ctx, modAddr, pool.Denom)
+	suite.Require().True(expectedModuleBalance.Equal(moduleBalance))
+	// There should be no prize left
 	prizes = app.MillionsKeeper.ListPrizes(ctx)
 	suite.Require().Len(prizes, 0)
 }

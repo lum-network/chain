@@ -61,6 +61,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types
 		Amount:           msg.Amount,
 		WinnerAddress:    winnerAddress.String(),
 		IsSponsor:        msg.GetIsSponsor(),
+		DepositOrigin:    types.DepositOrigin_Direct,
 		CreatedAtHeight:  ctx.BlockHeight(),
 		UpdatedAtHeight:  ctx.BlockHeight(),
 		CreatedAt:        ctx.BlockTime(),
@@ -93,6 +94,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types
 			sdk.NewAttribute(types.AttributeKeyWinner, deposit.WinnerAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, deposit.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeySponsor, strconv.FormatBool(msg.IsSponsor)),
+			sdk.NewAttribute(types.AttributeKeyDepositOrigin, deposit.DepositOrigin.String()),
 		),
 	})
 
