@@ -3,29 +3,21 @@ package keeper
 import (
 	"fmt"
 
-	gogotypes "github.com/cosmos/gogoproto/types"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 
-	icacallbackstypes "github.com/lum-network/chain/x/icacallbacks/types"
 	"github.com/lum-network/chain/x/millions/types"
 )
 
-// TransferDepositToNativeChain Transfer a deposit to a native chain
-// - wait for the ICA callback to move to OnTransferDepositToNativeChainCompleted
-// - or go to OnTransferDepositToNativeChainCompleted directly if local zone
-func (k Keeper) TransferDepositToNativeChain(ctx sdk.Context, poolID uint64, depositID uint64) error {
-	logger := k.Logger(ctx).With("ctx", "deposit_transfer")
-
+// TransferDepositToRemoteZone Transfer a deposit to a remote zone
+// - wait for the ICA callback to move to OnTransferDepositToRemoteZoneCompleted
+// - or go to OnTransferDepositToRemoteZoneCompleted directly if local zone (no-op)
+func (k Keeper) TransferDepositToRemoteZone(ctx sdk.Context, poolID uint64, depositID uint64) error {
 	// Acquire pool config
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err
-	}
-	if pool.IsLocalZone(ctx) {
-		return k.OnTransferDepositToNativeChainCompleted(ctx, poolID, depositID, false)
 	}
 
 	// Acquire the deposit
@@ -37,54 +29,21 @@ func (k Keeper) TransferDepositToNativeChain(ctx sdk.Context, poolID uint64, dep
 		return errorsmod.Wrapf(types.ErrIllegalStateOperation, "state should be %s but is %s", types.DepositState_IbcTransfer.String(), deposit.State.String())
 	}
 
-	// Construct our callback
-	transferToNativeCallback := types.TransferToNativeCallback{
-		PoolId:    poolID,
-		DepositId: depositID,
-	}
-	marshalledCallbackData, err := k.MarshalTransferToNativeCallbackArgs(ctx, transferToNativeCallback)
-	if err != nil {
+	poolRunner := k.MustGetPoolRunner(pool.PoolType)
+	if err := poolRunner.TransferDepositToRemoteZone(ctx, pool, deposit); err != nil {
+		// Return with error (if any) here since it is the first operation and nothing needs to be saved to state
 		return err
 	}
-
-	// Request funds transfer
-	msg, msgResponse, err := k.TransferAmountFromPoolToNativeChain(ctx, poolID, deposit.GetAmount())
-	if err != nil {
-		// Return with error here since it is the first operation and nothing needs to be saved to state
-		logger.Error(
-			fmt.Sprintf("failed to dispatch IBC transfer: %v", err),
-			"pool_id", poolID,
-			"deposit_id", depositID,
-			"chain_id", pool.GetChainId(),
-			"sequence", msgResponse.GetSequence(),
-		)
-		return err
+	if pool.IsLocalZone(ctx) {
+		// Move instantly to next stage since local ops don't wait for callbacks
+		return k.OnTransferDepositToRemoteZoneCompleted(ctx, poolID, depositID, false)
 	}
-	logger.Debug(
-		"IBC transfer dispatched",
-		"pool_id", poolID,
-		"deposit_id", depositID,
-		"chain_id", pool.GetChainId(),
-		"sequence", msgResponse.GetSequence(),
-	)
-
-	// Store the callback data
-	callback := icacallbackstypes.CallbackData{
-		CallbackKey:  icacallbackstypes.PacketID(msg.SourcePort, msg.SourceChannel, msgResponse.GetSequence()),
-		PortId:       msg.SourcePort,
-		ChannelId:    msg.SourceChannel,
-		Sequence:     msgResponse.GetSequence(),
-		CallbackId:   ICACallbackID_TransferToNative,
-		CallbackArgs: marshalledCallbackData,
-	}
-	k.ICACallbacksKeeper.SetCallbackData(ctx, callback)
-
 	return nil
 }
 
-// OnTransferDepositToNativeChainCompleted Acknowledge the IBC transfer to the native chain response
-// then moves to DelegateDepositOnNativeChain in case of success
-func (k Keeper) OnTransferDepositToNativeChainCompleted(ctx sdk.Context, poolID uint64, depositID uint64, isError bool) error {
+// OnTransferDepositToRemoteZoneCompleted Acknowledge the IBC transfer to a remote zone response
+// then moves to DelegateDepositOnRemoteZone in case of success
+func (k Keeper) OnTransferDepositToRemoteZoneCompleted(ctx sdk.Context, poolID uint64, depositID uint64, isError bool) error {
 	// Acquire the deposit
 	deposit, err := k.GetPoolDeposit(ctx, poolID, depositID)
 	if err != nil {
@@ -102,15 +61,13 @@ func (k Keeper) OnTransferDepositToNativeChainCompleted(ctx sdk.Context, poolID 
 	}
 
 	k.UpdateDepositStatus(ctx, poolID, depositID, types.DepositState_IcaDelegate, false)
-	return k.DelegateDepositOnNativeChain(ctx, poolID, depositID)
+	return k.DelegateDepositOnRemoteZone(ctx, poolID, depositID)
 }
 
-// DelegateDepositOnNativeChain Delegates a deposit to the native chain validators
-// - wait for the ICA callback to move to OnDelegateDepositOnNativeChainCompleted
-// - or go to OnDelegateDepositOnNativeChainCompleted directly if local zone
-func (k Keeper) DelegateDepositOnNativeChain(ctx sdk.Context, poolID uint64, depositID uint64) error {
-	logger := k.Logger(ctx).With("ctx", "deposit_delegate")
-
+// DelegateDepositOnRemoteZone Delegates a deposit on the remote zone (put it to work)
+// - wait for the ICA callback to move to OnDelegateDepositOnRemoteZoneCompleted
+// - or go to OnDelegateDepositOnRemoteZoneCompleted directly if local zone
+func (k Keeper) DelegateDepositOnRemoteZone(ctx sdk.Context, poolID uint64, depositID uint64) error {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err
@@ -124,85 +81,22 @@ func (k Keeper) DelegateDepositOnNativeChain(ctx sdk.Context, poolID uint64, dep
 		return errorsmod.Wrapf(types.ErrIllegalStateOperation, "state should be %s but is %s", types.DepositState_IcaDelegate.String(), deposit.State.String())
 	}
 
-	// Prepare delegations split
-	splits := pool.ComputeSplitDelegations(ctx, deposit.GetAmount().Amount)
-	if len(splits) == 0 {
-		return types.ErrPoolEmptySplitDelegations
-	}
-
-	// If pool is local, we just process operation in place
-	// Otherwise we trigger IBC / ICA transactions
+	// Return with error (if any) here since it is the first operation and nothing needs to be saved to state
+	poolRunner := k.MustGetPoolRunner(pool.PoolType)
+	splits, err := poolRunner.DelegateDepositOnRemoteZone(ctx, pool, deposit)
 	if pool.IsLocalZone(ctx) {
-		for _, split := range splits {
-			valAddr, err := sdk.ValAddressFromBech32(split.ValidatorAddress)
-			if err != nil {
-				return err
-			}
-			validator, found := k.StakingKeeper.GetValidator(ctx, valAddr)
-			if !found {
-				return errorsmod.Wrapf(stakingtypes.ErrNoValidatorFound, "%s", valAddr.String())
-			}
-			if _, err := k.StakingKeeper.Delegate(
-				ctx,
-				sdk.MustAccAddressFromBech32(pool.GetIcaDepositAddress()),
-				split.Amount,
-				stakingtypes.Unbonded,
-				validator,
-				true,
-			); err != nil {
-				return errorsmod.Wrapf(err, "%s", valAddr.String())
-			}
-		}
-		return k.OnDelegateDepositOnNativeChainCompleted(ctx, poolID, depositID, splits, false)
+		// Always save state in case of local zone
+		// TODO: we should probably return and error here since it is atomic with the deposit transaction
+		return k.OnDelegateDepositOnRemoteZoneCompleted(ctx, poolID, depositID, splits, err != nil)
+	} else if err != nil {
+		// Only save state in case of error for remote zones (otherwise wait for the callback)
+		return k.OnDelegateDepositOnRemoteZoneCompleted(ctx, poolID, depositID, splits, true)
 	}
-
-	// Construct our callback data
-	callbackData := types.DelegateCallback{
-		PoolId:           poolID,
-		DepositId:        depositID,
-		SplitDelegations: splits,
-	}
-	marshalledCallbackData, err := k.MarshalDelegateCallbackArgs(ctx, callbackData)
-	if err != nil {
-		return err
-	}
-
-	// Build delegation tx
-	var msgs []sdk.Msg
-	for _, split := range splits {
-		msgs = append(msgs, &stakingtypes.MsgDelegate{
-			DelegatorAddress: pool.GetIcaDepositAddress(),
-			ValidatorAddress: split.ValidatorAddress,
-			Amount:           sdk.NewCoin(pool.NativeDenom, split.Amount),
-		})
-	}
-
-	// Dispatch our message with a timeout of 30 minutes in nanos
-	sequence, err := k.BroadcastICAMessages(ctx, poolID, types.ICATypeDeposit, msgs, types.IBCTimeoutNanos, ICACallbackID_Delegate, marshalledCallbackData)
-	if err != nil {
-		// Save error state since we cannot simply recover from a failure at this stage
-		// A subsequent call to DepositRetry will be made possible by setting an error state and not returning an error here
-		logger.Error(
-			fmt.Sprintf("failed to dispatch ICA delegation: %v", err),
-			"pool_id", poolID,
-			"deposit_id", depositID,
-			"chain_id", pool.GetChainId(),
-			"sequence", sequence,
-		)
-		return k.OnDelegateDepositOnNativeChainCompleted(ctx, poolID, depositID, splits, true)
-	}
-	logger.Debug(
-		"ICA delegation dispatched",
-		"pool_id", poolID,
-		"deposit_id", depositID,
-		"chain_id", pool.GetChainId(),
-		"sequence", sequence,
-	)
 	return nil
 }
 
-// OnDelegateDepositOnNativeChainCompleted Acknowledge the ICA delegate to the native chain validators response
-func (k Keeper) OnDelegateDepositOnNativeChainCompleted(ctx sdk.Context, poolID uint64, depositID uint64, splits []*types.SplitDelegation, isError bool) error {
+// OnDelegateDepositOnRemoteZoneCompleted Acknowledge the ICA operation to delegate a deposit on the remote zone (deposit has been put to work)
+func (k Keeper) OnDelegateDepositOnRemoteZoneCompleted(ctx sdk.Context, poolID uint64, depositID uint64, splits []*types.SplitDelegation, isError bool) error {
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err

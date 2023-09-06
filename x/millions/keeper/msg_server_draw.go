@@ -37,14 +37,14 @@ func (k msgServer) DrawRetry(goCtx context.Context, msg *types.MsgDrawRetry) (*t
 		)
 	}
 
-	// DrawState_IcaWithdrawRewards refers to the failed ica callback if OnClaimRewardsOnNativeChainCompleted fails
+	// DrawState_IcaWithdrawRewards refers to the failed ica callback if OnClaimYieldOnRemoteZoneCompleted fails
 	if draw.ErrorState == types.DrawState_IcaWithdrawRewards {
 		draw.UpdatedAtHeight = ctx.BlockHeight()
 		draw.UpdatedAt = ctx.BlockTime()
 		draw.State = types.DrawState_IcaWithdrawRewards
 		draw.ErrorState = types.DrawState_Unspecified
 		k.SetPoolDraw(ctx, draw)
-		if _, err := k.ClaimRewardsOnNativeChain(ctx, draw.PoolId, draw.DrawId); err != nil {
+		if _, err := k.ClaimYieldOnRemoteZone(ctx, draw.PoolId, draw.DrawId); err != nil {
 			return nil, err
 		}
 		// DrawState_IcqRewards refers to the failed icq callback
@@ -54,17 +54,17 @@ func (k msgServer) DrawRetry(goCtx context.Context, msg *types.MsgDrawRetry) (*t
 		draw.State = types.DrawState_IcqBalance
 		draw.ErrorState = types.DrawState_Unspecified
 		k.SetPoolDraw(ctx, draw)
-		if _, err := k.QueryBalance(ctx, draw.GetPoolId(), draw.GetDrawId()); err != nil {
+		if _, err := k.QueryFreshPrizePoolCoinsOnRemoteZone(ctx, draw.GetPoolId(), draw.GetDrawId()); err != nil {
 			return nil, err
 		}
-		// DrawState_IbcTransfer refers to the failed ibc call if OnTransferRewardsToLocalChainCompleted fails
+		// DrawState_IbcTransfer refers to the failed ibc call if OnTransferFreshPrizePoolCoinsToLocalZoneCompleted fails
 	} else if draw.ErrorState == types.DrawState_IbcTransfer {
 		draw.UpdatedAtHeight = ctx.BlockHeight()
 		draw.UpdatedAt = ctx.BlockTime()
 		draw.State = types.DrawState_IbcTransfer
 		draw.ErrorState = types.DrawState_Unspecified
 		k.SetPoolDraw(ctx, draw)
-		if _, err := k.TransferRewardsToLocalChain(ctx, draw.PoolId, draw.DrawId); err != nil {
+		if _, err := k.TransferFreshPrizePoolCoinsToLocalZone(ctx, draw.PoolId, draw.DrawId); err != nil {
 			return nil, err
 		}
 	} else if draw.ErrorState == types.DrawState_Drawing {

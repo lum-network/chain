@@ -14,6 +14,33 @@ import (
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 
+// TestMsgServer_GenerateSeed run seed generation related tests
+func (suite *KeeperTestSuite) TestMsgServer_GenerateSeed() {
+	// Set the app context
+	app := suite.app
+	ctx := suite.ctx.WithBlockHeight(12).WithBlockTime(time.Now().UTC())
+	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
+
+	// Generate a basic seed
+	response, err := msgServer.GenerateSeed(sdk.WrapSDKContext(ctx), &millionstypes.MsgGenerateSeed{})
+	suite.Require().NoError(err)
+	suite.Require().NotNil(response.GetSeed())
+
+	// Asking for a second one should always return the same (at same height)
+	secondResponse, err := msgServer.GenerateSeed(sdk.WrapSDKContext(ctx), &millionstypes.MsgGenerateSeed{})
+	suite.Require().NoError(err)
+	suite.Require().NotNil(secondResponse.GetSeed())
+	suite.Require().Equal(response.GetSeed(), secondResponse.GetSeed())
+
+	// Asking for a third one should be different (at different height)
+	ctx = suite.ctx.WithBlockHeight(13).WithBlockTime(time.Now().UTC())
+	thirdResponse, err := msgServer.GenerateSeed(sdk.WrapSDKContext(ctx), &millionstypes.MsgGenerateSeed{})
+	suite.Require().NoError(err)
+	suite.Require().NotNil(thirdResponse.GetSeed())
+	suite.Require().NotEqual(thirdResponse.GetSeed(), response.GetSeed())
+	suite.Require().NotEqual(thirdResponse.GetSeed(), secondResponse.GetSeed())
+}
+
 // TestMsgServer_DrawRetry runs draw retry related tests
 func (suite *KeeperTestSuite) TestMsgServer_DrawRetry() {
 	// Set the app context
@@ -286,6 +313,7 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit() {
 
 	// Register real pool and apply real deposits
 	poolID, err = app.MillionsKeeper.RegisterPool(ctx,
+		millionstypes.PoolType_Staking,
 		"ulum",
 		"ulum",
 		testChainID,
@@ -295,6 +323,8 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit() {
 		"lum",
 		"lumvaloper",
 		app.MillionsKeeper.GetParams(ctx).MinDepositAmount,
+		time.Duration(millionstypes.DefaultUnbondingDuration),
+		sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
 		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
 	)
@@ -404,6 +434,7 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 	denom := app.StakingKeeper.BondDenom(ctx)
 	// Initialize the pool
 	poolID, err := app.MillionsKeeper.RegisterPool(ctx,
+		millionstypes.PoolType_Staking,
 		denom,
 		denom,
 		testChainID,
@@ -413,6 +444,8 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 		"lum",
 		"lumvaloper",
 		app.MillionsKeeper.GetParams(ctx).MinDepositAmount,
+		time.Duration(millionstypes.DefaultUnbondingDuration),
+		sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
 		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
 	)
@@ -750,6 +783,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 
 	// Initialize the pool
 	poolID, err := app.MillionsKeeper.RegisterPool(ctx,
+		millionstypes.PoolType_Staking,
 		"ulum",
 		"ulum",
 		testChainID,
@@ -759,6 +793,8 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 		"lum",
 		"lumvaloper",
 		app.MillionsKeeper.GetParams(ctx).MinDepositAmount,
+		time.Duration(millionstypes.DefaultUnbondingDuration),
+		sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
 		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
 	)
@@ -798,7 +834,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 		err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[0].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 		suite.Require().NoError(err)
 		// Trigger the Transfer deposit to native chain
-		err = app.MillionsKeeper.TransferDepositToNativeChain(ctx, deposits[i].PoolId, deposits[i].DepositId)
+		err = app.MillionsKeeper.TransferDepositToRemoteZone(ctx, deposits[i].PoolId, deposits[i].DepositId)
 		suite.Require().NoError(err)
 	}
 	// Create deposit with failure state
@@ -977,10 +1013,15 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 	drawDelta1 := 1 * time.Hour
 	var now = time.Now().UTC()
-	epochInfo, err := TriggerEpochUpdate(suite)
-	suite.Require().NoError(err)
-	_, err = TriggerEpochTrackerUpdate(suite, epochInfo)
-	suite.Require().NoError(err)
+	// Assuming first epoch is 1, and nextEpochUnbonding is the 4th one
+	for epoch := int64(1); epoch <= 4; epoch++ {
+		epochInfo, err := TriggerEpochUpdate(suite)
+		suite.Require().NoError(err)
+		suite.Require().Equal(epoch, epochInfo.CurrentEpoch)
+
+		_, err = TriggerEpochTrackerUpdate(suite, epochInfo)
+		suite.Require().NoError(err)
+	}
 
 	pool := newValidPool(suite, millionstypes.Pool{
 		PoolId:      uint64(1),
@@ -1011,14 +1052,14 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 		State:            millionstypes.DepositState_IbcTransfer,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
 	})
-	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
+	err := app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
 	deposits := app.MillionsKeeper.ListDeposits(ctx)
 	// Simulate transfer deposit and delegate to native chain
-	err = app.MillionsKeeper.TransferDepositToNativeChain(ctx, deposits[0].PoolId, deposits[0].DepositId)
+	err = app.MillionsKeeper.TransferDepositToRemoteZone(ctx, deposits[0].PoolId, deposits[0].DepositId)
 	suite.Require().NoError(err)
 	deposits = app.MillionsKeeper.ListDeposits(ctx)
-	err = app.MillionsKeeper.DelegateDepositOnNativeChain(ctx, deposits[0].PoolId, deposits[0].DepositId)
+	err = app.MillionsKeeper.DelegateDepositOnRemoteZone(ctx, deposits[0].PoolId, deposits[0].DepositId)
 	suite.Require().Error(err)
 
 	deposits = app.MillionsKeeper.ListDeposits(ctx)

@@ -686,7 +686,7 @@ func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 	suite.Require().Len(deposits, 1)
 
 	// Simulate failed ackResponse AckResponseStatus_FAILURE
-	err = app.MillionsKeeper.OnTransferDepositToNativeChainCompleted(ctx, deposits[0].GetPoolId(), deposits[0].GetDepositId(), true)
+	err = app.MillionsKeeper.OnTransferDepositToRemoteZoneCompleted(ctx, deposits[0].GetPoolId(), deposits[0].GetDepositId(), true)
 	suite.Require().NoError(err)
 
 	// List deposits to get latest status
@@ -700,13 +700,13 @@ func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 	app.MillionsKeeper.UpdateDepositStatus(ctx, deposits[0].PoolId, deposits[0].DepositId, millionstypes.DepositState_IbcTransfer, false)
 
 	// Simulate succesful ackResponse AckResponseStatus_SUCCESS
-	err = app.MillionsKeeper.OnTransferDepositToNativeChainCompleted(ctx, deposits[0].GetPoolId(), deposits[0].GetDepositId(), false)
+	err = app.MillionsKeeper.OnTransferDepositToRemoteZoneCompleted(ctx, deposits[0].GetPoolId(), deposits[0].GetDepositId(), false)
 	suite.Require().NoError(err)
 
 	// List deposits to get latest state
 	deposits = app.MillionsKeeper.ListAccountDeposits(ctx, uatomAddresses[0])
 	suite.Require().Len(deposits, 1)
-	// The deposit will reached the sequence, err := k.BroadcastICAMessages an fail on OnDelegateDepositOnNativeChainCompleted as we don't BroadcastICAMessages in our test
+	// The deposit will reached the sequence, err := k.BroadcastICAMessages an fail on OnDelegateDepositOnRemoteZoneCompleted as we don't BroadcastICAMessages in our test
 	suite.Require().Equal(millionstypes.DepositState_Failure, deposits[0].State)
 	suite.Require().Equal(millionstypes.DepositState_IcaDelegate, deposits[0].ErrorState)
 
@@ -763,7 +763,7 @@ func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 	suite.Require().Equal(millionstypes.DepositState_Unspecified, deposit.ErrorState)
 
 	// Trigger the Transfer deposit to native chain
-	err = app.MillionsKeeper.TransferDepositToNativeChain(ctx, deposit.PoolId, deposit.DepositId)
+	err = app.MillionsKeeper.TransferDepositToRemoteZone(ctx, deposit.PoolId, deposit.DepositId)
 	suite.Require().NoError(err)
 	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, deposits[0].PoolId, deposits[0].DepositId)
 	suite.Require().NoError(err)
@@ -836,13 +836,13 @@ func (suite *KeeperTestSuite) TestDeposit_DelegateDeposit() {
 	suite.Require().Equal(millionstypes.DepositState_IcaDelegate, deposit.State)
 	suite.Require().Equal(millionstypes.DepositState_Unspecified, deposit.ErrorState)
 
-	// Simulate a failed DelegateDepositOnNativeChain
-	err = app.MillionsKeeper.DelegateDepositOnNativeChain(ctx, deposit.PoolId, deposit.DepositId)
+	// Simulate a failed DelegateDepositOnRemoteZone
+	err = app.MillionsKeeper.DelegateDepositOnRemoteZone(ctx, deposit.PoolId, deposit.DepositId)
 	suite.Require().NoError(err)
 
 	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, deposits[0].PoolId, deposits[0].DepositId)
 	suite.Require().NoError(err)
-	// The deposit will reached the sequence, err := k.BroadcastICAMessages and fail on OnDelegateDepositOnNativeChainCompleted as we don't BroadcastICAMessages in our test
+	// The deposit will reached the sequence, err := k.BroadcastICAMessages and fail on OnDelegateDepositOnRemoteZoneCompleted as we don't BroadcastICAMessages in our test
 	suite.Require().Equal(millionstypes.DepositState_Failure, deposit.State)
 	suite.Require().Equal(millionstypes.DepositState_IcaDelegate, deposit.ErrorState)
 
@@ -852,7 +852,7 @@ func (suite *KeeperTestSuite) TestDeposit_DelegateDeposit() {
 	splits := []*millionstypes.SplitDelegation{{ValidatorAddress: cosmosPoolValidator, Amount: sdk.NewInt(int64(1_000_000))}}
 
 	// Now trigger a successfull Delegation to simulate icacallbackstypes.AckResponseStatus_SUCCESS
-	err = app.MillionsKeeper.OnDelegateDepositOnNativeChainCompleted(ctx, deposit.PoolId, deposit.DepositId, splits, false)
+	err = app.MillionsKeeper.OnDelegateDepositOnRemoteZoneCompleted(ctx, deposit.PoolId, deposit.DepositId, splits, false)
 	suite.Require().NoError(err)
 	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, deposit.PoolId, deposit.DepositId)
 	suite.Require().NoError(err)
@@ -914,8 +914,8 @@ func (suite *KeeperTestSuite) TestDeposit_DelegateDeposit() {
 	suite.Require().Equal(millionstypes.DepositState_IcaDelegate, deposit.State)
 	suite.Require().Equal(millionstypes.DepositState_Unspecified, deposit.ErrorState)
 
-	// As it's local pool trigger a DelegateDepositOnNativeChain for the new deposit
-	err = app.MillionsKeeper.DelegateDepositOnNativeChain(ctx, deposit.PoolId, deposit.DepositId)
+	// As it's local pool trigger a DelegateDepositOnRemoteZone for the new deposit
+	err = app.MillionsKeeper.DelegateDepositOnRemoteZone(ctx, deposit.PoolId, deposit.DepositId)
 	suite.Require().NoError(err)
 
 	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, deposits[0].PoolId, deposits[0].DepositId)
@@ -1008,10 +1008,10 @@ func (suite *KeeperTestSuite) TestDeposit_BalanceDeposit() {
 	splits := []*millionstypes.SplitDelegation{{ValidatorAddress: cosmosPoolValidator, Amount: sdk.NewInt(int64(1_000_000))}}
 
 	// Now trigger a successfull Delegation to simulate icacallbackstypes.AckResponseStatus_SUCCESS
-	err = app.MillionsKeeper.OnDelegateDepositOnNativeChainCompleted(ctx, deposit.PoolId, deposit.DepositId, splits, false)
+	err = app.MillionsKeeper.OnDelegateDepositOnRemoteZoneCompleted(ctx, deposit.PoolId, deposit.DepositId, splits, false)
 	suite.Require().NoError(err)
 
-	// For remote pools we don't reach the success as k.BroadcastICAMessages fails on OnDelegateDepositOnNativeChainCompleted
+	// For remote pools we don't reach the success as k.BroadcastICAMessages fails on OnDelegateDepositOnRemoteZoneCompleted
 
 	// Balance should remain unchanged
 	balance = app.BankKeeper.GetBalance(ctx, uatomAddresses[0], "uatom")
@@ -1093,7 +1093,7 @@ func (suite *KeeperTestSuite) TestDeposit_BalanceDeposit() {
 	suite.Require().Equal(millionstypes.DepositState_IbcTransfer, deposit.State)
 	suite.Require().Equal(millionstypes.DepositState_Unspecified, deposit.ErrorState)
 
-	err = app.MillionsKeeper.OnTransferDepositToNativeChainCompleted(ctx, deposit.PoolId, deposit.DepositId, true)
+	err = app.MillionsKeeper.OnTransferDepositToRemoteZoneCompleted(ctx, deposit.PoolId, deposit.DepositId, true)
 	suite.Require().NoError(err)
 	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, deposits[0].PoolId, deposits[0].DepositId)
 	suite.Require().NoError(err)
@@ -1116,7 +1116,7 @@ func (suite *KeeperTestSuite) TestDeposit_BalanceDeposit() {
 	// Update the status to trigger successful DepositToNativeChain
 	app.MillionsKeeper.UpdateDepositStatus(ctx, deposit.PoolId, deposit.DepositId, millionstypes.DepositState_IbcTransfer, false)
 
-	err = app.MillionsKeeper.TransferDepositToNativeChain(ctx, deposit.PoolId, deposit.DepositId)
+	err = app.MillionsKeeper.TransferDepositToRemoteZone(ctx, deposit.PoolId, deposit.DepositId)
 	suite.Require().NoError(err)
 	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, deposits[0].PoolId, deposits[0].DepositId)
 	suite.Require().NoError(err)
@@ -1214,7 +1214,7 @@ func (suite *KeeperTestSuite) TestDeposit_FullDepositProcess() {
 	suite.Require().Equal(millionstypes.DepositState_IbcTransfer, deposit.State)
 	suite.Require().Equal(millionstypes.DepositState_Unspecified, deposit.ErrorState)
 
-	err = app.MillionsKeeper.TransferDepositToNativeChain(ctx, deposit.PoolId, deposit.DepositId)
+	err = app.MillionsKeeper.TransferDepositToRemoteZone(ctx, deposit.PoolId, deposit.DepositId)
 	suite.Require().NoError(err)
 	deposit, err = app.MillionsKeeper.GetPoolDeposit(ctx, deposits[0].PoolId, deposits[0].DepositId)
 	suite.Require().NoError(err)

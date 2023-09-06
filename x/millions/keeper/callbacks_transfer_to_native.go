@@ -45,10 +45,10 @@ func TransferToNativeCallback(k Keeper, ctx sdk.Context, packet channeltypes.Pac
 		k.Logger(ctx).Debug("Received timeout for a transfer to native packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
 		k.Logger(ctx).Debug("Received failure for a transfer to native packet")
-		return k.OnTransferDepositToNativeChainCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetDepositId(), true)
+		return k.OnTransferDepositToRemoteZoneCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetDepositId(), true)
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
 		k.Logger(ctx).Debug("Received success for a transfer to native packet.")
-		return k.OnTransferDepositToNativeChainCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetDepositId(), false)
+		return k.OnTransferDepositToRemoteZoneCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetDepositId(), false)
 	}
 	return nil
 }

@@ -39,6 +39,18 @@ Please also make sure to have a look to the [contributing guidelines](https://gi
 
 Information related to the Lum Network mainnet `lum-network-1` can be found in the [mainnet repository](https://github.com/lum-network/mainnet).
 
+### v.1.5.2 - 2023-08-04 - Block [#8688700](https://www.mintscan.io/lum/blocks/8688700)
+This upgrade is essential for implementing the Epoch module and introducing the Millions batched withdrawals feature. Additionally, it includes an upgrade to Cosmos SDK v0.47.4 for enhanced functionality and stability.
+[Upgrade guide here](https://github.com/lum-network/mainnet/blob/master/upgrades/v1.5.2/guide.md).
+
+### v.1.5.1 - 2023-07-24 - Block [#8527300](https://www.mintscan.io/lum/blocks/8527300)
+This upgrade fixes an issue introduced in the previous update and update Millions prize strategy.
+[Upgrade guide here](https://github.com/lum-network/mainnet/blob/master/upgrades/v1.5.1/guide.md).
+
+### v.1.5.0 - 2023-07-17 - Block [#8424000](https://www.mintscan.io/lum/blocks/8424000)
+This upgrade introduces numerous changes over the whole Lum Network codebase, along with specific Millions improvements.
+[Upgrade guide here](https://github.com/lum-network/mainnet/blob/master/upgrades/v1.5.0/guide.md).
+
 ### ~~v1.4.1~~ v1.4.2 - 2023-05-30 - Block [#7740000](https://www.mintscan.io/lum/blocks/7740000)
 Fix IBC Huckleberry vulnerability and pruning issues.
 

@@ -24,6 +24,7 @@ service Msg {
   rpc DrawRetry(MsgDrawRetry) returns (MsgDrawRetryResponse);
   rpc RestoreInterchainAccounts(MsgRestoreInterchainAccounts)
       returns (MsgRestoreInterchainAccountsResponse);
+  rpc GenerateSeed(MsgGenerateSeed) returns (MsgGenerateSeedResponse);
 }
 
 message MsgUpdateParams {
@@ -166,3 +167,10 @@ message MsgRestoreInterchainAccounts {
 }
 
 message MsgRestoreInterchainAccountsResponse {}
+
+message MsgGenerateSeed {
+  string requester_address = 1
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+message MsgGenerateSeedResponse { int64 seed = 1; }
