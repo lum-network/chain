@@ -95,6 +95,11 @@ func (k msgServer) ClaimPrize(goCtx context.Context, msg *types.MsgClaimPrize) (
 		// Store deposit
 		k.AddDeposit(ctx, &deposit)
 
+		// Transfer to appropriate zone
+		if err := k.TransferDepositToRemoteZone(ctx, deposit.GetPoolId(), deposit.GetDepositId()); err != nil {
+			return nil, err
+		}
+
 		// Emit event
 		ctx.EventManager().EmitEvents(sdk.Events{
 			sdk.NewEvent(
@@ -112,11 +117,6 @@ func (k msgServer) ClaimPrize(goCtx context.Context, msg *types.MsgClaimPrize) (
 				sdk.NewAttribute(types.AttributeKeyDepositOrigin, deposit.DepositOrigin.String()),
 			),
 		})
-
-		// Transfer to appropriate zone
-		if err := k.TransferDepositToRemoteZone(ctx, deposit.GetPoolId(), deposit.GetDepositId()); err != nil {
-			return nil, err
-		}
 
 		return nil, nil
 	}

@@ -36,7 +36,7 @@ var (
 	ErrInvalidDepositState               = errorsmod.Register(ModuleName, 1208, "Deposit is in an invalid state")
 	ErrInvalidPoolAccountAddress         = errorsmod.Register(ModuleName, 1209, "Invalid pool module account address")
 	ErrInvalidRestorerAddress            = errorsmod.Register(ModuleName, 1210, "Invalid restorer address")
-	ErrInvalidAutoCompoundSponsorCombo   = errorsmod.Register(ModuleName, 1211, "Only auto compound operations can sponsor a deposit")
+	ErrInvalidAutoCompoundSponsorCombo   = errorsmod.Register(ModuleName, 1211, "Only winners that auto compounds can sponsor a deposit through a claim process")
 	ErrInvalidDepositOriginState         = errorsmod.Register(ModuleName, 1212, "Deposit origin is in an invalid state")
 	ErrPoolDrawNotFound                  = errorsmod.Register(ModuleName, 1300, "Pool draw not found")
 	ErrPoolDrawNotDone                   = errorsmod.Register(ModuleName, 1301, "Cannot launch a new draw until the previous one is done")

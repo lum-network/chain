@@ -331,9 +331,9 @@ func (k Keeper) hasPoolDeposit(ctx sdk.Context, address string, poolID uint64) b
 
 // UnsafeUpdateAutoCompoundDeposits raw updates deposit's origin
 // It's heavily unsafe and should only be used by store migrations
-func (k Keeper) UnsafeUpdateAutoCompoundDeposits(ctx sdk.Context, deposit types.Deposit, depositOrigin types.DepositOrigin) (types.Deposit, error) {
+func (k Keeper) UnsafeUpdateAutoCompoundDeposits(ctx sdk.Context, poolID uint64, depositID uint64, depositOrigin types.DepositOrigin) (types.Deposit, error) {
 	// Acquire the deposit
-	deposit, err := k.GetPoolDeposit(ctx, deposit.PoolId, deposit.DepositId)
+	deposit, err := k.GetPoolDeposit(ctx, poolID, depositID)
 	if err != nil {
 		return types.Deposit{}, err
 	}
@@ -341,9 +341,8 @@ func (k Keeper) UnsafeUpdateAutoCompoundDeposits(ctx sdk.Context, deposit types.
 	deposit.DepositOrigin = depositOrigin
 	deposit.UpdatedAtHeight = ctx.BlockHeight()
 	deposit.UpdatedAt = ctx.BlockTime()
-	// Update pool deposits
+
 	k.setPoolDeposit(ctx, &deposit)
-	// Update account deposits
 	k.setAccountDeposit(ctx, &deposit)
 
 	return deposit, nil
