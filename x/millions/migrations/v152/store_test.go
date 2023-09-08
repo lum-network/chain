@@ -169,7 +169,7 @@ func (suite *StoreMigrationTestSuite) TestMigrateUndelegations() {
 			WinnerAddress:    suite.addrs[i].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin("ulum", sdk.NewInt(1_000_0)),
-			DepositOrigin:    millionstypes.DepositOrigin_Direct,
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 

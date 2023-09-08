@@ -31,7 +31,7 @@ func (suite *KeeperTestSuite) TestDeposit_IDsGeneration() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(1_000_000)),
-			DepositOrigin:    millionstypes.DepositOrigin_Direct,
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 		// Test that depositID is incremented
 		suite.Require().Equal(uint64(i+1), depositID)
@@ -44,7 +44,7 @@ func (suite *KeeperTestSuite) TestDeposit_IDsGeneration() {
 				WinnerAddress:    suite.addrs[0].String(),
 				State:            millionstypes.DepositState_IbcTransfer,
 				Amount:           sdk.NewCoin(denom, sdk.NewInt(1_000_000)),
-				DepositOrigin:    millionstypes.DepositOrigin_Direct,
+				Origin:           millionstypes.DepositOrigin_Direct,
 			})
 		}
 		suite.Require().Panics(panicF)
@@ -105,7 +105,7 @@ func (suite *KeeperTestSuite) TestDeposit_AddDeposit() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(1_000_000)),
-			DepositOrigin:    millionstypes.DepositOrigin_Direct,
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 
@@ -125,7 +125,7 @@ func (suite *KeeperTestSuite) TestDeposit_AddDeposit() {
 			WinnerAddress:    suite.addrs[1].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(1_000_000)),
-			DepositOrigin:    millionstypes.DepositOrigin_Direct,
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 	suite.Require().NotPanics(panicF)
@@ -138,7 +138,7 @@ func (suite *KeeperTestSuite) TestDeposit_AddDeposit() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(1_000_000)),
-			DepositOrigin:    millionstypes.DepositOrigin_Direct,
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 	suite.Require().Panics(panicF)
@@ -157,7 +157,7 @@ func (suite *KeeperTestSuite) TestDeposit_AddDeposit() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_Unspecified,
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(1_000_000)),
-			DepositOrigin:    millionstypes.DepositOrigin_Direct,
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 	suite.Require().Panics(panicF)
@@ -170,7 +170,7 @@ func (suite *KeeperTestSuite) TestDeposit_AddDeposit() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(1_000_000)),
-			DepositOrigin:    millionstypes.DepositOrigin_Direct,
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 	suite.Require().Panics(panicF)
@@ -183,7 +183,7 @@ func (suite *KeeperTestSuite) TestDeposit_AddDeposit() {
 			WinnerAddress:    "",
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(1_000_000)),
-			DepositOrigin:    millionstypes.DepositOrigin_Direct,
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 	suite.Require().Panics(panicF)
@@ -198,7 +198,7 @@ func (suite *KeeperTestSuite) TestDeposit_AddDeposit() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(1_000_000)),
-			DepositOrigin:    millionstypes.DepositOrigin_Direct,
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 	suite.Require().Panics(panicF)
@@ -307,7 +307,7 @@ func (suite *KeeperTestSuite) TestDeposit_RemoveDeposit() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(1_000_000)),
-			DepositOrigin:    millionstypes.DepositOrigin_Direct,
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 
@@ -322,7 +322,7 @@ func (suite *KeeperTestSuite) TestDeposit_RemoveDeposit() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(1_000_000)),
-			DepositOrigin:    millionstypes.DepositOrigin_Direct,
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 	suite.Require().NotPanics(panicF)
@@ -493,7 +493,7 @@ func (suite *KeeperTestSuite) TestDeposit_UpdateDepositStatus() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(1_000_000)),
-			DepositOrigin:    millionstypes.DepositOrigin_Direct,
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 
@@ -592,7 +592,7 @@ func (suite *KeeperTestSuite) TestDeposit_EditDeposit() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(denom, sdk.NewInt(1_000_000)),
-			DepositOrigin:    millionstypes.DepositOrigin_Direct,
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 
@@ -682,7 +682,7 @@ func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 		WinnerAddress:    uatomAddresses[0].String(),
 		State:            millionstypes.DepositState_IbcTransfer,
 		Amount:           sdk.NewCoin("uatom", sdk.NewInt(1_000_000)),
-		DepositOrigin:    millionstypes.DepositOrigin_Direct,
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err := app.BankKeeper.SendCoins(ctx, uatomAddresses[0], sdk.MustAccAddressFromBech32(pools[0].LocalAddress), sdk.Coins{sdk.NewCoin(pools[0].Denom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -762,7 +762,7 @@ func (suite *KeeperTestSuite) TestDeposit_TransferDeposit() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_IbcTransfer,
 		Amount:           sdk.NewCoin(denom, sdk.NewInt(1_000_000)),
-		DepositOrigin:    millionstypes.DepositOrigin_Direct,
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[1].IcaDepositAddress), sdk.Coins{sdk.NewCoin(pools[1].Denom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -837,7 +837,7 @@ func (suite *KeeperTestSuite) TestDeposit_DelegateDeposit() {
 		WinnerAddress:    uatomAddresses[0].String(),
 		State:            millionstypes.DepositState_IcaDelegate,
 		Amount:           sdk.NewCoin("uatom", sdk.NewInt(1_000_000)),
-		DepositOrigin:    millionstypes.DepositOrigin_Direct,
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err := app.BankKeeper.SendCoins(ctx, uatomAddresses[0], sdk.MustAccAddressFromBech32(pools[0].LocalAddress), sdk.Coins{sdk.NewCoin(pools[0].Denom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -913,7 +913,7 @@ func (suite *KeeperTestSuite) TestDeposit_DelegateDeposit() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_IcaDelegate,
 		Amount:           sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), sdk.NewInt(1_000_000)),
-		DepositOrigin:    millionstypes.DepositOrigin_Direct,
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[1].IcaDepositAddress), sdk.Coins{sdk.NewCoin(pools[1].Denom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -999,7 +999,7 @@ func (suite *KeeperTestSuite) TestDeposit_BalanceDeposit() {
 		WinnerAddress:    uatomAddresses[0].String(),
 		State:            millionstypes.DepositState_IbcTransfer,
 		Amount:           sdk.NewCoin("uatom", sdk.NewInt(1_000_000)),
-		DepositOrigin:    millionstypes.DepositOrigin_Direct,
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 
 	err := app.BankKeeper.SendCoins(ctx, uatomAddresses[0], sdk.MustAccAddressFromBech32(pools[0].LocalAddress), sdk.Coins{sdk.NewCoin(pools[0].Denom, sdk.NewInt(1_000_000))})
@@ -1086,7 +1086,7 @@ func (suite *KeeperTestSuite) TestDeposit_BalanceDeposit() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_IbcTransfer,
 		Amount:           sdk.NewCoin(denom, sdk.NewInt(2_000_000)),
-		DepositOrigin:    millionstypes.DepositOrigin_Direct,
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[1].IcaDepositAddress), sdk.Coins{sdk.NewCoin(pools[1].Denom, sdk.NewInt(2_000_000))})
 	suite.Require().NoError(err)
@@ -1207,7 +1207,7 @@ func (suite *KeeperTestSuite) TestDeposit_FullDepositProcess() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_IbcTransfer,
 		Amount:           sdk.NewCoin(denom, sdk.NewInt(1_000_000)),
-		DepositOrigin:    millionstypes.DepositOrigin_Direct,
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err := app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[0].IcaDepositAddress), sdk.Coins{sdk.NewCoin(pools[0].Denom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)

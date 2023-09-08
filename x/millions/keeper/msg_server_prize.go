@@ -4,7 +4,6 @@ import (
 	"context"
 	"strconv"
 
-	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/lum-network/chain/x/millions/types"
@@ -40,88 +39,7 @@ func (k msgServer) ClaimPrize(goCtx context.Context, msg *types.MsgClaimPrize) (
 		return nil, types.ErrPoolNotFound
 	}
 
-	if msg.IsAutoCompound {
-		// Move claim prize fund to winner address
-		if err := k.BankKeeper.SendCoins(
-			ctx,
-			sdk.MustAccAddressFromBech32(pool.GetLocalAddress()),
-			winnerAddr,
-			sdk.NewCoins(prize.Amount),
-		); err != nil {
-			return nil, err
-		}
-
-		// New deposit instance
-		deposit := types.Deposit{
-			PoolId:           pool.PoolId,
-			State:            types.DepositState_IbcTransfer,
-			DepositorAddress: winnerAddr.String(),
-			Amount:           prize.Amount,
-			WinnerAddress:    winnerAddr.String(),
-			IsSponsor:        msg.GetIsSponsor(),
-			DepositOrigin:    types.DepositOrigin_Autocompound,
-			CreatedAtHeight:  ctx.BlockHeight(),
-			UpdatedAtHeight:  ctx.BlockHeight(),
-			CreatedAt:        ctx.BlockTime(),
-			UpdatedAt:        ctx.BlockTime(),
-		}
-
-		// Remove prize entity
-		if err := k.RemovePrize(ctx, prize); err != nil {
-			return nil, err
-		}
-
-		// Check pool state before being able to deposit
-		if pool.State != types.PoolState_Ready && pool.State != types.PoolState_Paused {
-			return nil, errorsmod.Wrapf(
-				types.ErrInvalidPoolState, "cannot deposit in pool during state %s", pool.State.String(),
-			)
-		}
-
-		// Double check if deposit denom issued from prize is suitable for pool
-		if deposit.Amount.Denom != pool.Denom {
-			return nil, types.ErrInvalidDepositDenom
-		}
-
-		// Move funds to pool
-		poolRunner, err := k.GetPoolRunner(pool.PoolType)
-		if err != nil {
-			return nil, errorsmod.Wrapf(types.ErrInvalidPoolType, err.Error())
-		}
-		if err := poolRunner.SendDepositToPool(ctx, pool, deposit); err != nil {
-			return nil, err
-		}
-
-		// Store deposit
-		k.AddDeposit(ctx, &deposit)
-
-		// Transfer to appropriate zone
-		if err := k.TransferDepositToRemoteZone(ctx, deposit.GetPoolId(), deposit.GetDepositId()); err != nil {
-			return nil, err
-		}
-
-		// Emit event
-		ctx.EventManager().EmitEvents(sdk.Events{
-			sdk.NewEvent(
-				sdk.EventTypeMessage,
-				sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			),
-			sdk.NewEvent(
-				types.EventTypeDeposit,
-				sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(deposit.PoolId, 10)),
-				sdk.NewAttribute(types.AttributeKeyDepositID, strconv.FormatUint(deposit.DepositId, 10)),
-				sdk.NewAttribute(types.AttributeKeyDepositor, deposit.DepositorAddress),
-				sdk.NewAttribute(types.AttributeKeyWinner, deposit.WinnerAddress),
-				sdk.NewAttribute(sdk.AttributeKeyAmount, deposit.Amount.String()),
-				sdk.NewAttribute(types.AttributeKeySponsor, strconv.FormatBool(msg.IsSponsor)),
-				sdk.NewAttribute(types.AttributeKeyDepositOrigin, deposit.DepositOrigin.String()),
-			),
-		})
-
-		return nil, nil
-	}
-
-	// Move funds for a simple claim
+	// Move funds to winner address
 	if err := k.BankKeeper.SendCoins(
 		ctx,
 		sdk.MustAccAddressFromBech32(pool.GetLocalAddress()),
@@ -133,6 +51,22 @@ func (k msgServer) ClaimPrize(goCtx context.Context, msg *types.MsgClaimPrize) (
 
 	if err := k.RemovePrize(ctx, prize); err != nil {
 		return nil, err
+	}
+
+	if msg.IsAutoCompound {
+		// Construct the deposit msg
+		msg := types.MsgDeposit{
+			PoolId:           pool.PoolId,
+			Amount:           prize.Amount,
+			DepositorAddress: winnerAddr.String(),
+			WinnerAddress:    winnerAddr.String(),
+			IsSponsor:        msg.GetIsSponsor(),
+		}
+
+		// Check internal validation before creating a deposit
+		if _, err := k.CreateDeposit(ctx, &msg, types.DepositOrigin_Autocompound); err != nil {
+			return nil, err
+		}
 	}
 
 	// Emit event
@@ -148,6 +82,7 @@ func (k msgServer) ClaimPrize(goCtx context.Context, msg *types.MsgClaimPrize) (
 			sdk.NewAttribute(types.AttributeKeyPrizeID, strconv.FormatUint(prize.PrizeId, 10)),
 			sdk.NewAttribute(types.AttributeKeyWinner, prize.WinnerAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, prize.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyAutoCompound, strconv.FormatBool(msg.IsAutoCompound)),
 		),
 	})
 

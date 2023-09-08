@@ -481,7 +481,7 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 		State:            millionstypes.DepositState_Failure,
 		ErrorState:       millionstypes.DepositState_IbcTransfer,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
-		DepositOrigin:    millionstypes.DepositOrigin_Direct,
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[0].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -541,7 +541,7 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 		State:            millionstypes.DepositState_Failure,
 		ErrorState:       millionstypes.DepositState_IcaDelegate,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
-		DepositOrigin:    millionstypes.DepositOrigin_Direct,
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[1].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -565,7 +565,7 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 		State:            millionstypes.DepositState_Failure,
 		ErrorState:       millionstypes.DepositState_Unspecified,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
-		DepositOrigin:    millionstypes.DepositOrigin_Direct,
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], suite.moduleAddrs[0], sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -614,7 +614,7 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositEdit() {
 		State:            millionstypes.DepositState_Success,
 		ErrorState:       millionstypes.DepositState_Unspecified,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
-		DepositOrigin:    millionstypes.DepositOrigin_Direct,
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err := app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[0].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -833,7 +833,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
-			DepositOrigin:    millionstypes.DepositOrigin_Direct,
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 		deposits := app.MillionsKeeper.ListAccountDeposits(ctx, suite.addrs[0])
 		err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[0].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
@@ -849,7 +849,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_Failure,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
-		DepositOrigin:    millionstypes.DepositOrigin_Direct,
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	// List deposits
 	deposits := app.MillionsKeeper.ListAccountDeposits(ctx, suite.addrs[0])
@@ -980,7 +980,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_Success,
 		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
-		DepositOrigin:    millionstypes.DepositOrigin_Direct,
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	deposits = app.MillionsKeeper.ListAccountDeposits(ctx, suite.addrs[0])
 	err = app.BankKeeper.SendCoins(ctx, uatomAddresses[0], sdk.MustAccAddressFromBech32(pools[2].LocalAddress), sdk.Coins{sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000))})
@@ -1058,7 +1058,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_IbcTransfer,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
-		DepositOrigin:    millionstypes.DepositOrigin_Direct,
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err := app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -1205,7 +1205,7 @@ func (suite *KeeperTestSuite) TestMsgServer_ClaimPrize() {
 		State:            millionstypes.DepositState_Failure,
 		ErrorState:       millionstypes.DepositState_IbcTransfer,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(500_000)),
-		DepositOrigin:    millionstypes.DepositOrigin_Direct,
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 
 	// Create prizes at various stages
@@ -1306,7 +1306,7 @@ func (suite *KeeperTestSuite) TestMsgServer_ClaimPrize() {
 	// There should be a new deposit
 	deposits := app.MillionsKeeper.ListDeposits(ctx)
 	suite.Require().Len(deposits, 2)
-	suite.Require().Equal(millionstypes.DepositOrigin_Autocompound, deposits[1].DepositOrigin)
+	suite.Require().Equal(millionstypes.DepositOrigin_Autocompound, deposits[1].Origin)
 	suite.Require().Equal(millionstypes.DepositState_Success, deposits[1].State)
 	suite.Require().Equal(millionstypes.DepositState_Unspecified, deposits[1].ErrorState)
 	// Pool tvl should have increased by 1_000_000
@@ -1351,7 +1351,7 @@ func (suite *KeeperTestSuite) TestMsgServer_ClaimPrize() {
 	// There should be a new deposit
 	deposits = app.MillionsKeeper.ListDeposits(ctx)
 	suite.Require().Len(deposits, 3)
-	suite.Require().Equal(millionstypes.DepositOrigin_Autocompound, deposits[2].DepositOrigin)
+	suite.Require().Equal(millionstypes.DepositOrigin_Autocompound, deposits[2].Origin)
 	suite.Require().Equal(millionstypes.DepositState_Success, deposits[2].State)
 	suite.Require().Equal(millionstypes.DepositState_Unspecified, deposits[2].ErrorState)
 	// Pool tvl should have increased by 2_000_000

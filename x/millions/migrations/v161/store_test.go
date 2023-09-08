@@ -169,7 +169,7 @@ func (suite *StoreMigrationTestSuite) TestMigrateAutoCompoundDeposits() {
 			WinnerAddress:    suite.addrs[i].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin("ulum", sdk.NewInt(1_000_0)),
-			DepositOrigin:    millionstypes.DepositOrigin_Autocompound,
+			Origin:           millionstypes.DepositOrigin_Autocompound,
 		})
 	}
 
@@ -179,7 +179,7 @@ func (suite *StoreMigrationTestSuite) TestMigrateAutoCompoundDeposits() {
 
 	deposits := suite.app.MillionsKeeper.ListDeposits(suite.ctx)
 	for _, d := range deposits {
-		suite.Require().Equal(millionstypes.DepositOrigin_Direct, d.DepositOrigin)
+		suite.Require().Equal(millionstypes.DepositOrigin_Direct, d.Origin)
 	}
 
 }
