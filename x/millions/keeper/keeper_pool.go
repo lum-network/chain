@@ -628,7 +628,7 @@ func (k Keeper) UnsafeUpdatePoolPortIds(ctx sdk.Context, poolID uint64, icaDepos
 	return pool, nil
 }
 
-// UnsafeUpdatePoolUnbondingFrequency raw updates the UnbondingDuration and mexUnbonding entries
+// UnsafeUpdatePoolUnbondingFrequencyAndType raw updates the UnbondingDuration, mexUnbonding and pool type entries
 // Unsafe and should only be used for store migration
 func (k Keeper) UnsafeUpdatePoolUnbondingFrequencyAndType(ctx sdk.Context, poolID uint64, UnbondingDuration time.Duration, maxUnbondingEntries math.Int, poolType types.PoolType) (types.Pool, error) {
 	// Grab our pool instance
@@ -640,6 +640,7 @@ func (k Keeper) UnsafeUpdatePoolUnbondingFrequencyAndType(ctx sdk.Context, poolI
 	// Patch and update our pool entity
 	pool.UnbondingDuration = UnbondingDuration
 	pool.MaxUnbondingEntries = maxUnbondingEntries
+	pool.PoolType = poolType
 	k.updatePool(ctx, &pool)
 
 	return pool, nil
