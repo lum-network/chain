@@ -47,7 +47,7 @@ func (pool *Pool) ValidateBasic(params Params) error {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, "min deposit denom must be gte %d", params.MinDepositAmount.Int64())
 	}
 	if pool.UnbondingDuration < MinUnbondingDuration {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unbonding duration cannot be lower than %s", MinUnbondingDuration)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unbonding duration cannot be lower than %s (is %s)", MinUnbondingDuration, pool.UnbondingDuration.String())
 	}
 	if pool.MaxUnbondingEntries.IsNegative() || pool.MaxUnbondingEntries.GT(sdk.NewInt(DefaultMaxUnbondingEntries)) {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "Unbonding entries cannot be negative or greated than %d", DefaultMaxUnbondingEntries)
