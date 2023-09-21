@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"fmt"
-	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
 	"strconv"
 	"time"
+
+	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
 
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"

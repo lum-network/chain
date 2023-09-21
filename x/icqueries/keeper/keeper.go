@@ -1,8 +1,13 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+	"net/url"
+	"sort"
+	"strings"
+	"time"
+
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -15,10 +20,6 @@ import (
 	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	ics23 "github.com/cosmos/ics23/go"
 	"github.com/spf13/cast"
-	"net/url"
-	"sort"
-	"strings"
-	"time"
 
 	"github.com/lum-network/chain/x/icqueries/types"
 )

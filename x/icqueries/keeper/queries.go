@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"fmt"
-	ibcconnectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
 	"strings"
 	"time"
+
+	ibcconnectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
