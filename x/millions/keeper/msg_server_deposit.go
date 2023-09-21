@@ -15,90 +15,12 @@ import (
 func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types.MsgDepositResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Get the pool to validate id and denom
-	pool, err := k.GetPool(ctx, msg.GetPoolId())
+	// Check internal validation before creating a deposit
+	deposit, err := k.CreateDeposit(ctx, msg, types.DepositOrigin_Direct)
 	if err != nil {
-		return nil, types.ErrPoolNotFound
-	}
-
-	if pool.State != types.PoolState_Ready && pool.State != types.PoolState_Paused {
-		return nil, errorsmod.Wrapf(
-			types.ErrInvalidPoolState, "cannot deposit in pool during state %s", pool.State.String(),
-		)
-	}
-
-	depositorAddr, err := sdk.AccAddressFromBech32(msg.GetDepositorAddress())
-	if err != nil {
-		return nil, types.ErrInvalidDepositorAddress
-	}
-
-	if msg.Amount.Denom != pool.Denom {
-		return nil, types.ErrInvalidDepositDenom
-	}
-
-	// Make sure the deposit is sufficient
-	if msg.GetAmount().Amount.LT(pool.MinDepositAmount) {
-		return nil, types.ErrInsufficientDepositAmount
-	}
-
-	winnerAddress := depositorAddr
-	if strings.TrimSpace(msg.GetWinnerAddress()) != "" {
-		winnerAddress, err = sdk.AccAddressFromBech32(msg.GetWinnerAddress())
-		if err != nil {
-			return nil, types.ErrInvalidWinnerAddress
-		}
-	}
-
-	if !depositorAddr.Equals(winnerAddress) && msg.GetIsSponsor() {
-		return nil, types.ErrInvalidSponsorWinnerCombo
-	}
-
-	// New deposit instance
-	deposit := types.Deposit{
-		PoolId:           pool.PoolId,
-		State:            types.DepositState_IbcTransfer,
-		DepositorAddress: depositorAddr.String(),
-		Amount:           msg.Amount,
-		WinnerAddress:    winnerAddress.String(),
-		IsSponsor:        msg.GetIsSponsor(),
-		CreatedAtHeight:  ctx.BlockHeight(),
-		UpdatedAtHeight:  ctx.BlockHeight(),
-		CreatedAt:        ctx.BlockTime(),
-		UpdatedAt:        ctx.BlockTime(),
-	}
-
-	// Move funds
-	poolRunner, err := k.GetPoolRunner(pool.PoolType)
-	if err != nil {
-		return nil, errorsmod.Wrapf(types.ErrInvalidPoolType, err.Error())
-	}
-	if err := poolRunner.SendDepositToPool(ctx, pool, deposit); err != nil {
 		return nil, err
 	}
 
-	// Store deposit
-	k.AddDeposit(ctx, &deposit)
-
-	// Emit event
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		),
-		sdk.NewEvent(
-			types.EventTypeDeposit,
-			sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(deposit.PoolId, 10)),
-			sdk.NewAttribute(types.AttributeKeyDepositID, strconv.FormatUint(deposit.DepositId, 10)),
-			sdk.NewAttribute(types.AttributeKeyDepositor, deposit.DepositorAddress),
-			sdk.NewAttribute(types.AttributeKeyWinner, deposit.WinnerAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, deposit.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeySponsor, strconv.FormatBool(msg.IsSponsor)),
-		),
-	})
-
-	if err := k.TransferDepositToRemoteZone(ctx, deposit.GetPoolId(), deposit.GetDepositId()); err != nil {
-		return nil, err
-	}
 	return &types.MsgDepositResponse{DepositId: deposit.DepositId}, nil
 }
 

@@ -65,6 +65,7 @@ func (suite *KeeperTestSuite) TestEpoch_BeforeEpochStartHook() {
 			WinnerAddress:    suite.addrs[i].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_0)),
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 
@@ -204,6 +205,7 @@ func (suite *KeeperTestSuite) TestEpoch_AddEpochUnbonding() {
 			WinnerAddress:    suite.addrs[i].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_0)),
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 
@@ -257,6 +259,7 @@ func (suite *KeeperTestSuite) TestEpoch_AddEpochUnbonding() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_0)),
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 
@@ -342,6 +345,7 @@ func (suite *KeeperTestSuite) TestEpoch_AddWithdrawalsToNextAvailableEpoch() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000)),
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 
@@ -421,6 +425,7 @@ func (suite *KeeperTestSuite) TestEpoch_AddWithdrawalsToNextAvailableEpoch() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000)),
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 
@@ -510,6 +515,7 @@ func (suite *KeeperTestSuite) TestEpoch_AddFailedIcaUndelegationsToEpochUnbondin
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000)),
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 	deposits := app.MillionsKeeper.ListDeposits(ctx)
@@ -605,6 +611,7 @@ func (suite *KeeperTestSuite) TestEpoch_RemoveEpochUnbonding() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_IbcTransfer,
 			Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000)),
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 	deposits := app.MillionsKeeper.ListDeposits(ctx)

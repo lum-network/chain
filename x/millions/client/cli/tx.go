@@ -238,14 +238,20 @@ $ %s tx %s deposit-edit <pool_id> <deposit_id> --winner_address=<address> --spon
 
 func CmdTxClaimPrize() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "claim-prize <pool_id> <draw_id> <prize_id>",
+		Use:   "claim-prize <pool_id> <draw_id> <prize_id> [autocompound] [sponsor]",
 		Short: "Claim a millions prize",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Claim a millions prize to send the funds to the prize winner address.
 
 Example:
-$ %s tx %s claim-prize <pool_id> <draw_id> <prize_id>`,
-				version.AppName, types.ModuleName),
+$ %s tx %s claim-prize <pool_id> <draw_id> <prize_id>
+
+To claim a prize and auto compound it (create a new deposit with the prize amount)
+$ %s tx %s claim-prize <pool_id> <draw_id> <prize_id> --autocompound=true
+
+To claim a prize and create a sponsorship from the auto compound deposit (no drawing chances at all)
+$ %s tx %s claim-prize <pool_id> <draw_id> <prize_id> --autocompound=true --sponsor=true`,
+				version.AppName, types.ModuleName, version.AppName, types.ModuleName, version.AppName, types.ModuleName),
 		),
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -275,13 +281,27 @@ $ %s tx %s claim-prize <pool_id> <draw_id> <prize_id>`,
 				return err
 			}
 
+			isAutoCompound, err := cmd.Flags().GetBool("autocompound")
+			if err != nil {
+				return err
+			}
+
+			isSponsor, err := cmd.Flags().GetBool("sponsor")
+			if err != nil {
+				return err
+			}
+
 			// Build the message
 			msg := types.NewMsgMsgClaimPrize(clientCtx.GetFromAddress().String(), poolID, drawID, prizeID)
+			msg.IsAutoCompound = isAutoCompound
+			msg.IsSponsor = isSponsor
 
 			// Generate the transaction
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
 	}
+	cmd.Flags().Bool("autocompound", false, "(optional) creates a new auto compound deposit with the prize amount")
+	cmd.Flags().Bool("sponsor", false, "(optional) active sponsor mode for the new auto compound deposit")
 	flags.AddTxFlagsToCmd(cmd)
 	_ = cmd.MarkFlagRequired(flags.FlagFrom)
 	return cmd

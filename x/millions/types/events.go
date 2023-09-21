@@ -33,4 +33,6 @@ const (
 	AttributeKeySponsor         = "sponsor"
 	AttributeKeyEpochID         = "epoch_id"
 	AttributeSeed               = "seed"
+	AttributeKeyOrigin          = "origin"
+	AttributeKeyAutoCompound    = "auto_compound"
 )

@@ -17,6 +17,9 @@ func (deposit *Deposit) ValidateBasic() error {
 	if deposit.State == DepositState_Unspecified {
 		return errorsmod.Wrapf(ErrInvalidDepositState, "no state specified")
 	}
+	if deposit.Origin == DepositOrigin_Unspecified {
+		return errorsmod.Wrapf(ErrInvalidDepositOriginState, "no state specified")
+	}
 	if _, err := sdk.AccAddressFromBech32(deposit.DepositorAddress); err != nil {
 		return errorsmod.Wrapf(ErrInvalidDepositorAddress, err.Error())
 	}

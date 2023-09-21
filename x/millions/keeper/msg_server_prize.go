@@ -39,7 +39,7 @@ func (k msgServer) ClaimPrize(goCtx context.Context, msg *types.MsgClaimPrize) (
 		return nil, types.ErrPoolNotFound
 	}
 
-	// Move funds
+	// Move funds to winner address
 	if err := k.BankKeeper.SendCoins(
 		ctx,
 		sdk.MustAccAddressFromBech32(pool.GetLocalAddress()),
@@ -51,6 +51,22 @@ func (k msgServer) ClaimPrize(goCtx context.Context, msg *types.MsgClaimPrize) (
 
 	if err := k.RemovePrize(ctx, prize); err != nil {
 		return nil, err
+	}
+
+	if msg.IsAutoCompound {
+		// Construct the deposit msg
+		msg := types.MsgDeposit{
+			PoolId:           pool.PoolId,
+			Amount:           prize.Amount,
+			DepositorAddress: winnerAddr.String(),
+			WinnerAddress:    winnerAddr.String(),
+			IsSponsor:        msg.GetIsSponsor(),
+		}
+
+		// Check internal validation before creating a deposit
+		if _, err := k.CreateDeposit(ctx, &msg, types.DepositOrigin_Autocompound); err != nil {
+			return nil, err
+		}
 	}
 
 	// Emit event
@@ -66,6 +82,7 @@ func (k msgServer) ClaimPrize(goCtx context.Context, msg *types.MsgClaimPrize) (
 			sdk.NewAttribute(types.AttributeKeyPrizeID, strconv.FormatUint(prize.PrizeId, 10)),
 			sdk.NewAttribute(types.AttributeKeyWinner, prize.WinnerAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, prize.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyAutoCompound, strconv.FormatBool(msg.IsAutoCompound)),
 		),
 	})
 

@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -213,6 +215,101 @@ func (k Keeper) AddDeposit(ctx sdk.Context, deposit *types.Deposit) {
 	k.updatePool(ctx, &pool)
 }
 
+// CreateDeposit creates a deposit from the transaction message
+// Holds the internal validation logic
+func (k Keeper) CreateDeposit(ctx sdk.Context, msg *types.MsgDeposit, depositOrigin types.DepositOrigin) (*types.Deposit, error) {
+	// Get the pool to validate id and denom
+	pool, err := k.GetPool(ctx, msg.GetPoolId())
+	if err != nil {
+		return nil, types.ErrPoolNotFound
+	}
+
+	if pool.State != types.PoolState_Ready && pool.State != types.PoolState_Paused {
+		return nil, errorsmod.Wrapf(
+			types.ErrInvalidPoolState, "cannot deposit in pool during state %s", pool.State.String(),
+		)
+	}
+
+	depositorAddr, err := sdk.AccAddressFromBech32(msg.GetDepositorAddress())
+	if err != nil {
+		return nil, types.ErrInvalidDepositorAddress
+	}
+
+	if msg.Amount.Denom != pool.Denom {
+		return nil, types.ErrInvalidDepositDenom
+	}
+
+	// Make sure the deposit is sufficient for direct deposits
+	if depositOrigin == types.DepositOrigin_Direct {
+		if msg.GetAmount().Amount.LT(pool.MinDepositAmount) {
+			return nil, types.ErrInsufficientDepositAmount
+		}
+	}
+
+	winnerAddress := depositorAddr
+	if strings.TrimSpace(msg.GetWinnerAddress()) != "" {
+		winnerAddress, err = sdk.AccAddressFromBech32(msg.GetWinnerAddress())
+		if err != nil {
+			return nil, types.ErrInvalidWinnerAddress
+		}
+	}
+
+	if !depositorAddr.Equals(winnerAddress) && msg.GetIsSponsor() {
+		return nil, types.ErrInvalidSponsorWinnerCombo
+	}
+
+	// New deposit instance
+	deposit := types.Deposit{
+		PoolId:           pool.PoolId,
+		State:            types.DepositState_IbcTransfer,
+		DepositorAddress: depositorAddr.String(),
+		Amount:           msg.Amount,
+		WinnerAddress:    winnerAddress.String(),
+		IsSponsor:        msg.GetIsSponsor(),
+		Origin:           depositOrigin,
+		CreatedAtHeight:  ctx.BlockHeight(),
+		UpdatedAtHeight:  ctx.BlockHeight(),
+		CreatedAt:        ctx.BlockTime(),
+		UpdatedAt:        ctx.BlockTime(),
+	}
+
+	// Move funds
+	poolRunner, err := k.GetPoolRunner(pool.PoolType)
+	if err != nil {
+		return nil, errorsmod.Wrapf(types.ErrInvalidPoolType, err.Error())
+	}
+	if err := poolRunner.SendDepositToPool(ctx, pool, deposit); err != nil {
+		return nil, err
+	}
+
+	// Store deposit
+	k.AddDeposit(ctx, &deposit)
+
+	if err := k.TransferDepositToRemoteZone(ctx, deposit.GetPoolId(), deposit.GetDepositId()); err != nil {
+		return nil, err
+	}
+
+	// Emit event
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+		sdk.NewEvent(
+			types.EventTypeDeposit,
+			sdk.NewAttribute(types.AttributeKeyPoolID, strconv.FormatUint(deposit.DepositId, 10)),
+			sdk.NewAttribute(types.AttributeKeyDepositID, strconv.FormatUint(deposit.DepositId, 10)),
+			sdk.NewAttribute(types.AttributeKeyDepositor, deposit.GetDepositorAddress()),
+			sdk.NewAttribute(types.AttributeKeyWinner, deposit.GetWinnerAddress()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, deposit.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeySponsor, strconv.FormatBool(deposit.IsSponsor)),
+			sdk.NewAttribute(types.AttributeKeyOrigin, deposit.Origin.String()),
+		),
+	})
+
+	return &deposit, nil
+}
+
 // RemoveDeposit removes a deposit from a pool
 // - removes it from the {pool_id, deposit_id}
 // - removes it from the {address, pool_id, deposit_id} deposits
@@ -327,6 +424,25 @@ func (k Keeper) hasPoolDeposit(ctx sdk.Context, address string, poolID uint64) b
 
 	defer iterator.Close()
 	return iterator.Valid()
+}
+
+// UnsafeUpdateAutoCompoundDeposits raw updates deposit's origin
+// It's heavily unsafe and should only be used by store migrations
+func (k Keeper) UnsafeUpdateAutoCompoundDeposits(ctx sdk.Context, poolID uint64, depositID uint64, depositOrigin types.DepositOrigin) (types.Deposit, error) {
+	// Acquire the deposit
+	deposit, err := k.GetPoolDeposit(ctx, poolID, depositID)
+	if err != nil {
+		return types.Deposit{}, err
+	}
+
+	deposit.Origin = depositOrigin
+	deposit.UpdatedAtHeight = ctx.BlockHeight()
+	deposit.UpdatedAt = ctx.BlockTime()
+
+	k.setPoolDeposit(ctx, &deposit)
+	k.setAccountDeposit(ctx, &deposit)
+
+	return deposit, nil
 }
 
 // ListPoolDeposits returns all deposits for a given poolID

@@ -111,6 +111,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_AddWithdrawal() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_Success,
 			Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 
@@ -141,6 +142,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_AddWithdrawal() {
 			WinnerAddress:    suite.addrs[0].String(),
 			State:            millionstypes.DepositState_Success,
 			Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+			Origin:           millionstypes.DepositOrigin_Direct,
 		})
 	}
 
@@ -169,6 +171,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_AddWithdrawal() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_Success,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	withdrawals = app.MillionsKeeper.ListWithdrawals(ctx)
 	suite.Require().Len(withdrawals, 5)
@@ -584,6 +587,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawals() {
 		WinnerAddress:    uatomAddresses[0].String(),
 		State:            millionstypes.DepositState_IcaDelegate,
 		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 
 	err := app.BankKeeper.SendCoins(ctx, uatomAddresses[0], sdk.MustAccAddressFromBech32(pools[0].LocalAddress), sdk.Coins{sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000))})
@@ -622,6 +626,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawals() {
 		WinnerAddress:    uatomAddresses[0].String(),
 		State:            millionstypes.DepositState_Success,
 		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 
 	withdrawals = app.MillionsKeeper.ListWithdrawals(ctx)
@@ -709,6 +714,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawals() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_IbcTransfer,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[1].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -746,6 +752,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawals() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_Success,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	// There should be ne more deposits
 	deposits = app.MillionsKeeper.ListAccountDeposits(ctx, suite.addrs[0])
@@ -832,6 +839,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 		WinnerAddress:    uatomAddresses[0].String(),
 		State:            millionstypes.DepositState_Success,
 		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err := app.BankKeeper.SendCoins(ctx, uatomAddresses[0], sdk.MustAccAddressFromBech32(pools[0].LocalAddress), sdk.Coins{sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -863,6 +871,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 		WinnerAddress:    uatomAddresses[0].String(),
 		State:            millionstypes.DepositState_Success,
 		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 
 	deposits = app.MillionsKeeper.ListAccountDeposits(ctx, uatomAddresses[0])
@@ -930,6 +939,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_Success,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[1].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -960,6 +970,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_TransferWithdrawal() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_Success,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 
 	// There should be no more deposits
@@ -1029,6 +1040,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_BankSend() {
 		WinnerAddress:    uatomAddresses[0].String(),
 		State:            millionstypes.DepositState_Success,
 		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err := app.BankKeeper.SendCoins(ctx, uatomAddresses[0], sdk.MustAccAddressFromBech32(pools[0].LocalAddress), sdk.Coins{sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -1060,6 +1072,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_BankSend() {
 		WinnerAddress:    uatomAddresses[0].String(),
 		State:            millionstypes.DepositState_Success,
 		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 
 	deposits = app.MillionsKeeper.ListAccountDeposits(ctx, uatomAddresses[0])
@@ -1144,6 +1157,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_ProcessWithdrawal() {
 		WinnerAddress:    uatomAddresses[0].String(),
 		State:            millionstypes.DepositState_Success,
 		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err := app.BankKeeper.SendCoins(ctx, uatomAddresses[0], sdk.MustAccAddressFromBech32(pools[0].LocalAddress), sdk.Coins{sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -1175,6 +1189,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_ProcessWithdrawal() {
 		WinnerAddress:    uatomAddresses[0].String(),
 		State:            millionstypes.DepositState_Success,
 		Amount:           sdk.NewCoin(remotePoolDenom, sdk.NewInt(1_000_000)),
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 
 	deposits = app.MillionsKeeper.ListAccountDeposits(ctx, uatomAddresses[0])
@@ -1229,6 +1244,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_ProcessWithdrawal() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_Success,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pools[1].IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)
@@ -1259,6 +1275,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_ProcessWithdrawal() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_Success,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 
 	// There should be no more deposits
@@ -1386,6 +1403,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_BalanceWithdrawal() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_IbcTransfer,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	// Send coin
 	err := app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
@@ -1404,6 +1422,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_BalanceWithdrawal() {
 		WinnerAddress:    suite.addrs[0].String(),
 		State:            millionstypes.DepositState_IbcTransfer,
 		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000)),
+		Origin:           millionstypes.DepositOrigin_Direct,
 	})
 	err = app.BankKeeper.SendCoins(ctx, suite.addrs[0], sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), sdk.Coins{sdk.NewCoin(localPoolDenom, sdk.NewInt(1_000_000))})
 	suite.Require().NoError(err)

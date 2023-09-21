@@ -127,6 +127,8 @@ message MsgClaimPrize {
   uint64 draw_id = 2;
   uint64 prize_id = 3;
   string winner_address = 4 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  bool is_auto_compound = 5;
+  bool is_sponsor = 6;
 }
 
 message MsgClaimPrizeResponse {}
