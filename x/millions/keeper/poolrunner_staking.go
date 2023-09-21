@@ -374,7 +374,7 @@ func (runner *PoolRunnerStaking) QueryFreshPrizePoolCoinsOnRemoteZone(ctx sdk.Co
 		extraID,
 		icqueriestypes.BANK_STORE_QUERY_WITH_PROOF,
 		queryData,
-		icqueriestypes.TimeoutPolicy_REJECT_QUERY_RESPONSE,
+		icqueriestypes.TimeoutPolicy_EXECUTE_QUERY_CALLBACK,
 		types.IBCTimeoutNanos,
 	)
 	if err != nil {

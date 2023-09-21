@@ -182,7 +182,6 @@ func (k Keeper) HandleQueryTimeout(ctx sdk.Context, msg *types.MsgSubmitQueryRes
 	switch query.TimeoutPolicy {
 	case types.TimeoutPolicy_REJECT_QUERY_RESPONSE:
 		k.Logger(ctx).Info(fmt.Sprintf("Rejecting query %s", query.GetId()))
-		k.InvokeCallback(ctx, msg, query, types.QueryResponseStatus_FAILURE)
 		return nil
 
 	case types.TimeoutPolicy_RETRY_QUERY_REQUEST:
