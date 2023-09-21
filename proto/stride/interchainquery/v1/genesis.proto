@@ -3,8 +3,15 @@ package stride.interchainquery.v1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "github.com/lum-network/chain/x/icqueries/types";
+
+enum TimeoutPolicy {
+  REJECT_QUERY_RESPONSE = 0;
+  RETRY_QUERY_REQUEST = 1;
+  EXECUTE_QUERY_CALLBACK = 2;
+}
 
 message Query {
   string id = 1;
@@ -12,10 +19,15 @@ message Query {
   string chain_id = 3;
   string query_type = 4;
   bytes request = 5;
+  string callback_module_name = 7;
   string callback_id = 8;
-  uint64 ttl = 9;
+  uint64 timeout_timestamp = 9;
   bool request_sent = 11;
   string extra_id = 12;
+  TimeoutPolicy timeout_policy = 13;
+  google.protobuf.Duration timeout_duration = 14
+      [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
+  uint64 submission_height = 15;
 }
 
 message DataPoint {

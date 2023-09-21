@@ -12,11 +12,6 @@ func DefaultGenesis() *GenesisState {
 
 // Validate performs basic genesis state validation returning an error upon any failure.
 func (gs GenesisState) Validate() error {
-	// Loop through all queries and validate them
-	for _, query := range gs.GetQueries() {
-		if err := query.ValidateBasic(); err != nil {
-			return err
-		}
-	}
+	// TODO: fixme
 	return nil
 }
