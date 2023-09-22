@@ -2,11 +2,12 @@ package keeper
 
 import (
 	"fmt"
-	ibcconnectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
 	"net/url"
 	"sort"
 	"strings"
 	"time"
+
+	ibcconnectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/libs/log"
