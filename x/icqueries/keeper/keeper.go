@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	ibcconnectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
 	"net/url"
 	"sort"
 	"strings"
@@ -59,8 +60,19 @@ func (k *Keeper) MakeRequest(ctx sdk.Context, module string, callbackId string, 
 	// Compute our timestamp ttl
 	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano() + timeoutDuration.Nanoseconds())
 
+	// Set the submission height on the Query to the latest light client height
+	// In the query response, this will be used to verify that the query wasn't historical
+	connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, connectionId)
+	if !found {
+		return errorsmod.Wrapf(ibcconnectiontypes.ErrConnectionNotFound, connectionId)
+	}
+	clientState, found := k.IBCKeeper.ClientKeeper.GetClientState(ctx, connection.ClientId)
+	if !found {
+		return errorsmod.Wrapf(clienttypes.ErrClientNotFound, connection.ClientId)
+	}
+
 	// Construct our query payload and validate it
-	query := k.NewQuery(ctx, module, callbackId, chainId, connectionId, extraId, queryType, request, timeoutTimestamp, timeoutPolicy, timeoutDuration, uint64(ctx.BlockHeight()))
+	query := k.NewQuery(ctx, module, callbackId, chainId, connectionId, extraId, queryType, request, timeoutTimestamp, timeoutPolicy, timeoutDuration, clientState.GetLatestHeight().GetRevisionHeight())
 	if err := k.ValidateQuery(ctx, query); err != nil {
 		return err
 	}
