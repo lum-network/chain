@@ -39,8 +39,6 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 	if err != nil {
 		k.Logger(ctx).Error(fmt.Sprintf("QUERY PROOF VERIFICATION FAILED - QueryId: %s, Error: %s", query.Id, err.Error()))
 
-		// Delete the query and invoke the callback
-		k.DeleteQuery(ctx, query.GetId())
 		if err = k.InvokeCallback(ctx, msg, query, types.QueryResponseStatus_FAILURE); err != nil {
 			return nil, err
 		}
