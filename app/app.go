@@ -897,23 +897,8 @@ func (app *App) registerUpgradeHandlers() {
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
 
-	app.UpgradeKeeper.SetUpgradeHandler("v1.6.1", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		app.Logger().Info("Starting v1.6.1 upgrade")
-		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
-	})
-
-	app.UpgradeKeeper.SetUpgradeHandler("v1.6.2", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		app.Logger().Info("Starting v1.6.2 upgrade")
-
-		_, err := app.MillionsKeeper.OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted(ctx, 2, 1471, sdk.NewCoins(), true)
-		if err != nil {
-			return nil, err
-		}
-		_, err = app.MillionsKeeper.OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted(ctx, 3, 1471, sdk.NewCoins(), true)
-		if err != nil {
-			return nil, err
-		}
-
+	app.UpgradeKeeper.SetUpgradeHandler("v1.6.3", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		app.Logger().Info("Starting v1.6.3 upgrade")
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
 
@@ -999,17 +984,7 @@ func (app *App) registerUpgradeHandlers() {
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
 
-	if upgradeInfo.Name == "v1.6.0" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := storetypes.StoreUpgrades{}
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
-	}
-
-	if upgradeInfo.Name == "v1.6.1" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := storetypes.StoreUpgrades{}
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
-	}
-
-	if upgradeInfo.Name == "v1.6.2" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	if upgradeInfo.Name == "v1.6.3" && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{}
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
