@@ -1,4 +1,4 @@
-package v160_test
+package v161_test
 
 import (
 	"testing"
@@ -14,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	apptypes "github.com/lum-network/chain/app"
-	v160 "github.com/lum-network/chain/x/millions/migrations/v160"
+	v160 "github.com/lum-network/chain/x/millions/migrations/v161"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 
