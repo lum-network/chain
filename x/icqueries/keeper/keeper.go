@@ -121,7 +121,7 @@ func (k Keeper) VerifyKeyProof(ctx sdk.Context, msg *types.MsgSubmitQueryRespons
 	height := clienttypes.NewHeight(clienttypes.ParseChainID(query.ChainId), proofHeight+1)
 
 	// Confirm the query proof height occurred after the submission height
-	if proofHeight <= query.SubmissionHeight {
+	if proofHeight < query.SubmissionHeight {
 		return errorsmod.Wrapf(types.ErrInvalidICQProof, "Query proof height (%d) is older than the submission height (%d)", proofHeight, query.SubmissionHeight)
 	}
 
