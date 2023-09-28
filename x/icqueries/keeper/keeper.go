@@ -199,6 +199,12 @@ func (k Keeper) HandleQueryTimeout(ctx sdk.Context, msg *types.MsgSubmitQueryRes
 }
 
 func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryResponse, query types.Query, status types.QueryResponseStatus) error {
+	// Extract the result payload
+	var result []byte
+	if msg != nil {
+		result = msg.Result
+	}
+
 	// get all the callback handlers and sort them for determinism
 	// (each module has their own callback handler)
 	moduleNames := []string{}
@@ -213,7 +219,7 @@ func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryRespons
 
 		// Once the callback is found, invoke the function
 		if moduleCallbackHandler.HasICQCallback(query.CallbackId) {
-			return moduleCallbackHandler.CallICQCallback(ctx, query.CallbackId, msg.Result, query, status)
+			return moduleCallbackHandler.CallICQCallback(ctx, query.CallbackId, result, query, status)
 		}
 	}
 
