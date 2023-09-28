@@ -79,7 +79,7 @@ func (p *ProposalRegisterPool) ValidateBasic() error {
 	if p.UnbondingDuration < MinUnbondingDuration {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "unbonding duration cannot be lower than %s", MinUnbondingDuration)
 	}
-	if p.MaxUnbondingEntries.IsNegative() || p.MaxUnbondingEntries.GT(sdk.NewInt(DefaultMaxUnbondingEntries)) {
+	if p.MaxUnbondingEntries.IsNil() || p.MaxUnbondingEntries.IsNegative() || p.MaxUnbondingEntries.GT(sdk.NewInt(DefaultMaxUnbondingEntries)) {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "Unbonding entries cannot be negative or greated than %d", DefaultMaxUnbondingEntries)
 	}
 	if len(strings.TrimSpace(p.Bech32PrefixAccAddr)) <= 0 {
