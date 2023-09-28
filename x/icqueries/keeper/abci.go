@@ -26,6 +26,7 @@ func (k *Keeper) EndBlocker(ctx sdk.Context) {
 			if query.HasTimedOut(ctx.BlockTime()) {
 				// Try to invoke the timeout query, but continue in case of failure (panicking here is heavily dangerous)
 				if err := k.HandleQueryTimeout(ctx, nil, query); err != nil {
+					logger.Error(fmt.Sprintf("Error encountered while handling query timeout : %v", err.Error()))
 					continue
 				}
 				// If everything went fine, just delete the query data
