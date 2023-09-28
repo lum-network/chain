@@ -823,8 +823,8 @@ func (k Keeper) BroadcastIBCTransfer(ctx sdk.Context, pool types.Pool, amount sd
 func (k Keeper) BroadcastICAMessages(ctx sdk.Context, pool types.Pool, accountType string, msgs []sdk.Msg, timeoutNanos uint64, callbackID string, callbackArgs []byte) (uint64, error) {
 	logger := k.Logger(ctx).With("ctx", "pool_broadcast_ica")
 
-	// Pool must be ready to process those kind of operations
-	if pool.GetState() != types.PoolState_Ready {
+	// Pool must be ready or created (creating) to process those kind of operations
+	if pool.GetState() != types.PoolState_Ready && pool.GetState() != types.PoolState_Created {
 		return 0, types.ErrPoolNotReady
 	}
 
