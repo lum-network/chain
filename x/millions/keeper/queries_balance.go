@@ -41,13 +41,13 @@ func BalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqueriestype
 
 	// Based on type, we want different processing
 	if status == icqueriestypes.QueryResponseStatus_TIMEOUT {
-		k.Logger(ctx).Error(fmt.Sprintf("QUERY TIMEOUT - QueryId: %s, TTL: %d, BlockTime: %d", query.Id, query.Ttl, ctx.BlockHeader().Time.UnixNano()))
+		k.Logger(ctx).Error(fmt.Sprintf("QUERY TIMEOUT - QueryId: %s, TTL: %d, BlockTime: %d", query.Id, query.TimeoutTimestamp, ctx.BlockHeader().Time.UnixNano()))
 		_, err := k.OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted(ctx, pool.GetPoolId(), draw.GetDrawId(), sdk.NewCoins(), true)
 		if err != nil {
 			return err
 		}
 	} else if status == icqueriestypes.QueryResponseStatus_FAILURE {
-		k.Logger(ctx).Error(fmt.Sprintf("QUERY FAILURE - QueryId: %s, TTL: %d, BlockTime: %d", query.Id, query.Ttl, ctx.BlockHeader().Time.UnixNano()))
+		k.Logger(ctx).Error(fmt.Sprintf("QUERY FAILURE - QueryId: %s, TTL: %d, BlockTime: %d", query.Id, query.TimeoutTimestamp, ctx.BlockHeader().Time.UnixNano()))
 		_, err := k.OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted(ctx, pool.GetPoolId(), draw.GetDrawId(), sdk.NewCoins(), true)
 		if err != nil {
 			return err

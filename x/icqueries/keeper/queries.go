@@ -2,6 +2,10 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
+	ibcconnectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
@@ -20,18 +24,52 @@ func GenerateQueryHash(connectionId string, chainId string, extraId string, quer
 }
 
 // NewQuery Build a new query structure
-func (k *Keeper) NewQuery(ctx sdk.Context, module string, callbackId string, chainId string, connectionId string, extraId string, queryType string, request []byte, ttl uint64) *types.Query {
+func (k *Keeper) NewQuery(ctx sdk.Context, module string, callbackId string, chainId string, connectionId string, extraId string, queryType string, request []byte, ttl uint64, timeoutPolicy types.TimeoutPolicy, timeoutDuration time.Duration, submissionHeight uint64) *types.Query {
 	return &types.Query{
-		Id:           GenerateQueryHash(connectionId, chainId, extraId, queryType, request, module, callbackId),
-		ConnectionId: connectionId,
-		ChainId:      chainId,
-		ExtraId:      extraId,
-		QueryType:    queryType,
-		Request:      request,
-		CallbackId:   callbackId,
-		Ttl:          ttl,
-		RequestSent:  false,
+		Id:                 GenerateQueryHash(connectionId, chainId, extraId, queryType, request, module, callbackId),
+		ConnectionId:       connectionId,
+		ChainId:            chainId,
+		ExtraId:            extraId,
+		QueryType:          queryType,
+		Request:            request,
+		CallbackId:         callbackId,
+		CallbackModuleName: module,
+		TimeoutTimestamp:   ttl,
+		TimeoutPolicy:      timeoutPolicy,
+		TimeoutDuration:    timeoutDuration,
+		SubmissionHeight:   submissionHeight,
+		RequestSent:        false,
 	}
+}
+
+// ValidateQuery validates that all the required attributes of a query are supplied when submitting an ICQ
+func (k *Keeper) ValidateQuery(ctx sdk.Context, query *types.Query) error {
+	if query.ChainId == "" {
+		return errorsmod.Wrapf(types.ErrInvalidQuery, "chain-id cannot be empty")
+	}
+	if query.ConnectionId == "" {
+		return errorsmod.Wrapf(types.ErrInvalidQuery, "connection-id cannot be empty")
+	}
+	if !strings.HasPrefix(query.ConnectionId, ibcconnectiontypes.ConnectionPrefix) {
+		return errorsmod.Wrapf(types.ErrInvalidQuery, "invalid connection-id (%s)", query.ConnectionId)
+	}
+	if query.QueryType == "" {
+		return errorsmod.Wrapf(types.ErrInvalidQuery, "query type cannot be empty")
+	}
+	if query.CallbackId == "" {
+		return errorsmod.Wrapf(types.ErrInvalidQuery, "callback-id cannot be empty")
+	}
+	if query.TimeoutDuration == time.Duration(0) {
+		return errorsmod.Wrapf(types.ErrInvalidQuery, "timeout duration must be set")
+	}
+	if _, exists := k.callbacks[query.GetCallbackModuleName()]; !exists {
+		return errorsmod.Wrapf(types.ErrInvalidQuery, "no callback handler registered for module (%s)", query.GetCallbackModuleName())
+	}
+	if exists := k.callbacks[query.GetCallbackModuleName()].HasICQCallback(query.CallbackId); !exists {
+		return errorsmod.Wrapf(types.ErrInvalidQuery, "callback-id (%s) is not registered for module (%s)", query.GetCallbackId(), query.GetCallbackModuleName())
+	}
+
+	return nil
 }
 
 // GetQuery returns query

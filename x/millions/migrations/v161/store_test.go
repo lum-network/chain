@@ -1,4 +1,4 @@
-package v160_test
+package v161_test
 
 import (
 	"testing"
@@ -14,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	apptypes "github.com/lum-network/chain/app"
-	v160 "github.com/lum-network/chain/x/millions/migrations/v160"
+	v161 "github.com/lum-network/chain/x/millions/migrations/v161"
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
 
@@ -159,7 +159,7 @@ func (suite *StoreMigrationTestSuite) TestUpdatePoolType() {
 	suite.app.MillionsKeeper.AddPool(suite.ctx, newValidPool(suite, millionstypes.Pool{PoolId: poolID}))
 
 	// Run the migration operation
-	err := v160.MigratePoolTypeAndUnbondingFrequency(suite.ctx, *suite.app.MillionsKeeper)
+	err := v161.MigratePoolTypeAndUnbondingFrequency(suite.ctx, *suite.app.MillionsKeeper)
 	suite.Require().NoError(err)
 
 	// Grab our pool

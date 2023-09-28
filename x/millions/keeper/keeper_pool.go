@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	icqueriestypes "github.com/lum-network/chain/x/icqueries/types"
+
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 
@@ -821,8 +823,8 @@ func (k Keeper) BroadcastIBCTransfer(ctx sdk.Context, pool types.Pool, amount sd
 func (k Keeper) BroadcastICAMessages(ctx sdk.Context, pool types.Pool, accountType string, msgs []sdk.Msg, timeoutNanos uint64, callbackID string, callbackArgs []byte) (uint64, error) {
 	logger := k.Logger(ctx).With("ctx", "pool_broadcast_ica")
 
-	// Pool must be ready to process those kind of operations
-	if pool.GetState() != types.PoolState_Ready {
+	// Pool must be ready or created (creating) to process those kind of operations
+	if pool.GetState() != types.PoolState_Ready && pool.GetState() != types.PoolState_Created {
 		return 0, types.ErrPoolNotReady
 	}
 
@@ -893,14 +895,13 @@ func (k Keeper) BroadcastICAMessages(ctx sdk.Context, pool types.Pool, accountTy
 // BroadcastICQuery broadcasts an ICQ query
 // Also registeres the requested callback
 // This method should not and DOEST NOT update the pool state
-func (k Keeper) BroadcastICQuery(ctx sdk.Context, pool types.Pool, callbackID string, extraID string, queryType string, queryData []byte, timeoutNanos uint64) error {
+func (k Keeper) BroadcastICQuery(ctx sdk.Context, pool types.Pool, callbackID string, extraID string, queryType string, queryData []byte, timeoutPolicy icqueriestypes.TimeoutPolicy, timeoutTimestamp time.Duration) error {
 	// Pool must be ready to process those kind of operations
 	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
 		return types.ErrPoolNotReady
 	}
 
 	// Broadcast the query
-	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + timeoutNanos
 	return k.ICQueriesKeeper.MakeRequest(
 		ctx,
 		types.ModuleName,
@@ -910,6 +911,7 @@ func (k Keeper) BroadcastICQuery(ctx sdk.Context, pool types.Pool, callbackID st
 		extraID,
 		queryType,
 		queryData,
+		timeoutPolicy,
 		timeoutTimestamp,
 	)
 }
