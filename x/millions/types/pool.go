@@ -339,11 +339,9 @@ func (p *Pool) GetNextEpochUnbonding(epochTracker EpochTracker) (nextUnbondingEp
 	if p.IsInvalidEpochUnbonding(epochTracker) {
 		remainingEpochs := frequency - (currentEpoch % frequency)
 		nextUnbondingEpoch = currentEpoch + remainingEpochs
-
-		return nextUnbondingEpoch
+	} else {
+		nextUnbondingEpoch = currentEpoch + frequency
 	}
-
-	nextUnbondingEpoch = currentEpoch + frequency
 
 	return nextUnbondingEpoch
 }

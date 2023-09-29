@@ -268,14 +268,14 @@ func (k Keeper) UnsafeAddPendingWithdrawalsToNewEpochUnbonding(ctx sdk.Context) 
 	iterator := sdk.KVStorePrefixIterator(store, types.GetWithdrawalsKey())
 	defer iterator.Close()
 
+	epochTracker, err := k.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, types.WithdrawalTrackerType)
+	if err != nil {
+		return err
+	}
+
 	for ; iterator.Valid(); iterator.Next() {
 		var withdrawal types.Withdrawal
 		k.cdc.MustUnmarshal(iterator.Value(), &withdrawal)
-
-		epochTracker, err := k.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, types.WithdrawalTrackerType)
-		if err != nil {
-			return err
-		}
 
 		if withdrawal.State == types.WithdrawalState_Pending {
 			// Iterate through past epochs to find EpochUnbondings
