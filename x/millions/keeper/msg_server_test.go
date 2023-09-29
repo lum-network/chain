@@ -1013,6 +1013,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
 	drawDelta1 := 1 * time.Hour
 	var now = time.Now().UTC()
+	frequency := uint64(4)
 	// Assuming first epoch is 1, and nextEpochUnbonding is the 4th one
 	for epoch := int64(1); epoch <= 4; epoch++ {
 		epochInfo, err := TriggerEpochUpdate(suite)
@@ -1130,7 +1131,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDepositRetry() {
 	suite.Require().NoError(err)
 
 	// Get epoch unbonding
-	currentEpochUnbonding, err := app.MillionsKeeper.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber, withdrawals[0].PoolId)
+	currentEpochUnbonding, err := app.MillionsKeeper.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber+frequency, withdrawals[0].PoolId)
 	suite.Require().NoError(err)
 
 	err = app.MillionsKeeper.UndelegateWithdrawalsOnRemoteZone(ctx, currentEpochUnbonding)

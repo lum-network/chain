@@ -140,6 +140,11 @@ func (a AppModule) RegisterServices(cfg module.Configurator) {
 	if err != nil {
 		panic(err)
 	}
+
+	err = cfg.RegisterMigration(types.ModuleName, 4, migrator.Migrate4To5)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (a AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
