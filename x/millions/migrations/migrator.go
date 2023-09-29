@@ -33,7 +33,7 @@ func (m Migrator) Migrate3To4(ctx sdk.Context) error {
 	return v161.MigratePoolTypeAndUnbondingFrequency(ctx, m.keeper)
 }
 
-// Migrate3To4 migrates from version 4 to 5
+// Migrate4To5 migrates from version 4 to 5
 func (m Migrator) Migrate4To5(ctx sdk.Context) error {
 	return v162.MigratePendingWithdrawalsToNewEpochUnbonding(ctx, m.keeper)
 }
