@@ -13,6 +13,7 @@ const (
 	MinAcceptableDepositDrawDelta     = 1 * time.Minute
 	MinAcceptablePrizeExpirationDelta = 1 * time.Hour
 	MaxAcceptableFeesStakers          = 50 // 50%
+	DefaultFeesStakers                = 10 // 10%
 
 	defaultMinDepositAmount        = 100_000
 	defaultMaxPrizeStrategyBatches = 10
@@ -20,7 +21,6 @@ const (
 	defaultMinDrawScheduleDelta    = 1 * time.Hour
 	defaultMaxDrawScheduleDelta    = 366 * 24 * time.Hour // 366 days
 	defaultPrizeExpirationDelta    = 30 * 24 * time.Hour  // 30 days
-	defaultFeesStakers             = 10                   // 10%
 	defaultMinDepositDrawDelta     = 5 * time.Minute
 )
 
@@ -32,7 +32,6 @@ func DefaultParams() Params {
 		MinDrawScheduleDelta:    defaultMinDrawScheduleDelta,
 		MaxDrawScheduleDelta:    defaultMaxDrawScheduleDelta,
 		PrizeExpirationDelta:    defaultPrizeExpirationDelta,
-		FeesStakers:             sdk.NewDecWithPrec(defaultFeesStakers, 2),
 		MinDepositDrawDelta:     defaultMinDepositDrawDelta,
 	}
 }
@@ -60,11 +59,6 @@ func (p *Params) ValidateBasics() error {
 	}
 	if p.PrizeExpirationDelta < MinAcceptablePrizeExpirationDelta {
 		return errorsmod.Wrapf(ErrInvalidParams, "prize clawback delta must be gte %s, got: %s", MinAcceptablePrizeExpirationDelta.String(), p.PrizeExpirationDelta.String())
-	}
-	if p.FeesStakers.IsNil() {
-		return errorsmod.Wrapf(ErrInvalidParams, "stakers fees required")
-	} else if p.FeesStakers.LT(sdk.NewDec(0)) || p.FeesStakers.GT(sdk.NewDecWithPrec(MaxAcceptableFeesStakers, 2)) {
-		return errorsmod.Wrapf(ErrInvalidParams, "stakers fees must be gte 0 and lte %d/100, got: %f", MaxAcceptableFeesStakers, p.FeesStakers.MustFloat64())
 	}
 	if p.MinDepositDrawDelta < MinAcceptableDepositDrawDelta {
 		return errorsmod.Wrapf(ErrInvalidParams, "min deposit draw delta must be gte %s, got: %s", MinAcceptableDepositDrawDelta.String(), p.MinDepositDrawDelta.String())

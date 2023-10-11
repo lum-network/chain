@@ -24,10 +24,6 @@ func (suite *KeeperTestSuite) TestFees_FeeCollector() {
 	suite.Require().Equal(denom, fc.CollectedAmount().Denom)
 
 	// 0 fees should do nothing
-	params := app.MillionsKeeper.GetParams(ctx)
-	params.FeesStakers = sdk.ZeroDec()
-	app.MillionsKeeper.SetParams(ctx, params)
-
 	fc = app.MillionsKeeper.NewFeeCollector(ctx, millionstypes.Pool{Denom: denom, LocalAddress: suite.addrs[0].String()})
 	prize := &millionstypes.Prize{Amount: sdk.NewCoin(denom, math.ZeroInt())}
 	a, f := fc.CollectPrizeFees(ctx, prize)
@@ -40,9 +36,7 @@ func (suite *KeeperTestSuite) TestFees_FeeCollector() {
 	suite.Require().Equal(math.ZeroInt(), f)
 
 	// 10% fees should store collected fees (if possible) and update prize amount
-	params.FeesStakers = floatToDec(0.1)
-	app.MillionsKeeper.SetParams(ctx, params)
-	fc = app.MillionsKeeper.NewFeeCollector(ctx, millionstypes.Pool{Denom: denom, LocalAddress: suite.addrs[0].String()})
+	fc = app.MillionsKeeper.NewFeeCollector(ctx, millionstypes.Pool{Denom: denom, LocalAddress: suite.addrs[0].String(), FeesStakers: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2)})
 
 	prize.Amount.Amount = math.NewInt(0)
 	a, f = fc.CollectPrizeFees(ctx, prize)
@@ -146,6 +140,7 @@ func (suite *KeeperTestSuite) TestFees_DrawPrizesFees() {
 		p.MaxUnbondingEntries,
 		p.DrawSchedule,
 		p.PrizeStrategy,
+		p.FeesStakers,
 	)
 	suite.Require().NoError(err)
 	p, err = app.MillionsKeeper.GetPool(ctx, poolID)
@@ -170,11 +165,6 @@ func (suite *KeeperTestSuite) TestFees_DrawPrizesFees() {
 	)
 	suite.Require().NoError(err)
 
-	// set 10% fees
-	params := app.MillionsKeeper.GetParams(ctx)
-	params.FeesStakers = sdk.NewDecWithPrec(10, 2)
-	app.MillionsKeeper.SetParams(ctx, params)
-
 	// force run draw and fee collection
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1).WithBlockTime(ctx.BlockTime().Add(24 * time.Hour))
 	draw, err := app.MillionsKeeper.LaunchNewDraw(ctx, poolID)
@@ -187,11 +177,11 @@ func (suite *KeeperTestSuite) TestFees_DrawPrizesFees() {
 	// prize entity should have fees subtracted
 	prizes := app.MillionsKeeper.ListPrizes(ctx)
 	suite.Require().Len(prizes, 100)
-	suite.Require().Equal(prizePoolAmount/100-params.FeesStakers.MulInt64(prizePoolAmount/100).RoundInt64(), prizes[0].Amount.Amount.Int64())
+	suite.Require().Equal(prizePoolAmount/100-p.FeesStakers.MulInt64(prizePoolAmount/100).RoundInt64(), prizes[0].Amount.Amount.Int64())
 
 	// Stakers should receive their share of the collected fees upon send success
 	// Community tax should apply as well
-	collectedAmount := params.FeesStakers.MulInt64(prizePoolAmount).RoundInt64()
+	collectedAmount := p.FeesStakers.MulInt64(prizePoolAmount).RoundInt64()
 	vals := app.StakingKeeper.GetAllValidators(ctx)
 	consAddr0, err := vals[0].GetConsAddr()
 	suite.Require().NoError(err)

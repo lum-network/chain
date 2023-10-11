@@ -457,6 +457,7 @@ func (suite *KeeperTestSuite) TestDraw_PrizePoolPersistence() {
 		p.MaxUnbondingEntries,
 		p.DrawSchedule,
 		p.PrizeStrategy,
+		p.FeesStakers,
 	)
 	suite.Require().NoError(err)
 	pool1, err := app.MillionsKeeper.GetPool(ctx, newID)
@@ -481,6 +482,7 @@ func (suite *KeeperTestSuite) TestDraw_PrizePoolPersistence() {
 		p.MaxUnbondingEntries,
 		p.DrawSchedule,
 		p.PrizeStrategy,
+		p.FeesStakers,
 	)
 	suite.Require().NoError(err)
 	pool2, err := app.MillionsKeeper.GetPool(ctx, newID)

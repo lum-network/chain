@@ -274,6 +274,7 @@ func (k Keeper) RegisterPool(
 	maxUnbondingEntries math.Int,
 	drawSchedule types.DrawSchedule,
 	prizeStrategy types.PrizeStrategy,
+	fees sdk.Dec,
 ) (uint64, error) {
 
 	// Acquire new pool ID
@@ -317,6 +318,7 @@ func (k Keeper) RegisterPool(
 		SponsorshipAmount:   sdk.ZeroInt(),
 		AvailablePrizePool:  sdk.NewCoin(denom, sdk.ZeroInt()),
 		State:               types.PoolState_Created,
+		FeesStakers:         fees,
 		TransferChannelId:   transferChannelId,
 		CreatedAtHeight:     ctx.BlockHeight(),
 		UpdatedAtHeight:     ctx.BlockHeight(),
@@ -381,6 +383,7 @@ func (k Keeper) UpdatePool(
 	drawSchedule *types.DrawSchedule,
 	prizeStrategy *types.PrizeStrategy,
 	state types.PoolState,
+	fees *sdk.Dec,
 ) error {
 	// Acquire and deserialize our pool entity
 	pool, err := k.GetPool(ctx, poolID)
@@ -408,6 +411,9 @@ func (k Keeper) UpdatePool(
 	}
 	if prizeStrategy != nil {
 		pool.PrizeStrategy = *prizeStrategy
+	}
+	if fees != nil {
+		pool.FeesStakers = *fees
 	}
 
 	// Update pool state only if current pool state is in paused and incoming state ready

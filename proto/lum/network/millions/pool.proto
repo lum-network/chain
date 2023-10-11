@@ -96,7 +96,10 @@ message Pool {
   DrawState last_draw_state = 28;
   cosmos.base.v1beta1.Coin available_prize_pool = 29
       [ (gogoproto.nullable) = false ];
-  reserved 30;
+  string fees_stakers = 30 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
   reserved 31;
 
   PoolState state = 32;

@@ -37,6 +37,10 @@ message ProposalRegisterPool {
     (gogoproto.nullable) = false
   ];
   PoolType pool_type = 16;
+  string fees_stakers = 17 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message ProposalUpdatePool {
@@ -58,6 +62,10 @@ message ProposalUpdatePool {
       [ (gogoproto.stdduration) = true, (gogoproto.nullable) = true ];
   string max_unbonding_entries = 10 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = true
+  ];
+  string fees_stakers = 11 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = true
   ];
 }
@@ -86,10 +94,8 @@ message ProposalUpdateParams {
       [ (gogoproto.stdduration) = true, (gogoproto.nullable) = true ];
   google.protobuf.Duration prize_expiration_delta = 8
       [ (gogoproto.stdduration) = true, (gogoproto.nullable) = true ];
-  string fees_stakers = 9 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = true
-  ];
+  // DO NOT USE - EX FEES STAKERS
+  reserved 9;
   google.protobuf.Duration min_deposit_draw_delta = 10
       [ (gogoproto.stdduration) = true, (gogoproto.nullable) = true ];
 }

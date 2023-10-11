@@ -78,7 +78,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 		MinDrawScheduleDelta:    1 * time.Hour,
 		MaxDrawScheduleDelta:    366 * 24 * time.Hour,
 		PrizeExpirationDelta:    30 * 24 * time.Hour,
-		FeesStakers:             sdk.ZeroDec(),
 		MinDepositDrawDelta:     millionstypes.MinAcceptableDepositDrawDelta,
 	})
 }
@@ -185,6 +184,9 @@ func newValidPool(suite *KeeperTestSuite, pool millionstypes.Pool) *millionstype
 	}
 	if pool.State == millionstypes.PoolState_Unspecified {
 		pool.State = millionstypes.PoolState_Ready
+	}
+	if pool.FeesStakers.IsNil() {
+		pool.FeesStakers = sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2)
 	}
 	if pool.CreatedAt.IsZero() {
 		pool.CreatedAt = suite.ctx.BlockTime()

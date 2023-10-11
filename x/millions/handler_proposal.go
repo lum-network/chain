@@ -15,7 +15,7 @@ func NewMillionsProposalHandler(k keeper.Keeper) govtypes.Handler {
 		switch c := content.(type) {
 		case *types.ProposalUpdatePool:
 			{
-				return k.UpdatePool(ctx, c.PoolId, c.Validators, c.MinDepositAmount, c.UnbondingDuration, c.MaxUnbondingEntries, c.DrawSchedule, c.PrizeStrategy, c.State)
+				return k.UpdatePool(ctx, c.PoolId, c.Validators, c.MinDepositAmount, c.UnbondingDuration, c.MaxUnbondingEntries, c.DrawSchedule, c.PrizeStrategy, c.State, c.FeesStakers)
 			}
 		case *types.ProposalRegisterPool:
 			{
@@ -35,6 +35,7 @@ func NewMillionsProposalHandler(k keeper.Keeper) govtypes.Handler {
 					c.MaxUnbondingEntries,
 					c.GetDrawSchedule(),
 					c.GetPrizeStrategy(),
+					c.FeesStakers,
 				)
 				return err
 			}
@@ -58,9 +59,6 @@ func NewMillionsProposalHandler(k keeper.Keeper) govtypes.Handler {
 				}
 				if c.PrizeExpirationDelta != nil {
 					params.PrizeExpirationDelta = *c.PrizeExpirationDelta
-				}
-				if c.FeesStakers != nil {
-					params.FeesStakers = *c.FeesStakers
 				}
 				if c.MinDepositDrawDelta != nil {
 					params.MinDepositDrawDelta = *c.MinDepositDrawDelta

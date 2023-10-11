@@ -327,6 +327,7 @@ func (suite *KeeperTestSuite) TestMsgServer_Deposit() {
 		sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
 		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
+		sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2),
 	)
 	suite.Require().NoError(err)
 	_, err = app.MillionsKeeper.GetPool(ctx, poolID)
@@ -448,6 +449,7 @@ func (suite *KeeperTestSuite) TestMsgServer_DepositRetry() {
 		sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
 		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
+		sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2),
 	)
 	suite.Require().NoError(err)
 	_, err = app.MillionsKeeper.GetPool(ctx, poolID)
@@ -797,6 +799,7 @@ func (suite *KeeperTestSuite) TestMsgServer_WithdrawDeposit() {
 		sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
 		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
+		sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2),
 	)
 	suite.Require().NoError(err)
 	_, err = app.MillionsKeeper.GetPool(ctx, poolID)
