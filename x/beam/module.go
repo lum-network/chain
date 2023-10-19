@@ -118,8 +118,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 	// Register the migrations
 	migrator := migrations.NewMigrator(am.keeper)
-	err := cfg.RegisterMigration(types.ModuleName, 1, migrator.Migrate1To2)
-	if err != nil {
+	if err := cfg.RegisterMigration(types.ModuleName, 1, migrator.Migrate1To2); err != nil {
+		panic(err)
+	}
+	if err := cfg.RegisterMigration(types.ModuleName, 2, migrator.Migrate2To3); err != nil {
 		panic(err)
 	}
 }

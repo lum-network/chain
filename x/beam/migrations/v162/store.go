@@ -24,6 +24,14 @@ func DeleteBeamsData(ctx sdk.Context, bk beamkeeper.Keeper) error {
 		return false
 	})
 	bk.IterateBeams(ctx, func(beam beamtypes.Beam) bool {
+		// Cancel the remaining beams if there is any
+		if beam.GetStatus() != beamtypes.BeamState_StateCanceled {
+			if err := bk.UpdateBeamStatus(ctx, beam.GetId(), beamtypes.BeamState_StateCanceled); err != nil {
+				panic(err)
+			}
+		}
+
+		// Delete the beam entity itself
 		if err := bk.DeleteBeam(ctx, beam.GetId()); err != nil {
 			panic(err)
 		}

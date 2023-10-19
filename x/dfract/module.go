@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/lum-network/chain/x/dfract/migrations"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -123,6 +124,12 @@ func (a AppModule) QuerierRoute() string {
 func (a AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServerImpl(a.keeper))
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(a.keeper))
+
+	// Register the migrations
+	migrator := migrations.NewMigrator(a.keeper)
+	if err := cfg.RegisterMigration(types.ModuleName, 1, migrator.Migrate1To2); err != nil {
+		panic(err)
+	}
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the capability module.
