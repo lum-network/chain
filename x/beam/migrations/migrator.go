@@ -2,6 +2,7 @@ package migrations
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	v162 "github.com/lum-network/chain/x/beam/migrations/v162"
 
 	keeper2 "github.com/lum-network/chain/x/beam/keeper"

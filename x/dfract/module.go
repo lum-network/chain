@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/lum-network/chain/x/dfract/migrations"
 
 	abci "github.com/cometbft/cometbft/abci/types"

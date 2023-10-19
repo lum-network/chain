@@ -1,16 +1,18 @@
 package v162_test
 
 import (
+	"testing"
+	"time"
+
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
+
 	apptypes "github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
 	"github.com/lum-network/chain/x/dfract/keeper"
 	v162 "github.com/lum-network/chain/x/dfract/migrations/v162"
 	dfracttypes "github.com/lum-network/chain/x/dfract/types"
-	"github.com/stretchr/testify/suite"
-	"testing"
-	"time"
 )
 
 type StoreMigrationTestSuite struct {

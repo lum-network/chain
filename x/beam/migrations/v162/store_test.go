@@ -2,16 +2,18 @@ package v162_test
 
 import (
 	"encoding/hex"
+	"testing"
+	"time"
+
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
+
 	apptypes "github.com/lum-network/chain/app"
 	apptesting "github.com/lum-network/chain/app/testing"
 	"github.com/lum-network/chain/utils"
 	v162 "github.com/lum-network/chain/x/beam/migrations/v162"
 	"github.com/lum-network/chain/x/beam/types"
-	"github.com/stretchr/testify/suite"
-	"testing"
-	"time"
 )
 
 type StoreMigrationTestSuite struct {

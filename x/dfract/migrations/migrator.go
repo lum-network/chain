@@ -2,6 +2,7 @@ package migrations
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/lum-network/chain/x/dfract/keeper"
 	v162 "github.com/lum-network/chain/x/dfract/migrations/v162"
 )

@@ -2,11 +2,13 @@ package v162
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	dfractkeeper "github.com/lum-network/chain/x/dfract/keeper"
 	dfracttypes "github.com/lum-network/chain/x/dfract/types"
 )
 
 func Nuke(ctx sdk.Context, dk dfractkeeper.Keeper) error {
+	// Destroy the queues
 	dk.IterateDepositsPendingMint(ctx, func(deposit dfracttypes.Deposit) bool {
 		dk.RemoveDepositPendingMint(ctx, sdk.MustAccAddressFromBech32(deposit.GetDepositorAddress()))
 		return false
@@ -15,6 +17,8 @@ func Nuke(ctx sdk.Context, dk dfractkeeper.Keeper) error {
 		dk.RemoveDepositPendingWithdrawal(ctx, sdk.MustAccAddressFromBech32(deposit.GetDepositorAddress()))
 		return false
 	})
+
+	// This one is a special case. To be able to burn coins, we need to move them to the module account first
 	dk.IterateDepositsMinted(ctx, func(deposit dfracttypes.Deposit) bool {
 		// Get the supply for the given depositor
 		supply := dk.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(deposit.GetDepositorAddress()), dfracttypes.MintDenom)
@@ -32,6 +36,7 @@ func Nuke(ctx sdk.Context, dk dfractkeeper.Keeper) error {
 		dk.RemoveDepositMinted(ctx, sdk.MustAccAddressFromBech32(deposit.GetDepositorAddress()))
 		return false
 	})
+
 	return nil
 }
 
