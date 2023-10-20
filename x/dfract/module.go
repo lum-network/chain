@@ -1,9 +1,9 @@
 package dfract
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
+
+	"github.com/lum-network/chain/x/dfract/migrations"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -15,8 +15,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/lum-network/chain/x/dfract/client/cli"
-	"github.com/lum-network/chain/x/dfract/client/rest"
 	"github.com/lum-network/chain/x/dfract/keeper"
 	"github.com/lum-network/chain/x/dfract/types"
 )
@@ -56,28 +54,21 @@ func (a AppModuleBasic) DefaultGenesis(jsonCodec codec.JSONCodec) json.RawMessag
 }
 
 func (a AppModuleBasic) ValidateGenesis(jsonCodec codec.JSONCodec, config client.TxEncodingConfig, message json.RawMessage) error {
-	var data types.GenesisState
-	if err := jsonCodec.UnmarshalJSON(message, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
-	}
-
 	return nil
 }
 
 func (a AppModuleBasic) RegisterRESTRoutes(context client.Context, router *mux.Router) {
-	rest.RegisterRoutes(context, router)
 }
 
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	_ = types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
+	return nil
 }
 
 func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(types.StoreKey)
+	return nil
 }
 
 // ----------------------------------------------------------------------------
@@ -102,16 +93,11 @@ func (a AppModule) Name() string {
 }
 
 func (a AppModule) InitGenesis(context sdk.Context, jsonCodec codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {
-	var genState types.GenesisState
-	jsonCodec.MustUnmarshalJSON(message, &genState)
-
-	InitGenesis(context, a.keeper, genState)
 	return []abci.ValidatorUpdate{}
 }
 
 func (a AppModule) ExportGenesis(context sdk.Context, jsonCodec codec.JSONCodec) json.RawMessage {
-	genState := ExportGenesis(context, a.keeper)
-	return jsonCodec.MustMarshalJSON(genState)
+	return nil
 }
 
 func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {}
@@ -121,8 +107,11 @@ func (a AppModule) QuerierRoute() string {
 }
 
 func (a AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServerImpl(a.keeper))
-	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(a.keeper))
+	// Register the migrations
+	migrator := migrations.NewMigrator(a.keeper)
+	if err := cfg.RegisterMigration(types.ModuleName, 1, migrator.Migrate1To2); err != nil {
+		panic(err)
+	}
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the capability module.
@@ -131,7 +120,6 @@ func (a AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // EndBlock executes all ABCI EndBlock logic respective to the capability module. It
 // returns no validator updates.
 func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	EndBlocker(ctx, a.keeper)
 	return []abci.ValidatorUpdate{}
 }
 
