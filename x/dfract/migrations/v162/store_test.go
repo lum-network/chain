@@ -90,6 +90,14 @@ func (suite *StoreMigrationTestSuite) TestMigration() {
 	_, found = suite.app.DFractKeeper.GetDepositPendingMint(suite.ctx, suite.addrs[0])
 	suite.Require().False(found)
 
+	// Initialize a transfer out of the scope of the module
+	err = suite.app.BankKeeper.SendCoins(suite.ctx, suite.addrs[0], suite.addrs[1], sdk.NewCoins(sdk.NewCoin(dfracttypes.MintDenom, sdk.NewInt(5))))
+	suite.Require().NoError(err)
+
+	// Get the destination balance
+	cheaterBalance := suite.app.BankKeeper.GetBalance(suite.ctx, suite.addrs[1], dfracttypes.MintDenom)
+	suite.Require().Equal(cheaterBalance.Amount.Int64(), int64(5))
+
 	// Get the total supply
 	beforeSupply := suite.app.BankKeeper.GetSupply(suite.ctx, dfracttypes.MintDenom)
 	suite.Require().NoError(err)
@@ -98,6 +106,10 @@ func (suite *StoreMigrationTestSuite) TestMigration() {
 	// Run the migration
 	err = v162.Migrate(suite.ctx, *suite.app.DFractKeeper)
 	suite.Require().NoError(err)
+
+	// Cheater balance must be empty as well
+	cheaterBalance = suite.app.BankKeeper.GetBalance(suite.ctx, suite.addrs[1], dfracttypes.MintDenom)
+	suite.Require().Equal(cheaterBalance.Amount.Int64(), int64(0))
 
 	// Queues must be empty
 	_, found = suite.app.DFractKeeper.GetDepositPendingWithdrawal(suite.ctx, suite.addrs[0])
