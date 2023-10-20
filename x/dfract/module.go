@@ -2,7 +2,6 @@ package dfract
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/lum-network/chain/x/dfract/migrations"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/lum-network/chain/x/dfract/client/rest"
 	"github.com/lum-network/chain/x/dfract/keeper"
 	"github.com/lum-network/chain/x/dfract/types"
 )
@@ -56,16 +54,10 @@ func (a AppModuleBasic) DefaultGenesis(jsonCodec codec.JSONCodec) json.RawMessag
 }
 
 func (a AppModuleBasic) ValidateGenesis(jsonCodec codec.JSONCodec, config client.TxEncodingConfig, message json.RawMessage) error {
-	var data types.GenesisState
-	if err := jsonCodec.UnmarshalJSON(message, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
-	}
-
 	return nil
 }
 
 func (a AppModuleBasic) RegisterRESTRoutes(context client.Context, router *mux.Router) {
-	rest.RegisterRoutes(context, router)
 }
 
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
@@ -101,16 +93,11 @@ func (a AppModule) Name() string {
 }
 
 func (a AppModule) InitGenesis(context sdk.Context, jsonCodec codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {
-	var genState types.GenesisState
-	jsonCodec.MustUnmarshalJSON(message, &genState)
-
-	InitGenesis(context, a.keeper, genState)
 	return []abci.ValidatorUpdate{}
 }
 
 func (a AppModule) ExportGenesis(context sdk.Context, jsonCodec codec.JSONCodec) json.RawMessage {
-	genState := ExportGenesis(context, a.keeper)
-	return jsonCodec.MustMarshalJSON(genState)
+	return nil
 }
 
 func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {}
