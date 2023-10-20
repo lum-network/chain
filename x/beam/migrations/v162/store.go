@@ -27,7 +27,7 @@ func DeleteBeamsData(ctx sdk.Context, bk beamkeeper.Keeper) error {
 	})
 	bk.IterateBeams(ctx, func(beam beamtypes.Beam) bool {
 		// Cancel the remaining beams if there is any
-		if beam.GetStatus() != beamtypes.BeamState_StateCanceled {
+		if beam.GetStatus() == beamtypes.BeamState_StateOpen {
 			if err := bk.UpdateBeamStatus(ctx, beam.GetId(), beamtypes.BeamState_StateCanceled); err != nil {
 				panic(err)
 			}
