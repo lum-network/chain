@@ -17,7 +17,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/lum-network/chain/x/beam/client/cli"
 	"github.com/lum-network/chain/x/beam/keeper"
 	"github.com/lum-network/chain/x/beam/migrations"
 	"github.com/lum-network/chain/x/beam/types"
@@ -76,12 +75,12 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *r
 
 // GetTxCmd returns the capability module's root tx command.
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
+	return nil
 }
 
 // GetQueryCmd returns the capability module's root query command.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(types.StoreKey)
+	return nil
 }
 
 // ----------------------------------------------------------------------------

@@ -17,7 +17,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/lum-network/chain/x/dfract/client/cli"
 	"github.com/lum-network/chain/x/dfract/client/rest"
 	"github.com/lum-network/chain/x/dfract/keeper"
 	"github.com/lum-network/chain/x/dfract/types"
@@ -75,11 +74,11 @@ func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux 
 }
 
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
+	return nil
 }
 
 func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(types.StoreKey)
+	return nil
 }
 
 // ----------------------------------------------------------------------------
