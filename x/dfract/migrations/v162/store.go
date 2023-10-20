@@ -20,22 +20,25 @@ func Nuke(ctx sdk.Context, dk dfractkeeper.Keeper) error {
 
 	// This one is a special case. To be able to burn coins, we need to move them to the module account first
 	dk.IterateDepositsMinted(ctx, func(deposit dfracttypes.Deposit) bool {
-		// Get the supply for the given depositor
-		supply := dk.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(deposit.GetDepositorAddress()), dfracttypes.MintDenom)
-
-		// Move the supply to the module account
-		if err := dk.BankKeeper.SendCoinsFromAccountToModule(ctx, sdk.MustAccAddressFromBech32(deposit.GetDepositorAddress()), dfracttypes.ModuleName, sdk.NewCoins(supply)); err != nil {
-			panic(err)
-		}
-
-		// Burn the coins
-		if err := dk.BankKeeper.BurnCoins(ctx, dfracttypes.ModuleName, sdk.NewCoins(supply)); err != nil {
-			panic(err)
-		}
-
 		dk.RemoveDepositMinted(ctx, sdk.MustAccAddressFromBech32(deposit.GetDepositorAddress()))
 		return false
 	})
+
+	// Burn the coins by looping over all the accounts balances
+	accounts := dk.AuthKeeper.GetAllAccounts(ctx)
+	for _, account := range accounts {
+		supply := dk.BankKeeper.GetBalance(ctx, account.GetAddress(), dfracttypes.MintDenom)
+		if supply.IsPositive() {
+			if err := dk.BankKeeper.SendCoinsFromAccountToModule(ctx, account.GetAddress(), dfracttypes.ModuleName, sdk.NewCoins(supply)); err != nil {
+				panic(err)
+			}
+
+			// Burn the coins
+			if err := dk.BankKeeper.BurnCoins(ctx, dfracttypes.ModuleName, sdk.NewCoins(supply)); err != nil {
+				panic(err)
+			}
+		}
+	}
 
 	return nil
 }
