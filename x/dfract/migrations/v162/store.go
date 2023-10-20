@@ -25,25 +25,9 @@ func Nuke(ctx sdk.Context, dk dfractkeeper.Keeper) error {
 	})
 
 	// Burn the coins by looping over all the accounts balances
-	accounts := dk.AuthKeeper.GetAllAccounts(ctx)
-	for _, account := range accounts {
-		supply := dk.BankKeeper.GetBalance(ctx, account.GetAddress(), dfracttypes.MintDenom)
-		if supply.IsPositive() {
-			if err := dk.BankKeeper.SendCoinsFromAccountToModule(ctx, account.GetAddress(), dfracttypes.ModuleName, sdk.NewCoins(supply)); err != nil {
-				panic(err)
-			}
-		}
-	}
-
-	// Get the exact balance of the module account for the mint denom
-	moduleAccount := dk.AuthKeeper.GetModuleAccount(ctx, dfracttypes.ModuleName)
-	supply := dk.BankKeeper.GetBalance(ctx, moduleAccount.GetAddress(), dfracttypes.MintDenom)
-
-	// Burn the coins
-	if err := dk.BankKeeper.BurnCoins(ctx, dfracttypes.ModuleName, sdk.NewCoins(supply)); err != nil {
+	if err := dk.UnsafeBurnAllBalance(ctx); err != nil {
 		panic(err)
 	}
-
 	return nil
 }
 
