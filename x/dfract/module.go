@@ -1,7 +1,6 @@
 package dfract
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -70,7 +69,6 @@ func (a AppModuleBasic) RegisterRESTRoutes(context client.Context, router *mux.R
 }
 
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	_ = types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -135,7 +133,6 @@ func (a AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // EndBlock executes all ABCI EndBlock logic respective to the capability module. It
 // returns no validator updates.
 func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	EndBlocker(ctx, a.keeper)
 	return []abci.ValidatorUpdate{}
 }
 
