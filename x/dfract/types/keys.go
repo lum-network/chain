@@ -7,7 +7,7 @@ const (
 	ModuleName = "dfract"
 
 	// ModuleVersion defines the current module version
-	ModuleVersion = 2
+	ModuleVersion = 1
 
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
