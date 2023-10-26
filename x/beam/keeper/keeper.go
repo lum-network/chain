@@ -180,6 +180,19 @@ func (k Keeper) RemoveFromClosedBeamQueue(ctx sdk.Context, beamID string) {
 	store.Delete(types.GetClosedBeamQueueKey(beamID))
 }
 
+// DeleteBeam Delete a beam by its ID and return error in case of non-existent entity
+func (k Keeper) DeleteBeam(ctx sdk.Context, key string) error {
+	// Acquire the store instance
+	store := ctx.KVStore(k.storeKey)
+
+	// Delete the beam if it exists
+	if !store.Has(types.GetBeamKey(key)) {
+		return errorsmod.Wrapf(types.ErrBeamNotFound, "beam not found: %s", key)
+	}
+	store.Delete(types.GetBeamKey(key))
+	return nil
+}
+
 // GetBeam Return a beam instance for the given key
 func (k Keeper) GetBeam(ctx sdk.Context, key string) (types.Beam, error) {
 	// Acquire the store instance

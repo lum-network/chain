@@ -7,7 +7,7 @@ const (
 	ModuleName = "beam"
 
 	// ModuleVersion defines the current module version
-	ModuleVersion = 2
+	ModuleVersion = 3
 
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName

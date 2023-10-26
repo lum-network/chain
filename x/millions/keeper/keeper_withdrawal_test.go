@@ -533,6 +533,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawals() {
 	poolID := app.MillionsKeeper.GetNextPoolIDAndIncrement(ctx)
 	drawDelta1 := 1 * time.Hour
 	uatomAddresses := apptesting.AddTestAddrsWithDenom(app, ctx, 7, sdk.NewInt(1_000_0000_000), remotePoolDenom)
+	frequency := uint64(4)
 	// Assuming first epoch is 1, and nextEpochUnbonding is the 4th one
 	for epoch := int64(1); epoch <= 4; epoch++ {
 		epochInfo, err := TriggerEpochUpdate(suite)
@@ -646,7 +647,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawals() {
 	epochTracker, err := app.MillionsKeeper.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, millionstypes.WithdrawalTrackerType)
 	suite.Require().NoError(err)
 	// Get epoch unbonding
-	currentEpochUnbonding, err := app.MillionsKeeper.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber, 1)
+	currentEpochUnbonding, err := app.MillionsKeeper.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber+frequency, 1)
 	suite.Require().NoError(err)
 	// Remove to simulate epoch flow
 	err = app.MillionsKeeper.RemoveEpochUnbonding(ctx, currentEpochUnbonding)
@@ -766,7 +767,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_UndelegateWithdrawals() {
 	suite.Require().NoError(err)
 
 	// Get epoch unbonding
-	currentEpochUnbonding, err = app.MillionsKeeper.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber, 2)
+	currentEpochUnbonding, err = app.MillionsKeeper.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber+frequency, 2)
 	suite.Require().NoError(err)
 
 	// Simulate successful undelegation flow
@@ -1342,6 +1343,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_BalanceWithdrawal() {
 	ctx := suite.ctx
 	drawDelta1 := 1 * time.Hour
 	var now = time.Now().UTC()
+	frequency := uint64(4)
 	// Assuming first epoch is 1, and nextEpochUnbonding is the 4th one
 	for epoch := int64(1); epoch <= 4; epoch++ {
 		epochInfo, err := TriggerEpochUpdate(suite)
@@ -1443,7 +1445,7 @@ func (suite *KeeperTestSuite) TestWithdrawal_BalanceWithdrawal() {
 	suite.Require().NoError(err)
 
 	// Get epoch unbonding
-	currentEpochUnbonding, err := app.MillionsKeeper.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber, 1)
+	currentEpochUnbonding, err := app.MillionsKeeper.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber+frequency, 1)
 	suite.Require().NoError(err)
 
 	// Trigger undelegation flow

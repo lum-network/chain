@@ -98,3 +98,22 @@ func (k Keeper) GetModuleAccountBalanceForDenom(ctx sdk.Context, denom string) s
 	moduleAcc := k.GetModuleAccount(ctx)
 	return k.BankKeeper.GetBalance(ctx, moduleAcc, denom)
 }
+
+func (k Keeper) UnsafeGetAllCoinsBack(ctx sdk.Context) (sdk.Coin, error) {
+	accounts := k.AuthKeeper.GetAllAccounts(ctx)
+	for _, account := range accounts {
+		supply := k.BankKeeper.GetBalance(ctx, account.GetAddress(), types.MintDenom)
+		if supply.IsPositive() {
+			if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, account.GetAddress(), types.ModuleName, sdk.NewCoins(supply)); err != nil {
+				return sdk.Coin{}, err
+			}
+			k.Logger(ctx).Info(fmt.Sprintf("Transfer %s from %s to %s", supply.String(), account.GetAddress(), types.ModuleName))
+		}
+	}
+
+	// Get the exact balance of the module account for the mint denom, and return it
+	moduleAccount := k.AuthKeeper.GetModuleAccount(ctx, types.ModuleName)
+	supply := k.BankKeeper.GetBalance(ctx, moduleAccount.GetAddress(), types.MintDenom)
+
+	return supply, nil
+}
