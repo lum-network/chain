@@ -41,27 +41,36 @@ Information related to the Lum Network mainnet `lum-network-1` can be found in t
 
 ### v1.6.2 - 2023-11-02 - Block 10027000
 CosmosMillions: Fix of bug related to Withdrawals and EpochUnbonding which caused some Withdrawals to remain in pending state.
+
 Beam module: Deprecate beam module due to the drop of the use case.
+
 DFract module: Clawback all DFRs as part of DFract sunsetting process as detailed in this [blog post](https://medium.com/lum-network/sunsetting-the-dfract-protocol-beta-version-a2277bce07fb).
+
 [Upgrade guide here](https://github.com/lum-network/mainnet/blob/master/upgrades/v1.6.2/guide.md).
 
 
 ### v.1.6.1 - 2023-09-29 - Block [#9520750](https://www.mintscan.io/lum/blocks/9520750)
 Refactoring of Pool lifecycle abstraction which should facilitate different pool type integration.
+
 Improvements of Batch withdrawals with respect to remote zone unbonding frequency.
+
 Manual seed generation consensus-based.
+
 [Upgrade guide here](https://github.com/lum-network/mainnet/blob/master/upgrades/v1.6.1/guide.md).
 
 ### v.1.5.2 - 2023-08-04 - Block [#8688700](https://www.mintscan.io/lum/blocks/8688700)
 This upgrade is essential for implementing the Epoch module and introducing the Millions batched withdrawals feature. Additionally, it includes an upgrade to Cosmos SDK v0.47.4 for enhanced functionality and stability.
+
 [Upgrade guide here](https://github.com/lum-network/mainnet/blob/master/upgrades/v1.5.2/guide.md).
 
 ### v.1.5.1 - 2023-07-24 - Block [#8527300](https://www.mintscan.io/lum/blocks/8527300)
 This upgrade fixes an issue introduced in the previous update and update Millions prize strategy.
+
 [Upgrade guide here](https://github.com/lum-network/mainnet/blob/master/upgrades/v1.5.1/guide.md).
 
 ### v.1.5.0 - 2023-07-17 - Block [#8424000](https://www.mintscan.io/lum/blocks/8424000)
 This upgrade introduces numerous changes over the whole Lum Network codebase, along with specific Millions improvements.
+
 [Upgrade guide here](https://github.com/lum-network/mainnet/blob/master/upgrades/v1.5.0/guide.md).
 
 ### ~~v1.4.1~~ v1.4.2 - 2023-05-30 - Block [#7740000](https://www.mintscan.io/lum/blocks/7740000)
