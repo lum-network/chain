@@ -122,7 +122,11 @@ func (suite *StoreMigrationTestSuite) TestMigration() {
 	// Get the total supply
 	afterSupply := suite.app.BankKeeper.GetSupply(suite.ctx, dfracttypes.MintDenom)
 	suite.Require().NoError(err)
-	suite.Require().Equal(int64(0), afterSupply.Amount.Int64())
+
+	// Get the module account balance, and ensure it contains the total supply
+	moduleAccount := suite.app.DFractKeeper.GetModuleAccount(suite.ctx)
+	moduleAccountBalance := suite.app.BankKeeper.GetAllBalances(suite.ctx, moduleAccount)
+	suite.Require().Equal(moduleAccountBalance.AmountOf(dfracttypes.MintDenom).Int64(), afterSupply.Amount.Int64())
 }
 
 func TestKeeperSuite(t *testing.T) {

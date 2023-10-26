@@ -25,7 +25,7 @@ func Nuke(ctx sdk.Context, dk dfractkeeper.Keeper) error {
 	})
 
 	// Burn the coins by looping over all the accounts balances
-	if err := dk.UnsafeBurnAllBalance(ctx); err != nil {
+	if _, err := dk.UnsafeGetAllCoinsBack(ctx); err != nil {
 		panic(err)
 	}
 	return nil
