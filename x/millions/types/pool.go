@@ -61,9 +61,6 @@ func (pool *Pool) ValidateBasic(params Params) error {
 	if err := pool.PrizeStrategy.Validate(params); err != nil {
 		return errorsmod.Wrapf(ErrInvalidPoolParams, err.Error())
 	}
-	if pool.FeesStakers.LT(sdk.NewDec(0)) || pool.FeesStakers.GT(sdk.NewDecWithPrec(MaxAcceptableFeesStakers, 2)) {
-		return errorsmod.Wrapf(ErrInvalidPoolParams, "stakers fees must be gte 0 and lte %d/100, got: %f", MaxAcceptableFeesStakers, pool.FeesStakers.MustFloat64())
-	}
 	if pool.PoolType == PoolType_Staking {
 		// Validate native staking configuration
 		if len(pool.Validators) == 0 {

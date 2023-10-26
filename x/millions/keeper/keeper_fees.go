@@ -11,12 +11,17 @@ import (
 type feeCollector struct {
 	keeper        Keeper
 	pool          types.Pool
-	feesStakers   sdk.Dec
+	feesTakers    []types.FeeTaker
 	stakersAmount sdk.Coin
 }
 
 // NewFeeCollector creates a new fee collector for the specified pool
 func (k Keeper) NewFeeCollector(ctx sdk.Context, pool types.Pool) *feeCollector {
+	for _, ft := range pool.FeeTakers {
+		if ft.IsNil() {
+			ft.Amount = sdk.ZeroDec()
+		}
+	}
 	feesStaker := pool.FeesStakers
 	if feesStaker.IsNil() {
 		feesStaker = sdk.ZeroDec()
