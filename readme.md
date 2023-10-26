@@ -40,9 +40,9 @@ Please also make sure to have a look to the [contributing guidelines](https://gi
 Information related to the Lum Network mainnet `lum-network-1` can be found in the [mainnet repository](https://github.com/lum-network/mainnet).
 
 ### v1.6.2 - 2023-11-02 - Block 10027000
-CosmosMillions: Fix of bug related to Withdrawals and EpochUnbonding which caused some Withdrawals to remain in pending state 
-Beam module: Deprecate beam module due to the drop of the use case
-DFract module: Clawback all DFRs as part of DFract sunsetting process as detailed in this blog post: https://medium.com/lum-network/sunsetting-the-dfract-protocol-beta-version-a2277bce07fb
+CosmosMillions: Fix of bug related to Withdrawals and EpochUnbonding which caused some Withdrawals to remain in pending state.
+Beam module: Deprecate beam module due to the drop of the use case.
+DFract module: Clawback all DFRs as part of DFract sunsetting process as detailed in this [blog post](https://medium.com/lum-network/sunsetting-the-dfract-protocol-beta-version-a2277bce07fb).
 [Upgrade guide here](https://github.com/lum-network/mainnet/blob/master/upgrades/v1.6.2/guide.md).
 
 
