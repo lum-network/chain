@@ -96,7 +96,7 @@ func (k Keeper) AddEpochUnbonding(ctx sdk.Context, withdrawal types.Withdrawal, 
 
 	// Prevent adding the same withdrawalID several times per epoch
 	if epochPoolUnbonding.WithdrawalIDExists(withdrawal.WithdrawalId) {
-		return errorsmod.Wrapf(types.ErrEntityOverride, "ID %d", withdrawal.GetWithdrawalId())
+		return nil
 	}
 
 	// Check the Hard cap limit on withdrawals per epoch unbonding
