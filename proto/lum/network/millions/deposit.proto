@@ -43,4 +43,6 @@ message Deposit {
       [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
   google.protobuf.Timestamp updated_at = 13
       [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
+  google.protobuf.Timestamp state_changed_last_at = 14
+      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
 }

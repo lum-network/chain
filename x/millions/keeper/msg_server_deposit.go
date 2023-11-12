@@ -55,16 +55,17 @@ func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDeposit) (*types
 
 	// New deposit instance
 	deposit := types.Deposit{
-		PoolId:           pool.PoolId,
-		State:            types.DepositState_IbcTransfer,
-		DepositorAddress: depositorAddr.String(),
-		Amount:           msg.Amount,
-		WinnerAddress:    winnerAddress.String(),
-		IsSponsor:        msg.GetIsSponsor(),
-		CreatedAtHeight:  ctx.BlockHeight(),
-		UpdatedAtHeight:  ctx.BlockHeight(),
-		CreatedAt:        ctx.BlockTime(),
-		UpdatedAt:        ctx.BlockTime(),
+		PoolId:             pool.PoolId,
+		State:              types.DepositState_IbcTransfer,
+		DepositorAddress:   depositorAddr.String(),
+		Amount:             msg.Amount,
+		WinnerAddress:      winnerAddress.String(),
+		IsSponsor:          msg.GetIsSponsor(),
+		CreatedAtHeight:    ctx.BlockHeight(),
+		UpdatedAtHeight:    ctx.BlockHeight(),
+		CreatedAt:          ctx.BlockTime(),
+		UpdatedAt:          ctx.BlockTime(),
+		StateChangedLastAt: ctx.BlockTime(),
 	}
 
 	// Move funds

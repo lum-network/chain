@@ -262,6 +262,7 @@ func (k Keeper) UpdateDepositStatus(ctx sdk.Context, poolID uint64, depositID ui
 
 	deposit.UpdatedAtHeight = ctx.BlockHeight()
 	deposit.UpdatedAt = ctx.BlockTime()
+	deposit.StateChangedLastAt = ctx.BlockTime()
 	k.setAccountDeposit(ctx, &deposit)
 	k.setPoolDeposit(ctx, &deposit)
 }
