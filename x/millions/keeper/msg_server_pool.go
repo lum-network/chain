@@ -47,6 +47,7 @@ func (k msgServer) RestoreInterchainAccounts(goCtx context.Context, msg *types.M
 		if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, pool.GetConnectionId(), icaDepositPortName, appVersion); err != nil {
 			return nil, errorsmod.Wrapf(types.ErrFailedToRestorePool, fmt.Sprintf("Unable to trigger deposit account registration, err: %s", err.Error()))
 		}
+		k.restoreICADepositEntities(ctx, pool.GetPoolId())
 		// Exit to prevent a double channel registration which might create unpredictable behaviours
 		// The registration of the ICA PrizePool will either be automatically triggered once the ICA Deposit gets ACK (see keeper.OnSetupPoolICACompleted)
 		// or can be restored by calling this method again
@@ -65,7 +66,54 @@ func (k msgServer) RestoreInterchainAccounts(goCtx context.Context, msg *types.M
 		if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, pool.GetConnectionId(), icaPrizePoolPortName, appVersion); err != nil {
 			return nil, errorsmod.Wrapf(types.ErrFailedToRestorePool, fmt.Sprintf("Unable to trigger prizepool account registration, err: %s", err.Error()))
 		}
+		k.restoreICAPrizePoolEntities(ctx, pool.GetPoolId())
 	}
 
 	return &types.MsgRestoreInterchainAccountsResponse{}, nil
+}
+
+// restoreICADepositEntities restores all blocked entities by putting them in error state instead of locked state
+// thus leaving users the opportunity to retry the operation
+func (k msgServer) restoreICADepositEntities(ctx sdk.Context, poolID uint64) {
+	// Restore deposits ICA locked operations on ICADeposit account
+	deposits := k.Keeper.ListPoolDeposits(ctx, poolID)
+	for _, d := range deposits {
+		if d.State == types.DepositState_IcaDelegate {
+			d.ErrorState = d.State
+			d.State = types.DepositState_Failure
+			k.Keeper.setPoolDeposit(ctx, &d)
+		}
+	}
+	// Restore withdrawals ICA locked operations on ICADeposit account
+	withdrawals := k.Keeper.ListPoolWithdrawals(ctx, poolID)
+	for _, w := range withdrawals {
+		if w.State == types.WithdrawalState_IcaUndelegate {
+			w.ErrorState = w.State
+			w.State = types.WithdrawalState_Failure
+			k.Keeper.setPoolWithdrawal(ctx, w)
+		}
+	}
+	// Restore draws ICA locked operations on ICADeposit account
+	draws := k.Keeper.ListPoolDraws(ctx, poolID)
+	for _, d := range draws {
+		if d.State == types.DrawState_IcaWithdrawRewards {
+			d.ErrorState = d.State
+			d.State = types.DrawState_Failure
+			k.Keeper.SetPoolDraw(ctx, d)
+		}
+	}
+}
+
+// restoreICAPrizePoolEntities restores all blocked entities by putting them in error state instead of locked state
+// thus leaving users the opportunity to retry the operation
+func (k msgServer) restoreICAPrizePoolEntities(ctx sdk.Context, poolID uint64) {
+	// Restore draws ICQ locked operations on ICAPrizePool account
+	draws := k.Keeper.ListPoolDraws(ctx, poolID)
+	for _, d := range draws {
+		if d.State == types.DrawState_IcqBalance {
+			d.ErrorState = d.State
+			d.State = types.DrawState_Failure
+			k.Keeper.SetPoolDraw(ctx, d)
+		}
+	}
 }
