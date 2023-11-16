@@ -126,23 +126,34 @@ func (k msgServer) DepositRetry(goCtx context.Context, msg *types.MsgDepositRetr
 		return nil, types.ErrInvalidDepositorAddress
 	}
 
-	// State should be set to failure in order to retry something
-	if deposit.State != types.DepositState_Failure {
-		return nil, errorsmod.Wrapf(
-			types.ErrInvalidDepositState,
-			"state is %s instead of %s",
-			deposit.State.String(), types.DepositState_Failure.String(),
-		)
-	}
-
+	// Process our conditional retry logic
 	newState := types.DepositState_Unspecified
-	if deposit.ErrorState == types.DepositState_IbcTransfer {
+	if deposit.State == types.DepositState_IbcTransfer || deposit.ErrorState == types.DepositState_IbcTransfer {
+		// If the state is not error state and the state did not change for more than deltas, deny the request
+		if deposit.State != types.DepositState_Failure && !deposit.StateChangedLastAt.IsZero() && deposit.StateChangedLastAt.Add(types.RetryStateChangeDeltaNanos).After(ctx.BlockTime()) {
+			return nil, errorsmod.Wrapf(
+				types.ErrInvalidDepositState,
+				"state is %s and state changed last at %s",
+				deposit.State.String(), deposit.StateChangedLastAt.String(),
+			)
+		}
+
+		// Otherwise process the retry
 		newState = types.DepositState_IbcTransfer
 		k.UpdateDepositStatus(ctx, deposit.PoolId, deposit.DepositId, newState, false)
 		if err := k.TransferDepositToRemoteZone(ctx, deposit.PoolId, deposit.DepositId); err != nil {
 			return nil, err
 		}
-	} else if deposit.ErrorState == types.DepositState_IcaDelegate {
+	} else if deposit.State == types.DepositState_IcaDelegate || deposit.ErrorState == types.DepositState_IcaDelegate {
+		// If the state is not error state and the state did not change for more than deltas, deny the request
+		if deposit.State != types.DepositState_Failure && !deposit.StateChangedLastAt.IsZero() && deposit.StateChangedLastAt.Add(types.RetryStateChangeDeltaNanos).After(ctx.BlockTime()) {
+			return nil, errorsmod.Wrapf(
+				types.ErrInvalidDepositState,
+				"state is %s and state changed last at %s",
+				deposit.State.String(), deposit.StateChangedLastAt.String(),
+			)
+		}
+
 		newState = types.DepositState_IcaDelegate
 		k.UpdateDepositStatus(ctx, deposit.PoolId, deposit.DepositId, newState, false)
 		if err := k.DelegateDepositOnRemoteZone(ctx, deposit.PoolId, deposit.DepositId); err != nil {

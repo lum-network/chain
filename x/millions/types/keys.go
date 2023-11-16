@@ -24,7 +24,8 @@ const (
 )
 
 const (
-	IBCTimeoutNanos = 1_800_000_000_000 // 30 minutes
+	IBCTimeoutNanos            = 1_800_000_000_000  // 30 minutes
+	RetryStateChangeDeltaNanos = 10_800_000_000_000 // 3 hours
 )
 
 const (
