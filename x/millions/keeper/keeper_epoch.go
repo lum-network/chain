@@ -395,6 +395,14 @@ func (k Keeper) GetEpochUnbondings(ctx sdk.Context, epochID uint64) (epochUnbond
 	return
 }
 
+// SetEpochUnbonding sets the internal epoch unbondings
+func (k Keeper) SetEpochUnbonding(ctx sdk.Context, epochUnbonding types.EpochUnbonding) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetEpochUnbondingsKey(epochUnbonding.GetEpochNumber())
+	encodedEpochUnbonding := k.cdc.MustMarshal(&epochUnbonding)
+	store.Set(key, encodedEpochUnbonding)
+}
+
 func (k Keeper) ListEpochTrackers(ctx sdk.Context) (list []types.EpochTracker) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.EpochTrackerPrefix)
@@ -402,6 +410,20 @@ func (k Keeper) ListEpochTrackers(ctx sdk.Context) (list []types.EpochTracker) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.EpochTracker
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
+}
+
+func (k Keeper) ListEpochUnbondings(ctx sdk.Context) (list []types.EpochUnbonding) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.EpochUnbondingPrefix)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.EpochUnbonding
 		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		list = append(list, val)
 	}
