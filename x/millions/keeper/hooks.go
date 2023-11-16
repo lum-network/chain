@@ -22,7 +22,11 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochInfo epochstypes.EpochInf
 }
 
 func (k Keeper) processEpochUnbondings(ctx sdk.Context, epochInfo epochstypes.EpochInfo, logger log.Logger) (successCount, errorCount, skippedCount int) {
-	epochTracker, err := k.UpdateEpochTracker(ctx, epochInfo, types.WithdrawalTrackerType)
+	// Create temporary context
+	cacheCtx, writeCache := ctx.CacheContext()
+
+	// Update the epoch tracker
+	epochTracker, err := k.UpdateEpochTracker(cacheCtx, epochInfo, types.WithdrawalTrackerType)
 	if err != nil {
 		logger.Error(
 			fmt.Sprintf("Unable to update epoch tracker, err: %v", err),
@@ -32,9 +36,9 @@ func (k Keeper) processEpochUnbondings(ctx sdk.Context, epochInfo epochstypes.Ep
 	}
 
 	// Get epoch unbondings
-	epochUnbondings := k.GetEpochUnbondings(ctx, epochTracker.EpochNumber)
+	epochUnbondings := k.GetEpochUnbondings(cacheCtx, epochTracker.EpochNumber)
 	for _, epochUnbonding := range epochUnbondings {
-		success, err := k.processEpochUnbonding(ctx, epochUnbonding, epochTracker, logger)
+		success, err := k.processEpochUnbonding(cacheCtx, epochUnbonding, epochTracker, logger)
 		if err != nil {
 			logger.Error(
 				fmt.Sprintf("Error processing epoch unbonding: %v", err),
@@ -49,14 +53,19 @@ func (k Keeper) processEpochUnbondings(ctx sdk.Context, epochInfo epochstypes.Ep
 		}
 	}
 
-	if successCount+errorCount > 0 {
-		logger.Info(
-			"epoch unbonding undelegate started",
-			"nbr_success", successCount,
-			"nbr_error", errorCount,
-			"nbr_skipped", skippedCount,
-		)
+	// If there was no error, write the cache
+	if errorCount > 0 {
+		return successCount, errorCount, skippedCount
+	} else {
+		writeCache()
 	}
+
+	logger.Info(
+		"epoch unbonding undelegate processed",
+		"nbr_success", successCount,
+		"nbr_error", errorCount,
+		"nbr_skipped", skippedCount,
+	)
 
 	return successCount, errorCount, skippedCount
 }
