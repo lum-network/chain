@@ -55,6 +55,12 @@ func (k Keeper) processEpochUnbondings(ctx sdk.Context, epochInfo epochstypes.Ep
 
 	// If there was no error, write the cache
 	if errorCount > 0 {
+		logger.Error(
+			"epoch unbonding undelegate processed with errors, cache not written",
+			"nbr_success", successCount,
+			"nbr_error", errorCount,
+			"nbr_skipped", skippedCount,
+		)
 		return successCount, errorCount, skippedCount
 	} else {
 		writeCache()
