@@ -33,14 +33,17 @@ func (k Keeper) UnmarshalSetWithdrawAddressCallbackArgs(ctx sdk.Context, setWith
 }
 
 func SetWithdrawAddressCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
+	// Create a custom temporary cache
+	cacheCtx, writeCache := ctx.CacheContext()
+
 	// Deserialize the callback args
-	setWithdrawAddressCallback, err := k.UnmarshalSetWithdrawAddressCallbackArgs(ctx, args)
+	setWithdrawAddressCallback, err := k.UnmarshalSetWithdrawAddressCallbackArgs(cacheCtx, args)
 	if err != nil {
 		return errorsmod.Wrapf(types.ErrUnmarshalFailure, fmt.Sprintf("Unable to unmarshal set withdraw address callback args: %s", err.Error()))
 	}
 
 	// Acquire the pool instance from the callback
-	pool, err := k.GetPool(ctx, setWithdrawAddressCallback.GetPoolId())
+	pool, err := k.GetPool(cacheCtx, setWithdrawAddressCallback.GetPoolId())
 	if err != nil {
 		return err
 	}
@@ -48,13 +51,18 @@ func SetWithdrawAddressCallback(k Keeper, ctx sdk.Context, packet channeltypes.P
 	// If the response status is a timeout, that's not an "error" since the relayer will retry then fail or succeed.
 	// We just log it out and return no error
 	if ackResponse.Status == icacallbackstypes.AckResponseStatus_TIMEOUT {
-		k.Logger(ctx).Debug("Received timeout for a set withdraw address packet")
+		k.Logger(cacheCtx).Debug("Received timeout for a set withdraw address packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
-		k.Logger(ctx).Debug("Received failure for a set withdraw address packet")
+		k.Logger(cacheCtx).Debug("Received failure for a set withdraw address packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
-		k.Logger(ctx).Debug("Received success for a set withdraw address packet")
-		_, err := k.OnSetupPoolWithdrawalAddressCompleted(ctx, pool.PoolId)
-		return err
+		k.Logger(cacheCtx).Debug("Received success for a set withdraw address packet")
+		_, err := k.OnSetupPoolWithdrawalAddressCompleted(cacheCtx, pool.PoolId)
+		if err != nil {
+			return err
+		}
+
+		// Commit the cache
+		writeCache()
 	}
 	return nil
 }

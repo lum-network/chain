@@ -33,14 +33,17 @@ func (k Keeper) UnmarshalRedelegateCallbackArgs(ctx sdk.Context, redelegateCallb
 }
 
 func RedelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
+	// Create a custom temporary cache
+	cacheCtx, writeCache := ctx.CacheContext()
+
 	// Deserialize the callback args
-	redelegateCallback, err := k.UnmarshalRedelegateCallbackArgs(ctx, args)
+	redelegateCallback, err := k.UnmarshalRedelegateCallbackArgs(cacheCtx, args)
 	if err != nil {
 		return errorsmod.Wrapf(types.ErrUnmarshalFailure, fmt.Sprintf("Unable to unmarshal redelegate callback args: %s", err.Error()))
 	}
 
 	// Acquire the pool instance from the callback
-	_, err = k.GetPool(ctx, redelegateCallback.GetPoolId())
+	_, err = k.GetPool(cacheCtx, redelegateCallback.GetPoolId())
 	if err != nil {
 		return err
 	}
@@ -48,13 +51,23 @@ func RedelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, a
 	// If the response status is a timeout, that's not an "error" since the relayer will retry then fail or succeed.
 	// We just log it out and return no error
 	if ackResponse.Status == icacallbackstypes.AckResponseStatus_TIMEOUT {
-		k.Logger(ctx).Debug("Received timeout for a redelegate packet")
+		k.Logger(cacheCtx).Debug("Received timeout for a redelegate packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
-		k.Logger(ctx).Debug("Received failure for a redelegate packet")
-		return k.OnRedelegateToActiveValidatorsOnRemoteZoneCompleted(ctx, redelegateCallback.GetPoolId(), redelegateCallback.GetOperatorAddress(), redelegateCallback.GetSplitDelegations(), true)
+		k.Logger(cacheCtx).Debug("Received failure for a redelegate packet")
+		if err := k.OnRedelegateToActiveValidatorsOnRemoteZoneCompleted(cacheCtx, redelegateCallback.GetPoolId(), redelegateCallback.GetOperatorAddress(), redelegateCallback.GetSplitDelegations(), true); err != nil {
+			return err
+		}
+
+		// Commit the cache
+		writeCache()
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
-		k.Logger(ctx).Debug("Received success for a redelegate packet")
-		return k.OnRedelegateToActiveValidatorsOnRemoteZoneCompleted(ctx, redelegateCallback.GetPoolId(), redelegateCallback.GetOperatorAddress(), redelegateCallback.GetSplitDelegations(), false)
+		k.Logger(cacheCtx).Debug("Received success for a redelegate packet")
+		if err := k.OnRedelegateToActiveValidatorsOnRemoteZoneCompleted(cacheCtx, redelegateCallback.GetPoolId(), redelegateCallback.GetOperatorAddress(), redelegateCallback.GetSplitDelegations(), false); err != nil {
+			return err
+		}
+
+		// Commit the cache
+		writeCache()
 	}
 	return nil
 }
