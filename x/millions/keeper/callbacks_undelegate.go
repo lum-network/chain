@@ -57,17 +57,14 @@ func (k Keeper) GetUnbondingCompletionTime(ctx sdk.Context, msgResponses [][]byt
 }
 
 func UndelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
-	// Create a custom temporary cache
-	cacheCtx, writeCache := ctx.CacheContext()
-
 	// Deserialize the callback args
-	undelegateCallback, err := k.UnmarshalUndelegateCallbackArgs(cacheCtx, args)
+	undelegateCallback, err := k.UnmarshalUndelegateCallbackArgs(ctx, args)
 	if err != nil {
 		return errorsmod.Wrapf(types.ErrUnmarshalFailure, fmt.Sprintf("Unable to unmarshal undelegate callback args: %s", err.Error()))
 	}
 
 	// Acquire the pool instance from the callback
-	_, err = k.GetPool(cacheCtx, undelegateCallback.GetPoolId())
+	_, err = k.GetPool(ctx, undelegateCallback.GetPoolId())
 	if err != nil {
 		return err
 	}
@@ -75,47 +72,30 @@ func UndelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, a
 	// If the response status is a timeout, that's not an "error" since the relayer will retry then fail or succeed.
 	// We just log it out and return no error
 	if ackResponse.Status == icacallbackstypes.AckResponseStatus_TIMEOUT {
-		k.Logger(cacheCtx).Debug("Received timeout for an undelegate packet")
+		k.Logger(ctx).Debug("Received timeout for an undelegate packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
-		k.Logger(cacheCtx).Debug("Received failure for an undelegate packet")
+		k.Logger(ctx).Debug("Received failure for an undelegate packet")
 		// Failed OnUndelegateEpochUnbondingOnRemoteZoneCompleted
-		err := k.OnUndelegateWithdrawalsOnRemoteZoneCompleted(
-			cacheCtx,
+		return k.OnUndelegateWithdrawalsOnRemoteZoneCompleted(
+			ctx,
 			undelegateCallback.PoolId,
 			undelegateCallback.WithdrawalIds,
 			nil,
 			true,
 		)
-		if err != nil {
-			return err
-		}
-
-		// Commit the cache
-		writeCache()
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
-		k.Logger(cacheCtx).Debug("Received success for an undelegate packet")
-
-		// Update the completion time using the latest completion time across each message within the transaction
-		unbondingEndsAt, err := k.GetUnbondingCompletionTime(cacheCtx, ackResponse.MsgResponses)
+		k.Logger(ctx).Debug("Received success for an undelegate packet")
+		unbondingEndsAt, err := k.GetUnbondingCompletionTime(ctx, ackResponse.MsgResponses)
 		if err != nil {
 			return err
 		}
-
-		// Call the callback handler
-		err = k.OnUndelegateWithdrawalsOnRemoteZoneCompleted(
-			cacheCtx,
+		return k.OnUndelegateWithdrawalsOnRemoteZoneCompleted(
+			ctx,
 			undelegateCallback.PoolId,
 			undelegateCallback.WithdrawalIds,
 			unbondingEndsAt,
 			false,
 		)
-
-		if err != nil {
-			return err
-		}
-
-		// Commit the cache
-		writeCache()
 	}
 	return nil
 }

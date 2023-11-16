@@ -32,39 +32,26 @@ func (k Keeper) UnmarshalBankSendCallbackArgs(ctx sdk.Context, bankSendCallback 
 }
 
 func BankSendCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
-	// Create a custom temporary cache
-	cacheCtx, writeCache := ctx.CacheContext()
-
 	// Deserialize the callback args
-	bankSendCallback, err := k.UnmarshalBankSendCallbackArgs(cacheCtx, args)
+	bankSendCallback, err := k.UnmarshalBankSendCallbackArgs(ctx, args)
 	if err != nil {
 		return errorsmod.Wrapf(types.ErrUnmarshalFailure, fmt.Sprintf("Unable to unmarshal bank send callback args: %s", err.Error()))
 	}
 
 	// Acquire the pool instance from the callback
-	pool, err := k.GetPool(cacheCtx, bankSendCallback.GetPoolId())
+	pool, err := k.GetPool(ctx, bankSendCallback.GetPoolId())
 	if err != nil {
 		return err
 	}
 
 	if ackResponse.Status == icacallbackstypes.AckResponseStatus_TIMEOUT {
-		k.Logger(cacheCtx).Debug("Received timeout for a bank send to native packet")
+		k.Logger(ctx).Debug("Received timeout for a bank send to native packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
-		k.Logger(cacheCtx).Debug("Received failure for a bank send to native packet")
-		if err := k.OnTransferWithdrawalToRecipientCompleted(cacheCtx, pool.PoolId, bankSendCallback.GetWithdrawalId(), true); err != nil {
-			return err
-		}
-
-		// Commit the cache
-		writeCache()
+		k.Logger(ctx).Debug("Received failure for a bank send to native packet")
+		return k.OnTransferWithdrawalToRecipientCompleted(ctx, pool.PoolId, bankSendCallback.GetWithdrawalId(), true)
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
-		k.Logger(cacheCtx).Debug("Received success for a bank send to native packet")
-		if err := k.OnTransferWithdrawalToRecipientCompleted(cacheCtx, pool.PoolId, bankSendCallback.GetWithdrawalId(), false); err != nil {
-			return err
-		}
-
-		// Commit the cache
-		writeCache()
+		k.Logger(ctx).Debug("Received success for a bank send to native packet")
+		return k.OnTransferWithdrawalToRecipientCompleted(ctx, pool.PoolId, bankSendCallback.GetWithdrawalId(), false)
 	}
 	return nil
 }

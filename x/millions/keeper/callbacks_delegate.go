@@ -33,11 +33,8 @@ func (k Keeper) UnmarshalDelegateCallbackArgs(ctx sdk.Context, delegateCallback 
 }
 
 func DelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ackResponse *icacallbackstypes.AcknowledgementResponse, args []byte) error {
-	// Create a custom temporary cache
-	cacheCtx, writeCache := ctx.CacheContext()
-
 	// Deserialize the callback args
-	delegateCallback, err := k.UnmarshalDelegateCallbackArgs(cacheCtx, args)
+	delegateCallback, err := k.UnmarshalDelegateCallbackArgs(ctx, args)
 	if err != nil {
 		return errorsmod.Wrapf(types.ErrUnmarshalFailure, fmt.Sprintf("Unable to unmarshal delegate callback args: %s", err.Error()))
 	}
@@ -45,23 +42,13 @@ func DelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ack
 	// If the response status is a timeout, that's not an "error" since the relayer will retry then fail or succeed.
 	// We just log it out and return no error
 	if ackResponse.Status == icacallbackstypes.AckResponseStatus_TIMEOUT {
-		k.Logger(cacheCtx).Debug("Received timeout for a delegate packet")
+		k.Logger(ctx).Debug("Received timeout for a delegate packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
-		k.Logger(cacheCtx).Debug("Received failure for a delegate packet")
-		if err := k.OnDelegateDepositOnRemoteZoneCompleted(cacheCtx, delegateCallback.GetPoolId(), delegateCallback.GetDepositId(), delegateCallback.GetSplitDelegations(), true); err != nil {
-			return err
-		}
-
-		// Commit the cache
-		writeCache()
+		k.Logger(ctx).Debug("Received failure for a delegate packet")
+		return k.OnDelegateDepositOnRemoteZoneCompleted(ctx, delegateCallback.GetPoolId(), delegateCallback.GetDepositId(), delegateCallback.GetSplitDelegations(), true)
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_SUCCESS {
-		k.Logger(cacheCtx).Debug("Received success for a delegate packet")
-		if err := k.OnDelegateDepositOnRemoteZoneCompleted(cacheCtx, delegateCallback.GetPoolId(), delegateCallback.GetDepositId(), delegateCallback.GetSplitDelegations(), false); err != nil {
-			return err
-		}
-
-		// Commit the cache
-		writeCache()
+		k.Logger(ctx).Debug("Received success for a delegate packet")
+		return k.OnDelegateDepositOnRemoteZoneCompleted(ctx, delegateCallback.GetPoolId(), delegateCallback.GetDepositId(), delegateCallback.GetSplitDelegations(), false)
 	}
 	return nil
 }
