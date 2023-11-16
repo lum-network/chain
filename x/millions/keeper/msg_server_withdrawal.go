@@ -130,6 +130,13 @@ func (k msgServer) WithdrawDepositRetry(goCtx context.Context, msg *types.MsgWit
 		if err := k.TransferWithdrawalToRecipient(ctx, withdrawal.PoolId, withdrawal.WithdrawalId); err != nil {
 			return nil, err
 		}
+	} else if withdrawal.ErrorState == types.WithdrawalState_IcaUndelegate {
+		// Only possible following a restore account which put entities in this error state
+		// otherwise the retry is automatically triggered by the ICA callback
+		err := k.AddEpochUnbonding(ctx, withdrawal, true)
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		return nil, errorsmod.Wrapf(
 			types.ErrInvalidWithdrawalState,
