@@ -37,6 +37,8 @@ func (k Keeper) processEpochUnbondings(ctx sdk.Context, epochInfo epochstypes.Ep
 
 	// Get epoch unbondings
 	epochUnbondings := k.GetEpochUnbondings(cacheCtx, epochTracker.EpochNumber)
+
+	// For each unbonding, try to proceed the undelegation otherwise, rollback the entire operation
 	for _, epochUnbonding := range epochUnbondings {
 		success, err := k.processEpochUnbonding(cacheCtx, epochUnbonding, epochTracker, logger)
 		if err != nil {
@@ -46,6 +48,7 @@ func (k Keeper) processEpochUnbondings(ctx sdk.Context, epochInfo epochstypes.Ep
 				"epoch_number", epochUnbonding.GetEpochNumber(),
 			)
 			errorCount++
+			break
 		} else if success {
 			successCount++
 		} else {
@@ -53,19 +56,39 @@ func (k Keeper) processEpochUnbondings(ctx sdk.Context, epochInfo epochstypes.Ep
 		}
 	}
 
-	// If there was no error, write the cache
+	// If there was an error, we are supposed to cancel the entire operation
 	if errorCount > 0 {
+		// Log out the critical error
 		logger.Error(
 			"epoch unbonding undelegate processed with errors, cache not written",
 			"nbr_success", successCount,
 			"nbr_error", errorCount,
 			"nbr_skipped", skippedCount,
 		)
+
+		// Rollback the operations and put everything back up in the next epoch
+		// We explicitly don't use the cache context here, as we want to proceed
+		for _, epochUnbonding := range epochUnbondings {
+			for _, wid := range epochUnbonding.WithdrawalIds {
+				withdrawal, err := k.GetPoolWithdrawal(ctx, epochUnbonding.PoolId, wid)
+				if err != nil {
+					return 0, 1, 0
+				}
+				if err := k.AddEpochUnbonding(ctx, withdrawal, false); err != nil {
+					return 0, 1, 0
+				}
+			}
+
+			if err := k.RemoveEpochUnbonding(ctx, epochUnbonding); err != nil {
+				return 0, 1, 0
+			}
+		}
+
 		return successCount, errorCount, skippedCount
-	} else {
-		writeCache()
 	}
 
+	// Otherwise we can just commit the cache, and return
+	writeCache()
 	logger.Info(
 		"epoch unbonding undelegate processed",
 		"nbr_success", successCount,
