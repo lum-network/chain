@@ -22,9 +22,6 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochInfo epochstypes.EpochInf
 }
 
 func (k Keeper) processEpochUnbondings(ctx sdk.Context, epochInfo epochstypes.EpochInfo, logger log.Logger) (successCount, errorCount, skippedCount int) {
-	// Create temporary context
-	cacheCtx, writeCache := ctx.CacheContext()
-
 	// Update the epoch tracker
 	epochTracker, err := k.UpdateEpochTracker(ctx, epochInfo, types.WithdrawalTrackerType)
 	if err != nil {
@@ -34,6 +31,9 @@ func (k Keeper) processEpochUnbondings(ctx sdk.Context, epochInfo epochstypes.Ep
 		)
 		return
 	}
+
+	// Create temporary context
+	cacheCtx, writeCache := ctx.CacheContext()
 
 	// Get epoch unbondings
 	epochUnbondings := k.GetEpochUnbondings(cacheCtx, epochTracker.EpochNumber)
@@ -73,7 +73,7 @@ func (k Keeper) processEpochUnbondings(ctx sdk.Context, epochInfo epochstypes.Ep
 		epochUnbondings = k.GetEpochUnbondings(rollbackTmpCacheCtx, epochTracker.EpochNumber)
 
 		// Rollback the operations and put everything back up in the next epoch
-		// We explicitly don't use the cache context here, as we want to proceed
+		// We explicitly use a custom tailored cache for this operation
 		for _, epochUnbonding := range epochUnbondings {
 			for _, wid := range epochUnbonding.WithdrawalIds {
 				withdrawal, err := k.GetPoolWithdrawal(rollbackTmpCacheCtx, epochUnbonding.PoolId, wid)
@@ -93,10 +93,16 @@ func (k Keeper) processEpochUnbondings(ctx sdk.Context, epochInfo epochstypes.Ep
 			}
 		}
 
-		// Write the cache
+		// Write the rollback cache
 		writeRollbackCache()
+		logger.Info(
+			"epoch unbonding processed with failure, rollback done",
+			"nbr_success", successCount,
+			"nbr_error", errorCount,
+			"nbr_skipped", skippedCount,
+		)
 	} else {
-		// Otherwise we can just commit the cache, and return
+		// Write the operation succeed cache
 		writeCache()
 		logger.Info(
 			"epoch unbonding undelegate processed",
