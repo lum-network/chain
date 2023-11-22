@@ -26,7 +26,7 @@ func (k Keeper) processEpochUnbondings(ctx sdk.Context, epochInfo epochstypes.Ep
 	cacheCtx, writeCache := ctx.CacheContext()
 
 	// Update the epoch tracker
-	epochTracker, err := k.UpdateEpochTracker(cacheCtx, epochInfo, types.WithdrawalTrackerType)
+	epochTracker, err := k.UpdateEpochTracker(ctx, epochInfo, types.WithdrawalTrackerType)
 	if err != nil {
 		logger.Error(
 			fmt.Sprintf("Unable to update epoch tracker, err: %v", err),
@@ -66,36 +66,45 @@ func (k Keeper) processEpochUnbondings(ctx sdk.Context, epochInfo epochstypes.Ep
 			"nbr_skipped", skippedCount,
 		)
 
+		// Allocate new cache context
+		rollbackTmpCacheCtx, writeRollbackCache := ctx.CacheContext()
+
+		// Get epoch unbondings
+		epochUnbondings = k.GetEpochUnbondings(rollbackTmpCacheCtx, epochTracker.EpochNumber)
+
 		// Rollback the operations and put everything back up in the next epoch
 		// We explicitly don't use the cache context here, as we want to proceed
 		for _, epochUnbonding := range epochUnbondings {
 			for _, wid := range epochUnbonding.WithdrawalIds {
-				withdrawal, err := k.GetPoolWithdrawal(ctx, epochUnbonding.PoolId, wid)
+				withdrawal, err := k.GetPoolWithdrawal(rollbackTmpCacheCtx, epochUnbonding.PoolId, wid)
 				if err != nil {
+					logger.Error(fmt.Sprintf("Failure in getting the pool withdrawals for pool %d, err: %v", epochUnbonding.PoolId, err))
 					return 0, 1, 0
 				}
-				if err := k.AddEpochUnbonding(ctx, withdrawal, false); err != nil {
+				if err := k.AddEpochUnbonding(rollbackTmpCacheCtx, withdrawal, false); err != nil {
+					logger.Error(fmt.Sprintf("Failure in adding the withdrawal to epoch unbonding for pool %d, err: %v", epochUnbonding.PoolId, err))
 					return 0, 1, 0
 				}
 			}
 
-			if err := k.RemoveEpochUnbonding(ctx, epochUnbonding); err != nil {
+			if err := k.RemoveEpochUnbonding(rollbackTmpCacheCtx, epochUnbonding); err != nil {
+				logger.Error(fmt.Sprintf("Failure in removing the epoch unbonding for pool %d, err: %v", epochUnbonding.PoolId, err))
 				return 0, 1, 0
 			}
 		}
 
-		return successCount, errorCount, skippedCount
+		// Write the cache
+		writeRollbackCache()
+	} else {
+		// Otherwise we can just commit the cache, and return
+		writeCache()
+		logger.Info(
+			"epoch unbonding undelegate processed",
+			"nbr_success", successCount,
+			"nbr_error", errorCount,
+			"nbr_skipped", skippedCount,
+		)
 	}
-
-	// Otherwise we can just commit the cache, and return
-	writeCache()
-	logger.Info(
-		"epoch unbonding undelegate processed",
-		"nbr_success", successCount,
-		"nbr_error", errorCount,
-		"nbr_skipped", skippedCount,
-	)
-
 	return successCount, errorCount, skippedCount
 }
 
