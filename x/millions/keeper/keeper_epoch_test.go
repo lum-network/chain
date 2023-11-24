@@ -255,9 +255,12 @@ func (suite *KeeperTestSuite) TestEpoch_AddEpochUnbonding() {
 	suite.Require().Equal([]uint64{1, 2}, epochUnbondingPool.WithdrawalIds)
 	suite.Require().Equal(uint64(2), epochUnbondingPool.WithdrawalIdsCount)
 
-	// Same withdrawalID to the epoch unbonding should faild
+	// Same withdrawalID to the epoch unbonding should do nothing
 	err = app.MillionsKeeper.AddEpochUnbonding(ctx, withdrawals[0], false)
-	suite.Require().ErrorIs(millionstypes.ErrEntityOverride, err)
+	suite.Require().NoError(err)
+	epochUnbondingPoolAfter, err := app.MillionsKeeper.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber+frequency, 1)
+	suite.Require().NoError(err)
+	suite.Require().Equal(epochUnbondingPool.WithdrawalIds, epochUnbondingPoolAfter.WithdrawalIds)
 
 	// Trigger new deposits for new pool
 	for i := 0; i < 3; i++ {

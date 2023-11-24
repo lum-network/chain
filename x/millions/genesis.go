@@ -47,6 +47,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetEpochTracker(ctx, epochTracker, types.WithdrawalTrackerType)
 	}
 
+	for _, epochUnbonding := range genState.EpochUnbondings {
+		k.SetEpochUnbonding(ctx, epochUnbonding)
+	}
 }
 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
@@ -63,5 +66,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		Prizes:           k.ListPrizes(ctx),
 		Withdrawals:      k.ListWithdrawals(ctx),
 		EpochTrackers:    k.ListEpochTrackers(ctx),
+		EpochUnbondings:  k.ListEpochUnbondings(ctx),
 	}
 }

@@ -82,13 +82,12 @@ func (k Keeper) OnUndelegateWithdrawalsOnRemoteZoneCompleted(ctx sdk.Context, po
 			if err := k.AddEpochUnbonding(ctx, withdrawal, true); err != nil {
 				return err
 			}
-			continue
+		} else {
+			// Set the unbondingEndsAt and add withdrawal to matured queue
+			withdrawal.UnbondingEndsAt = unbondingEndsAt
+			k.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, types.WithdrawalState_IcaUnbonding, unbondingEndsAt, false)
+			k.addWithdrawalToMaturedQueue(ctx, withdrawal)
 		}
-
-		// Set the unbondingEndsAt and add withdrawal to matured queue
-		withdrawal.UnbondingEndsAt = unbondingEndsAt
-		k.UpdateWithdrawalStatus(ctx, withdrawal.PoolId, withdrawal.WithdrawalId, types.WithdrawalState_IcaUnbonding, unbondingEndsAt, false)
-		k.addWithdrawalToMaturedQueue(ctx, withdrawal)
 	}
 
 	if isError {
