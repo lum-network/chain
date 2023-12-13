@@ -775,6 +775,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitUndelegate() {
 func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	app := suite.app
 	ctx := suite.ctx
+	frequency := uint64(4)
 	// Assuming first epoch is 1, and nextEpochUnbonding is the 4th one
 	for epoch := int64(1); epoch <= 4; epoch++ {
 		epochInfo, err := TriggerEpochUpdate(suite)
@@ -921,7 +922,7 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	suite.Require().NoError(err)
 
 	// Get epoch unbonding
-	currentEpochUnbonding, err := app.MillionsKeeper.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber, poolID)
+	currentEpochUnbonding, err := app.MillionsKeeper.GetEpochPoolUnbonding(ctx, epochTracker.EpochNumber+frequency, poolID)
 	suite.Require().NoError(err)
 
 	// Simulate undelegate failure for d1 + d2

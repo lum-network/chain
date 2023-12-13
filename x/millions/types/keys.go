@@ -14,7 +14,7 @@ import (
 const (
 	ModuleName = "millions"
 
-	ModuleVersion = 4
+	ModuleVersion = 5
 
 	StoreKey = ModuleName
 

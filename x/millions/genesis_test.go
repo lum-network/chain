@@ -113,6 +113,9 @@ var testGenesis = millionstypes.GenesisState{
 	EpochTrackers: []millionstypes.EpochTracker{
 		{EpochTrackerType: epochstypes.DAY_EPOCH, EpochIdentifier: epochstypes.DAY_EPOCH, NextEpochNumber: uint64(2), PreviousEpochNumber: uint64(0), NextEpochStartTime: future},
 	},
+	EpochUnbondings: []millionstypes.EpochUnbonding{
+		{PoolId: 1, EpochIdentifier: "test", EpochNumber: 1, TotalAmount: sdk.NewCoin("ulum", sdk.NewInt(1000000)), WithdrawalIds: []uint64{1, 2}, WithdrawalIdsCount: 2},
+	},
 }
 
 func TestInitGenesis(t *testing.T) {
@@ -301,6 +304,16 @@ func TestInitGenesis(t *testing.T) {
 		require.Equal(t, testGenesis.EpochTrackers[i].NextEpochStartTime, epochTracker.NextEpochStartTime)
 	}
 
+	// Make sure epoch unbondings have been imported
+	epochUnbondings := app.MillionsKeeper.ListEpochUnbondings(ctx)
+	require.Len(t, epochUnbondings, len(testGenesis.EpochUnbondings))
+	for i, epochUnbonding := range epochUnbondings {
+		require.Equal(t, testGenesis.EpochUnbondings[i].EpochIdentifier, epochUnbonding.EpochIdentifier)
+		require.Equal(t, testGenesis.EpochUnbondings[i].EpochNumber, epochUnbonding.EpochNumber)
+		require.Equal(t, testGenesis.EpochUnbondings[i].WithdrawalIds, epochUnbonding.WithdrawalIds)
+		require.Equal(t, testGenesis.EpochUnbondings[i].WithdrawalIdsCount, epochUnbonding.WithdrawalIdsCount)
+		require.Equal(t, testGenesis.EpochUnbondings[i].TotalAmount.Amount.Int64(), epochUnbonding.TotalAmount.Amount.Int64())
+	}
 }
 
 func TestExportGenesis(t *testing.T) {
@@ -408,5 +421,15 @@ func TestExportGenesis(t *testing.T) {
 		require.Equal(t, testGenesis.EpochTrackers[i].EpochTrackerType, epochTracker.EpochTrackerType)
 		require.Equal(t, testGenesis.EpochTrackers[i].NextEpochNumber, epochTracker.NextEpochNumber)
 		require.Equal(t, testGenesis.EpochTrackers[i].NextEpochStartTime, epochTracker.NextEpochStartTime)
+	}
+
+	// Test epoch unbondings export
+	require.Len(t, exportGenesis.EpochUnbondings, len(testGenesis.EpochUnbondings))
+	for i, epochUnbonding := range testGenesis.EpochUnbondings {
+		require.Equal(t, testGenesis.EpochUnbondings[i].EpochIdentifier, epochUnbonding.EpochIdentifier)
+		require.Equal(t, testGenesis.EpochUnbondings[i].EpochNumber, epochUnbonding.EpochNumber)
+		require.Equal(t, testGenesis.EpochUnbondings[i].WithdrawalIds, epochUnbonding.WithdrawalIds)
+		require.Equal(t, testGenesis.EpochUnbondings[i].WithdrawalIdsCount, epochUnbonding.WithdrawalIdsCount)
+		require.Equal(t, testGenesis.EpochUnbondings[i].TotalAmount.Amount.Int64(), epochUnbonding.TotalAmount.Amount.Int64())
 	}
 }
