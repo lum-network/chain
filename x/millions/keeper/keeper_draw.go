@@ -435,7 +435,7 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*typ
 	k.SetPoolDraw(ctx, draw)
 
 	// Distribute prizes and collect fees
-	fc := k.NewFeeCollector(ctx, pool)
+	fc := k.NewFeeManager(ctx, pool)
 	if err := k.DistributePrizes(ctx, fc, dRes, draw); err != nil {
 		return k.OnExecuteDrawCompleted(
 			ctx,
@@ -758,7 +758,7 @@ func (k Keeper) RunDrawPrizesWithUniques(ctx sdk.Context, prizePool sdk.Coin, pr
 }
 
 // DistributePrizes distributes the prizes if they have a winner
-func (k Keeper) DistributePrizes(ctx sdk.Context, fc *feeCollector, dRes DrawResult, draw types.Draw) error {
+func (k Keeper) DistributePrizes(ctx sdk.Context, fc *feeManager, dRes DrawResult, draw types.Draw) error {
 	var prizeRefs []types.PrizeRef
 	for _, pd := range dRes.PrizeDraws {
 		if pd.Winner != nil {

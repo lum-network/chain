@@ -37,10 +37,8 @@ message ProposalRegisterPool {
     (gogoproto.nullable) = false
   ];
   PoolType pool_type = 16;
-  string fees_stakers = 17 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
-  ];
+  reserved 17; // OLD fees_stakers
+  repeated FeeTaker fee_takers = 18 [ (gogoproto.nullable) = false ];
 }
 
 message ProposalUpdatePool {
@@ -64,10 +62,8 @@ message ProposalUpdatePool {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = true
   ];
-  string fees_stakers = 11 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = true
-  ];
+  reserved 11; // OLD fees_stakers
+  repeated FeeTaker fee_takers = 12 [ (gogoproto.nullable) = true ];
 }
 
 message ProposalUpdateParams {

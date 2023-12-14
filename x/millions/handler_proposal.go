@@ -15,7 +15,7 @@ func NewMillionsProposalHandler(k keeper.Keeper) govtypes.Handler {
 		switch c := content.(type) {
 		case *types.ProposalUpdatePool:
 			{
-				return k.UpdatePool(ctx, c.PoolId, c.Validators, c.MinDepositAmount, c.UnbondingDuration, c.MaxUnbondingEntries, c.DrawSchedule, c.PrizeStrategy, c.State, c.FeesStakers)
+				return k.UpdatePool(ctx, c.PoolId, c.Validators, c.MinDepositAmount, c.UnbondingDuration, c.MaxUnbondingEntries, c.DrawSchedule, c.PrizeStrategy, c.State, c.FeeTakers)
 			}
 		case *types.ProposalRegisterPool:
 			{
@@ -35,7 +35,7 @@ func NewMillionsProposalHandler(k keeper.Keeper) govtypes.Handler {
 					c.MaxUnbondingEntries,
 					c.GetDrawSchedule(),
 					c.GetPrizeStrategy(),
-					c.FeesStakers,
+					c.FeeTakers,
 				)
 				return err
 			}
