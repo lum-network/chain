@@ -23,7 +23,7 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeUpdatePool)
 }
 
-func NewUpdatePoolProposal(title, description string, poolId uint64, validators []string, minDepositAmount *math.Int, prizeStrategy *PrizeStrategy, drawSchedule *DrawSchedule, state PoolState, UnbondingDuration *time.Duration, maxUnbondingEntries *math.Int, fees *sdk.Dec) govtypes.Content {
+func NewUpdatePoolProposal(title, description string, poolId uint64, validators []string, minDepositAmount *math.Int, prizeStrategy *PrizeStrategy, drawSchedule *DrawSchedule, state PoolState, UnbondingDuration *time.Duration, maxUnbondingEntries *math.Int, fees []*FeeTaker) govtypes.Content {
 	return &ProposalUpdatePool{
 		Title:               title,
 		Description:         description,
@@ -35,7 +35,7 @@ func NewUpdatePoolProposal(title, description string, poolId uint64, validators 
 		State:               state,
 		UnbondingDuration:   UnbondingDuration,
 		MaxUnbondingEntries: maxUnbondingEntries,
-		FeesStakers:         fees,
+		FeeTakers:           fees,
 	}
 }
 
@@ -77,11 +77,11 @@ func (p *ProposalUpdatePool) ValidateBasic() error {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "draw delta cannot be lower than %s", MinAcceptableDrawDelta.String())
 		}
 	}
-	if p.FeesStakers != nil {
+	/*if p.FeesStakers != nil {
 		if p.FeesStakers.LT(sdk.NewDec(0)) || p.FeesStakers.GT(sdk.NewDecWithPrec(MaxAcceptableFeesStakers, 2)) {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "stakers fees must be gte 0 and lte %d/100, got: %f", MaxAcceptableFeesStakers, p.FeesStakers.MustFloat64())
 		}
-	}
+	}*/
 	return nil
 }
 
@@ -95,7 +95,6 @@ func (p ProposalUpdatePool) String() string {
 	Min Deposit Amount: 		%d
 	Zone Unbonding Duration:	%s
 	Max Unbonding Entries:		%d
-	Fees Stakers:				%s
 	======Draw Schedule======
 	%s
 	======Prize Strategy======
@@ -108,7 +107,6 @@ func (p ProposalUpdatePool) String() string {
 		p.MinDepositAmount.Int64(),
 		p.UnbondingDuration.String(),
 		p.MaxUnbondingEntries.Int64(),
-		p.FeesStakers.String(),
 		p.DrawSchedule.String(),
 		p.PrizeStrategy.String(),
 	)

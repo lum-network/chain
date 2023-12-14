@@ -24,7 +24,7 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeRegisterPool)
 }
 
-func NewRegisterPoolProposal(title string, description string, poolType PoolType, chainID string, denom string, nativeDenom string, connectionId string, bech32PrefixAccAddr string, bech32PrefixValAddr string, validators []string, minDepositAmount math.Int, prizeStrategy PrizeStrategy, drawSchedule DrawSchedule, UnbondingDuration time.Duration, maxUnbondingEntries math.Int, fees sdk.Dec) govtypes.Content {
+func NewRegisterPoolProposal(title string, description string, poolType PoolType, chainID string, denom string, nativeDenom string, connectionId string, bech32PrefixAccAddr string, bech32PrefixValAddr string, validators []string, minDepositAmount math.Int, prizeStrategy PrizeStrategy, drawSchedule DrawSchedule, UnbondingDuration time.Duration, maxUnbondingEntries math.Int, fees []FeeTaker) govtypes.Content {
 	return &ProposalRegisterPool{
 		Title:               title,
 		Description:         description,
@@ -41,7 +41,7 @@ func NewRegisterPoolProposal(title string, description string, poolType PoolType
 		DrawSchedule:        drawSchedule,
 		UnbondingDuration:   UnbondingDuration,
 		MaxUnbondingEntries: maxUnbondingEntries,
-		FeesStakers:         fees,
+		FeeTakers:           fees,
 	}
 }
 
@@ -95,9 +95,9 @@ func (p *ProposalRegisterPool) ValidateBasic() error {
 	if p.DrawSchedule.DrawDelta < MinAcceptableDrawDelta {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "draw delta cannot be lower than %s", MinAcceptableDrawDelta)
 	}
-	if p.FeesStakers.LT(sdk.NewDec(0)) || p.FeesStakers.GT(sdk.NewDecWithPrec(MaxAcceptableFeesStakers, 2)) {
+	/*if p.FeesStakers.LT(sdk.NewDec(0)) || p.FeesStakers.GT(sdk.NewDecWithPrec(MaxAcceptableFeesStakers, 2)) {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "stakers fees must be gte 0 and lte %d/100, got: %f", MaxAcceptableFeesStakers, p.FeesStakers.MustFloat64())
-	}
+	}*/
 	return nil
 }
 
@@ -116,7 +116,6 @@ func (p ProposalRegisterPool) String() string {
 	Bech32 Acc Prefix: 			%s
 	Bech32 Val Prefix: 			%s
 	Transfer Channel ID:		%s
-	Fees Stakers:				%s
 	======Draw Schedule======
 	%s
 	======Prize Strategy======
@@ -131,7 +130,6 @@ func (p ProposalRegisterPool) String() string {
 		p.MaxUnbondingEntries.Int64(),
 		p.Bech32PrefixAccAddr, p.Bech32PrefixValAddr,
 		p.TransferChannelId,
-		p.FeesStakers.String(),
 		p.DrawSchedule.String(),
 		p.PrizeStrategy.String(),
 	)
