@@ -78,6 +78,11 @@ func (pool *Pool) ValidateBasic(params Params) error {
 			}
 		}
 	}
+	for _, fee := range pool.FeeTakers {
+		if err := fee.ValidateBasic(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
