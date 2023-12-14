@@ -2,6 +2,7 @@ package migrations
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v164 "github.com/lum-network/chain/x/millions/migrations/v164"
 
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
 	v150 "github.com/lum-network/chain/x/millions/migrations/v150"
@@ -36,4 +37,9 @@ func (m Migrator) Migrate3To4(ctx sdk.Context) error {
 // Migrate4To5 migrates from version 4 to 5
 func (m Migrator) Migrate4To5(ctx sdk.Context) error {
 	return v162.MigratePendingWithdrawalsToNewEpochUnbonding(ctx, m.keeper)
+}
+
+// Migrate5To6 migrates from version 5 to 6
+func (m Migrator) Migrate5To6(ctx sdk.Context) error {
+	return v164.SaveEntitiesOnAccountLevel(ctx, m.keeper)
 }
