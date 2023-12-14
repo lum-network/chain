@@ -9,11 +9,17 @@ import (
 	"github.com/lum-network/chain/x/millions/types"
 )
 
+type feeDestination struct {
+	taker  types.FeeTaker
+	amount math.Int
+}
+
 type feeManager struct {
 	keeper          Keeper
 	pool            types.Pool
 	takers          []types.FeeTaker
 	collectedAmount sdk.Coin
+	destinations    []feeDestination
 }
 
 // CollectedAmount returns the collected and not sent amount
@@ -34,6 +40,7 @@ func (k Keeper) NewFeeManager(ctx sdk.Context, pool types.Pool) *feeManager {
 		pool:            pool,
 		takers:          pool.FeeTakers,
 		collectedAmount: sdk.NewCoin(pool.Denom, math.ZeroInt()),
+		destinations:    make([]feeDestination, 0),
 	}
 }
 
@@ -43,7 +50,14 @@ func (fm *feeManager) CollectPrizeFees(ctx sdk.Context, prize *types.Prize) (new
 	// Compute the fees
 	fees = math.ZeroInt()
 	for _, ft := range fm.takers {
-		fees = fees.Add(ft.Amount.MulInt(prize.Amount.Amount).RoundInt())
+		am := ft.Amount.MulInt(prize.Amount.Amount).RoundInt()
+		fees = fees.Add(am)
+
+		// Update the collected amount for this destination
+		fm.destinations = append(fm.destinations, feeDestination{
+			taker:  ft,
+			amount: am,
+		})
 	}
 
 	// Update the collected amount
@@ -64,19 +78,18 @@ func (fm *feeManager) SendCollectedFees(ctx sdk.Context) (err error) {
 	}
 
 	// Otherwise, handle each fee taker by calling specific logic with the taker and amount to send
-	for _, ft := range fm.takers {
+	for _, destination := range fm.destinations {
 		// Compute the amount to send for each, depending on their amount (which is a percentage)
-		total := fm.collectedAmount.Amount.Mul(ft.Amount.RoundInt()).Quo(math.NewInt(100))
-		amount := sdk.NewCoin(fm.pool.Denom, total)
+		amount := sdk.NewCoin(fm.pool.Denom, destination.amount)
 
 		// Process the fee taker depending on its type
-		switch ft.Type {
+		switch destination.taker.Type {
 		case types.FeeTakerType_LocalAddr:
-			err = fm.sendCollectedFeesToLocalAddr(ctx, ft, amount)
+			err = fm.sendCollectedFeesToLocalAddr(ctx, destination.taker, amount)
 		case types.FeeTakerType_LocalModuleAccount:
-			err = fm.sendCollectedFeesToLocalModuleAccount(ctx, ft, amount)
+			err = fm.sendCollectedFeesToLocalModuleAccount(ctx, destination.taker, amount)
 		case types.FeeTakerType_RemoteAddr:
-			err = fm.sendCollectedFeesToRemoteAddr(ctx, ft, amount)
+			err = fm.sendCollectedFeesToRemoteAddr(ctx, destination.taker, amount)
 		}
 		if err != nil {
 			return err
