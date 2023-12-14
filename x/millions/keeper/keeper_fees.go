@@ -83,6 +83,10 @@ func (fm *feeManager) SendCollectedFees(ctx sdk.Context) (err error) {
 		}
 	}
 
+	if err == nil {
+		fm.collectedAmount.Amount = math.ZeroInt()
+	}
+
 	return nil
 }
 
