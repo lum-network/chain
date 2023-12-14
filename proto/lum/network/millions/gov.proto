@@ -61,7 +61,7 @@ message ProposalUpdatePool {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = true
   ];
-  repeated FeeTaker fee_takers = 11 [ (gogoproto.nullable) = true ];
+  repeated FeeTaker fee_takers = 11 [ (gogoproto.nullable) = false ];
 }
 
 message ProposalUpdateParams {

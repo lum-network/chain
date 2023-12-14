@@ -383,7 +383,7 @@ func (k Keeper) UpdatePool(
 	drawSchedule *types.DrawSchedule,
 	prizeStrategy *types.PrizeStrategy,
 	state types.PoolState,
-	fees []*types.FeeTaker,
+	feeTakers []types.FeeTaker,
 ) error {
 	// Acquire and deserialize our pool entity
 	pool, err := k.GetPool(ctx, poolID)
@@ -412,8 +412,8 @@ func (k Keeper) UpdatePool(
 	if prizeStrategy != nil {
 		pool.PrizeStrategy = *prizeStrategy
 	}
-	if fees != nil {
-		pool.FeeTakers = fees
+	if feeTakers != nil {
+		pool.FeeTakers = feeTakers
 	}
 
 	// Update pool state only if current pool state is in paused and incoming state ready

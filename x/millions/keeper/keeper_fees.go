@@ -60,7 +60,6 @@ func (fm *feeManager) CollectPrizeFees(ctx sdk.Context, prize *types.Prize) (new
 func (fm *feeManager) SendCollectedFees(ctx sdk.Context) (err error) {
 	// If nothing was collected, there is nothing to do
 	if fm.collectedAmount.Amount.IsZero() {
-		fm.collectedAmount.Amount = math.ZeroInt()
 		return nil
 	}
 
