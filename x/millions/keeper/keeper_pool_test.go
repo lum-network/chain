@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -306,7 +307,9 @@ func (suite *KeeperTestSuite) TestPool_DepositorsCountAndTVL() {
 		sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
 		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
-		sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2),
+		[]millionstypes.FeeTaker{
+			{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		},
 	)
 	suite.Require().NoError(err)
 	pool, err := app.MillionsKeeper.GetPool(ctx, poolID)
@@ -974,7 +977,9 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 			{PoolPercent: 10, DrawProbability: sdk.NewDec(1), Quantity: 10},
 		},
 	}
-	newFees := sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers+1, 2)
+	newFees := []millionstypes.FeeTaker{
+		{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers+1, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+	}
 
 	UnbondingDuration := time.Duration(millionstypes.DefaultUnbondingDuration)
 	maxUnbondingEntries := sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries)
@@ -1069,7 +1074,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 	suite.Require().Equal(true, pool.Validators[4].IsEnabled)
 
 	// UpdatePool with new params
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Paused, &newFees)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Paused, newFees)
 	suite.Require().NoError(err)
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
@@ -1086,10 +1091,10 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 	// New draw schedule applied
 	suite.Require().Equal(newDrawSchedule, pool.DrawSchedule)
 	// New fees applied
-	suite.Require().Equal(newFees, pool.FeesStakers)
+	suite.Require().Equal(len(newFees), len(pool.FeeTakers))
 
 	// UpdatePool with invalid pool_state -> PoolState_Killed
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Killed, &newFees)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Killed, newFees)
 	suite.Require().ErrorIs(err, millionstypes.ErrPoolStateChangeNotAllowed)
 	// Grab fresh pool instance
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
@@ -1106,7 +1111,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 	suite.Require().Equal(millionstypes.PoolState_Paused, pool.State)
 
 	// UpdatePool with valid pool_state -> PoolState_Ready
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Ready, &newFees)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Ready, newFees)
 	suite.Require().NoError(err)
 	// Grab fresh pool instance
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)

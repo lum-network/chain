@@ -1,6 +1,7 @@
 package millions_test
 
 import (
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"sort"
 	"testing"
 	"time"
@@ -54,31 +55,41 @@ var testGenesis = millionstypes.GenesisState{
 			ChainId: "c1", Validators: defaultValidators, MinDepositAmount: sdk.NewInt(1_000_000), UnbondingDuration: time.Duration(millionstypes.DefaultUnbondingDuration), MaxUnbondingEntries: sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries), AvailablePrizePool: sdk.NewCoin("denom-1", sdk.ZeroInt()),
 			DrawSchedule: defaultSchedule, PrizeStrategy: defaultPrizeStrat,
 			State: millionstypes.PoolState_Created, Bech32PrefixAccAddr: "lum", Bech32PrefixValAddr: "lumvaloper",
-			FeesStakers: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2),
+			FeeTakers: []millionstypes.FeeTaker{
+				{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+			},
 		},
 		{PoolId: 2, PoolType: millionstypes.PoolType_Staking, TvlAmount: sdk.NewInt(603), DepositorsCount: 2, SponsorshipAmount: sdk.NewInt(401), Denom: "denom-2", NativeDenom: "denom-2", NextDrawId: 2,
 			ChainId: "c1", Validators: defaultValidators, MinDepositAmount: sdk.NewInt(1_000_000), UnbondingDuration: time.Duration(millionstypes.DefaultUnbondingDuration), MaxUnbondingEntries: sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries), AvailablePrizePool: sdk.NewCoin("denom-2", sdk.ZeroInt()),
 			DrawSchedule: defaultSchedule, PrizeStrategy: defaultPrizeStrat,
 			State: millionstypes.PoolState_Ready, Bech32PrefixAccAddr: "lum", Bech32PrefixValAddr: "lumvaloper",
-			FeesStakers: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2),
+			FeeTakers: []millionstypes.FeeTaker{
+				{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+			},
 		},
 		{PoolId: 3, PoolType: millionstypes.PoolType_Staking, TvlAmount: sdk.NewInt(601), DepositorsCount: 1, SponsorshipAmount: sdk.ZeroInt(), Denom: "denom-3", NativeDenom: "denom-3", NextDrawId: 1,
 			ChainId: "c1", Validators: defaultValidators, MinDepositAmount: sdk.NewInt(1_000_000), UnbondingDuration: time.Duration(millionstypes.DefaultUnbondingDuration), MaxUnbondingEntries: sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries), AvailablePrizePool: sdk.NewCoin("denom-3", sdk.ZeroInt()),
 			DrawSchedule: defaultSchedule, PrizeStrategy: defaultPrizeStrat,
 			State: millionstypes.PoolState_Killed, Bech32PrefixAccAddr: "lum", Bech32PrefixValAddr: "lumvaloper",
-			FeesStakers: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2),
+			FeeTakers: []millionstypes.FeeTaker{
+				{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+			},
 		},
 		{PoolId: 4, PoolType: millionstypes.PoolType_Staking, TvlAmount: sdk.NewInt(400), DepositorsCount: 1, SponsorshipAmount: sdk.ZeroInt(), Denom: "denom-4", NativeDenom: "denom-4", NextDrawId: 1,
 			ChainId: "c1", Validators: defaultValidators, MinDepositAmount: sdk.NewInt(1_000_000), UnbondingDuration: time.Duration(millionstypes.DefaultUnbondingDuration), MaxUnbondingEntries: sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries), AvailablePrizePool: sdk.NewCoin("denom-4", sdk.ZeroInt()),
 			DrawSchedule: defaultSchedule, PrizeStrategy: defaultPrizeStrat,
 			State: millionstypes.PoolState_Created, Bech32PrefixAccAddr: "lum", Bech32PrefixValAddr: "lumvaloper",
-			FeesStakers: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2),
+			FeeTakers: []millionstypes.FeeTaker{
+				{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+			},
 		},
 		{PoolId: 5, PoolType: millionstypes.PoolType_Staking, TvlAmount: sdk.NewInt(0), DepositorsCount: 0, SponsorshipAmount: sdk.ZeroInt(), Denom: "denom-5", NativeDenom: "denom-5", NextDrawId: 1,
 			ChainId: "c1", Validators: defaultValidators, MinDepositAmount: sdk.NewInt(1_000_000), UnbondingDuration: time.Duration(millionstypes.DefaultUnbondingDuration), MaxUnbondingEntries: sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries), AvailablePrizePool: sdk.NewCoin("denom-5", sdk.ZeroInt()),
 			DrawSchedule: defaultSchedule, PrizeStrategy: defaultPrizeStrat,
 			State: millionstypes.PoolState_Killed, Bech32PrefixAccAddr: "lum", Bech32PrefixValAddr: "lumvaloper",
-			FeesStakers: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2),
+			FeeTakers: []millionstypes.FeeTaker{
+				{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+			},
 		},
 	},
 	Deposits: []millionstypes.Deposit{

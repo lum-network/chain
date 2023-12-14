@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"testing"
 	"time"
 
@@ -185,8 +186,10 @@ func newValidPool(suite *KeeperTestSuite, pool millionstypes.Pool) *millionstype
 	if pool.State == millionstypes.PoolState_Unspecified {
 		pool.State = millionstypes.PoolState_Ready
 	}
-	if pool.FeesStakers.IsNil() {
-		pool.FeesStakers = sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2)
+	if len(pool.FeeTakers) == 0 {
+		pool.FeeTakers = []millionstypes.FeeTaker{
+			{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		}
 	}
 	if pool.CreatedAt.IsZero() {
 		pool.CreatedAt = suite.ctx.BlockTime()

@@ -19,12 +19,12 @@ func (suite *KeeperTestSuite) TestFees_FeeCollector() {
 	// Fees should start at 0 and have the pool denom
 	denom := app.StakingKeeper.BondDenom(ctx)
 	feeAddr := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName).GetAddress()
-	fc := app.MillionsKeeper.NewFeeCollector(ctx, millionstypes.Pool{Denom: denom, LocalAddress: suite.addrs[0].String()})
+	fc := app.MillionsKeeper.NewFeeManager(ctx, millionstypes.Pool{Denom: denom, LocalAddress: suite.addrs[0].String()})
 	suite.Require().Equal(math.ZeroInt(), fc.CollectedAmount().Amount)
 	suite.Require().Equal(denom, fc.CollectedAmount().Denom)
 
 	// 0 fees should do nothing
-	fc = app.MillionsKeeper.NewFeeCollector(ctx, millionstypes.Pool{Denom: denom, LocalAddress: suite.addrs[0].String()})
+	fc = app.MillionsKeeper.NewFeeManager(ctx, millionstypes.Pool{Denom: denom, LocalAddress: suite.addrs[0].String()})
 	prize := &millionstypes.Prize{Amount: sdk.NewCoin(denom, math.ZeroInt())}
 	a, f := fc.CollectPrizeFees(ctx, prize)
 	suite.Require().Equal(math.ZeroInt(), a)
@@ -36,7 +36,9 @@ func (suite *KeeperTestSuite) TestFees_FeeCollector() {
 	suite.Require().Equal(math.ZeroInt(), f)
 
 	// 10% fees should store collected fees (if possible) and update prize amount
-	fc = app.MillionsKeeper.NewFeeCollector(ctx, millionstypes.Pool{Denom: denom, LocalAddress: suite.addrs[0].String(), FeesStakers: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2)})
+	fc = app.MillionsKeeper.NewFeeManager(ctx, millionstypes.Pool{Denom: denom, LocalAddress: suite.addrs[0].String(), FeeTakers: []millionstypes.FeeTaker{
+		{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+	}})
 
 	prize.Amount.Amount = math.NewInt(0)
 	a, f = fc.CollectPrizeFees(ctx, prize)
@@ -78,13 +80,16 @@ func (suite *KeeperTestSuite) TestFees_FeeCollector() {
 	// Succeeding at sending collected fees should send and clear the collected amount
 	poolBalanceBefore := app.BankKeeper.GetBalance(ctx, suite.addrs[0], denom)
 	feeCollectorBalanceBefore := app.BankKeeper.GetBalance(ctx, feeAddr, denom)
-	collectedAmount := sdk.NewInt(123_456)
+
+	collectedAmount := sdk.NewInt(123_456) // Manually set collected amount
+
 	fc.CollectPrizeFees(ctx, &millionstypes.Prize{Amount: sdk.NewCoin(denom, collectedAmount.MulRaw(10).SubRaw(1290))})
 	suite.Require().Equal(denom, fc.CollectedAmount().Denom)
 	suite.Require().Equal(collectedAmount, fc.CollectedAmount().Amount)
+
 	err := fc.SendCollectedFees(ctx)
 	suite.Require().NoError(err)
-	suite.Require().Equal(math.NewInt(0), fc.CollectedAmount().Amount)
+	suite.Require().Equal(math.NewInt(0).Int64(), fc.CollectedAmount().Amount.Int64())
 	suite.Require().Equal(poolBalanceBefore.SubAmount(collectedAmount), app.BankKeeper.GetBalance(ctx, suite.addrs[0], denom))
 	suite.Require().Equal(feeCollectorBalanceBefore.AddAmount(collectedAmount), app.BankKeeper.GetBalance(ctx, feeAddr, denom))
 
@@ -140,7 +145,7 @@ func (suite *KeeperTestSuite) TestFees_DrawPrizesFees() {
 		p.MaxUnbondingEntries,
 		p.DrawSchedule,
 		p.PrizeStrategy,
-		p.FeesStakers,
+		p.FeeTakers,
 	)
 	suite.Require().NoError(err)
 	p, err = app.MillionsKeeper.GetPool(ctx, poolID)
@@ -177,11 +182,11 @@ func (suite *KeeperTestSuite) TestFees_DrawPrizesFees() {
 	// prize entity should have fees subtracted
 	prizes := app.MillionsKeeper.ListPrizes(ctx)
 	suite.Require().Len(prizes, 100)
-	suite.Require().Equal(prizePoolAmount/100-p.FeesStakers.MulInt64(prizePoolAmount/100).RoundInt64(), prizes[0].Amount.Amount.Int64())
+	suite.Require().Equal(prizePoolAmount/100-p.FeeTakers[0].Amount.MulInt64(prizePoolAmount/100).RoundInt64(), prizes[0].Amount.Amount.Int64())
 
 	// Stakers should receive their share of the collected fees upon send success
 	// Community tax should apply as well
-	collectedAmount := p.FeesStakers.MulInt64(prizePoolAmount).RoundInt64()
+	collectedAmount := p.FeeTakers[0].Amount.MulInt64(prizePoolAmount).RoundInt64()
 	vals := app.StakingKeeper.GetAllValidators(ctx)
 	consAddr0, err := vals[0].GetConsAddr()
 	suite.Require().NoError(err)

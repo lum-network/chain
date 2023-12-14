@@ -53,4 +53,7 @@ var (
 	ErrInvalidEpochTracker               = errorsmod.Register(ModuleName, 1700, "Invalid epoch tracker")
 	ErrInvalidEpochUnbonding             = errorsmod.Register(ModuleName, 1701, "Invalid epoch unbonding")
 	ErrInvalidEpochField                 = errorsmod.Register(ModuleName, 1702, "Invalid epoch field")
+	ErrInvalidFeeTakerDestination        = errorsmod.Register(ModuleName, 1800, "Invalid fee taker destination")
+	ErrInvalidFeeTakerType               = errorsmod.Register(ModuleName, 1801, "Invalid fee taker type")
+	ErrInvalidFeeTakerAmount             = errorsmod.Register(ModuleName, 1802, "Invalid fee taker amount")
 )

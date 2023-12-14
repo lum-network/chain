@@ -95,13 +95,22 @@ func (p *ProposalRegisterPool) ValidateBasic() error {
 	if p.DrawSchedule.DrawDelta < MinAcceptableDrawDelta {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "draw delta cannot be lower than %s", MinAcceptableDrawDelta)
 	}
-	/*if p.FeesStakers.LT(sdk.NewDec(0)) || p.FeesStakers.GT(sdk.NewDecWithPrec(MaxAcceptableFeesStakers, 2)) {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "stakers fees must be gte 0 and lte %d/100, got: %f", MaxAcceptableFeesStakers, p.FeesStakers.MustFloat64())
-	}*/
+	for _, fee := range p.FeeTakers {
+		if err := fee.ValidateBasic(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 func (p ProposalRegisterPool) String() string {
+	// Prepare the fee takers string by iterating over the array
+	feeTakers := ""
+	for _, fee := range p.FeeTakers {
+		feeTakers += fee.String() + "\n"
+	}
+
+	// Return the string
 	return fmt.Sprintf(`Register Pool Proposal:
 	Title:            			%s
 	Description:      			%s
@@ -120,6 +129,8 @@ func (p ProposalRegisterPool) String() string {
 	%s
 	======Prize Strategy======
 	%s
+	======Fee Takers======
+	%s
   `,
 		p.Title, p.Description,
 		p.ChainId, p.Denom, p.NativeDenom,
@@ -132,5 +143,6 @@ func (p ProposalRegisterPool) String() string {
 		p.TransferChannelId,
 		p.DrawSchedule.String(),
 		p.PrizeStrategy.String(),
+		feeTakers,
 	)
 }

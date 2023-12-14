@@ -77,15 +77,22 @@ func (p *ProposalUpdatePool) ValidateBasic() error {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "draw delta cannot be lower than %s", MinAcceptableDrawDelta.String())
 		}
 	}
-	/*if p.FeesStakers != nil {
-		if p.FeesStakers.LT(sdk.NewDec(0)) || p.FeesStakers.GT(sdk.NewDecWithPrec(MaxAcceptableFeesStakers, 2)) {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "stakers fees must be gte 0 and lte %d/100, got: %f", MaxAcceptableFeesStakers, p.FeesStakers.MustFloat64())
+	for _, fee := range p.FeeTakers {
+		if err := fee.ValidateBasic(); err != nil {
+			return err
 		}
-	}*/
+	}
 	return nil
 }
 
 func (p ProposalUpdatePool) String() string {
+	// Prepare the fee takers string by iterating over the array
+	feeTakers := ""
+	for _, fee := range p.FeeTakers {
+		feeTakers += fee.String() + "\n"
+	}
+
+	// Return the string
 	return fmt.Sprintf(`Update Pool Proposal:
 	Title:            			%s
 	Description:      			%s
@@ -99,6 +106,8 @@ func (p ProposalUpdatePool) String() string {
 	%s
 	======Prize Strategy======
 	%s
+	======Fee Takers======
+	%s
   `,
 		p.Title, p.Description,
 		p.PoolId,
@@ -109,5 +118,6 @@ func (p ProposalUpdatePool) String() string {
 		p.MaxUnbondingEntries.Int64(),
 		p.DrawSchedule.String(),
 		p.PrizeStrategy.String(),
+		feeTakers,
 	)
 }
