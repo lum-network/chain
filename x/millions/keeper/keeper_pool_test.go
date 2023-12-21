@@ -309,7 +309,7 @@ func (suite *KeeperTestSuite) TestPool_DepositorsCountAndTVL() {
 		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
 		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
 		[]millionstypes.FeeTaker{
-			{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+			{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
 		},
 	)
 	suite.Require().NoError(err)
@@ -979,7 +979,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 		},
 	}
 	newFees := []millionstypes.FeeTaker{
-		{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers+1, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount+1, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
 	}
 
 	UnbondingDuration := time.Duration(millionstypes.DefaultUnbondingDuration)

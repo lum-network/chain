@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) TestFees_FeeCollector() {
 
 	// 10% fees should store collected fees (if possible) and update prize amount
 	fc = app.MillionsKeeper.NewFeeManager(ctx, millionstypes.Pool{Denom: denom, LocalAddress: suite.addrs[0].String(), FeeTakers: []millionstypes.FeeTaker{
-		{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
 	}})
 
 	prize.Amount.Amount = math.NewInt(0)

@@ -12,8 +12,6 @@ const (
 	MinAcceptableDrawDelta            = 1 * time.Hour
 	MinAcceptableDepositDrawDelta     = 1 * time.Minute
 	MinAcceptablePrizeExpirationDelta = 1 * time.Hour
-	MaxAcceptableFeesStakers          = 50 // 50%
-	DefaultFeesStakers                = 10 // 10%
 
 	defaultMinDepositAmount        = 100_000
 	defaultMaxPrizeStrategyBatches = 10

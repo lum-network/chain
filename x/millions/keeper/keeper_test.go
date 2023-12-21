@@ -189,7 +189,7 @@ func newValidPool(suite *KeeperTestSuite, pool millionstypes.Pool) *millionstype
 	}
 	if len(pool.FeeTakers) == 0 {
 		pool.FeeTakers = []millionstypes.FeeTaker{
-			{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeesStakers, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+			{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
 		}
 	}
 	if pool.CreatedAt.IsZero() {
