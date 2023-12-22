@@ -17,11 +17,11 @@ type feeDestination struct {
 }
 
 type feeManager struct {
-	keeper          Keeper
-	pool            types.Pool
-	takers          []types.FeeTaker
-	collectedAmount sdk.Coin
-	destinations    []feeDestination
+	keeper                Keeper
+	pool                  types.Pool
+	takers                []types.FeeTaker
+	totalPercentToCollect math.LegacyDec
+	collectedAmount       sdk.Coin
 }
 
 // CollectedAmount returns the collected and not sent amount
@@ -30,37 +30,35 @@ func (fm *feeManager) CollectedAmount() sdk.Coin {
 }
 
 func (k Keeper) NewFeeManager(ctx sdk.Context, pool types.Pool) *feeManager {
+	total := math.LegacyZeroDec()
+
 	// Sanitize the amount of each fee taker
+	// Compute the total fees percent to collect
 	for _, ft := range pool.FeeTakers {
 		if ft.Amount.IsNil() {
 			ft.Amount = sdk.ZeroDec()
 		}
+		total = total.Add(ft.Amount)
 	}
 
 	return &feeManager{
-		keeper:          k,
-		pool:            pool,
-		takers:          pool.FeeTakers,
-		collectedAmount: sdk.NewCoin(pool.Denom, math.ZeroInt()),
-		destinations:    make([]feeDestination, 0),
+		keeper:                k,
+		pool:                  pool,
+		takers:                pool.FeeTakers,
+		totalPercentToCollect: total,
+		collectedAmount:       sdk.NewCoin(pool.Denom, math.ZeroInt()),
 	}
 }
 
 // CollectPrizeFees computes and collects the fees for a prize and updates its final amount
 // It loops through the fee takers and collect the fees for each one of them
 func (fm *feeManager) CollectPrizeFees(ctx sdk.Context, prize *types.Prize) (newAmount, fees math.Int) {
-	// Compute the fees
-	fees = math.ZeroInt()
-	for _, ft := range fm.takers {
-		am := ft.Amount.MulInt(prize.Amount.Amount).RoundInt()
-		fees = fees.Add(am)
-
-		// Update the collected amount for this destination
-		fm.destinations = append(fm.destinations, feeDestination{
-			taker:  ft,
-			amount: am,
-		})
+	if fm.totalPercentToCollect.IsZero() {
+		return prize.Amount.Amount, math.ZeroInt()
 	}
+
+	// Take the fees
+	fees = fm.totalPercentToCollect.MulInt(prize.Amount.Amount).RoundInt()
 
 	// Update the collected amount
 	fm.collectedAmount = fm.collectedAmount.AddAmount(fees)
@@ -75,23 +73,23 @@ func (fm *feeManager) CollectPrizeFees(ctx sdk.Context, prize *types.Prize) (new
 // For each type, it handles specific logic
 func (fm *feeManager) SendCollectedFees(ctx sdk.Context) (err error) {
 	// If nothing was collected, there is nothing to do
-	if fm.collectedAmount.Amount.IsZero() {
+	if fm.totalPercentToCollect.IsZero() || fm.collectedAmount.Amount.IsZero() {
 		return nil
 	}
 
-	// Otherwise, handle each fee taker by calling specific logic with the taker and amount to send
-	for _, destination := range fm.destinations {
-		// Compute the amount to send for each, depending on their amount (which is a percentage)
-		amount := sdk.NewCoin(fm.pool.Denom, destination.amount)
+	// Compute the destinations
+	for _, ft := range fm.takers {
+		am := ft.Amount.MulInt(fm.collectedAmount.Amount).RoundInt()
+		amount := sdk.NewCoin(fm.pool.Denom, am)
 
 		// Process the fee taker depending on its type
-		switch destination.taker.Type {
+		switch ft.Type {
 		case types.FeeTakerType_LocalAddr:
-			err = fm.sendCollectedFeesToLocalAddr(ctx, destination.taker, amount)
+			err = fm.sendCollectedFeesToLocalAddr(ctx, ft, amount)
 		case types.FeeTakerType_LocalModuleAccount:
-			err = fm.sendCollectedFeesToLocalModuleAccount(ctx, destination.taker, amount)
+			err = fm.sendCollectedFeesToLocalModuleAccount(ctx, ft, amount)
 		case types.FeeTakerType_RemoteAddr:
-			err = fm.sendCollectedFeesToRemoteAddr(ctx, destination.taker, amount)
+			err = fm.sendCollectedFeesToRemoteAddr(ctx, ft, amount)
 		}
 		if err != nil {
 			return err
