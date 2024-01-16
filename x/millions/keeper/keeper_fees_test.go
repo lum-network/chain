@@ -133,6 +133,10 @@ func (suite *KeeperTestSuite) TestFees_DrawPrizesFees() {
 				{PoolPercent: 100, Quantity: 100, DrawProbability: floatToDec(1.00)},
 			},
 		},
+		FeeTakers: []millionstypes.FeeTaker{
+			{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+			{Destination: suite.addrs[3].String(), Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalAddr},
+		},
 	})
 	poolID, err := app.MillionsKeeper.RegisterPool(
 		ctx,
@@ -170,22 +174,31 @@ func (suite *KeeperTestSuite) TestFees_DrawPrizesFees() {
 	)
 	suite.Require().NoError(err)
 
-	// force run draw and fee collection
+	// Force run draw and fee collection
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1).WithBlockTime(ctx.BlockTime().Add(24 * time.Hour))
 	draw, err := app.MillionsKeeper.LaunchNewDraw(ctx, poolID)
 	suite.Require().NoError(err)
 	suite.Require().Equal(prizePoolAmount, draw.PrizePoolFreshAmount.Int64())
 	suite.Require().Equal(prizePoolAmount, draw.TotalWinAmount.Int64())
-	// prize ref should reflect the total win amount
+
+	// Prize ref should reflect the total win amount
 	suite.Require().Len(draw.PrizesRefs, 100)
 	suite.Require().Equal(prizePoolAmount/100, draw.PrizesRefs[0].Amount.Int64())
-	// prize entity should have fees subtracted
+
+	// Prize entity should have fees subtracted
 	prizes := app.MillionsKeeper.ListPrizes(ctx)
 	suite.Require().Len(prizes, 100)
-	suite.Require().Equal(prizePoolAmount/100-p.FeeTakers[0].Amount.MulInt64(prizePoolAmount/100).RoundInt64(), prizes[0].Amount.Amount.Int64())
+
+	// Check the prizes fees over all fee takers
+	for _, prize := range prizes {
+		var totalFeeAmount int64 = 0
+		for _, ft := range p.FeeTakers {
+			totalFeeAmount += ft.Amount.MulInt64(prizePoolAmount / 100).RoundInt64()
+		}
+		suite.Require().Equal(prizePoolAmount/100-totalFeeAmount, prize.Amount.Amount.Int64())
+	}
 
 	// Stakers should receive their share of the collected fees upon send success
-	// Community tax should apply as well
 	collectedAmount := p.FeeTakers[0].Amount.MulInt64(prizePoolAmount).RoundInt64()
 	vals := app.StakingKeeper.GetAllValidators(ctx)
 	consAddr0, err := vals[0].GetConsAddr()
