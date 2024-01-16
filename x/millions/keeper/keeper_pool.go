@@ -654,6 +654,22 @@ func (k Keeper) UnsafeUpdatePoolUnbondingFrequencyAndType(ctx sdk.Context, poolI
 	return pool, nil
 }
 
+// UnsafeUpdatePoolFeeTakers raw updates the fee takers entries
+// Unsafe and should only be used for store migration
+func (k Keeper) UnsafeUpdatePoolFeeTakers(ctx sdk.Context, poolID uint64, feeTakers []types.FeeTaker) (types.Pool, error) {
+	// Grab our pool instance
+	pool, err := k.GetPool(ctx, poolID)
+	if err != nil {
+		return types.Pool{}, err
+	}
+
+	// Patch and update our pool entity
+	pool.FeeTakers = feeTakers
+	k.updatePool(ctx, &pool)
+
+	return pool, nil
+}
+
 func (k Keeper) updatePool(ctx sdk.Context, pool *types.Pool) {
 	pool.UpdatedAt = ctx.BlockTime()
 	pool.UpdatedAtHeight = ctx.BlockHeight()
