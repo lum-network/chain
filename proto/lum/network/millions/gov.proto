@@ -37,6 +37,7 @@ message ProposalRegisterPool {
     (gogoproto.nullable) = false
   ];
   PoolType pool_type = 16;
+  repeated FeeTaker fee_takers = 17 [ (gogoproto.nullable) = false ];
 }
 
 message ProposalUpdatePool {
@@ -60,6 +61,7 @@ message ProposalUpdatePool {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = true
   ];
+  repeated FeeTaker fee_takers = 11 [ (gogoproto.nullable) = false ];
 }
 
 message ProposalUpdateParams {
@@ -86,10 +88,8 @@ message ProposalUpdateParams {
       [ (gogoproto.stdduration) = true, (gogoproto.nullable) = true ];
   google.protobuf.Duration prize_expiration_delta = 8
       [ (gogoproto.stdduration) = true, (gogoproto.nullable) = true ];
-  string fees_stakers = 9 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = true
-  ];
+  // DO NOT USE - EX FEES STAKERS
+  reserved 9;
   google.protobuf.Duration min_deposit_draw_delta = 10
       [ (gogoproto.stdduration) = true, (gogoproto.nullable) = true ];
 }

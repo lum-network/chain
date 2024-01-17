@@ -49,21 +49,6 @@ func (suite *KeeperTestSuite) TestParams_Validation() {
 	params.PrizeExpirationDelta = millionstypes.MinAcceptablePrizeExpirationDelta
 	suite.Require().NoError(params.ValidateBasics())
 
-	// Default FeesStakers should be equal to default 10% value
-	suite.Require().Equal(0.1, millionstypes.DefaultParams().FeesStakers.MustFloat64())
-	// FeesStakers should always be gte 0 and lte MaxAcceptableFeesStakers
-	params.FeesStakers = sdk.NewDec(-1)
-	suite.Require().Error(params.ValidateBasics())
-	maxFees := sdk.NewDecWithPrec(millionstypes.MaxAcceptableFeesStakers, 2)
-	maxFeesFloat, err := maxFees.Float64()
-	suite.Require().NoError(err)
-	suite.Require().Equal(0.5, maxFeesFloat)
-	suite.Require().NoError(err)
-	params.FeesStakers = sdk.NewDecWithPrec(millionstypes.MaxAcceptableFeesStakers+1, 2)
-	suite.Require().Error(params.ValidateBasics())
-	params.FeesStakers = maxFees
-	suite.Require().NoError(params.ValidateBasics())
-
 	// MinDepositDrawDelta should always be gte MinAcceptableDepositDrawDelta
 	params.MinDepositDrawDelta = millionstypes.MinAcceptableDepositDrawDelta - 1
 	suite.Require().Error(params.ValidateBasics())

@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/stretchr/testify/suite"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -78,7 +80,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 		MinDrawScheduleDelta:    1 * time.Hour,
 		MaxDrawScheduleDelta:    366 * 24 * time.Hour,
 		PrizeExpirationDelta:    30 * 24 * time.Hour,
-		FeesStakers:             sdk.ZeroDec(),
 		MinDepositDrawDelta:     millionstypes.MinAcceptableDepositDrawDelta,
 	})
 }
@@ -185,6 +186,11 @@ func newValidPool(suite *KeeperTestSuite, pool millionstypes.Pool) *millionstype
 	}
 	if pool.State == millionstypes.PoolState_Unspecified {
 		pool.State = millionstypes.PoolState_Ready
+	}
+	if len(pool.FeeTakers) == 0 {
+		pool.FeeTakers = []millionstypes.FeeTaker{
+			{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		}
 	}
 	if pool.CreatedAt.IsZero() {
 		pool.CreatedAt = suite.ctx.BlockTime()

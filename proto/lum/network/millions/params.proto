@@ -31,12 +31,8 @@ message Params {
   // pools)
   google.protobuf.Duration prize_expiration_delta = 6
       [ (gogoproto.stdduration) = true, (gogoproto.nullable) = false ];
-  // fees_stakers the fees distributed by stakers over prize won (common to all
-  // pools)
-  string fees_stakers = 7 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
-  ];
+  // DEPRECATED - DO NOT USE IN THE FUTURE - EX FEES STAKERS
+  reserved 7;
   // min_deposit_draw_delta the minimum delta before a draw for a deposit to be
   // accepted during the time weighted balance computation for a draw
   google.protobuf.Duration min_deposit_draw_delta = 8
