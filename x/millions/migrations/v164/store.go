@@ -5,8 +5,20 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	millionskeeper "github.com/lum-network/chain/x/millions/keeper"
+
 	millionstypes "github.com/lum-network/chain/x/millions/types"
 )
+
+func SaveEntitiesOnAccountLevel(ctx sdk.Context, k millionskeeper.Keeper) error {
+	ctx.Logger().Info("Saving entities on account level")
+
+	updatedDeposits := k.UnsafeSetUnpersistedDeposits(ctx)
+	updatedWithdrawals := k.UnsafeSetUnpersistedWithdrawals(ctx)
+
+	ctx.Logger().Info("Saving entities on account level: deposits", "count", updatedDeposits)
+	ctx.Logger().Info("Saving entities on account level: withdrawals", "count", updatedWithdrawals)
+	return nil
+}
 
 func InitializePoolFeeTakers(ctx sdk.Context, k millionskeeper.Keeper) error {
 	ctx.Logger().Info("Initializing pool fee takers...")
