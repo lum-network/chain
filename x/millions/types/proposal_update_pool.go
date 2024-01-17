@@ -78,18 +78,7 @@ func (p *ProposalUpdatePool) ValidateBasic() error {
 		}
 	}
 
-	totalFeePercentage := sdk.ZeroDec()
-	for _, fee := range p.FeeTakers {
-		if err := fee.ValidateBasic(); err != nil {
-			return err
-		}
-		totalFeePercentage = totalFeePercentage.Add(fee.Amount)
-	}
-
-	if totalFeePercentage.GT(sdk.OneDec()) {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "total fee percentage cannot be greater than 1")
-	}
-	return nil
+	return ValidateFeeTakers(p.FeeTakers)
 }
 
 func (p ProposalUpdatePool) String() string {

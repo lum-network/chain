@@ -56,4 +56,5 @@ var (
 	ErrInvalidFeeTakerDestination        = errorsmod.Register(ModuleName, 1800, "Invalid fee taker destination")
 	ErrInvalidFeeTakerType               = errorsmod.Register(ModuleName, 1801, "Invalid fee taker type")
 	ErrInvalidFeeTakerAmount             = errorsmod.Register(ModuleName, 1802, "Invalid fee taker amount")
+	ErrInvalidFeeTakersTotalAmount       = errorsmod.Register(ModuleName, 1803, "Invalid fee takers total amount (cannot exceed 100%)")
 )
