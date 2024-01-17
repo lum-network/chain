@@ -42,5 +42,13 @@ func (m Migrator) Migrate4To5(ctx sdk.Context) error {
 
 // Migrate5To6 migrates from version 5 to 6
 func (m Migrator) Migrate5To6(ctx sdk.Context) error {
-	return v164.SaveEntitiesOnAccountLevel(ctx, m.keeper)
+	if err := v164.SaveEntitiesOnAccountLevel(ctx, m.keeper); err != nil {
+		return err
+	}
+
+	if err := v164.InitializePoolFeeTakers(ctx, m.keeper); err != nil {
+		return err
+	}
+
+	return nil
 }

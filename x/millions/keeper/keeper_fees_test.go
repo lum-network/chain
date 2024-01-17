@@ -19,16 +19,12 @@ func (suite *KeeperTestSuite) TestFees_FeeCollector() {
 	// Fees should start at 0 and have the pool denom
 	denom := app.StakingKeeper.BondDenom(ctx)
 	feeAddr := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName).GetAddress()
-	fc := app.MillionsKeeper.NewFeeCollector(ctx, millionstypes.Pool{Denom: denom, LocalAddress: suite.addrs[0].String()})
+	fc := app.MillionsKeeper.NewFeeManager(ctx, millionstypes.Pool{Denom: denom, LocalAddress: suite.addrs[0].String()})
 	suite.Require().Equal(math.ZeroInt(), fc.CollectedAmount().Amount)
 	suite.Require().Equal(denom, fc.CollectedAmount().Denom)
 
 	// 0 fees should do nothing
-	params := app.MillionsKeeper.GetParams(ctx)
-	params.FeesStakers = sdk.ZeroDec()
-	app.MillionsKeeper.SetParams(ctx, params)
-
-	fc = app.MillionsKeeper.NewFeeCollector(ctx, millionstypes.Pool{Denom: denom, LocalAddress: suite.addrs[0].String()})
+	fc = app.MillionsKeeper.NewFeeManager(ctx, millionstypes.Pool{Denom: denom, LocalAddress: suite.addrs[0].String()})
 	prize := &millionstypes.Prize{Amount: sdk.NewCoin(denom, math.ZeroInt())}
 	a, f := fc.CollectPrizeFees(ctx, prize)
 	suite.Require().Equal(math.ZeroInt(), a)
@@ -40,9 +36,9 @@ func (suite *KeeperTestSuite) TestFees_FeeCollector() {
 	suite.Require().Equal(math.ZeroInt(), f)
 
 	// 10% fees should store collected fees (if possible) and update prize amount
-	params.FeesStakers = floatToDec(0.1)
-	app.MillionsKeeper.SetParams(ctx, params)
-	fc = app.MillionsKeeper.NewFeeCollector(ctx, millionstypes.Pool{Denom: denom, LocalAddress: suite.addrs[0].String()})
+	fc = app.MillionsKeeper.NewFeeManager(ctx, millionstypes.Pool{Denom: denom, LocalAddress: suite.addrs[0].String(), FeeTakers: []millionstypes.FeeTaker{
+		{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+	}})
 
 	prize.Amount.Amount = math.NewInt(0)
 	a, f = fc.CollectPrizeFees(ctx, prize)
@@ -84,13 +80,16 @@ func (suite *KeeperTestSuite) TestFees_FeeCollector() {
 	// Succeeding at sending collected fees should send and clear the collected amount
 	poolBalanceBefore := app.BankKeeper.GetBalance(ctx, suite.addrs[0], denom)
 	feeCollectorBalanceBefore := app.BankKeeper.GetBalance(ctx, feeAddr, denom)
-	collectedAmount := sdk.NewInt(123_456)
+
+	collectedAmount := sdk.NewInt(123_456) // Manually set collected amount
+
 	fc.CollectPrizeFees(ctx, &millionstypes.Prize{Amount: sdk.NewCoin(denom, collectedAmount.MulRaw(10).SubRaw(1290))})
 	suite.Require().Equal(denom, fc.CollectedAmount().Denom)
 	suite.Require().Equal(collectedAmount, fc.CollectedAmount().Amount)
+
 	err := fc.SendCollectedFees(ctx)
 	suite.Require().NoError(err)
-	suite.Require().Equal(math.NewInt(0), fc.CollectedAmount().Amount)
+	suite.Require().Equal(math.NewInt(0).Int64(), fc.CollectedAmount().Amount.Int64())
 	suite.Require().Equal(poolBalanceBefore.SubAmount(collectedAmount), app.BankKeeper.GetBalance(ctx, suite.addrs[0], denom))
 	suite.Require().Equal(feeCollectorBalanceBefore.AddAmount(collectedAmount), app.BankKeeper.GetBalance(ctx, feeAddr, denom))
 
@@ -134,6 +133,10 @@ func (suite *KeeperTestSuite) TestFees_DrawPrizesFees() {
 				{PoolPercent: 100, Quantity: 100, DrawProbability: floatToDec(1.00)},
 			},
 		},
+		FeeTakers: []millionstypes.FeeTaker{
+			{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+			{Destination: suite.addrs[3].String(), Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalAddr},
+		},
 	})
 	poolID, err := app.MillionsKeeper.RegisterPool(
 		ctx,
@@ -146,6 +149,7 @@ func (suite *KeeperTestSuite) TestFees_DrawPrizesFees() {
 		p.MaxUnbondingEntries,
 		p.DrawSchedule,
 		p.PrizeStrategy,
+		p.FeeTakers,
 	)
 	suite.Require().NoError(err)
 	p, err = app.MillionsKeeper.GetPool(ctx, poolID)
@@ -170,28 +174,32 @@ func (suite *KeeperTestSuite) TestFees_DrawPrizesFees() {
 	)
 	suite.Require().NoError(err)
 
-	// set 10% fees
-	params := app.MillionsKeeper.GetParams(ctx)
-	params.FeesStakers = sdk.NewDecWithPrec(10, 2)
-	app.MillionsKeeper.SetParams(ctx, params)
-
-	// force run draw and fee collection
+	// Force run draw and fee collection
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1).WithBlockTime(ctx.BlockTime().Add(24 * time.Hour))
 	draw, err := app.MillionsKeeper.LaunchNewDraw(ctx, poolID)
 	suite.Require().NoError(err)
 	suite.Require().Equal(prizePoolAmount, draw.PrizePoolFreshAmount.Int64())
 	suite.Require().Equal(prizePoolAmount, draw.TotalWinAmount.Int64())
-	// prize ref should reflect the total win amount
+
+	// Prize ref should reflect the total win amount
 	suite.Require().Len(draw.PrizesRefs, 100)
 	suite.Require().Equal(prizePoolAmount/100, draw.PrizesRefs[0].Amount.Int64())
-	// prize entity should have fees subtracted
+
+	// Prize entity should have fees subtracted
 	prizes := app.MillionsKeeper.ListPrizes(ctx)
 	suite.Require().Len(prizes, 100)
-	suite.Require().Equal(prizePoolAmount/100-params.FeesStakers.MulInt64(prizePoolAmount/100).RoundInt64(), prizes[0].Amount.Amount.Int64())
+
+	// Check the prizes fees over all fee takers
+	for _, prize := range prizes {
+		var totalFeeAmount int64 = 0
+		for _, ft := range p.FeeTakers {
+			totalFeeAmount += ft.Amount.MulInt64(prizePoolAmount / 100).RoundInt64()
+		}
+		suite.Require().Equal(prizePoolAmount/100-totalFeeAmount, prize.Amount.Amount.Int64())
+	}
 
 	// Stakers should receive their share of the collected fees upon send success
-	// Community tax should apply as well
-	collectedAmount := params.FeesStakers.MulInt64(prizePoolAmount).RoundInt64()
+	collectedAmount := p.FeeTakers[0].Amount.MulInt64(prizePoolAmount).RoundInt64()
 	vals := app.StakingKeeper.GetAllValidators(ctx)
 	consAddr0, err := vals[0].GetConsAddr()
 	suite.Require().NoError(err)

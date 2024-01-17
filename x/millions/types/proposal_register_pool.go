@@ -24,7 +24,7 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeRegisterPool)
 }
 
-func NewRegisterPoolProposal(title string, description string, poolType PoolType, chainID string, denom string, nativeDenom string, connectionId string, bech32PrefixAccAddr string, bech32PrefixValAddr string, validators []string, minDepositAmount math.Int, prizeStrategy PrizeStrategy, drawSchedule DrawSchedule, UnbondingDuration time.Duration, maxUnbondingEntries math.Int) govtypes.Content {
+func NewRegisterPoolProposal(title string, description string, poolType PoolType, chainID string, denom string, nativeDenom string, connectionId string, bech32PrefixAccAddr string, bech32PrefixValAddr string, validators []string, minDepositAmount math.Int, prizeStrategy PrizeStrategy, drawSchedule DrawSchedule, UnbondingDuration time.Duration, maxUnbondingEntries math.Int, fees []FeeTaker) govtypes.Content {
 	return &ProposalRegisterPool{
 		Title:               title,
 		Description:         description,
@@ -41,6 +41,7 @@ func NewRegisterPoolProposal(title string, description string, poolType PoolType
 		DrawSchedule:        drawSchedule,
 		UnbondingDuration:   UnbondingDuration,
 		MaxUnbondingEntries: maxUnbondingEntries,
+		FeeTakers:           fees,
 	}
 }
 
@@ -94,10 +95,18 @@ func (p *ProposalRegisterPool) ValidateBasic() error {
 	if p.DrawSchedule.DrawDelta < MinAcceptableDrawDelta {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "draw delta cannot be lower than %s", MinAcceptableDrawDelta)
 	}
-	return nil
+
+	return ValidateFeeTakers(p.FeeTakers)
 }
 
 func (p ProposalRegisterPool) String() string {
+	// Prepare the fee takers string by iterating over the array
+	feeTakers := ""
+	for _, fee := range p.FeeTakers {
+		feeTakers += fee.String() + "\n"
+	}
+
+	// Return the string
 	return fmt.Sprintf(`Register Pool Proposal:
 	Title:            			%s
 	Description:      			%s
@@ -116,6 +125,8 @@ func (p ProposalRegisterPool) String() string {
 	%s
 	======Prize Strategy======
 	%s
+	======Fee Takers======
+	%s
   `,
 		p.Title, p.Description,
 		p.ChainId, p.Denom, p.NativeDenom,
@@ -128,5 +139,6 @@ func (p ProposalRegisterPool) String() string {
 		p.TransferChannelId,
 		p.DrawSchedule.String(),
 		p.PrizeStrategy.String(),
+		feeTakers,
 	)
 }

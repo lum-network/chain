@@ -23,7 +23,7 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeUpdatePool)
 }
 
-func NewUpdatePoolProposal(title, description string, poolId uint64, validators []string, minDepositAmount *math.Int, prizeStrategy *PrizeStrategy, drawSchedule *DrawSchedule, state PoolState, UnbondingDuration *time.Duration, maxUnbondingEntries *math.Int) govtypes.Content {
+func NewUpdatePoolProposal(title, description string, poolId uint64, validators []string, minDepositAmount *math.Int, prizeStrategy *PrizeStrategy, drawSchedule *DrawSchedule, state PoolState, UnbondingDuration *time.Duration, maxUnbondingEntries *math.Int, fees []FeeTaker) govtypes.Content {
 	return &ProposalUpdatePool{
 		Title:               title,
 		Description:         description,
@@ -35,6 +35,7 @@ func NewUpdatePoolProposal(title, description string, poolId uint64, validators 
 		State:               state,
 		UnbondingDuration:   UnbondingDuration,
 		MaxUnbondingEntries: maxUnbondingEntries,
+		FeeTakers:           fees,
 	}
 }
 
@@ -76,10 +77,18 @@ func (p *ProposalUpdatePool) ValidateBasic() error {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "draw delta cannot be lower than %s", MinAcceptableDrawDelta.String())
 		}
 	}
-	return nil
+
+	return ValidateFeeTakers(p.FeeTakers)
 }
 
 func (p ProposalUpdatePool) String() string {
+	// Prepare the fee takers string by iterating over the array
+	feeTakers := ""
+	for _, fee := range p.FeeTakers {
+		feeTakers += fee.String() + "\n"
+	}
+
+	// Return the string
 	return fmt.Sprintf(`Update Pool Proposal:
 	Title:            			%s
 	Description:      			%s
@@ -93,6 +102,8 @@ func (p ProposalUpdatePool) String() string {
 	%s
 	======Prize Strategy======
 	%s
+	======Fee Takers======
+	%s
   `,
 		p.Title, p.Description,
 		p.PoolId,
@@ -103,5 +114,6 @@ func (p ProposalUpdatePool) String() string {
 		p.MaxUnbondingEntries.Int64(),
 		p.DrawSchedule.String(),
 		p.PrizeStrategy.String(),
+		feeTakers,
 	)
 }

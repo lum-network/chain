@@ -44,6 +44,28 @@ enum PoolType {
   POOL_TYPE_STAKING = 1 [ (gogoproto.enumvalue_customname) = "Staking" ];
 }
 
+enum FeeTakerType {
+  option (gogoproto.goproto_enum_prefix) = true;
+
+  FEE_TAKER_TYPE_UNSPECIFIED = 0
+      [ (gogoproto.enumvalue_customname) = "Unspecified" ];
+  FEE_TAKER_TYPE_LOCAL_ADDR = 1
+      [ (gogoproto.enumvalue_customname) = "LocalAddr" ];
+  FEE_TAKER_TYPE_LOCAL_MODULE_ACCOUNT = 2
+      [ (gogoproto.enumvalue_customname) = "LocalModuleAccount" ];
+  FEE_TAKER_TYPE_REMOTE_ADDR = 3
+      [ (gogoproto.enumvalue_customname) = "RemoteAddr" ];
+}
+
+message FeeTaker {
+  string destination = 1;
+  string amount = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  FeeTakerType type = 3;
+}
+
 message Pool {
   uint64 pool_id = 1;
   string denom = 2;
@@ -96,7 +118,7 @@ message Pool {
   DrawState last_draw_state = 28;
   cosmos.base.v1beta1.Coin available_prize_pool = 29
       [ (gogoproto.nullable) = false ];
-  reserved 30;
+  repeated FeeTaker fee_takers = 30 [ (gogoproto.nullable) = false ];
   reserved 31;
 
   PoolState state = 32;
