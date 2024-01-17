@@ -169,6 +169,19 @@ func (suite *HandlerTestSuite) TestProposal_RegisterPool() {
 	invalidFees := []millionstypes.FeeTaker{
 		{Destination: "", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
 	}
+	invalidExcessiveFees := []millionstypes.FeeTaker{
+		{Destination: "test_1", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_2", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_3", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_4", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_5", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_6", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_7", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_8", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_9", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_10", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_11", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+	}
 
 	cases := []struct {
 		name            string
@@ -267,8 +280,14 @@ func (suite *HandlerTestSuite) TestProposal_RegisterPool() {
 			true,
 		},
 		{
-			"FeesStakers cannot exceed maximum allowed amount",
+			"FeesStakers cannot be invalid",
 			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, UnbondingDuration, maxUnbondingEntries, invalidFees),
+			true,
+			true,
+		},
+		{
+			"FeesStakers cannot exceed maximum allowed amount",
+			millionstypes.NewRegisterPoolProposal("Test", "Test", millionstypes.PoolType_Staking, "lum-network-devnet", "ulum", "ulum", "connection-0", "lum", "lumvaloper", validValidatorSet, sdk.NewInt(1000000), validPrizeStrategy, validDrawSchedule, UnbondingDuration, maxUnbondingEntries, invalidExcessiveFees),
 			true,
 			true,
 		},
@@ -356,6 +375,19 @@ func (suite *HandlerTestSuite) TestProposal_UpdatePool() {
 	invalidFees := []millionstypes.FeeTaker{
 		{Destination: "", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
 	}
+	invalidExcessiveFees := []millionstypes.FeeTaker{
+		{Destination: "test_1", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_2", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_3", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_4", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_5", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_6", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_7", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_8", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_9", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_10", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		{Destination: "test_11", Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+	}
 
 	cases := []struct {
 		name            string
@@ -414,6 +446,12 @@ func (suite *HandlerTestSuite) TestProposal_UpdatePool() {
 		{
 			"Fees Stakers cannot be invalid",
 			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused, &UnbondingDuration, &maxUnbondingEntries, invalidFees),
+			true,
+			true,
+		},
+		{
+			"Fees Stakers cannot exceed maximum allowed amount",
+			millionstypes.NewUpdatePoolProposal("Test", "Test", suite.pool.GetPoolId(), validValidatorSet, &validMinDepositAmount, &validPrizeStrategy, &validDrawSchedule, poolStatePaused, &UnbondingDuration, &maxUnbondingEntries, invalidExcessiveFees),
 			true,
 			true,
 		},

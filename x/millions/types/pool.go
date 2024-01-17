@@ -78,10 +78,17 @@ func (pool *Pool) ValidateBasic(params Params) error {
 			}
 		}
 	}
+
+	// Validate fee takers
+	totalFeePercentage := sdk.ZeroDec()
 	for _, fee := range pool.FeeTakers {
 		if err := fee.ValidateBasic(); err != nil {
 			return err
 		}
+		totalFeePercentage = totalFeePercentage.Add(fee.Amount)
+	}
+	if totalFeePercentage.GT(sdk.OneDec()) {
+		return errorsmod.Wrapf(ErrInvalidPoolParams, "total fee percentage cannot be greater than 1")
 	}
 	return nil
 }
