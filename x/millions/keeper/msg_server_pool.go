@@ -78,7 +78,7 @@ func (k msgServer) restoreICADepositEntities(ctx sdk.Context, poolID uint64) {
 	// Restore deposits ICA locked operations on ICADeposit account
 	deposits := k.Keeper.ListPoolDeposits(ctx, poolID)
 	for _, d := range deposits {
-		if d.State == types.DepositState_IcaDelegate || d.State == types.DepositState_IbcTransfer {
+		if d.State == types.DepositState_IcaDelegate {
 			d.ErrorState = d.State
 			d.State = types.DepositState_Failure
 			k.Keeper.setPoolDeposit(ctx, &d)
