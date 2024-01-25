@@ -388,3 +388,14 @@ func (k Keeper) ListDeposits(ctx sdk.Context) (deposits []types.Deposit) {
 	}
 	return
 }
+
+func (k Keeper) UnsafeSetUnpersistedDeposits(ctx sdk.Context) int {
+	i := 0
+	for _, deposit := range k.ListDeposits(ctx) {
+		k.setPoolDeposit(ctx, &deposit)
+		k.setAccountDeposit(ctx, &deposit)
+		i++
+	}
+
+	return i
+}

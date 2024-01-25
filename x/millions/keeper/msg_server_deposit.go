@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 	"strings"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -135,7 +136,13 @@ func (k msgServer) DepositRetry(goCtx context.Context, msg *types.MsgDepositRetr
 	}
 
 	newState := types.DepositState_Unspecified
-	if deposit.ErrorState == types.DepositState_IbcTransfer {
+	if deposit.State == types.DepositState_IbcTransfer && ctx.BlockTime().After(deposit.UpdatedAt.Add(2*types.IBCTimeoutNanos*time.Nanosecond)) {
+		// Handle IBC stucked operation for more than twice the specified IBC timeout
+		newState = types.DepositState_IbcTransfer
+		if err := k.TransferDepositToRemoteZone(ctx, deposit.PoolId, deposit.DepositId); err != nil {
+			return nil, err
+		}
+	} else if deposit.ErrorState == types.DepositState_IbcTransfer {
 		newState = types.DepositState_IbcTransfer
 		k.UpdateDepositStatus(ctx, deposit.PoolId, deposit.DepositId, newState, false)
 		if err := k.TransferDepositToRemoteZone(ctx, deposit.PoolId, deposit.DepositId); err != nil {

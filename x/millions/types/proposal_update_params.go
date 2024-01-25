@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -21,12 +20,11 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeUpdateParams)
 }
 
-func NewUpdateParamsProposal(title, description string, minDepositAmount *math.Int, fees *sdk.Dec, prizeDelta *time.Duration, minDepDrawDelta *time.Duration, minDrawDelta *time.Duration, maxDrawDelta *time.Duration, maxBatchQuantity *math.Int, maxStrategyBatches *math.Int) govtypes.Content {
+func NewUpdateParamsProposal(title, description string, minDepositAmount *math.Int, prizeDelta *time.Duration, minDepDrawDelta *time.Duration, minDrawDelta *time.Duration, maxDrawDelta *time.Duration, maxBatchQuantity *math.Int, maxStrategyBatches *math.Int) govtypes.Content {
 	return &ProposalUpdateParams{
 		Title:                   title,
 		Description:             description,
 		MinDepositAmount:        minDepositAmount,
-		FeesStakers:             fees,
 		PrizeExpirationDelta:    prizeDelta,
 		MinDrawScheduleDelta:    minDrawDelta,
 		MaxDrawScheduleDelta:    maxDrawDelta,
@@ -69,9 +67,6 @@ func (p *ProposalUpdateParams) ValidateBasic() error {
 	if p.PrizeExpirationDelta != nil {
 		params.PrizeExpirationDelta = *p.PrizeExpirationDelta
 	}
-	if p.FeesStakers != nil {
-		params.FeesStakers = *p.FeesStakers
-	}
 	if p.MinDepositDrawDelta != nil {
 		params.MinDepositDrawDelta = *p.MinDepositDrawDelta
 	}
@@ -88,7 +83,6 @@ func (p ProposalUpdateParams) String() string {
 	Min Draw Schedule Delta		%s
 	Max Draw Schedule Delta		%s
 	Prize Expiration Delta		%s
-	Fees Stakers				%s
 	Min Deposit Draw Delta		%s
   `,
 		p.Title, p.Description,
@@ -98,6 +92,5 @@ func (p ProposalUpdateParams) String() string {
 		p.MinDrawScheduleDelta.String(),
 		p.MaxDrawScheduleDelta.String(),
 		p.PrizeExpirationDelta.String(),
-		p.FeesStakers.String(),
 		p.MinDepositDrawDelta.String())
 }

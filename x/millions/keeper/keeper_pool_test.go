@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"time"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -306,6 +308,9 @@ func (suite *KeeperTestSuite) TestPool_DepositorsCountAndTVL() {
 		sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
 		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
 		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
+		[]millionstypes.FeeTaker{
+			{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		},
 	)
 	suite.Require().NoError(err)
 	pool, err := app.MillionsKeeper.GetPool(ctx, poolID)
@@ -973,6 +978,9 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 			{PoolPercent: 10, DrawProbability: sdk.NewDec(1), Quantity: 10},
 		},
 	}
+	newFees := []millionstypes.FeeTaker{
+		{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount+1, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+	}
 
 	UnbondingDuration := time.Duration(millionstypes.DefaultUnbondingDuration)
 	maxUnbondingEntries := sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries)
@@ -1049,7 +1057,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 
 	// Simulate that 2 validators are bonded but inactive in the poolSet
 	// - Validator 2 and 4 are being removed
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{pool.Validators[0].GetOperatorAddress(), pool.Validators[2].GetOperatorAddress(), pool.Validators[4].GetOperatorAddress()}, nil, nil, nil, nil, nil, millionstypes.PoolState_Unspecified)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{pool.Validators[0].GetOperatorAddress(), pool.Validators[2].GetOperatorAddress(), pool.Validators[4].GetOperatorAddress()}, nil, nil, nil, nil, nil, millionstypes.PoolState_Unspecified, nil)
 	suite.Require().NoError(err)
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
@@ -1067,7 +1075,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 	suite.Require().Equal(true, pool.Validators[4].IsEnabled)
 
 	// UpdatePool with new params
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Paused)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Paused, newFees)
 	suite.Require().NoError(err)
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
 	suite.Require().NoError(err)
@@ -1083,9 +1091,11 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 	suite.Require().Equal(newPrizeStrategy, pool.PrizeStrategy)
 	// New draw schedule applied
 	suite.Require().Equal(newDrawSchedule, pool.DrawSchedule)
+	// New fees applied
+	suite.Require().Equal(len(newFees), len(pool.FeeTakers))
 
 	// UpdatePool with invalid pool_state -> PoolState_Killed
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Killed)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Killed, newFees)
 	suite.Require().ErrorIs(err, millionstypes.ErrPoolStateChangeNotAllowed)
 	// Grab fresh pool instance
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
@@ -1094,7 +1104,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 
 	// UpdatePool with invalid pool_state -> PoolState_Unspecified
 	// Should remain with the current poolState
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Unspecified)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Unspecified, nil)
 	suite.Require().NoError(err)
 	// Grab fresh pool instance
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
@@ -1102,7 +1112,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 	suite.Require().Equal(millionstypes.PoolState_Paused, pool.State)
 
 	// UpdatePool with valid pool_state -> PoolState_Ready
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Ready)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Ready, newFees)
 	suite.Require().NoError(err)
 	// Grab fresh pool instance
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)
@@ -1188,7 +1198,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 	suite.Require().Equal(sdk.NewInt(1_000_000), pool.Validators[4].BondedAmount)
 
 	// Simulate validator 1 that gets removed from the valSet
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{pool.Validators[1].GetOperatorAddress(), pool.Validators[2].GetOperatorAddress(), pool.Validators[3].GetOperatorAddress(), pool.Validators[4].GetOperatorAddress()}, nil, nil, nil, nil, nil, millionstypes.PoolState_Unspecified)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, []string{pool.Validators[1].GetOperatorAddress(), pool.Validators[2].GetOperatorAddress(), pool.Validators[3].GetOperatorAddress(), pool.Validators[4].GetOperatorAddress()}, nil, nil, nil, nil, nil, millionstypes.PoolState_Unspecified, nil)
 	suite.Require().Error(err)
 	// No active channel for this owner
 	pool, err = app.MillionsKeeper.GetPool(ctx, 2)

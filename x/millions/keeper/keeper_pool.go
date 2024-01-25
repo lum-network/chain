@@ -274,6 +274,7 @@ func (k Keeper) RegisterPool(
 	maxUnbondingEntries math.Int,
 	drawSchedule types.DrawSchedule,
 	prizeStrategy types.PrizeStrategy,
+	fees []types.FeeTaker,
 ) (uint64, error) {
 
 	// Acquire new pool ID
@@ -317,6 +318,7 @@ func (k Keeper) RegisterPool(
 		SponsorshipAmount:   sdk.ZeroInt(),
 		AvailablePrizePool:  sdk.NewCoin(denom, sdk.ZeroInt()),
 		State:               types.PoolState_Created,
+		FeeTakers:           fees,
 		TransferChannelId:   transferChannelId,
 		CreatedAtHeight:     ctx.BlockHeight(),
 		UpdatedAtHeight:     ctx.BlockHeight(),
@@ -381,6 +383,7 @@ func (k Keeper) UpdatePool(
 	drawSchedule *types.DrawSchedule,
 	prizeStrategy *types.PrizeStrategy,
 	state types.PoolState,
+	feeTakers []types.FeeTaker,
 ) error {
 	// Acquire and deserialize our pool entity
 	pool, err := k.GetPool(ctx, poolID)
@@ -408,6 +411,9 @@ func (k Keeper) UpdatePool(
 	}
 	if prizeStrategy != nil {
 		pool.PrizeStrategy = *prizeStrategy
+	}
+	if feeTakers != nil {
+		pool.FeeTakers = feeTakers
 	}
 
 	// Update pool state only if current pool state is in paused and incoming state ready
@@ -643,6 +649,22 @@ func (k Keeper) UnsafeUpdatePoolUnbondingFrequencyAndType(ctx sdk.Context, poolI
 	pool.UnbondingDuration = UnbondingDuration
 	pool.MaxUnbondingEntries = maxUnbondingEntries
 	pool.PoolType = poolType
+	k.updatePool(ctx, &pool)
+
+	return pool, nil
+}
+
+// UnsafeUpdatePoolFeeTakers raw updates the fee takers entries
+// Unsafe and should only be used for store migration
+func (k Keeper) UnsafeUpdatePoolFeeTakers(ctx sdk.Context, poolID uint64, feeTakers []types.FeeTaker) (types.Pool, error) {
+	// Grab our pool instance
+	pool, err := k.GetPool(ctx, poolID)
+	if err != nil {
+		return types.Pool{}, err
+	}
+
+	// Patch and update our pool entity
+	pool.FeeTakers = feeTakers
 	k.updatePool(ctx, &pool)
 
 	return pool, nil

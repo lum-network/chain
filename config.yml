@@ -45,7 +45,6 @@ genesis:
         min_draw_schedule_delta: "1h"
         max_draw_schedule_delta: "8784h" # 366days
         prize_expiration_delta: "720h" # 30days
-        fees_stakers: "0.10"
         min_deposit_draw_delta: "60s"
 faucet:
   name: user1

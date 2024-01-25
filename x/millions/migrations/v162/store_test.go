@@ -178,7 +178,6 @@ func (suite *StoreMigrationTestSuite) SetupTest() {
 		MinDrawScheduleDelta:    1 * time.Hour,
 		MaxDrawScheduleDelta:    366 * 24 * time.Hour,
 		PrizeExpirationDelta:    30 * 24 * time.Hour,
-		FeesStakers:             sdk.ZeroDec(),
 		MinDepositDrawDelta:     millionstypes.MinAcceptableDepositDrawDelta,
 	})
 }

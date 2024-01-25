@@ -78,7 +78,8 @@ func (pool *Pool) ValidateBasic(params Params) error {
 			}
 		}
 	}
-	return nil
+
+	return ValidateFeeTakers(pool.FeeTakers)
 }
 
 func (p *Pool) IsLocalZone(ctx sdk.Context) bool {

@@ -416,3 +416,14 @@ func (k Keeper) ListPoolWithdrawals(ctx sdk.Context, poolID uint64) (withdrawals
 	}
 	return
 }
+
+func (k Keeper) UnsafeSetUnpersistedWithdrawals(ctx sdk.Context) int {
+	i := 0
+	for _, withdrawal := range k.ListWithdrawals(ctx) {
+		k.setPoolWithdrawal(ctx, withdrawal)
+		k.setAccountWithdrawal(ctx, withdrawal)
+		i++
+	}
+
+	return i
+}
