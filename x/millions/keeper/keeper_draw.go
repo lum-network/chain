@@ -83,6 +83,7 @@ func (k Keeper) ClaimYieldOnRemoteZone(ctx sdk.Context, poolID uint64, drawID ui
 	if err != nil {
 		return nil, err
 	}
+
 	// Acquire Draw
 	draw, err := k.GetPoolDraw(ctx, poolID, drawID)
 	if err != nil {
@@ -483,6 +484,7 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*typ
 // OnExecuteDrawCompleted wrappers for draw state update upon drawing phase completion
 // returns the error specified in parameters and does not produce any internal error
 func (k Keeper) OnExecuteDrawCompleted(ctx sdk.Context, pool *types.Pool, draw *types.Draw, err error) (*types.Draw, error) {
+	// If it's a failure, we do not update the pool state
 	if err != nil {
 		draw.State = types.DrawState_Failure
 		draw.ErrorState = types.DrawState_Drawing
@@ -493,6 +495,8 @@ func (k Keeper) OnExecuteDrawCompleted(ctx sdk.Context, pool *types.Pool, draw *
 		k.updatePool(ctx, pool)
 		return draw, err
 	}
+
+	// Update draw state
 	draw.State = types.DrawState_Success
 	draw.ErrorState = types.DrawState_Unspecified
 	draw.UpdatedAtHeight = ctx.BlockHeight()
@@ -500,6 +504,15 @@ func (k Keeper) OnExecuteDrawCompleted(ctx sdk.Context, pool *types.Pool, draw *
 	k.SetPoolDraw(ctx, *draw)
 	pool.LastDrawState = draw.State
 	k.updatePool(ctx, pool)
+
+	// If the pool is in closing state, notify the close method
+	// Discard the error here since we do not want to return an error on a successful draw
+	if pool.State == types.PoolState_Closing {
+		if err := k.ClosePool(ctx, pool.PoolId); err != nil {
+			k.Logger(ctx).Error(fmt.Sprintf("Failed to close pool %d: %v", pool.PoolId, err))
+			return draw, nil
+		}
+	}
 	return draw, err
 }
 

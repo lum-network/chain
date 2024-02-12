@@ -318,6 +318,7 @@ func (k Keeper) RegisterPool(
 		SponsorshipAmount:   sdk.ZeroInt(),
 		AvailablePrizePool:  sdk.NewCoin(denom, sdk.ZeroInt()),
 		State:               types.PoolState_Created,
+		ClosingStep:         types.PoolClosingStep_Unspecified,
 		FeeTakers:           fees,
 		TransferChannelId:   transferChannelId,
 		CreatedAtHeight:     ctx.BlockHeight(),
@@ -479,6 +480,120 @@ func (k Keeper) UpdatePool(
 	return nil
 }
 
+// ClosePool It is a deterministic method that proceed with pool closure steps based on the current pool state
+func (k Keeper) ClosePool(ctx sdk.Context, poolID uint64) error {
+	// Make sure we always have a valid pool entity
+	pool, err := k.GetPool(ctx, poolID)
+	if err != nil {
+		return err
+	}
+
+	// Make sure the pool is not already closed
+	if pool.State == types.PoolState_Closed {
+		return types.ErrPoolClosed
+	}
+
+	// If the pool is in state "ready", it means we are in the very first step of the closure process
+	if pool.State == types.PoolState_Ready {
+		// Update the pool state to "Closing"
+		pool.State = types.PoolState_Closing
+		pool.ClosingStep = types.PoolClosingStep_Withdraw
+		k.updatePool(ctx, &pool)
+		k.Logger(ctx).Info(fmt.Sprintf("Updated pool %d to state closing", poolID))
+
+		// Acquire all deposits
+		deposits := k.ListPoolDeposits(ctx, poolID)
+
+		// Update the prize strategy now to distribute 100% of the prize pool to the depositors
+		// Do it now because once you create a withdrawal, you delete deposit
+		pool.PrizeStrategy = types.PrizeStrategy{
+			PrizeBatches: []types.PrizeBatch{
+				{Quantity: uint64(len(deposits)), PoolPercent: 1, DrawProbability: sdk.NewDec(1), IsUnique: true},
+			},
+		}
+		k.updatePool(ctx, &pool)
+		k.Logger(ctx).Info(fmt.Sprintf("Updated pool %d prize strategy to distribute 100%% of the prize pool to the depositors", poolID))
+
+		// Iterate over all deposits
+		for _, deposit := range deposits {
+			// Make sure the deposit can be withdrawn
+			if deposit.State != types.DepositState_Success {
+				continue
+			}
+
+			// Trigger the withdrawal
+			withdrawal := types.Withdrawal{
+				PoolId:           poolID,
+				DepositId:        deposit.DepositId,
+				WithdrawalId:     k.GetNextWithdrawalIdAndIncrement(ctx),
+				State:            types.WithdrawalState_Pending,
+				DepositorAddress: deposit.GetDepositorAddress(),
+				ToAddress:        deposit.GetDepositorAddress(),
+				Amount:           deposit.Amount,
+				CreatedAtHeight:  ctx.BlockHeight(),
+				UpdatedAtHeight:  ctx.BlockHeight(),
+				CreatedAt:        ctx.BlockTime(),
+				UpdatedAt:        ctx.BlockTime(),
+			}
+
+			// Adds the withdrawal and remove the deposit
+			k.AddWithdrawal(ctx, withdrawal)
+			k.RemoveDeposit(ctx, &deposit)
+		}
+
+		k.Logger(ctx).Info(fmt.Sprintf("Created %d withdrawals for pool %d", len(deposits), poolID))
+	} else if pool.State == types.PoolState_Closing {
+		// After that, we are in the second step of the closure process
+		// If the actual closing step is withdrawal, we have to watch the withdrawal list and wait for it to be empty
+		// Then we can proceed with the final draw
+		if pool.ClosingStep == types.PoolClosingStep_Withdraw {
+			// Acquire the withdrawals and make sure we have none
+			withdrawals := k.ListPoolWithdrawals(ctx, poolID)
+			if len(withdrawals) > 0 {
+				k.Logger(ctx).Debug(fmt.Sprintf("Pool %d has %d withdrawals pending", poolID, len(withdrawals)))
+				return nil
+			}
+
+			// If we have no withdrawals, we can proceed with the final draw
+			draw, err := k.LaunchNewDraw(ctx, poolID)
+			if err != nil {
+				return err
+			}
+
+			// And update the final state
+			pool.ClosingStep = types.PoolClosingStep_Draw
+			k.updatePool(ctx, &pool)
+			k.Logger(ctx).Info(fmt.Sprintf("Updated pool %d to state draw with drawID %d", poolID, draw.DrawId))
+			return nil
+		} else if pool.ClosingStep == types.PoolClosingStep_Draw {
+			// Wait for the actual draw to be completed
+			if pool.LastDrawState != types.DrawState_Success {
+				k.Logger(ctx).Debug(fmt.Sprintf("Pool %d last draw is not yet completed", poolID))
+				return nil
+			}
+
+			// Transfer the remaining dust on local module account to community pool
+			// This is to avoid having dust on the module account
+			// This is not a critical step, so we don't need to return an error if it fails
+			currentLocalBalance := k.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(pool.LocalAddress), pool.Denom)
+			if currentLocalBalance.IsPositive() {
+				if err := k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, distribtypes.ModuleName, sdk.NewCoins(currentLocalBalance)); err != nil {
+					k.Logger(ctx).Error(fmt.Sprintf("Failed to transfer dust from pool %d local module account to community pool: %v", poolID, err))
+				}
+			}
+
+			// Once everything is done, we can update the state to closed
+			pool.State = types.PoolState_Closed
+			k.updatePool(ctx, &pool)
+			k.Logger(ctx).Info(fmt.Sprintf("Updated pool %d to state closed", poolID))
+		}
+	} else {
+		return types.ErrPoolNotClosing
+	}
+
+	return nil
+}
+
 // RebalanceValidatorsBondings allows rebalancing of validators bonded assets
 // Current implementation:
 // - Initiate an even redelegate distribution from inactive bonded validators to active validators
@@ -598,26 +713,6 @@ func (k Keeper) OnRedelegateToActiveValidatorsOnRemoteZoneCompleted(ctx sdk.Cont
 	})
 
 	return nil
-}
-
-// UnsafeKillPool This method switches the provided pool state but does not handle any withdrawal or deposit.
-// It shouldn't be used and is very specific to UNUSED and EMPTY pools
-func (k Keeper) UnsafeKillPool(ctx sdk.Context, poolID uint64) (types.Pool, error) {
-	// Grab our pool instance
-	pool, err := k.GetPool(ctx, poolID)
-	if err != nil {
-		return types.Pool{}, err
-	}
-
-	// Make sure the pool isn't killed yet
-	if pool.GetState() == types.PoolState_Killed {
-		return pool, errorsmod.Wrapf(types.ErrPoolKilled, "%d", poolID)
-	}
-
-	// Kill the pool
-	pool.State = types.PoolState_Killed
-	k.updatePool(ctx, &pool)
-	return pool, nil
 }
 
 // UnsafeUpdatePoolPortIds This method raw update the provided pool port ids.

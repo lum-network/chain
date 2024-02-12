@@ -133,8 +133,8 @@ func (k Keeper) TransferWithdrawalToRecipient(ctx sdk.Context, poolID uint64, wi
 	return nil
 }
 
-// OnTransferWithdrawalToRecipientCompleted Acknowledge the withdraw IBC transfer
-// - To to the local chain response if it's a transfer to local chain
+// OnTransferWithdrawalToRecipientCompleted Acknowledge the withdrawal IBC transfer
+// - To the local chain response if it's a transfer to local chain
 // - To the native chain if it's BankSend for a native pool with a native destination address
 func (k Keeper) OnTransferWithdrawalToRecipientCompleted(ctx sdk.Context, poolID uint64, withdrawalID uint64, isError bool) error {
 	withdrawal, err := k.GetPoolWithdrawal(ctx, poolID, withdrawalID)
@@ -153,6 +153,12 @@ func (k Keeper) OnTransferWithdrawalToRecipientCompleted(ctx sdk.Context, poolID
 
 	if err := k.RemoveWithdrawal(ctx, withdrawal); err != nil {
 		return err
+	}
+
+	// Notify the closing method to check if the step can continue
+	// Discard any error here to avoid blocking the process on relaying side
+	if err := k.ClosePool(ctx, poolID); err != nil {
+		k.Logger(ctx).Error(fmt.Sprintf("ClosePool %v", err.Error()))
 	}
 	return nil
 }
