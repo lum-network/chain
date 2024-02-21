@@ -39,6 +39,16 @@ Please also make sure to have a look to the [contributing guidelines](https://gi
 
 Information related to the Lum Network mainnet `lum-network-1` can be found in the [mainnet repository](https://github.com/lum-network/mainnet).
 
+### v1.6.4 - 2024-02-01 - Block 11390000
+CosmosMillions: Make ICA channel restoration unlock all entities and revamp the fee system to allow for more than one fee taker.
+
+[Upgrade guide here](https://github.com/lum-network/mainnet/blob/master/upgrades/v1.6.4/guide.md).
+
+### v1.6.3 - 2023-11-30 - Block 10444000
+CosmosMillions: Fix issues related to Withdrawals and Unbondings, unlock entities in stalling state.
+
+[Upgrade guide here](https://github.com/lum-network/mainnet/blob/master/upgrades/v1.6.3/guide.md).
+
 ### v1.6.2 - 2023-11-02 - Block 10027000
 CosmosMillions: Fix of bug related to Withdrawals and EpochUnbonding which caused some Withdrawals to remain in pending state.
 
@@ -47,7 +57,6 @@ Beam module: Deprecate beam module due to the drop of the use case.
 DFract module: Clawback all DFRs as part of DFract sunsetting process as detailed in this [blog post](https://medium.com/lum-network/sunsetting-the-dfract-protocol-beta-version-a2277bce07fb).
 
 [Upgrade guide here](https://github.com/lum-network/mainnet/blob/master/upgrades/v1.6.2/guide.md).
-
 
 ### v.1.6.1 - 2023-09-29 - Block [#9520750](https://www.mintscan.io/lum/blocks/9520750)
 Refactoring of Pool lifecycle abstraction which should facilitate different pool type integration.
