@@ -100,7 +100,7 @@ message MsgUpdatePool {
 message MsgUpdatePoolResponse {}
 
 message MsgDeposit {
-  option (amino.name) = "lum-network/millions/MsgPool";
+  option (amino.name) = "lum-network/millions/MsgDeposit";
 
   uint64 pool_id = 1;
   cosmos.base.v1beta1.Coin amount = 2 [ (gogoproto.nullable) = false ];
@@ -171,7 +171,7 @@ message MsgWithdrawDepositRetry {
 message MsgWithdrawDepositRetryResponse {}
 
 message MsgDrawRetry {
-  option (amino.name) = "lum-network/millions/MsgRetry";
+  option (amino.name) = "lum-network/millions/MsgDrawRetry";
 
   uint64 pool_id = 1;
   uint64 draw_id = 2;
