@@ -45,8 +45,10 @@ func SetWithdrawAddressCallback(k Keeper, ctx sdk.Context, packet channeltypes.P
 		return err
 	}
 
-	// If the response status is a timeout, that's not an "error" since the relayer will retry then fail or succeed.
-	// We just log it out and return no error
+	// Scenarios:
+	// This operation is done right after the ICA channel open procedure
+	// - Timeout: Does nothing - fix may be needed manually
+	// - Error: Does nothing - fix may be needed manually
 	if ackResponse.Status == icacallbackstypes.AckResponseStatus_TIMEOUT {
 		k.Logger(ctx).Debug("Received timeout for a set withdraw address packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {

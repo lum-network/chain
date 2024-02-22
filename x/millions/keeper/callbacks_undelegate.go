@@ -69,13 +69,13 @@ func UndelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, a
 		return err
 	}
 
-	// If the response status is a timeout, that's not an "error" since the relayer will retry then fail or succeed.
-	// We just log it out and return no error
+	// Scenarios:
+	// - Timeout: Does nothing, handled when restoring the ICA channel
+	// - Error: Put back entities in the queue automatically
 	if ackResponse.Status == icacallbackstypes.AckResponseStatus_TIMEOUT {
 		k.Logger(ctx).Debug("Received timeout for an undelegate packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
 		k.Logger(ctx).Debug("Received failure for an undelegate packet")
-		// Failed OnUndelegateEpochUnbondingOnRemoteZoneCompleted
 		return k.OnUndelegateWithdrawalsOnRemoteZoneCompleted(
 			ctx,
 			undelegateCallback.PoolId,

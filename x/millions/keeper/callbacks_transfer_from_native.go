@@ -45,8 +45,9 @@ func TransferFromNativeCallback(k Keeper, ctx sdk.Context, packet channeltypes.P
 		return err
 	}
 
-	// If the response status is a timeout, that's not an "error" since the relayer will retry then fail or succeed.
-	// We just log it out and return no error
+	// Scenarios:
+	// - Timeout: Does nothing, handled when restoring the ICA channel
+	// - Error: Put entity in error state to allow users to retry
 	if ackResponse.Status == icacallbackstypes.AckResponseStatus_TIMEOUT {
 		k.Logger(ctx).Debug("Received timeout for a transfer from native packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {

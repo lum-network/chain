@@ -44,6 +44,9 @@ func BankSendCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ack
 		return err
 	}
 
+	// Scenarios:
+	// - Timeout: Does nothing, handled when restoring the ICA channel
+	// - Error: Put entity in error state to allow users to retry
 	if ackResponse.Status == icacallbackstypes.AckResponseStatus_TIMEOUT {
 		k.Logger(ctx).Debug("Received timeout for a bank send to native packet")
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {

@@ -39,8 +39,10 @@ func TransferToNativeCallback(k Keeper, ctx sdk.Context, packet channeltypes.Pac
 		return errorsmod.Wrapf(types.ErrUnmarshalFailure, fmt.Sprintf("Unable to unmarshal transfer to native callback args: %s", err.Error()))
 	}
 
+	// Scenarios:
+	// - Timeout: Treated as an error (see below)
+	// - Error: Put entity in error state to allow users to retry
 	if ackResponse.Status == icacallbackstypes.AckResponseStatus_TIMEOUT {
-		// Timeout is considered a failure on IBC transfers
 		k.Logger(ctx).Debug("Received timeout for a transfer to native packet")
 		return k.OnTransferDepositToRemoteZoneCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetDepositId(), true)
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {

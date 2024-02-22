@@ -45,10 +45,12 @@ func RedelegateCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, a
 		return err
 	}
 
-	// If the response status is a timeout, that's not an "error" since the relayer will retry then fail or succeed.
-	// We just log it out and return no error
+	// Scenarios:
+	// - Timeout: Treated as an error (see below)
+	// - Error: Revert Pool validator set known split
 	if ackResponse.Status == icacallbackstypes.AckResponseStatus_TIMEOUT {
 		k.Logger(ctx).Debug("Received timeout for a redelegate packet")
+		return k.OnRedelegateToActiveValidatorsOnRemoteZoneCompleted(ctx, redelegateCallback.GetPoolId(), redelegateCallback.GetOperatorAddress(), redelegateCallback.GetSplitDelegations(), true)
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
 		k.Logger(ctx).Debug("Received failure for a redelegate packet")
 		return k.OnRedelegateToActiveValidatorsOnRemoteZoneCompleted(ctx, redelegateCallback.GetPoolId(), redelegateCallback.GetOperatorAddress(), redelegateCallback.GetSplitDelegations(), true)
