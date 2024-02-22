@@ -39,6 +39,10 @@ Please also make sure to have a look to the [contributing guidelines](https://gi
 
 Information related to the Lum Network mainnet `lum-network-1` can be found in the [mainnet repository](https://github.com/lum-network/mainnet).
 
+### v1.6.4 - `TODO` - Block `TODO`
+
+`TODO`
+
 ### v1.6.4 - 2024-02-01 - Block 11390000
 CosmosMillions: Make ICA channel restoration unlock all entities and revamp the fee system to allow for more than one fee taker.
 
