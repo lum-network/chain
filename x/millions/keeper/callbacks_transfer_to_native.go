@@ -39,10 +39,12 @@ func TransferToNativeCallback(k Keeper, ctx sdk.Context, packet channeltypes.Pac
 		return errorsmod.Wrapf(types.ErrUnmarshalFailure, fmt.Sprintf("Unable to unmarshal transfer to native callback args: %s", err.Error()))
 	}
 
-	// If the response status is a timeout, that's not an "error" since the relayer will retry then fail or succeed.
-	// We just log it out and return no error
+	// Scenarios:
+	// - Timeout: Treated as an error (see below)
+	// - Error: Put entity in error state to allow users to retry
 	if ackResponse.Status == icacallbackstypes.AckResponseStatus_TIMEOUT {
 		k.Logger(ctx).Debug("Received timeout for a transfer to native packet")
+		return k.OnTransferDepositToRemoteZoneCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetDepositId(), true)
 	} else if ackResponse.Status == icacallbackstypes.AckResponseStatus_FAILURE {
 		k.Logger(ctx).Debug("Received failure for a transfer to native packet")
 		return k.OnTransferDepositToRemoteZoneCompleted(ctx, transferCallback.GetPoolId(), transferCallback.GetDepositId(), true)

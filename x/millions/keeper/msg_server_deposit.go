@@ -126,18 +126,9 @@ func (k msgServer) DepositRetry(goCtx context.Context, msg *types.MsgDepositRetr
 		return nil, types.ErrInvalidDepositorAddress
 	}
 
-	// State should be set to failure in order to retry something
-	if deposit.State != types.DepositState_Failure {
-		return nil, errorsmod.Wrapf(
-			types.ErrInvalidDepositState,
-			"state is %s instead of %s",
-			deposit.State.String(), types.DepositState_Failure.String(),
-		)
-	}
-
 	newState := types.DepositState_Unspecified
-	if deposit.State == types.DepositState_IbcTransfer && ctx.BlockTime().After(deposit.UpdatedAt.Add(2*types.IBCTimeoutNanos*time.Nanosecond)) {
-		// Handle IBC stucked operation for more than twice the specified IBC timeout
+	if deposit.State == types.DepositState_IbcTransfer && ctx.BlockTime().After(deposit.UpdatedAt.Add(types.IBCForceRetryNanos*time.Nanosecond)) {
+		// Handle IBC stucked operation for more than 3 days (no timeout received)
 		newState = types.DepositState_IbcTransfer
 		if err := k.TransferDepositToRemoteZone(ctx, deposit.PoolId, deposit.DepositId); err != nil {
 			return nil, err
@@ -157,8 +148,8 @@ func (k msgServer) DepositRetry(goCtx context.Context, msg *types.MsgDepositRetr
 	} else {
 		return nil, errorsmod.Wrapf(
 			types.ErrInvalidDepositState,
-			"error_state is %s instead of %s or %s",
-			deposit.ErrorState.String(), types.DepositState_IbcTransfer.String(), types.DepositState_IcaDelegate.String(),
+			"state is %s instead of %s",
+			deposit.State.String(), types.DepositState_Failure.String(),
 		)
 	}
 
