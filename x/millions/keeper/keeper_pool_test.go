@@ -207,7 +207,7 @@ func (suite *KeeperTestSuite) TestPool_DrawScheduleBasics() {
 	suite.Require().True(pool.ShouldDraw(ctx.WithBlockTime((*pool.LastDrawCreatedAt).Add(48 * time.Hour))))
 
 	// Test pool not ready states which should not allow any draw
-	pool.State = millionstypes.PoolState_Killed
+	pool.State = millionstypes.PoolState_Closed
 	suite.Require().False(pool.ShouldDraw(ctx.WithBlockTime(now.Add(48 * time.Hour))))
 
 	pool.State = millionstypes.PoolState_Created
@@ -1095,7 +1095,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 	suite.Require().Equal(len(newFees), len(pool.FeeTakers))
 
 	// UpdatePool with invalid pool_state -> PoolState_Killed
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Killed, newFees)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Closed, newFees)
 	suite.Require().ErrorIs(err, millionstypes.ErrPoolStateChangeNotAllowed)
 	// Grab fresh pool instance
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)

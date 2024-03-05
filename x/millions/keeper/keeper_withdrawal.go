@@ -157,7 +157,7 @@ func (k Keeper) OnTransferWithdrawalToRecipientCompleted(ctx sdk.Context, poolID
 
 	// Notify the closing method to check if the step can continue
 	// Discard any error here to avoid blocking the process on relaying side
-	if err := k.ClosePool(ctx, poolID); err != nil {
+	if err := k.ClosePool(ctx, poolID, false); err != nil {
 		k.Logger(ctx).Error(fmt.Sprintf("ClosePool %v", err.Error()))
 	}
 	return nil

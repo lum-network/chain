@@ -508,8 +508,7 @@ func (k Keeper) OnExecuteDrawCompleted(ctx sdk.Context, pool *types.Pool, draw *
 	// If the pool is in closing state, notify the close method
 	// Discard the error here since we do not want to return an error on a successful draw
 	if pool.State == types.PoolState_Closing {
-		if err := k.ClosePool(ctx, pool.PoolId); err != nil {
-			k.Logger(ctx).Error(fmt.Sprintf("Failed to close pool %d: %v", pool.PoolId, err))
+		if err := k.ClosePool(ctx, pool.PoolId, true); err != nil {
 			return draw, nil
 		}
 	}
@@ -517,7 +516,7 @@ func (k Keeper) OnExecuteDrawCompleted(ctx sdk.Context, pool *types.Pool, draw *
 }
 
 // ComputeDepositsTWB takes deposits and computes the weight based on their deposit time and the draw duration
-// It essentially compute the Time Weighted Balance of each deposit for the DrawPrizes phase
+// It essentially computes the Time Weighted Balance of each deposit for the DrawPrizes phase
 func (k Keeper) ComputeDepositsTWB(ctx sdk.Context, depositStartAt time.Time, drawAt time.Time, deposits []types.Deposit) []DepositTWB {
 	params := k.GetParams(ctx)
 

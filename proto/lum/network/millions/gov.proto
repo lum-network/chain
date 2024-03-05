@@ -64,6 +64,15 @@ message ProposalUpdatePool {
   repeated FeeTaker fee_takers = 11 [ (gogoproto.nullable) = false ];
 }
 
+message ProposalClosePool {
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+
+  uint64 pool_id = 3;
+}
+
 message ProposalUpdateParams {
   option (gogoproto.goproto_stringer) = false;
 

@@ -142,6 +142,7 @@ var (
 				ibcclientclient.UpgradeProposalHandler,
 				dfractclient.UpdateParamsProposalHandler,
 				millionsclient.RegisterPoolProposalHandler,
+				millionsclient.ClosePoolProposalHandler,
 				millionsclient.UpdatePoolProposalHandler,
 				millionsclient.UpdateParamsProposalHandler,
 			},

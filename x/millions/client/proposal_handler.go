@@ -9,5 +9,6 @@ import (
 var (
 	RegisterPoolProposalHandler = govclient.NewProposalHandler(cli.CmdProposalRegisterPool)
 	UpdatePoolProposalHandler   = govclient.NewProposalHandler(cli.CmdProposalUpdatePool)
+	ClosePoolProposalHandler    = govclient.NewProposalHandler(cli.CmdProposalClosePool)
 	UpdateParamsProposalHandler = govclient.NewProposalHandler(cli.CmdProposalUpdateParams)
 )

@@ -318,7 +318,6 @@ func (k Keeper) RegisterPool(
 		SponsorshipAmount:   sdk.ZeroInt(),
 		AvailablePrizePool:  sdk.NewCoin(denom, sdk.ZeroInt()),
 		State:               types.PoolState_Created,
-		ClosingStep:         types.PoolClosingStep_Unspecified,
 		FeeTakers:           fees,
 		TransferChannelId:   transferChannelId,
 		CreatedAtHeight:     ctx.BlockHeight(),
@@ -481,7 +480,7 @@ func (k Keeper) UpdatePool(
 }
 
 // ClosePool It is a deterministic method that proceed with pool closure steps based on the current pool state
-func (k Keeper) ClosePool(ctx sdk.Context, poolID uint64) error {
+func (k Keeper) ClosePool(ctx sdk.Context, poolID uint64, finalStep bool) error {
 	// Make sure we always have a valid pool entity
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
@@ -497,7 +496,6 @@ func (k Keeper) ClosePool(ctx sdk.Context, poolID uint64) error {
 	if pool.State == types.PoolState_Ready {
 		// Update the pool state to "Closing"
 		pool.State = types.PoolState_Closing
-		pool.ClosingStep = types.PoolClosingStep_Withdraw
 		k.updatePool(ctx, &pool)
 		k.Logger(ctx).Info(fmt.Sprintf("Updated pool %d to state closing", poolID))
 
@@ -543,10 +541,7 @@ func (k Keeper) ClosePool(ctx sdk.Context, poolID uint64) error {
 
 		k.Logger(ctx).Info(fmt.Sprintf("Created %d withdrawals for pool %d", len(deposits), poolID))
 	} else if pool.State == types.PoolState_Closing {
-		// After that, we are in the second step of the closure process
-		// If the actual closing step is withdrawal, we have to watch the withdrawal list and wait for it to be empty
-		// Then we can proceed with the final draw
-		if pool.ClosingStep == types.PoolClosingStep_Withdraw {
+		if !finalStep {
 			// Acquire the withdrawals and make sure we have none
 			withdrawals := k.ListPoolWithdrawals(ctx, poolID)
 			if len(withdrawals) > 0 {
@@ -554,38 +549,34 @@ func (k Keeper) ClosePool(ctx sdk.Context, poolID uint64) error {
 				return nil
 			}
 
-			// If we have no withdrawals, we can proceed with the final draw
-			draw, err := k.LaunchNewDraw(ctx, poolID)
-			if err != nil {
-				return err
-			}
-
-			// And update the final state
-			pool.ClosingStep = types.PoolClosingStep_Draw
-			k.updatePool(ctx, &pool)
-			k.Logger(ctx).Info(fmt.Sprintf("Updated pool %d to state draw with drawID %d", poolID, draw.DrawId))
-			return nil
-		} else if pool.ClosingStep == types.PoolClosingStep_Draw {
-			// Wait for the actual draw to be completed
-			if pool.LastDrawState != types.DrawState_Success {
-				k.Logger(ctx).Debug(fmt.Sprintf("Pool %d last draw is not yet completed", poolID))
-				return nil
-			}
-
-			// Transfer the remaining dust on local module account to community pool
-			// This is to avoid having dust on the module account
-			// This is not a critical step, so we don't need to return an error if it fails
-			currentLocalBalance := k.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(pool.LocalAddress), pool.Denom)
-			if currentLocalBalance.IsPositive() {
-				if err := k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, distribtypes.ModuleName, sdk.NewCoins(currentLocalBalance)); err != nil {
-					k.Logger(ctx).Error(fmt.Sprintf("Failed to transfer dust from pool %d local module account to community pool: %v", poolID, err))
+			// If the last draw state is success, it means we haven't launched the final draw yet
+			if pool.LastDrawState == types.DrawState_Success {
+				draw, err := k.LaunchNewDraw(ctx, poolID)
+				if err != nil {
+					return err
 				}
+				k.Logger(ctx).Info(fmt.Sprintf("Updated pool %d to launch draw with drawID %d", poolID, draw.DrawId))
 			}
+		} else {
+			// Only proceed if the final draw succeeded
+			if pool.LastDrawState == types.DrawState_Success {
+				// Transfer the remaining dust on local module account to community pool
+				// This is to avoid having dust on the module account
+				// This is not a critical step, so we don't need to return an error if it fails
+				currentLocalBalance := k.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(pool.LocalAddress), pool.Denom)
+				if currentLocalBalance.IsPositive() {
+					if err := k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, distribtypes.ModuleName, sdk.NewCoins(currentLocalBalance)); err != nil {
+						k.Logger(ctx).Error(fmt.Sprintf("Failed to transfer dust from pool %d local module account to community pool: %v", poolID, err))
+					}
+				}
 
-			// Once everything is done, we can update the state to closed
-			pool.State = types.PoolState_Closed
-			k.updatePool(ctx, &pool)
-			k.Logger(ctx).Info(fmt.Sprintf("Updated pool %d to state closed", poolID))
+				// Once everything is done, we can update the state to closed
+				pool.State = types.PoolState_Closed
+				k.updatePool(ctx, &pool)
+				k.Logger(ctx).Info(fmt.Sprintf("Updated pool %d to state closed", poolID))
+			} else {
+				k.Logger(ctx).Error(fmt.Sprintf("Pool %d cannot be closed because the last draw state is not success", poolID))
+			}
 		}
 	} else {
 		return types.ErrPoolNotClosing

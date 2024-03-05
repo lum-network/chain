@@ -34,16 +34,6 @@ enum PoolState {
   POOL_STATE_CLOSED = 5 [ (gogoproto.enumvalue_customname) = "Closed" ];
 }
 
-enum PoolClosingStep {
-  option (gogoproto.goproto_enum_prefix) = true;
-
-  POOL_CLOSING_STEP_UNSPECIFIED = 0
-      [ (gogoproto.enumvalue_customname) = "Unspecified" ];
-  POOL_CLOSING_STEP_WITHDRAW = 1
-      [ (gogoproto.enumvalue_customname) = "Withdraw" ];
-  POOL_CLOSING_STEP_DRAW = 2 [ (gogoproto.enumvalue_customname) = "Draw" ];
-}
-
 // PoolType the type of Pool
 // Each PoolType implements a dedicated runner which applies its own Pool
 // Lifecycle in order to deliver yield and distribute prizes
@@ -131,7 +121,7 @@ message Pool {
       [ (gogoproto.nullable) = false ];
   repeated FeeTaker fee_takers = 30 [ (gogoproto.nullable) = false ];
 
-  PoolClosingStep closing_step = 31;
+  reserved 31;
   PoolState state = 32;
 
   int64 created_at_height = 33;

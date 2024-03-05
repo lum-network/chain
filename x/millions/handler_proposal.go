@@ -13,6 +13,10 @@ import (
 func NewMillionsProposalHandler(k keeper.Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
+		case *types.ProposalClosePool:
+			{
+				return k.ClosePool(ctx, c.PoolId, false)
+			}
 		case *types.ProposalUpdatePool:
 			{
 				return k.UpdatePool(ctx, c.PoolId, c.Validators, c.MinDepositAmount, c.UnbondingDuration, c.MaxUnbondingEntries, c.DrawSchedule, c.PrizeStrategy, c.State, c.FeeTakers)
