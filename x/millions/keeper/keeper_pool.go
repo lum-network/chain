@@ -534,7 +534,7 @@ func (k Keeper) ClosePool(ctx sdk.Context, poolID uint64) error {
 			if deposit.State == types.DepositState_Failure {
 				// Force retry deposits in error states
 				logger.Info(fmt.Sprintf("Retrying deposit with ID %d in error state %s", deposit.GetDepositId(), deposit.GetErrorState().String()))
-				_, err := serv.DepositRetry(ctx, &types.MsgDepositRetry{
+				_, err := serv.DepositRetry(sdk.WrapSDKContext(ctx), &types.MsgDepositRetry{
 					PoolId:           deposit.GetPoolId(),
 					DepositId:        deposit.GetDepositId(),
 					DepositorAddress: deposit.GetDepositorAddress(),
@@ -546,7 +546,7 @@ func (k Keeper) ClosePool(ctx sdk.Context, poolID uint64) error {
 			} else if deposit.State == types.DepositState_Success {
 				// Withdraw deposits in success state
 				logger.Info(fmt.Sprintf("Withdrawing deposit with ID %d", deposit.GetDepositId()))
-				_, err := serv.WithdrawDeposit(ctx.Context(), types.NewMsgWithdrawDeposit(
+				_, err := serv.WithdrawDeposit(sdk.WrapSDKContext(ctx), types.NewMsgWithdrawDeposit(
 					deposit.GetDepositorAddress(),
 					deposit.GetDepositorAddress(),
 					deposit.GetPoolId(),
@@ -569,7 +569,7 @@ func (k Keeper) ClosePool(ctx sdk.Context, poolID uint64) error {
 			if withdrawal.State == types.WithdrawalState_Failure {
 				// Force retry withdrawals in error state
 				logger.Info(fmt.Sprintf("Retrying withdrawal with ID %d in error state %s", withdrawal.GetWithdrawalId(), withdrawal.GetErrorState().String()))
-				_, err := serv.WithdrawDepositRetry(ctx, &types.MsgWithdrawDepositRetry{
+				_, err := serv.WithdrawDepositRetry(sdk.WrapSDKContext(ctx), &types.MsgWithdrawDepositRetry{
 					PoolId:           withdrawal.GetPoolId(),
 					WithdrawalId:     withdrawal.GetWithdrawalId(),
 					DepositorAddress: withdrawal.GetDepositorAddress(),
