@@ -684,11 +684,6 @@ func (k Keeper) OnRedelegateToActiveValidatorsOnRemoteZoneCompleted(ctx sdk.Cont
 		return err
 	}
 
-	// Make sure pool is ready
-	if pool.State != types.PoolState_Ready && pool.State != types.PoolState_Paused {
-		return types.ErrPoolNotReady
-	}
-
 	// Get the validator
 	valIdx := pool.GetValidatorsMapIndex()
 	index, found := valIdx[valSrcAddr]
