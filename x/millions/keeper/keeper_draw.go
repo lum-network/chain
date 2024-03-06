@@ -496,7 +496,6 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*typ
 // OnExecuteDrawCompleted wrappers for draw state update upon drawing phase completion
 // returns the error specified in parameters and does not produce any internal error
 func (k Keeper) OnExecuteDrawCompleted(ctx sdk.Context, pool *types.Pool, draw *types.Draw, err error) (*types.Draw, error) {
-	// If it's a failure, we do not update the pool state
 	if err != nil {
 		draw.State = types.DrawState_Failure
 		draw.ErrorState = types.DrawState_Drawing
@@ -508,7 +507,6 @@ func (k Keeper) OnExecuteDrawCompleted(ctx sdk.Context, pool *types.Pool, draw *
 		return draw, err
 	}
 
-	// Update draw state
 	draw.State = types.DrawState_Success
 	draw.ErrorState = types.DrawState_Unspecified
 	draw.UpdatedAtHeight = ctx.BlockHeight()

@@ -499,7 +499,8 @@ func (k Keeper) ClosePool(ctx sdk.Context, poolID uint64) error {
 	if pool.State != types.PoolState_Ready &&
 		pool.State != types.PoolState_Paused &&
 		pool.State != types.PoolState_Closing {
-		return types.ErrPoolClosed
+		logger.Error(fmt.Sprintf("Impossible state change requested due to pool state %s", pool.State))
+		return types.ErrPoolStateChangeNotAllowed
 	}
 
 	// Step 1: Pool is not yet in closing state - launch closing procedure
@@ -518,7 +519,7 @@ func (k Keeper) ClosePool(ctx sdk.Context, poolID uint64) error {
 		}
 	}
 
-	// Step 2: Launch final Draw and wait for its completion
+	// Step 2: Wait for final draw completion
 	if pool.LastDrawState != types.DrawState_Success {
 		return nil
 	}
@@ -542,7 +543,7 @@ func (k Keeper) ClosePool(ctx sdk.Context, poolID uint64) error {
 					logger.Error(fmt.Sprintf("Error while forcing retry for deposit %d: %v", deposit.GetDepositId(), err))
 					return err
 				}
-			} else {
+			} else if deposit.State == types.DepositState_Success {
 				// Withdraw deposits in success state
 				logger.Info(fmt.Sprintf("Withdrawing deposit with ID %d", deposit.GetDepositId()))
 				_, err := serv.WithdrawDeposit(ctx.Context(), types.NewMsgWithdrawDeposit(
