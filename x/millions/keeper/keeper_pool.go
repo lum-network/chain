@@ -479,109 +479,121 @@ func (k Keeper) UpdatePool(
 	return nil
 }
 
-// ClosePool It is a deterministic method that proceed with pool closure steps based on the current pool state
-func (k Keeper) ClosePool(ctx sdk.Context, poolID uint64, finalStep bool) error {
+// ClosePool iterate through many stages to close a Pool based on its local state, deposits and withdrawals
+//
+// Closing procedure steps:
+// 1. Move pool into state Closing
+// 2. Launch the final Draw
+// 3. Launch the withdrawal of all the deposits
+// 4. Wait for all withdrawals to complete
+func (k Keeper) ClosePool(ctx sdk.Context, poolID uint64) error {
+	logger := k.Logger(ctx).With("ctx", "close_pool", "pool_id", poolID)
+
 	// Make sure we always have a valid pool entity
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err
 	}
 
-	// Make sure the pool is not already closed
-	if pool.State == types.PoolState_Closed {
+	// Make sure the pool can be closed or is already closing
+	if pool.State != types.PoolState_Ready &&
+		pool.State != types.PoolState_Paused &&
+		pool.State != types.PoolState_Closing {
 		return types.ErrPoolClosed
 	}
 
-	// If the pool is in state "ready", it means we are in the very first step of the closure process
-	if pool.State == types.PoolState_Ready {
-		// Update the pool state to "Closing"
+	// Step 1: Pool is not yet in closing state - launch closing procedure
+	if pool.State != types.PoolState_Closing {
+		logger.Info("Update pool to state closing")
 		pool.State = types.PoolState_Closing
+		pool.UpdatedAt = ctx.BlockTime()
+		pool.UpdatedAtHeight = ctx.BlockHeight()
 		k.updatePool(ctx, &pool)
-		k.Logger(ctx).Info(fmt.Sprintf("Updated pool %d to state closing", poolID))
 
-		// Acquire all deposits
-		deposits := k.ListPoolDeposits(ctx, poolID)
-
-		// Update the prize strategy now to distribute 100% of the prize pool to the depositors
-		// Do it now because once you create a withdrawal, you delete deposit
-		pool.PrizeStrategy = types.PrizeStrategy{
-			PrizeBatches: []types.PrizeBatch{
-				{Quantity: uint64(len(deposits)), PoolPercent: 1, DrawProbability: sdk.NewDec(1), IsUnique: true},
-			},
+		// Launch step 2 final draw
+		logger.Info("Launch final draw")
+		if _, err := k.LaunchNewDraw(ctx, poolID); err != nil {
+			logger.Error(fmt.Sprintf("Error while launching final draw: %v", err))
+			return err
 		}
-		k.updatePool(ctx, &pool)
-		k.Logger(ctx).Info(fmt.Sprintf("Updated pool %d prize strategy to distribute 100%% of the prize pool to the depositors", poolID))
-
-		// Iterate over all deposits
-		for _, deposit := range deposits {
-			// Make sure the deposit can be withdrawn
-			if deposit.State != types.DepositState_Success {
-				continue
-			}
-
-			// Trigger the withdrawal
-			withdrawal := types.Withdrawal{
-				PoolId:           poolID,
-				DepositId:        deposit.DepositId,
-				WithdrawalId:     k.GetNextWithdrawalIdAndIncrement(ctx),
-				State:            types.WithdrawalState_Pending,
-				DepositorAddress: deposit.GetDepositorAddress(),
-				ToAddress:        deposit.GetDepositorAddress(),
-				Amount:           deposit.Amount,
-				CreatedAtHeight:  ctx.BlockHeight(),
-				UpdatedAtHeight:  ctx.BlockHeight(),
-				CreatedAt:        ctx.BlockTime(),
-				UpdatedAt:        ctx.BlockTime(),
-			}
-
-			// Adds the withdrawal and remove the deposit
-			k.AddWithdrawal(ctx, withdrawal)
-			k.RemoveDeposit(ctx, &deposit)
-		}
-
-		k.Logger(ctx).Info(fmt.Sprintf("Created %d withdrawals for pool %d", len(deposits), poolID))
-	} else if pool.State == types.PoolState_Closing {
-		if !finalStep {
-			// Acquire the withdrawals and make sure we have none
-			withdrawals := k.ListPoolWithdrawals(ctx, poolID)
-			if len(withdrawals) > 0 {
-				k.Logger(ctx).Debug(fmt.Sprintf("Pool %d has %d withdrawals pending", poolID, len(withdrawals)))
-				return nil
-			}
-
-			// If the last draw state is success, it means we haven't launched the final draw yet
-			if pool.LastDrawState == types.DrawState_Success {
-				draw, err := k.LaunchNewDraw(ctx, poolID)
-				if err != nil {
-					return err
-				}
-				k.Logger(ctx).Info(fmt.Sprintf("Updated pool %d to launch draw with drawID %d", poolID, draw.DrawId))
-			}
-		} else {
-			// Only proceed if the final draw succeeded
-			if pool.LastDrawState == types.DrawState_Success {
-				// Transfer the remaining dust on local module account to community pool
-				// This is to avoid having dust on the module account
-				// This is not a critical step, so we don't need to return an error if it fails
-				currentLocalBalance := k.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(pool.LocalAddress), pool.Denom)
-				if currentLocalBalance.IsPositive() {
-					if err := k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, distribtypes.ModuleName, sdk.NewCoins(currentLocalBalance)); err != nil {
-						k.Logger(ctx).Error(fmt.Sprintf("Failed to transfer dust from pool %d local module account to community pool: %v", poolID, err))
-					}
-				}
-
-				// Once everything is done, we can update the state to closed
-				pool.State = types.PoolState_Closed
-				k.updatePool(ctx, &pool)
-				k.Logger(ctx).Info(fmt.Sprintf("Updated pool %d to state closed", poolID))
-			} else {
-				k.Logger(ctx).Error(fmt.Sprintf("Pool %d cannot be closed because the last draw state is not success", poolID))
-			}
-		}
-	} else {
-		return types.ErrPoolNotClosing
 	}
 
+	// Step 2: Launch final Draw and wait for its completion
+	if pool.LastDrawState != types.DrawState_Success {
+		return nil
+	}
+
+	// Step 3: Initiate the withdrawal of all the deposits
+	deposits := k.ListPoolDeposits(ctx, poolID)
+	if len(deposits) > 0 {
+		logger.Info("Initiate the withdrawal of all deposits")
+		// As long as we have deposits we will keep trying to withdraw them before moving forward
+		serv := msgServer{Keeper: k}
+		for _, deposit := range deposits {
+			if deposit.State == types.DepositState_Failure {
+				// Force retry deposits in error states
+				logger.Info(fmt.Sprintf("Retrying deposit with ID %d in error state %s", deposit.GetDepositId(), deposit.GetErrorState().String()))
+				_, err := serv.DepositRetry(ctx, &types.MsgDepositRetry{
+					PoolId:           deposit.GetPoolId(),
+					DepositId:        deposit.GetDepositId(),
+					DepositorAddress: deposit.GetDepositorAddress(),
+				})
+				if err != nil {
+					logger.Error(fmt.Sprintf("Error while forcing retry for deposit %d: %v", deposit.GetDepositId(), err))
+					return err
+				}
+			} else {
+				// Withdraw deposits in success state
+				logger.Info(fmt.Sprintf("Withdrawing deposit with ID %d", deposit.GetDepositId()))
+				_, err := serv.WithdrawDeposit(ctx.Context(), types.NewMsgWithdrawDeposit(
+					deposit.GetDepositorAddress(),
+					deposit.GetDepositorAddress(),
+					deposit.GetPoolId(),
+					deposit.GetDepositId(),
+				))
+				if err != nil {
+					logger.Error(fmt.Sprintf("Error while launching withdrawal for deposit with ID %d: %v", deposit.GetDepositId(), err))
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
+	// Step 4: Wait for all withdrawals to complete
+	withdrawals := k.ListPoolWithdrawals(ctx, poolID)
+	if len(withdrawals) > 0 {
+		serv := msgServer{Keeper: k}
+		for _, withdrawal := range withdrawals {
+			if withdrawal.State == types.WithdrawalState_Failure {
+				// Force retry withdrawals in error state
+				logger.Info(fmt.Sprintf("Retrying withdrawal with ID %d in error state %s", withdrawal.GetWithdrawalId(), withdrawal.GetErrorState().String()))
+				_, err := serv.WithdrawDepositRetry(ctx, &types.MsgWithdrawDepositRetry{
+					PoolId:           withdrawal.GetPoolId(),
+					WithdrawalId:     withdrawal.GetWithdrawalId(),
+					DepositorAddress: withdrawal.GetDepositorAddress(),
+				})
+				if err != nil {
+					logger.Error(fmt.Sprintf("Error while forcing retry for withdrawal with ID %d: %v", withdrawal.GetWithdrawalId(), err))
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
+	// Step 5: Clear module dust and close Pool
+	balance := k.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(pool.LocalAddress), pool.Denom)
+	if balance.IsPositive() {
+		if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, sdk.MustAccAddressFromBech32(pool.GetLocalAddress()), authtypes.FeeCollectorName, sdk.NewCoins(balance)); err != nil {
+			logger.Error(fmt.Sprintf("Failed to transfer dust from pool with ID %d local account to fee collector: %v", poolID, err))
+		}
+	}
+	logger.Info("Update pool to state closed")
+	pool.State = types.PoolState_Closed
+	pool.UpdatedAt = ctx.BlockTime()
+	pool.UpdatedAtHeight = ctx.BlockHeight()
+	k.updatePool(ctx, &pool)
 	return nil
 }
 

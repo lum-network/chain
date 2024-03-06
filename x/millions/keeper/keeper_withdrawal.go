@@ -137,6 +137,10 @@ func (k Keeper) TransferWithdrawalToRecipient(ctx sdk.Context, poolID uint64, wi
 // - To the local chain response if it's a transfer to local chain
 // - To the native chain if it's BankSend for a native pool with a native destination address
 func (k Keeper) OnTransferWithdrawalToRecipientCompleted(ctx sdk.Context, poolID uint64, withdrawalID uint64, isError bool) error {
+	pool, err := k.GetPool(ctx, poolID)
+	if err != nil {
+		return err
+	}
 	withdrawal, err := k.GetPoolWithdrawal(ctx, poolID, withdrawalID)
 	if err != nil {
 		return err
@@ -155,11 +159,14 @@ func (k Keeper) OnTransferWithdrawalToRecipientCompleted(ctx sdk.Context, poolID
 		return err
 	}
 
-	// Notify the closing method to check if the step can continue
-	// Discard any error here to avoid blocking the process on relaying side
-	if err := k.ClosePool(ctx, poolID, false); err != nil {
-		k.Logger(ctx).Error(fmt.Sprintf("ClosePool %v", err.Error()))
+	if pool.State == types.PoolState_Closing {
+		// Continue closing procedure
+		// voluntary ignore errors
+		if err := k.ClosePool(ctx, poolID); err != nil {
+			k.Logger(ctx).With("ctx", "withdrawal_completed", "pool_id", poolID).Error("Silently failed to continue close pool procedure: %v", err)
+		}
 	}
+
 	return nil
 }
 

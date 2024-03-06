@@ -408,11 +408,23 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*typ
 	draw.PrizePoolRemainsAmount = pool.AvailablePrizePool.Amount
 	draw.PrizePool = draw.PrizePool.Add(pool.AvailablePrizePool)
 
+	prizeStrat := pool.PrizeStrategy
+
+	if pool.State == types.PoolState_Closing {
+		// Pool is unfortunately closing but some people will be lucky
+		// Modify prize distribution to distribute the full prize pool in one draw
+		// which is equal to making all batches not unique and with a 100% draw probability
+		for i := range prizeStrat.PrizeBatches {
+			prizeStrat.PrizeBatches[i].IsUnique = false
+			prizeStrat.PrizeBatches[i].DrawProbability = sdk.OneDec()
+		}
+	}
+
 	// Draw prizes
 	dRes, err := k.RunDrawPrizes(
 		ctx,
 		draw.PrizePool,
-		pool.PrizeStrategy,
+		prizeStrat,
 		depositorsTWB,
 		draw.RandSeed,
 	)
@@ -505,11 +517,11 @@ func (k Keeper) OnExecuteDrawCompleted(ctx sdk.Context, pool *types.Pool, draw *
 	pool.LastDrawState = draw.State
 	k.updatePool(ctx, pool)
 
-	// If the pool is in closing state, notify the close method
-	// Discard the error here since we do not want to return an error on a successful draw
 	if pool.State == types.PoolState_Closing {
-		if err := k.ClosePool(ctx, pool.PoolId, true); err != nil {
-			return draw, nil
+		// Continue closing procedure
+		// voluntary ignore errors
+		if err := k.ClosePool(ctx, pool.GetPoolId()); err != nil {
+			k.Logger(ctx).With("ctx", "draw_completed", "pool_id", pool.GetPoolId()).Error("Silently failed to continue close pool procedure: %v", err)
 		}
 	}
 	return draw, err
