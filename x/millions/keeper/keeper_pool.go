@@ -608,7 +608,7 @@ func (k Keeper) RebalanceValidatorsBondings(ctx sdk.Context, poolID uint64) erro
 	}
 
 	// Make sure pool is ready
-	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
+	if pool.State != types.PoolState_Ready && pool.State != types.PoolState_Paused {
 		return types.ErrPoolNotReady
 	}
 
@@ -633,7 +633,7 @@ func (k Keeper) RedelegateToActiveValidatorsOnRemoteZone(ctx sdk.Context, poolID
 	}
 
 	// Make sure pool is ready
-	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
+	if pool.State != types.PoolState_Ready && pool.State != types.PoolState_Paused {
 		return types.ErrPoolNotReady
 	}
 
@@ -685,7 +685,7 @@ func (k Keeper) OnRedelegateToActiveValidatorsOnRemoteZoneCompleted(ctx sdk.Cont
 	}
 
 	// Make sure pool is ready
-	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
+	if pool.State != types.PoolState_Ready && pool.State != types.PoolState_Paused {
 		return types.ErrPoolNotReady
 	}
 

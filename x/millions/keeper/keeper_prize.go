@@ -23,6 +23,8 @@ func (k Keeper) ClawBackPrize(ctx sdk.Context, poolID uint64, drawID uint64, pri
 	// If the pool is in closing or closed state, we do not process any prize clawback
 	// We want all user to be able to claim their prize, no matter the state
 	if pool.State == types.PoolState_Closing || pool.State == types.PoolState_Closed {
+		// Since clawback is triggered by a queue we simulate a successful clawback and the queue will never retry it
+		// = infinite prize claim duration
 		return nil
 	}
 

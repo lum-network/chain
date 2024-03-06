@@ -20,7 +20,7 @@ func (k msgServer) RestoreInterchainAccounts(goCtx context.Context, msg *types.M
 	}
 
 	// We always want our pool to be ready
-	if pool.State == types.PoolState_Created {
+	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
 		return nil, types.ErrPoolNotReady
 	}
 
