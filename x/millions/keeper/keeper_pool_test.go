@@ -1002,7 +1002,7 @@ func (suite *KeeperTestSuite) TestPool_ClosePool() {
 		// Create a new deposit and add it to the state
 		_, err := msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
 			PoolId:           poolID,
-			Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_100_000)),
+			Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_100_000_000)),
 			DepositorAddress: suite.addrs[0].String(),
 			WinnerAddress:    suite.addrs[0].String(),
 			IsSponsor:        false,
@@ -1071,7 +1071,7 @@ func (suite *KeeperTestSuite) TestPool_ClosePool() {
 
 	// Test that the balance should remain unchanged
 	balance := app.BankKeeper.GetBalance(ctx, suite.addrs[0], localPoolDenom)
-	suite.Require().Equal(balanceBefore.Amount.Int64()-3_300_000, balance.Amount.Int64())
+	suite.Require().Equal(balanceBefore.Amount.Int64()-3_300_000_000, balance.Amount.Int64())
 
 	ctx = ctx.WithBlockTime(now.Add(21 * 24 * time.Hour))
 	_, err = app.StakingKeeper.CompleteUnbonding(ctx, sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), suite.valAddrs[0])
@@ -1091,14 +1091,35 @@ func (suite *KeeperTestSuite) TestPool_ClosePool() {
 	balance = app.BankKeeper.GetBalance(ctx, suite.addrs[0], localPoolDenom)
 	suite.Require().Equal(balanceBefore.Amount.Int64(), balance.Amount.Int64())
 
-	// Close pool again
-	err = app.MillionsKeeper.ClosePool(ctx, poolID)
-	suite.Require().Error(err, millionstypes.ErrPoolStateChangeNotAllowed)
-
 	// Get the pool and make sure it's in the closed state
 	pool, err = app.MillionsKeeper.GetPool(ctx, poolID)
 	suite.Require().NoError(err)
 	suite.Require().Equal(millionstypes.PoolState_Closed, pool.State)
+
+	// Close pool again - It shouldn't work
+	err = app.MillionsKeeper.ClosePool(ctx, poolID)
+	suite.Require().Error(err, millionstypes.ErrPoolStateChangeNotAllowed)
+
+	// Try to make a deposit - It shouldn't work
+	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
+		PoolId:           poolID,
+		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_100_000_000)),
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[0].String(),
+		IsSponsor:        false,
+	})
+	suite.Require().Error(err)
+
+	// Try to claim the prizes - It should work even with a closed pool
+	prizes := app.MillionsKeeper.ListAccountPrizes(ctx, suite.addrs[0])
+	for _, p := range prizes {
+		_, err = msgServer.ClaimPrize(goCtx, &millionstypes.MsgClaimPrize{
+			PoolId:  poolID,
+			DrawId:  p.DrawId,
+			PrizeId: p.PrizeId,
+		})
+		suite.Require().NoError(err)
+	}
 }
 
 // TestPool_UpdatePool tests the different conditions for a proposal pool update
