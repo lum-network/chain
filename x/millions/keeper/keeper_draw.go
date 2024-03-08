@@ -83,6 +83,7 @@ func (k Keeper) ClaimYieldOnRemoteZone(ctx sdk.Context, poolID uint64, drawID ui
 	if err != nil {
 		return nil, err
 	}
+
 	// Acquire Draw
 	draw, err := k.GetPoolDraw(ctx, poolID, drawID)
 	if err != nil {
@@ -407,11 +408,23 @@ func (k Keeper) ExecuteDraw(ctx sdk.Context, poolID uint64, drawID uint64) (*typ
 	draw.PrizePoolRemainsAmount = pool.AvailablePrizePool.Amount
 	draw.PrizePool = draw.PrizePool.Add(pool.AvailablePrizePool)
 
+	prizeStrat := pool.PrizeStrategy
+
+	if pool.State == types.PoolState_Closing {
+		// Pool is unfortunately closing but some people will be lucky
+		// Modify prize distribution to distribute the full prize pool in one draw
+		// which is equal to making all batches not unique and with a 100% draw probability
+		for i := range prizeStrat.PrizeBatches {
+			prizeStrat.PrizeBatches[i].IsUnique = false
+			prizeStrat.PrizeBatches[i].DrawProbability = sdk.OneDec()
+		}
+	}
+
 	// Draw prizes
 	dRes, err := k.RunDrawPrizes(
 		ctx,
 		draw.PrizePool,
-		pool.PrizeStrategy,
+		prizeStrat,
 		depositorsTWB,
 		draw.RandSeed,
 	)
@@ -493,6 +506,7 @@ func (k Keeper) OnExecuteDrawCompleted(ctx sdk.Context, pool *types.Pool, draw *
 		k.updatePool(ctx, pool)
 		return draw, err
 	}
+
 	draw.State = types.DrawState_Success
 	draw.ErrorState = types.DrawState_Unspecified
 	draw.UpdatedAtHeight = ctx.BlockHeight()
@@ -500,11 +514,19 @@ func (k Keeper) OnExecuteDrawCompleted(ctx sdk.Context, pool *types.Pool, draw *
 	k.SetPoolDraw(ctx, *draw)
 	pool.LastDrawState = draw.State
 	k.updatePool(ctx, pool)
+
+	if pool.State == types.PoolState_Closing {
+		// Continue closing procedure
+		// voluntary ignore errors
+		if err := k.ClosePool(ctx, pool.GetPoolId()); err != nil {
+			k.Logger(ctx).With("ctx", "draw_completed", "pool_id", pool.GetPoolId()).Error("Silently failed to continue close pool procedure: %v", err)
+		}
+	}
 	return draw, err
 }
 
 // ComputeDepositsTWB takes deposits and computes the weight based on their deposit time and the draw duration
-// It essentially compute the Time Weighted Balance of each deposit for the DrawPrizes phase
+// It essentially computes the Time Weighted Balance of each deposit for the DrawPrizes phase
 func (k Keeper) ComputeDepositsTWB(ctx sdk.Context, depositStartAt time.Time, drawAt time.Time, deposits []types.Deposit) []DepositTWB {
 	params := k.GetParams(ctx)
 

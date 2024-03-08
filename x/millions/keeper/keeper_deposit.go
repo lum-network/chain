@@ -120,6 +120,15 @@ func (k Keeper) OnDelegateDepositOnRemoteZoneCompleted(ctx sdk.Context, poolID u
 	pool.ApplySplitDelegate(ctx, splits)
 	k.updatePool(ctx, &pool)
 	k.UpdateDepositStatus(ctx, poolID, depositID, types.DepositState_Success, false)
+
+	if pool.State == types.PoolState_Closing {
+		// Continue closing procedure
+		// voluntary ignore errors
+		if err := k.ClosePool(ctx, poolID); err != nil {
+			k.Logger(ctx).With("ctx", "deposit_completed", "pool_id", poolID).Error("Silently failed to continue close pool procedure: %v", err)
+		}
+	}
+
 	return nil
 }
 
