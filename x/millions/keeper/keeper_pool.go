@@ -479,6 +479,125 @@ func (k Keeper) UpdatePool(
 	return nil
 }
 
+// ClosePool iterate through many stages to close a Pool based on its local state, deposits and withdrawals
+//
+// Closing procedure steps:
+// 1. Move pool into state Closing
+// 2. Launch the final Draw
+// 3. Launch the withdrawal of all the deposits
+// 4. Wait for all withdrawals to complete
+func (k Keeper) ClosePool(ctx sdk.Context, poolID uint64) error {
+	logger := k.Logger(ctx).With("ctx", "close_pool", "pool_id", poolID)
+
+	// Make sure we always have a valid pool entity
+	pool, err := k.GetPool(ctx, poolID)
+	if err != nil {
+		return err
+	}
+
+	// Make sure the pool can be closed or is already closing
+	if pool.State != types.PoolState_Ready &&
+		pool.State != types.PoolState_Paused &&
+		pool.State != types.PoolState_Closing {
+		logger.Error(fmt.Sprintf("Impossible state change requested due to pool state %s", pool.State))
+		return types.ErrPoolStateChangeNotAllowed
+	}
+
+	// Step 1: Pool is not yet in closing state - launch closing procedure
+	if pool.State != types.PoolState_Closing {
+		logger.Info("Update pool to state closing")
+		pool.State = types.PoolState_Closing
+		pool.UpdatedAt = ctx.BlockTime()
+		pool.UpdatedAtHeight = ctx.BlockHeight()
+		k.updatePool(ctx, &pool)
+
+		// Launch step 2 final draw
+		logger.Info("Launch final draw")
+		if _, err := k.LaunchNewDraw(ctx, poolID); err != nil {
+			logger.Error(fmt.Sprintf("Error while launching final draw: %v", err))
+			return err
+		}
+	}
+
+	// Step 2: Wait for final draw completion
+	if pool.LastDrawState != types.DrawState_Success {
+		return nil
+	}
+
+	// Step 3: Initiate the withdrawal of all the deposits
+	deposits := k.ListPoolDeposits(ctx, poolID)
+	if len(deposits) > 0 {
+		logger.Info("Initiate the withdrawal of all deposits")
+		// As long as we have deposits we will keep trying to withdraw them before moving forward
+		serv := msgServer{Keeper: k}
+		for _, deposit := range deposits {
+			if deposit.State == types.DepositState_Failure {
+				// Force retry deposits in error states
+				logger.Info(fmt.Sprintf("Retrying deposit with ID %d in error state %s", deposit.GetDepositId(), deposit.GetErrorState().String()))
+				_, err := serv.DepositRetry(sdk.WrapSDKContext(ctx), &types.MsgDepositRetry{
+					PoolId:           deposit.GetPoolId(),
+					DepositId:        deposit.GetDepositId(),
+					DepositorAddress: deposit.GetDepositorAddress(),
+				})
+				if err != nil {
+					logger.Error(fmt.Sprintf("Error while forcing retry for deposit %d: %v", deposit.GetDepositId(), err))
+					return err
+				}
+			} else if deposit.State == types.DepositState_Success {
+				// Withdraw deposits in success state
+				logger.Info(fmt.Sprintf("Withdrawing deposit with ID %d", deposit.GetDepositId()))
+				_, err := serv.WithdrawDeposit(sdk.WrapSDKContext(ctx), types.NewMsgWithdrawDeposit(
+					deposit.GetDepositorAddress(),
+					deposit.GetDepositorAddress(),
+					deposit.GetPoolId(),
+					deposit.GetDepositId(),
+				))
+				if err != nil {
+					logger.Error(fmt.Sprintf("Error while launching withdrawal for deposit with ID %d: %v", deposit.GetDepositId(), err))
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
+	// Step 4: Wait for all withdrawals to complete
+	withdrawals := k.ListPoolWithdrawals(ctx, poolID)
+	if len(withdrawals) > 0 {
+		serv := msgServer{Keeper: k}
+		for _, withdrawal := range withdrawals {
+			if withdrawal.State == types.WithdrawalState_Failure {
+				// Force retry withdrawals in error state
+				logger.Info(fmt.Sprintf("Retrying withdrawal with ID %d in error state %s", withdrawal.GetWithdrawalId(), withdrawal.GetErrorState().String()))
+				_, err := serv.WithdrawDepositRetry(sdk.WrapSDKContext(ctx), &types.MsgWithdrawDepositRetry{
+					PoolId:           withdrawal.GetPoolId(),
+					WithdrawalId:     withdrawal.GetWithdrawalId(),
+					DepositorAddress: withdrawal.GetDepositorAddress(),
+				})
+				if err != nil {
+					logger.Error(fmt.Sprintf("Error while forcing retry for withdrawal with ID %d: %v", withdrawal.GetWithdrawalId(), err))
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
+	// Step 5: Clear module dust and close Pool
+	balance := k.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(pool.LocalAddress), pool.Denom)
+	if balance.IsPositive() {
+		if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, sdk.MustAccAddressFromBech32(pool.GetLocalAddress()), authtypes.FeeCollectorName, sdk.NewCoins(balance)); err != nil {
+			logger.Error(fmt.Sprintf("Failed to transfer dust from pool with ID %d local account to fee collector: %v", poolID, err))
+		}
+	}
+	logger.Info("Update pool to state closed")
+	pool.State = types.PoolState_Closed
+	pool.UpdatedAt = ctx.BlockTime()
+	pool.UpdatedAtHeight = ctx.BlockHeight()
+	k.updatePool(ctx, &pool)
+	return nil
+}
+
 // RebalanceValidatorsBondings allows rebalancing of validators bonded assets
 // Current implementation:
 // - Initiate an even redelegate distribution from inactive bonded validators to active validators
@@ -489,7 +608,7 @@ func (k Keeper) RebalanceValidatorsBondings(ctx sdk.Context, poolID uint64) erro
 	}
 
 	// Make sure pool is ready
-	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
+	if pool.State != types.PoolState_Ready && pool.State != types.PoolState_Paused {
 		return types.ErrPoolNotReady
 	}
 
@@ -514,7 +633,7 @@ func (k Keeper) RedelegateToActiveValidatorsOnRemoteZone(ctx sdk.Context, poolID
 	}
 
 	// Make sure pool is ready
-	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
+	if pool.State != types.PoolState_Ready && pool.State != types.PoolState_Paused {
 		return types.ErrPoolNotReady
 	}
 
@@ -565,11 +684,6 @@ func (k Keeper) OnRedelegateToActiveValidatorsOnRemoteZoneCompleted(ctx sdk.Cont
 		return err
 	}
 
-	// Make sure pool is ready
-	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
-		return types.ErrPoolNotReady
-	}
-
 	// Get the validator
 	valIdx := pool.GetValidatorsMapIndex()
 	index, found := valIdx[valSrcAddr]
@@ -598,26 +712,6 @@ func (k Keeper) OnRedelegateToActiveValidatorsOnRemoteZoneCompleted(ctx sdk.Cont
 	})
 
 	return nil
-}
-
-// UnsafeKillPool This method switches the provided pool state but does not handle any withdrawal or deposit.
-// It shouldn't be used and is very specific to UNUSED and EMPTY pools
-func (k Keeper) UnsafeKillPool(ctx sdk.Context, poolID uint64) (types.Pool, error) {
-	// Grab our pool instance
-	pool, err := k.GetPool(ctx, poolID)
-	if err != nil {
-		return types.Pool{}, err
-	}
-
-	// Make sure the pool isn't killed yet
-	if pool.GetState() == types.PoolState_Killed {
-		return pool, errorsmod.Wrapf(types.ErrPoolKilled, "%d", poolID)
-	}
-
-	// Kill the pool
-	pool.State = types.PoolState_Killed
-	k.updatePool(ctx, &pool)
-	return pool, nil
 }
 
 // UnsafeUpdatePoolPortIds This method raw update the provided pool port ids.

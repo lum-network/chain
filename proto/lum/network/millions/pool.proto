@@ -30,7 +30,8 @@ enum PoolState {
   POOL_STATE_CREATED = 1 [ (gogoproto.enumvalue_customname) = "Created" ];
   POOL_STATE_READY = 2 [ (gogoproto.enumvalue_customname) = "Ready" ];
   POOL_STATE_PAUSED = 3 [ (gogoproto.enumvalue_customname) = "Paused" ];
-  POOL_STATE_KILLED = 4 [ (gogoproto.enumvalue_customname) = "Killed" ];
+  POOL_STATE_CLOSING = 4 [ (gogoproto.enumvalue_customname) = "Closing" ];
+  POOL_STATE_CLOSED = 5 [ (gogoproto.enumvalue_customname) = "Closed" ];
 }
 
 // PoolType the type of Pool
@@ -119,8 +120,8 @@ message Pool {
   cosmos.base.v1beta1.Coin available_prize_pool = 29
       [ (gogoproto.nullable) = false ];
   repeated FeeTaker fee_takers = 30 [ (gogoproto.nullable) = false ];
-  reserved 31;
 
+  reserved 31;
   PoolState state = 32;
 
   int64 created_at_height = 33;

@@ -17,6 +17,18 @@ import (
 	"github.com/lum-network/chain/x/millions/types"
 )
 
+func parseClosePoolProposalFile(cdc codec.JSONCodec, proposalFile string) (proposal types.ProposalClosePool, err error) {
+	contents, err := os.ReadFile(proposalFile)
+	if err != nil {
+		return proposal, err
+	}
+
+	if err = cdc.UnmarshalJSON(contents, &proposal); err != nil {
+		return proposal, err
+	}
+	return proposal, nil
+}
+
 func parseRegisterPoolProposalFile(cdc codec.JSONCodec, proposalFile string) (proposal types.ProposalRegisterPool, err error) {
 	contents, err := os.ReadFile(proposalFile)
 	if err != nil {
@@ -192,6 +204,78 @@ Where proposal.json contains:
 
 			// Parse the proposal file
 			proposal, err := parseUpdatePoolProposalFile(clientCtx.Codec, args[0])
+			if err != nil {
+				return err
+			}
+
+			if err := proposal.ValidateBasic(); err != nil {
+				return err
+			}
+
+			// Grab the parameters
+			from := clientCtx.GetFromAddress()
+
+			// Grab the deposit
+			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(&proposal, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			// Generate the transaction
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(govcli.FlagDeposit, "1ulum", "deposit of proposal")
+	if err := cmd.MarkFlagRequired(govcli.FlagDeposit); err != nil {
+		panic(err)
+	}
+	return cmd
+}
+
+func CmdProposalClosePool() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "millions-close-pool [proposal-file]",
+		Short: "Submit a millions close pool proposal",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a ClosePool proposal along with an initial deposit.
+The proposal details must be supplied via a JSON file.
+
+Example:
+$ %s tx gov submit-legacy-proposal millions-close-pool <path/to/proposal.json> --from=<key_or_address>
+
+Where proposal.json contains:
+{
+    "title": "Close my pool",
+    "description": "This is my close pool",
+    "pool_id": 1
+}
+`, version.AppName),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Acquire the client context
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// Parse the proposal file
+			proposal, err := parseClosePoolProposalFile(clientCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}

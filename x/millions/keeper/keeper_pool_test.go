@@ -207,7 +207,7 @@ func (suite *KeeperTestSuite) TestPool_DrawScheduleBasics() {
 	suite.Require().True(pool.ShouldDraw(ctx.WithBlockTime((*pool.LastDrawCreatedAt).Add(48 * time.Hour))))
 
 	// Test pool not ready states which should not allow any draw
-	pool.State = millionstypes.PoolState_Killed
+	pool.State = millionstypes.PoolState_Closed
 	suite.Require().False(pool.ShouldDraw(ctx.WithBlockTime(now.Add(48 * time.Hour))))
 
 	pool.State = millionstypes.PoolState_Created
@@ -955,6 +955,173 @@ func (suite *KeeperTestSuite) TestPool_ValidatorsSplitConsistency() {
 	suite.Require().Equal(sdk.ZeroInt(), pool.Validators[0].BondedAmount)
 }
 
+func (suite *KeeperTestSuite) TestPool_ClosePool() {
+	app := suite.app
+	ctx := suite.ctx
+	goCtx := sdk.WrapSDKContext(ctx)
+	msgServer := millionskeeper.NewMsgServerImpl(*app.MillionsKeeper)
+	var now = time.Now().UTC()
+
+	// Set up the base pool
+	poolID, err := app.MillionsKeeper.RegisterPool(ctx,
+		millionstypes.PoolType_Staking,
+		"ulum",
+		"ulum",
+		testChainID,
+		"",
+		"",
+		[]string{suite.valAddrs[0].String()},
+		"lum",
+		"lumvaloper",
+		app.MillionsKeeper.GetParams(ctx).MinDepositAmount,
+		time.Duration(millionstypes.DefaultUnbondingDuration),
+		sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries),
+		millionstypes.DrawSchedule{DrawDelta: 24 * time.Hour, InitialDrawAt: ctx.BlockTime().Add(24 * time.Hour)},
+		millionstypes.PrizeStrategy{PrizeBatches: []millionstypes.PrizeBatch{{PoolPercent: 100, Quantity: 100, DrawProbability: sdk.NewDec(1)}}},
+		[]millionstypes.FeeTaker{
+			{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
+		},
+	)
+	suite.Require().NoError(err)
+
+	// Initialize the balance
+	balanceBefore := app.BankKeeper.GetBalance(ctx, suite.addrs[0], localPoolDenom)
+	suite.Require().Equal(int64(1_000_000_000_0), balanceBefore.Amount.Int64())
+
+	// Make sure the pool is in the ready state
+	pool, err := app.MillionsKeeper.GetPool(ctx, poolID)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Ready, pool.State)
+	withdrawalsBefore := app.MillionsKeeper.ListAccountWithdrawals(ctx, suite.addrs[0])
+	suite.Require().Len(withdrawalsBefore, 0)
+	withdrawals := app.MillionsKeeper.ListAccountWithdrawals(ctx, suite.addrs[0])
+	suite.Require().Len(withdrawals, 0)
+
+	// Add 3 deposits
+	for i := 0; i < 3; i++ {
+		// Create a new deposit and add it to the state
+		_, err := msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
+			PoolId:           poolID,
+			Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_100_000_000)),
+			DepositorAddress: suite.addrs[0].String(),
+			WinnerAddress:    suite.addrs[0].String(),
+			IsSponsor:        false,
+		})
+		suite.Require().NoError(err)
+	}
+
+	// Pool should have 3 active deposits
+	deposits := app.MillionsKeeper.ListDeposits(ctx)
+	suite.Require().Len(deposits, 3)
+	for _, d := range deposits {
+		suite.Require().Equal(millionstypes.DepositState_Success, d.State)
+	}
+
+	// Pool should have no withdrawals for now
+	withdrawals = app.MillionsKeeper.ListWithdrawals(ctx)
+	suite.Require().Len(withdrawals, 0)
+
+	// Run the first step of closing the pool
+	err = app.MillionsKeeper.ClosePool(ctx, poolID)
+	suite.Require().NoError(err)
+
+	// Pool should be in state closing, and have a succeeded draw
+	pool, err = app.MillionsKeeper.GetPool(ctx, poolID)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Closing, pool.State)
+	suite.Require().Equal(millionstypes.DrawState_Success, pool.LastDrawState)
+
+	// Pool should have 3 withdrawals, and no deposits
+	withdrawals = app.MillionsKeeper.ListWithdrawals(ctx)
+	suite.Require().Len(withdrawals, 3)
+	for _, w := range withdrawals {
+		suite.Require().Equal(millionstypes.WithdrawalState_Pending, w.State)
+	}
+	deposits = app.MillionsKeeper.ListDeposits(ctx)
+	suite.Require().Len(deposits, 0)
+
+	// Calling ClosePool should have no effect untill withdrawals finish their unbonding
+	err = app.MillionsKeeper.ClosePool(ctx, poolID)
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, poolID)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Closing, pool.State)
+
+	// Launch withdrawal unbonding
+	epochTracker, err := app.MillionsKeeper.GetEpochTracker(ctx, epochstypes.DAY_EPOCH, millionstypes.WithdrawalTrackerType)
+	suite.Require().NoError(err)
+	nextEpochUnbonding := pool.GetNextEpochUnbonding(epochTracker)
+	epochUnbondings := app.MillionsKeeper.GetEpochUnbondings(ctx, nextEpochUnbonding)
+	for _, e := range epochUnbondings {
+		err = app.MillionsKeeper.UndelegateWithdrawalsOnRemoteZone(ctx, e)
+		suite.Require().NoError(err)
+	}
+	withdrawals = app.MillionsKeeper.ListWithdrawals(ctx)
+	suite.Require().Len(withdrawals, 3)
+	for _, w := range withdrawals {
+		suite.Require().Equal(millionstypes.WithdrawalState_IcaUnbonding, w.State)
+	}
+
+	// Calling ClosePool should have no effect untill withdrawals finish their unbonding
+	err = app.MillionsKeeper.ClosePool(ctx, poolID)
+	suite.Require().NoError(err)
+	pool, err = app.MillionsKeeper.GetPool(ctx, poolID)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Closing, pool.State)
+
+	// Test that the balance should remain unchanged
+	balance := app.BankKeeper.GetBalance(ctx, suite.addrs[0], localPoolDenom)
+	suite.Require().Equal(balanceBefore.Amount.Int64()-3_300_000_000, balance.Amount.Int64())
+
+	ctx = ctx.WithBlockTime(now.Add(21 * 24 * time.Hour))
+	_, err = app.StakingKeeper.CompleteUnbonding(ctx, sdk.MustAccAddressFromBech32(pool.IcaDepositAddress), suite.valAddrs[0])
+	suite.Require().NoError(err)
+
+	// Dequeue matured withdrawals and trigger the transfer to the local chain
+	s, e := app.MillionsKeeper.BlockWithdrawalUpdates(ctx)
+	suite.Require().Equal(3, s)
+	suite.Require().Equal(0, e)
+
+	// Test that there should be no matured withdrawal left
+	s, e = app.MillionsKeeper.BlockWithdrawalUpdates(ctx)
+	suite.Require().Equal(0, s)
+	suite.Require().Equal(0, e)
+
+	// Test that the balance should compensate 3 deposits transfered back
+	balance = app.BankKeeper.GetBalance(ctx, suite.addrs[0], localPoolDenom)
+	suite.Require().Equal(balanceBefore.Amount.Int64(), balance.Amount.Int64())
+
+	// Get the pool and make sure it's in the closed state
+	pool, err = app.MillionsKeeper.GetPool(ctx, poolID)
+	suite.Require().NoError(err)
+	suite.Require().Equal(millionstypes.PoolState_Closed, pool.State)
+
+	// Close pool again - It shouldn't work
+	err = app.MillionsKeeper.ClosePool(ctx, poolID)
+	suite.Require().Error(err, millionstypes.ErrPoolStateChangeNotAllowed)
+
+	// Try to make a deposit - It shouldn't work
+	_, err = msgServer.Deposit(goCtx, &millionstypes.MsgDeposit{
+		PoolId:           poolID,
+		Amount:           sdk.NewCoin(localPoolDenom, sdk.NewInt(1_100_000_000)),
+		DepositorAddress: suite.addrs[0].String(),
+		WinnerAddress:    suite.addrs[0].String(),
+		IsSponsor:        false,
+	})
+	suite.Require().Error(err)
+
+	// Try to claim the prizes - It should work even with a closed pool
+	prizes := app.MillionsKeeper.ListAccountPrizes(ctx, suite.addrs[0])
+	for _, p := range prizes {
+		_, err = msgServer.ClaimPrize(goCtx, &millionstypes.MsgClaimPrize{
+			PoolId:  poolID,
+			DrawId:  p.DrawId,
+			PrizeId: p.PrizeId,
+		})
+		suite.Require().NoError(err)
+	}
+}
+
 // TestPool_UpdatePool tests the different conditions for a proposal pool update
 func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 	app := suite.app
@@ -1095,7 +1262,7 @@ func (suite *KeeperTestSuite) TestPool_UpdatePool() {
 	suite.Require().Equal(len(newFees), len(pool.FeeTakers))
 
 	// UpdatePool with invalid pool_state -> PoolState_Killed
-	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Killed, newFees)
+	err = app.MillionsKeeper.UpdatePool(ctx, pool.PoolId, nil, &newDepositAmount, &UnbondingDuration, &maxUnbondingEntries, &newDrawSchedule, &newPrizeStrategy, millionstypes.PoolState_Closed, newFees)
 	suite.Require().ErrorIs(err, millionstypes.ErrPoolStateChangeNotAllowed)
 	// Grab fresh pool instance
 	pool, err = app.MillionsKeeper.GetPool(ctx, 1)

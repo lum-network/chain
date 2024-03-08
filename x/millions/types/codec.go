@@ -32,6 +32,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&ProposalUpdateParams{}, "lum-network/millions/ProposalUpdateParams", nil)
 	cdc.RegisterConcrete(&ProposalRegisterPool{}, "lum-network/millions/ProposalRegisterPool", nil)
 	cdc.RegisterConcrete(&ProposalUpdatePool{}, "lum-network/millions/ProposalUpdatePool", nil)
+	cdc.RegisterConcrete(&ProposalClosePool{}, "lum-network/millions/ProposalClosePool", nil)
 }
 
 // RegisterInterfaces Register the implementations for the given codecs
@@ -51,6 +52,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*govtypesv1beta1.Content)(nil), &ProposalUpdateParams{})
 	registry.RegisterImplementations((*govtypesv1beta1.Content)(nil), &ProposalRegisterPool{})
 	registry.RegisterImplementations((*govtypesv1beta1.Content)(nil), &ProposalUpdatePool{})
+	registry.RegisterImplementations((*govtypesv1beta1.Content)(nil), &ProposalClosePool{})
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

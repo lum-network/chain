@@ -20,7 +20,7 @@ func (k msgServer) RestoreInterchainAccounts(goCtx context.Context, msg *types.M
 	}
 
 	// We always want our pool to be ready
-	if pool.State == types.PoolState_Created {
+	if pool.State == types.PoolState_Created || pool.State == types.PoolState_Unspecified {
 		return nil, types.ErrPoolNotReady
 	}
 
@@ -88,7 +88,7 @@ func (k msgServer) restoreICADepositEntities(ctx sdk.Context, poolID uint64) {
 	// Restore withdrawals ICA locked operations on ICADeposit account
 	withdrawals := k.Keeper.ListPoolWithdrawals(ctx, poolID)
 	for _, w := range withdrawals {
-		if w.State == types.WithdrawalState_IcaUndelegate {
+		if w.State == types.WithdrawalState_IcaUndelegate || w.State == types.WithdrawalState_IbcTransfer {
 			w.ErrorState = w.State
 			w.State = types.WithdrawalState_Failure
 			k.Keeper.setPoolWithdrawal(ctx, w)
@@ -98,7 +98,7 @@ func (k msgServer) restoreICADepositEntities(ctx sdk.Context, poolID uint64) {
 	// Restore draws ICA locked operations on ICADeposit account
 	draws := k.Keeper.ListPoolDraws(ctx, poolID)
 	for _, d := range draws {
-		if d.State == types.DrawState_IcaWithdrawRewards {
+		if d.State == types.DrawState_IcaWithdrawRewards || d.State == types.DrawState_IbcTransfer {
 			d.ErrorState = d.State
 			d.State = types.DrawState_Failure
 			k.Keeper.SetPoolDraw(ctx, d)

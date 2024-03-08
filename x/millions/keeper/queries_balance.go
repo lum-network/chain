@@ -39,7 +39,9 @@ func BalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqueriestype
 		return errorsmod.Wrapf(types.ErrPoolNotFound, "no registered draw %d for pool %d", drawID, poolID)
 	}
 
-	// Based on type, we want different processing
+	// Scenarios:
+	// - Timeout: Treated as an error (see below)
+	// - Error: Put entity in error state to allow users to retry
 	if status == icqueriestypes.QueryResponseStatus_TIMEOUT {
 		k.Logger(ctx).Error(fmt.Sprintf("QUERY TIMEOUT - QueryId: %s, TTL: %d, BlockTime: %d", query.Id, query.TimeoutTimestamp, ctx.BlockHeader().Time.UnixNano()))
 		_, err := k.OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted(ctx, pool.GetPoolId(), draw.GetDrawId(), sdk.NewCoins(), true)

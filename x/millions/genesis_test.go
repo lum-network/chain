@@ -71,7 +71,7 @@ var testGenesis = millionstypes.GenesisState{
 		{PoolId: 3, PoolType: millionstypes.PoolType_Staking, TvlAmount: sdk.NewInt(601), DepositorsCount: 1, SponsorshipAmount: sdk.ZeroInt(), Denom: "denom-3", NativeDenom: "denom-3", NextDrawId: 1,
 			ChainId: "c1", Validators: defaultValidators, MinDepositAmount: sdk.NewInt(1_000_000), UnbondingDuration: time.Duration(millionstypes.DefaultUnbondingDuration), MaxUnbondingEntries: sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries), AvailablePrizePool: sdk.NewCoin("denom-3", sdk.ZeroInt()),
 			DrawSchedule: defaultSchedule, PrizeStrategy: defaultPrizeStrat,
-			State: millionstypes.PoolState_Killed, Bech32PrefixAccAddr: "lum", Bech32PrefixValAddr: "lumvaloper",
+			State: millionstypes.PoolState_Closed, Bech32PrefixAccAddr: "lum", Bech32PrefixValAddr: "lumvaloper",
 			FeeTakers: []millionstypes.FeeTaker{
 				{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
 			},
@@ -87,7 +87,7 @@ var testGenesis = millionstypes.GenesisState{
 		{PoolId: 5, PoolType: millionstypes.PoolType_Staking, TvlAmount: sdk.NewInt(0), DepositorsCount: 0, SponsorshipAmount: sdk.ZeroInt(), Denom: "denom-5", NativeDenom: "denom-5", NextDrawId: 1,
 			ChainId: "c1", Validators: defaultValidators, MinDepositAmount: sdk.NewInt(1_000_000), UnbondingDuration: time.Duration(millionstypes.DefaultUnbondingDuration), MaxUnbondingEntries: sdk.NewInt(millionstypes.DefaultMaxUnbondingEntries), AvailablePrizePool: sdk.NewCoin("denom-5", sdk.ZeroInt()),
 			DrawSchedule: defaultSchedule, PrizeStrategy: defaultPrizeStrat,
-			State: millionstypes.PoolState_Killed, Bech32PrefixAccAddr: "lum", Bech32PrefixValAddr: "lumvaloper",
+			State: millionstypes.PoolState_Closed, Bech32PrefixAccAddr: "lum", Bech32PrefixValAddr: "lumvaloper",
 			FeeTakers: []millionstypes.FeeTaker{
 				{Destination: authtypes.FeeCollectorName, Amount: sdk.NewDecWithPrec(millionstypes.DefaultFeeTakerAmount, 2), Type: millionstypes.FeeTakerType_LocalModuleAccount},
 			},

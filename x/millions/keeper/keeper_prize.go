@@ -14,21 +14,36 @@ import (
 
 // ClawBackPrize claw backs a prize by adding its amount to the clawback prize pool
 func (k Keeper) ClawBackPrize(ctx sdk.Context, poolID uint64, drawID uint64, prizeID uint64) error {
+	// Acquire the pool instance
 	pool, err := k.GetPool(ctx, poolID)
 	if err != nil {
 		return err
 	}
+
+	// If the pool is in closing or closed state, we do not process any prize clawback
+	// We want all user to be able to claim their prize, no matter the state
+	if pool.State == types.PoolState_Closing || pool.State == types.PoolState_Closed {
+		// Since clawback is triggered by a queue we simulate a successful clawback and the queue will never retry it
+		// = infinite prize claim duration
+		return nil
+	}
+
+	// Acquire the prize instance
 	prize, err := k.GetPoolDrawPrize(ctx, poolID, drawID, prizeID)
 	if err != nil {
 		return err
 	}
+
+	// If the prize is not in pending state, we do not process any prize clawback
 	if prize.State != types.PrizeState_Pending {
 		return errorsmod.Wrapf(types.ErrIllegalStateOperation, "expecting %s but state is %s", types.PrizeState_Pending, prize.State)
 	}
 
+	// Add the prize amount to the clawback prize pool
 	pool.AvailablePrizePool = pool.AvailablePrizePool.Add(prize.Amount)
 	k.updatePool(ctx, &pool)
 
+	// Remove the prize from the prize queue
 	if err := k.RemovePrize(ctx, prize); err != nil {
 		return err
 	}
