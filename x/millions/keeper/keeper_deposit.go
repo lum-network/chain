@@ -408,3 +408,15 @@ func (k Keeper) UnsafeSetUnpersistedDeposits(ctx sdk.Context) int {
 
 	return i
 }
+
+func (k Keeper) UnsafeSetDepositErrorState(ctx sdk.Context, poolID uint64, depositID uint64, state types.DepositState) {
+	deposit, err := k.GetPoolDeposit(ctx, poolID, depositID)
+	if err != nil {
+		panic(err)
+	}
+
+	deposit.State = types.DepositState_Failure
+	deposit.ErrorState = state
+	k.setAccountDeposit(ctx, &deposit)
+	k.setPoolDeposit(ctx, &deposit)
+}

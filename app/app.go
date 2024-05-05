@@ -915,6 +915,12 @@ func (app *App) registerUpgradeHandlers() {
 
 	app.UpgradeKeeper.SetUpgradeHandler("v1.6.6", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		app.Logger().Info("Starting v1.6.6 upgrade")
+
+		// Fix the stuck deposits
+		depositIDs := []uint64{1301, 1302, 1310, 1329}
+		for _, depositID := range depositIDs {
+			app.MillionsKeeper.UnsafeSetDepositErrorState(ctx, 3, depositID, millionstypes.DepositState_IcaDelegate)
+		}
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
 
