@@ -921,7 +921,6 @@ func (app *App) registerUpgradeHandlers() {
 		for _, depositID := range depositIDs {
 			app.MillionsKeeper.UnsafeSetDepositErrorState(ctx, 3, depositID, millionstypes.DepositState_IcaDelegate)
 		}
-
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	})
 
