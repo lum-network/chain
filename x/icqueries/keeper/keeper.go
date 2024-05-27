@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -121,7 +120,7 @@ func (k Keeper) VerifyKeyProof(ctx sdk.Context, msg *types.MsgSubmitQueryRespons
 	height := clienttypes.NewHeight(clienttypes.ParseChainID(query.ChainId), proofHeight+1)
 
 	// Confirm the query proof height occurred after the submission height
-	if proofHeight < query.SubmissionHeight {
+	if proofHeight <= query.SubmissionHeight {
 		return errorsmod.Wrapf(types.ErrInvalidICQProof, "Query proof height (%d) is older than the submission height (%d)", proofHeight, query.SubmissionHeight)
 	}
 
@@ -152,7 +151,7 @@ func (k Keeper) VerifyKeyProof(ctx sdk.Context, msg *types.MsgSubmitQueryRespons
 	var clientStateProof []*ics23.ProofSpec = tendermintClientState.ProofSpecs
 
 	// Get the merkle path and merkle proof
-	path := commitmenttypes.NewMerklePath([]string{pathParts[1], url.PathEscape(string(query.Request))}...)
+	path := commitmenttypes.NewMerklePath([]string{pathParts[1], string(query.Request)}...)
 	merkleProof, err := commitmenttypes.ConvertProofs(msg.ProofOps)
 	if err != nil {
 		return errorsmod.Wrapf(types.ErrInvalidICQProof, "Error converting proofs: %s", err.Error())
