@@ -203,6 +203,13 @@ func (k Keeper) OnQueryFreshPrizePoolCoinsOnRemoteZoneCompleted(ctx sdk.Context,
 		return nil, err
 	}
 	if draw.State != types.DrawState_IcqBalance {
+		// W're in the wrong state. If the state is already in error, and we are triggering because of an error, just ignore and don't return the error
+		// Because it's making the relayer trying to push again and again the same error
+		if isError && draw.State == types.DrawState_Failure {
+			return &draw, nil
+		}
+
+		// Otherwise we just process the error as expected
 		return &draw, errorsmod.Wrapf(types.ErrIllegalStateOperation, "state should be %s but is %s", types.DrawState_IcqBalance.String(), draw.State.String())
 	}
 
