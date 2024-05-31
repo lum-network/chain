@@ -24,9 +24,9 @@ Once inside, you can type the following to create the links (repeat for each cha
 
 ### Create link for Gaia <=> Lum
 
-`hermes create connection --a-chain lum-millions-1 --b-chain gaia-devnet`
+`hermes create connection --a-chain lum-devnet --b-chain gaia-devnet`
 
-`hermes create channel --a-chain lum-millions-1 --a-connection connection-0 --a-port transfer --b-port transfer`
+`hermes create channel --a-chain lum-devnet --a-connection connection-0 --a-port transfer --b-port transfer`
 
 Transactions may fail but will succeed at some point.
 
@@ -54,7 +54,7 @@ Then enter the container (replace ID inside)
 
 Then type
 
-`gaiad tx ibc-transfer transfer transfer channel-0 lum16rlynj5wvzwts5lqep0je5q4m3eaepn58hmzu5 1000000uatom --from genesis_key --keyring-backend test --chain-id gaia-devnet --fees 200uatom`
+`gaiad tx ibc-transfer transfer transfer channel-0 lum1u33h97evzjpqkl9t8g7cd6wfvt2h9jzlahdzva 1000000uatom --from genesis_key --keyring-backend test --chain-id gaia-devnet --fees 200uatom`
 
 If you type 
 

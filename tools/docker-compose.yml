@@ -43,7 +43,7 @@ services:
         sed -i 's/timeout_precommit_delta = "500ms"/timeout_precommit_delta = "200ms"/g' /home/juno/.juno/config/config.toml
         sed -i 's/timeout_commit = "5s"/timeout_commit = "2s"/g' /home/juno/.juno/config/config.toml
         sed -i 's/\("allow_messages": \)\[[^]]*\]/\1["\/cosmos.bank.v1beta1.MsgSend", "\/cosmos.bank.v1beta1.MsgMultiSend", "\/cosmos.staking.v1beta1.MsgDelegate", "\/cosmos.staking.v1beta1.MsgUndelegate", "\/cosmos.staking.v1beta1.MsgBeginRedelegate", "\/cosmos.staking.v1beta1.MsgRedeemTokensforShares", "\/cosmos.staking.v1beta1.MsgTokenizeShares", "\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward", "\/cosmos.distribution.v1beta1.MsgSetWithdrawAddress", "\/ibc.applications.transfer.v1.MsgTransfer"]/' /home/juno/.juno/config/genesis.json
-        junod start --rpc.laddr tcp://0.0.0.0:26657 --pruning nothing
+        junod start --rpc.laddr tcp://0.0.0.0:26657 --grpc.address 0.0.0.0:9090 --pruning nothing
 
   gaia-local-net:
     build:
@@ -73,10 +73,10 @@ services:
         gaiad keys add genesis_key --keyring-backend test
         echo $GAIA_MNEMONIC | gaiad keys add relayer_key --keyring-backend test --recover
         gaiad init genesis_key --chain-id=gaia-devnet
-        gaiad add-genesis-account `gaiad keys show genesis_key -a --keyring-backend test` 1000000000000000uatom --keyring-backend test
-        gaiad add-genesis-account `gaiad keys show relayer_key -a --keyring-backend test` 1000000000000000uatom --keyring-backend test
-        gaiad gentx genesis_key 1000000uatom --chain-id=gaia-devnet --keyring-backend test
-        gaiad collect-gentxs
+        gaiad genesis add-genesis-account `gaiad keys show genesis_key -a --keyring-backend test` 1000000000000000uatom --keyring-backend test
+        gaiad genesis add-genesis-account `gaiad keys show relayer_key -a --keyring-backend test` 1000000000000000uatom --keyring-backend test
+        gaiad genesis gentx genesis_key 1000000uatom --chain-id=gaia-devnet --keyring-backend test
+        gaiad genesis collect-gentxs
         sed -i 's/"stake"/"uatom"/g' /home/gaia/.gaia/config/genesis.json
         sed -i 's/minimum-gas-prices = ""/minimum-gas-prices = "0.001uatom"/g' /home/gaia/.gaia/config/app.toml
         sed -i 's/timeout_propose = "3s"/timeout_propose = "1s"/g' /home/gaia/.gaia/config/config.toml
@@ -87,7 +87,7 @@ services:
         sed -i 's/timeout_precommit_delta = "500ms"/timeout_precommit_delta = "200ms"/g' /home/gaia/.gaia/config/config.toml
         sed -i 's/timeout_commit = "5s"/timeout_commit = "2s"/g' /home/gaia/.gaia/config/config.toml
         sed -i 's/\("allow_messages": \)\[[^]]*\]/\1["\/cosmos.bank.v1beta1.MsgSend", "\/cosmos.bank.v1beta1.MsgMultiSend", "\/cosmos.staking.v1beta1.MsgDelegate", "\/cosmos.staking.v1beta1.MsgUndelegate", "\/cosmos.staking.v1beta1.MsgBeginRedelegate", "\/cosmos.staking.v1beta1.MsgRedeemTokensforShares", "\/cosmos.staking.v1beta1.MsgTokenizeShares", "\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward", "\/cosmos.distribution.v1beta1.MsgSetWithdrawAddress", "\/ibc.applications.transfer.v1.MsgTransfer"]/' /home/gaia/.gaia/config/genesis.json
-        gaiad start --rpc.laddr tcp://0.0.0.0:26657 --pruning nothing
+        gaiad start --rpc.laddr tcp://0.0.0.0:26657 --grpc.address 0.0.0.0:9090 --pruning nothing
 
   osmosis-local-net:
     build:
@@ -131,7 +131,7 @@ services:
         sed -i 's/timeout_precommit_delta = "500ms"/timeout_precommit_delta = "200ms"/g' /home/osmosis/.osmosisd/config/config.toml
         sed -i 's/timeout_commit = "5s"/timeout_commit = "2s"/g' /home/osmosis/.osmosisd/config/config.toml
         sed -i 's/\("allow_messages": \)\[[^]]*\]/\1["\/cosmos.bank.v1beta1.MsgSend", "\/cosmos.bank.v1beta1.MsgMultiSend", "\/cosmos.staking.v1beta1.MsgDelegate", "\/cosmos.staking.v1beta1.MsgUndelegate", "\/cosmos.staking.v1beta1.MsgBeginRedelegate", "\/cosmos.staking.v1beta1.MsgRedeemTokensforShares", "\/cosmos.staking.v1beta1.MsgTokenizeShares", "\/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward", "\/cosmos.distribution.v1beta1.MsgSetWithdrawAddress", "\/ibc.applications.transfer.v1.MsgTransfer"]/' /home/osmosis/.osmosisd/config/genesis.json
-        osmosisd start --rpc.laddr tcp://0.0.0.0:26657 --pruning nothing
+        osmosisd start --rpc.laddr tcp://0.0.0.0:26657 --grpc.address 0.0.0.0:9090 --pruning nothing
 
   relayer-local-net:
     build:
@@ -174,5 +174,5 @@ services:
         echo $OSMOSIS_MNEMONIC > osmosis.txt
         hermes keys add --key-name hrly3 --chain osmosis-devnet --mnemonic-file osmosis.txt --overwrite
         echo $LUM_MNEMONIC > lum.txt
-        hermes keys add --key-name hrly4 --chain lumnetwork-testnet --mnemonic-file lum.txt --overwrite --hd-path "m/44'/880'/0'/0/0"
+        hermes keys add --key-name hrly4 --chain lum-devnet --mnemonic-file lum.txt --overwrite --hd-path "m/44'/880'/0'/0/0"
         hermes start

@@ -1,10 +1,10 @@
-FROM rust:1.65-buster as builder
+FROM rust:1.78-buster as builder
 
 WORKDIR /opt
 
 RUN apt update && apt install git bash curl nano htop -y
 
-ENV COMMIT_HASH=v1.4.1
+ENV COMMIT_HASH=v1.8.3
 RUN git clone https://github.com/informalsystems/ibc-rs \
     && cd ibc-rs \
     && git checkout $COMMIT_HASH \
